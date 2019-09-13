@@ -6,6 +6,7 @@ With the introduction of version 3 of the ESPN's API, this structure creates lea
 I am new to the Git interface, but any recommendations and pull requests are welcome.
 
 This project was inspired and based off of [rbarton65/espnff](https://github.com/rbarton65/espnff)
+Additional help/ideas were received from [cwendt94/ff-espn-api](https://github.com/cwendt94/ff-espn-api)
 
 
 ## Fetch public leagues
