@@ -141,7 +141,7 @@ The power rankings for a given week can be viewed using the 'printPowerRankings'
 ```python
  Week  1 
  Power Index                      Team  Owner
-&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150&#150
+-----------------------------  ------  ----------------
 The Adams Family               101.52  Marc Chirico
 T.Y. Very Much                 101.24  Desi Pilla
 Sony with a Chance              93.02  Isabella Chirico
