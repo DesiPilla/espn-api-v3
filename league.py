@@ -405,9 +405,7 @@ class League():
             dominance = (score - oppScore) / score * 10
         else:
             dominance = 0
-        
-        #print(team.owner, '\t', round(pfScore,1), '\t', round(pfScore * multiplier,1), '\t', round(bestLineupScore,1), '\t', round(dominance,1))
-        
+            
         return pfScore*multiplier + bestLineupScore + dominance
     
     def teamTotalPRank(self, teamId, week):

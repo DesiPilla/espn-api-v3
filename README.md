@@ -78,8 +78,76 @@ Under team.rosters, each value in the dictionary contains a list of player objec
 3051392
 >>> player.eligibleSlots	# position slot ids that the player can be placed in
 [2, 3, 23, 7, 20, 21]
->>> player.positionId	# position slot id that the user used him in
+>>> player.positionId		# position slot id that the user used him in
 2
 >>> player.isStarting
 True
+```
+
+## View stats for a specific week
+The two main purposes for this package is to be able to quickly and seamlessly view stats for a team or league that ESPN doesn't readily compute.
+Using the 'printWeeklyStats' method, you can view a weekly report for a certain week.
+```python
+>>> team.printWeeklyStats(1)
+----------------------------
+John Smith Week 1
+----------------------------
+Week Score: 149.9
+Best Possible Lineup: 156.42
+Opponent Score: 116.5
+Weekly Finish: 3
+Best Trio: 74.32
+Number of Injuries: 0
+Starting QB pts: 30.72
+Avg. Starting RB pts: 23.6
+Avg. Starting WR pts: 9.85
+Starting TE pts: 5.7
+Starting Flex pts: 19.6
+Starting DST pts: 10.0
+Starting K pts: 17.0
+Total Bench pts: 71.12
+----------------------------
+>>> league.printWeeklyStats(1)
+ Week 1
+---------------------  ----------------
+Most Points Scored:    Marco
+Least Points Scored:   Ellie
+Best Possible Lineup:  Desi
+Best Trio:             Desi
+Worst Trio:            Vincent
+---------------------  ----------------
+Best QBs:              Nikki
+Best RBs:              Desi
+Best WRs:              Nikki
+Best TEs:              Isabella
+Best Flex:             Julia
+Best DST:              Marc
+Best K:                Ellie
+Best Bench:            Ellie
+---------------------  ----------------
+Worst QBs:             Desi
+Worst RBs:             Ellie
+Worst WRs:             Julia
+Worst TEs:             Vincent
+Worst Flex:            Nikki
+Worst DST:             Vincent
+Worst K:               Marc
+Worst Bench:           Gabriel
+```
+
+This package also has its own formula for calculating power rankings each week. 
+The computation takes in a team's performance over the entire season (with more weight on the recent weeks), while also accounting for luck.
+The power rankings for a given week can be viewed using the 'printPowerRankings' method.
+```python
+ Week  1 
+ Power Index                      Team  Owner
+-----------------------------  ------  ----------------
+The Adams Family               101.52  Marc Chirico
+T.Y. Very Much                 101.24  Desi Pilla
+Sony with a Chance              93.02  Isabella Chirico
+Good Ole   Christian Boys       79.57  Gabriel S
+Home Sweet Mahomes              76.30  Nikki  Pilla
+Any Tom, Dick,  Harry Will Do   70.96  Vincent Chirico
+The Kamara adds 10 pounds       65.41  Julia Selleck
+Can you Diggs this?             64.38  Ellie Knecht
 ```
