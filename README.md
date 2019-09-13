@@ -1,0 +1,1 @@
+This project aims to make ESPN Fantasy Football statistics easily available. With the introduction of version 3 of the ESPN's API, this structure creates leagues, teams, and player classes that allow for advanced data analytics and the potential for many new features to be added.
