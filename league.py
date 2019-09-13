@@ -1,13 +1,20 @@
-import requests
+from authorize import Authorize
 from team import Team
+import requests
+from tabulate import tabulate as table
 
 class League():
     
-    def __init__(self, league_id, year, swid = None, espn_s2 = None):
+    def __init__(self, league_id, year, username = None, password = None):
         self.league_id = league_id
         self.year = year
-        self.swid = swid
-        self.espn_s2 = espn_s2
+        if username and password:
+            client = Authorize(username, password)
+            self.swid = client.swid
+            self.espn_s2 = client.espn_s2
+        else:
+            self.swid = None
+            self.espn_s2 = None            
 
         # ESPN Fantasy Football API v3 came out for seasons in 2019 and beyond. v2 is used up until 2018
         print('Fetching league...')
@@ -105,7 +112,7 @@ class League():
             name = '%s %s' % (team['location'], team['nickname'])   # Get the name of each team
             swid = team['primaryOwner']                             # Get the swid of each team
             owner = self.swids[swid]                                # Get the owner's name for each team
-            self.teamNames[teamId] = [owner, name]                  # Populate the teamNames dictionary
+            self.teamNames[teamId] = owner                          # Populate the teamNames dictionary
             id += 1
         return
     
@@ -332,30 +339,30 @@ class League():
     def printWeeklyStats(self, week):
         ''' Prints weekly stat report for a league during a given week. '''
         last = self.numTeams
-        stats_table = [['Most Points Scored: ', self.sortWeeklyScore(week)[1].owner[0].split(' ')[0]],
-                       ['Least Points Scored: ', self.sortWeeklyScore(week)[last].owner[0].split(' ')[0]],
-                       ['Best Possible Lineup: ', self.sortBestLineup(week)[1].owner[0].split(' ')[0]],
-                       ['Best Trio: ', self.sortBestTrio(week)[1].owner[0].split(' ')[0]],
-                       ['Worst Trio: ', self.sortBestTrio(week)[last].owner[0].split(' ')[0]],
+        stats_table = [['Most Points Scored: ', self.sortWeeklyScore(week)[1].owner.split(' ')[0]],
+                       ['Least Points Scored: ', self.sortWeeklyScore(week)[last].owner.split(' ')[0]],
+                       ['Best Possible Lineup: ', self.sortBestLineup(week)[1].owner.split(' ')[0]],
+                       ['Best Trio: ', self.sortBestTrio(week)[1].owner.split(' ')[0]],
+                       ['Worst Trio: ', self.sortBestTrio(week)[last].owner.split(' ')[0]],
                        
                        ['---------------------','----------------'],
-                       ['Best QBs: ', self.sortPositionScore(week, 0)[1].owner[0].split(' ')[0]],
-                       ['Best RBs: ', self.sortPositionScore(week, 2)[1].owner[0].split(' ')[0]],
-                       ['Best WRs: ', self.sortPositionScore(week, 4)[1].owner[0].split(' ')[0]], 
-                       ['Best TEs: ', self.sortPositionScore(week, 6)[1].owner[0].split(' ')[0]],
-                       ['Best Flex: ', self.sortPositionScore(week, 23)[1].owner[0].split(' ')[0]],
-                       ['Best DST: ', self.sortPositionScore(week, 16)[1].owner[0].split(' ')[0]],
-                       ['Best K: ', self.sortPositionScore(week, 17)[1].owner[0].split(' ')[0]],
-                       ['Best Bench: ', self.sortBenchPoints(week)[1].owner[0].split(' ')[0]],
+                       ['Best QBs: ', self.sortPositionScore(week, 0)[1].owner.split(' ')[0]],
+                       ['Best RBs: ', self.sortPositionScore(week, 2)[1].owner.split(' ')[0]],
+                       ['Best WRs: ', self.sortPositionScore(week, 4)[1].owner.split(' ')[0]], 
+                       ['Best TEs: ', self.sortPositionScore(week, 6)[1].owner.split(' ')[0]],
+                       ['Best Flex: ', self.sortPositionScore(week, 23)[1].owner.split(' ')[0]],
+                       ['Best DST: ', self.sortPositionScore(week, 16)[1].owner.split(' ')[0]],
+                       ['Best K: ', self.sortPositionScore(week, 17)[1].owner.split(' ')[0]],
+                       ['Best Bench: ', self.sortBenchPoints(week)[1].owner.split(' ')[0]],
                        ['---------------------','----------------'],
-                       ['Worst QBs: ', self.sortPositionScore(week, 0)[last].owner[0].split(' ')[0]],
-                       ['Worst RBs: ', self.sortPositionScore(week, 2)[last].owner[0].split(' ')[0]],
-                       ['Worst WRs: ', self.sortPositionScore(week, 4)[last].owner[0].split(' ')[0]], 
-                       ['Worst TEs: ', self.sortPositionScore(week, 6)[last].owner[0].split(' ')[0]],
-                       ['Worst Flex: ', self.sortPositionScore(week, 23)[last].owner[0].split(' ')[0]],
-                       ['Worst DST: ', self.sortPositionScore(week, 16)[last].owner[0].split(' ')[0]],
-                       ['Worst K: ', self.sortPositionScore(week, 17)[last].owner[0].split(' ')[0]],
-                       ['Worst Bench: ', self.sortBenchPoints(week)[last].owner[0].split(' ')[0]]]
+                       ['Worst QBs: ', self.sortPositionScore(week, 0)[last].owner.split(' ')[0]],
+                       ['Worst RBs: ', self.sortPositionScore(week, 2)[last].owner.split(' ')[0]],
+                       ['Worst WRs: ', self.sortPositionScore(week, 4)[last].owner.split(' ')[0]], 
+                       ['Worst TEs: ', self.sortPositionScore(week, 6)[last].owner.split(' ')[0]],
+                       ['Worst Flex: ', self.sortPositionScore(week, 23)[last].owner.split(' ')[0]],
+                       ['Worst DST: ', self.sortPositionScore(week, 16)[last].owner.split(' ')[0]],
+                       ['Worst K: ', self.sortPositionScore(week, 17)[last].owner.split(' ')[0]],
+                       ['Worst Bench: ', self.sortBenchPoints(week)[last].owner.split(' ')[0]]]
         print('\n', table(stats_table, headers = ['Week ' + str(week), '']))   
     
         # ['Most Injuries: ', self.sortNumOut(week)[last].owner.split(' ')[0]],
@@ -414,7 +421,7 @@ class League():
             week += 1
         return pRank / (week + 2)
     
-    def printMyPowerRankings(self, week):
+    def printPowerRankings(self, week):
         ''' Print my power rankings in a nice table. '''
         powerRankings = []
         for teamId in range(1, self.numTeams + 1):
@@ -424,5 +431,5 @@ class League():
         for team in sortedRankings:
             powerRankingsTable += [[ team[1].teamName,
                                        team[0],
-                                       team[1].owner[0] ]]
+                                       team[1].owner ]]
         print('\n','Week ',week, '\n', table( powerRankingsTable, headers = ['Power Index', 'Team', 'Owner'], floatfmt = '.2f')) 
