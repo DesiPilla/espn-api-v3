@@ -45,7 +45,7 @@ class League():
         self.regSeasonWeeks = self.settings['scheduleSettings']['matchupPeriodCount']
         self.teamData = requests.get(self.url, cookies = self.cookies, params = {'view' : 'mTeam'}).json()
         print('Gathering matchup data...')
-        self.matchupData = requests.get(self.url, cookies = self.cookies, params = {'view' : 'mMatchup'}).json()
+        self.matchupData = requests.get(self.url, cookies = self.cookies, params = {'view' : 'mMatchupScore'}).json()
         if year < 2019:
             self.teamData = self.teamData[0]
             self.matchupData = self.matchupData[0]        
@@ -130,10 +130,17 @@ class League():
         
         
         print('Building schedule...')
+        #self.it = []
+        #self.itt = []
         numMatchups = (self.currentWeek - 1)*self.numTeams // 2     # Determines the number of matchups that have been completed (not including the current week)
-        for week in range(self.settings['scheduleSettings']['matchupPeriodCount']):
+        for week in range(1, self.settings['scheduleSettings']['matchupPeriodCount'] + 1):
             # Build the matchups for every week
-            week += 1
+            if week < self.currentWeek:
+                matchupData = requests.get(self.url, cookies = self.cookies, params = { 'view' : 'mMatchupScore', 'view' : 'mMatchup', 'scoringPeriodId': week }).json()
+                #self.it += [matchupData]
+                #self.itt += [week]
+            else: 
+                matchupData = self.matchupData
             print('\tBuilding week %d/%d...' % (week, self.settings['scheduleSettings']['matchupPeriodCount']))             
             for m in range((week-1)*self.numTeams // 2, (week)*self.numTeams // 2):  
                 awayTeam = matchupData['schedule'][m]['away']           # Define the away team of the matchup
@@ -145,12 +152,10 @@ class League():
                 if m < numMatchups:
                     self.teams[awayId].addMatchup(awayTeam, week)       # Add this matchup to the away team's Team object
                     self.teams[homeId].addMatchup(homeTeam, week)       # Add this matchup to the home team's Team object            
-                
-            if week < self.currentWeek:
-                self.loadWeeklyRosters(week)                        # Add the roster data for weeks that have already concluded
-                
+            week += 1         
+            
         return
-        
+            
     def loadWeeklyRosters(self, week):
         '''Sets Teams Roster for a Certain Week'''
         params = {'view': 'mRoster', 'scoringPeriodId': week}       # Specify the request parameters for the given week
@@ -159,8 +164,7 @@ class League():
             rosterData = rosterData[0]                              # Adjust rosterData for ESPN API v2
         for teamId in self.teams:                                   # Fetch the roster of each team for the given week                 
             self.teams[teamId].fetchWeeklyRoster(rosterData['teams'][self.teams[teamId].teamId - 1]['roster'], week)
-        return
-    
+        return   
     
     ''' **************************************************
         *         Begin advanced stats methods           *

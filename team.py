@@ -3,6 +3,7 @@ from player import Player
 class Team():
     """
     teamData['teams'][teamId]
+    rosterData['schedule'][matchupNum]['home' or 'away']
     """
     def __init__(self, teamData):
         self.teamId = teamData['id']
@@ -20,7 +21,7 @@ class Team():
         self.scores = {}                # Constructed by League.buildTeams when it calls Team.addMatchup
         self.rosters = {}               # Constructed by League.buildTeams when it calls League.loadWeeklyRosters when it calls Team.fetchWeeklyRoster
                                         # self.startingRosterSlots is constructed by League.buildTeams
-        
+    
     
     def __repr__(self):
         """ This is what is displayed when print(team) is entered"""
@@ -32,16 +33,20 @@ class Team():
         return
     
     def addMatchup(self, teamData, week):
-        ''' Currently only adds a team's score for a given week to its scores{} attribute '''
-        self.scores[week] = round(teamData['totalPoints'],1)    
+        ''' Currently only adds a team's score for a given week to its scores{} attribute 
+        teamData = matchupData['schedule'][m]['away' or 'home']
+        '''
+        self.scores[week] = round(teamData['totalPoints'],1)   
+        self.fetchWeeklyRoster(teamData['rosterForCurrentScoringPeriod']['entries'], week)
         return
 
     def fetchWeeklyRoster(self, rosterData, week):
-        '''Fetch the roster of a team for a specific week'''
-        roster = rosterData['entries']                      # Get the players in roster{}
+        '''Fetch the roster of a team for a specific week
+        rosterData = matchupData['schedule'][matchupNum]['home' or 'away']['rosterForCurrentScoringPeriod']['entries']
+        '''
         self.rosters[week] = []                             # Create an empty list for the team roster for the given week
-        for player in roster:
-            self.rosters[week].append(Player(player))       # Add each player on the roster to team's roster for the given week
+        for player in rosterData:
+            self.rosters[week].append(Player(player))       # Add each player on the roster to team's roster for the given week            
         
     ''' **************************************************
         *      Begin advanced stats team methods         *
