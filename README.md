@@ -134,11 +134,12 @@ Worst DST:             Vincent
 Worst K:               Marc
 Worst Bench:           Gabriel
 ```
-
-This package also has its own formula for calculating power rankings each week. 
+## Power Rankings
+This package has its own formula for calculating power rankings each week. 
 The computation takes in a team's performance over the entire season (with more weight on the recent weeks), while also accounting for luck.
-The power rankings for a given week can be viewed using the 'printPowerRankings' method.
+The power rankings for a given week can be viewed using the `printPowerRankings` method.
 ```python
+>>> league.printPowerRankings(1)
  Week  1 
  Power Index                      Team  Owner
 -----------------------------  ------  ----------------
@@ -151,3 +152,24 @@ Any Tom, Dick,  Harry Will Do   70.96  Vincent Chirico
 The Kamara adds 10 pounds       65.41  Julia Selleck
 Can you Diggs this?             64.38  Ellie Knecht
 ```
+
+## Luck Index
+This package has its own formula for calculating how "lucky" a team has been over the course of a season. Each week, every team is assigned a luck score
+based on how they did relative to the rest of the league and the result of their weekly matchup. Teams that performed poorly but still won are assigned 
+a higher score, while teams that did well but still lost are assigned lower scores. Over the course of the season, the luck scores are totaled and the luck
+index is compiled. The luck index can be viewed using the `printLuckIndex` method.
+```python
+>>> league.printLuckIndex(2)
+Through Week 2
+ Team                         Luck Index  Owner
+-------------------------  ------------  ----------------
+Can you Diggs this?                4.29  Ellie Knecht
+Sony with a Chance                 2.14  Isabella Chirico
+T.Y. Very Much                     0.71  Desi Pilla
+The Adams Family                   0     Marc Chirico
+Good Ole   Christian Boys          0     Gabriel S
+Home Sweet Mahomes                -1.43  Nikki  Pilla
+The Kamara adds 10 pounds         -2.14  Julia Selleck
+All Tom No Jerry                  -3.57  Vincent Chirico
+```
+ 

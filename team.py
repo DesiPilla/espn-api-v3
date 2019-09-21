@@ -38,6 +38,7 @@ class Team():
         '''
         self.scores[week] = round(teamData['totalPoints'],1)   
         self.fetchWeeklyRoster(teamData['rosterForCurrentScoringPeriod']['entries'], week)
+        
         return
 
     def fetchWeeklyRoster(self, rosterData, week):
@@ -161,3 +162,17 @@ class Team():
             'Starting K pts: ' + str(self.avgStartingScore(week, 17)) + '\n' + \
             'Total Bench pts: ' + str(self.totalBenchPoints(week)) + '\n' + \
             '----------------------------')    
+    
+    def weeklyResult(self, week):
+        ''' For a given week:
+                if the team lost, return 0
+                if the team won, return 1
+                if the team ties, return 0.5
+        '''        
+        oppScore = self.schedule[week].scores[week]
+        if self.scores[week] < oppScore:
+            return 0
+        elif self.scores[week] > oppScore:
+            return 1
+        else:
+            return 0.5

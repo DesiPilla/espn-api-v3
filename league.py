@@ -53,7 +53,6 @@ class League():
         # Build league
         self.getTeamNames() 
         self.getRosterSettings() 
-        print(self.teamNames)  
         self.buildTeams()
         print('League successfully built!')
         
@@ -130,15 +129,11 @@ class League():
         
         
         print('Building schedule...')
-        #self.it = []
-        #self.itt = []
         numMatchups = (self.currentWeek - 1)*self.numTeams // 2     # Determines the number of matchups that have been completed (not including the current week)
         for week in range(1, self.settings['scheduleSettings']['matchupPeriodCount'] + 1):
             # Build the matchups for every week
             if week < self.currentWeek:
                 matchupData = requests.get(self.url, cookies = self.cookies, params = { 'view' : 'mMatchupScore', 'view' : 'mMatchup', 'scoringPeriodId': week }).json()
-                #self.it += [matchupData]
-                #self.itt += [week]
             else: 
                 matchupData = self.matchupData
             print('\tBuilding week %d/%d...' % (week, self.settings['scheduleSettings']['matchupPeriodCount']))             
@@ -239,6 +234,39 @@ class League():
             if (team.scores[week] != self.teams[teamId].scores[week]) and (team.scores[week] <= self.teams[teamId].scores[week]):
                 weeklyFinish += 1;                          # Increment the weeklyFinish for every team with a higher weekly score
         return weeklyFinish
+    
+    def weeklyLuckIndex(self, teamId, week):
+        ''' This function returns an index quantifying how 'lucky' a team was in a given week '''
+        team = self.teams[teamId]
+        teamScore = team.scores[week]
+        result = team.weeklyResult(week)
+        place = self.weeklyFinish(teamId, week)
+        if result == 1:                                 # If the team won...
+            odds = (place - 1) / (self.numTeams - 1)    # Odds of this team playing a team with a higher score than it
+            luckIndex = 5*odds                          # The worse the team ranked, the luckier they were to have won
+        else:                                                           # if the team lost or tied...
+            odds = (self.numTeams - place) / (self.numTeams - 1)    # Odds of this team playing a team with a lower score than it
+            luckIndex = -5*odds                                          # The better the team ranked, the unluckier they were to have lost or tied
+        if result == 0.5:                               # If the team tied...
+            luckIndex /= 2                              # They are only half as unlucky, because tying is not as bad as losing
+        return luckIndex
+                         
+    def seasonLuckIndex(self, teamId, week):
+        ''' This function returns an index quantifying how 'lucky' a team was all season long (up to a certain week) '''
+        luckIndex = 0
+        for week in range(1, week + 1):
+            luckIndex += self.weeklyLuckIndex(teamId, week)
+        return luckIndex    
+    
+    def printLuckIndex(self, week):
+        ''' This function prints the index quantifying how 'lucky' a team was all season long (up to a certain week) '''
+        lucks = []
+        for teamId in range(1, self.numTeams + 1):
+            luck = self.seasonLuckIndex(teamId, week)
+            lucks.append([self.teams[teamId].teamName, round(luck, 2), self.teams[teamId].owner])
+        lucks.sort(key = lambda x: x[1], reverse = True)
+        print('\nThrough Week %d\n'% (week), table(lucks, headers = ["Team", "Luck Index", "Owner"])) 
+        return
         
 
     ''' **************************************************
@@ -434,4 +462,4 @@ class League():
             powerRankingsTable += [[ team[1].teamName,
                                        team[0],
                                        team[1].owner ]]
-        print('\n','Week ',week, '\n', table( powerRankingsTable, headers = ['Power Index', 'Team', 'Owner'], floatfmt = '.2f')) 
+        print('\n','Week ',week, '\n', table( powerRankingsTable, headers = ['Team', 'Power Index', 'Owner'], floatfmt = '.2f')) 
