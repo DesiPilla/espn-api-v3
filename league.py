@@ -89,7 +89,7 @@ class League():
                 if positionId not in ['20', '21', '24']:              # Include all slotIds in the startingRosterSlots{} unless they are bench, injured reserve, or ' '
                     startingRosterSlots[positionId] = [roster[positionId], self.rosterMap[int(positionId)]]
         self.rosterSettings = {'rosterSlots' : rosterSlots, 'startingRosterSlots' : startingRosterSlots}    # Add rosterSlots{} and startingRosterSlots{} as a league attribute
-        return
+        return  
     
     def getTeamNames(self):
         """ This function takes the teamData of a league and:
@@ -104,9 +104,18 @@ class League():
             self.swids[member['id']] = '%s %s' % (member['firstName'], member['lastName'])
         
         self.teamNames = {}                                  # Create an empty teamNames dictionary
+        self.adjustIds= {}
         id = 1
         for team in self.teamData['teams']:
-            teamId = id
+            if team['id'] != id:                                    # If the teamId is not what it is supposed to be...
+                self.adjustIds[team['id']] = id                     # Save the incorrect teamId for future reference
+                self.teamData['teams'][id - 1]['id'] = id           # Correct the teamId of the copied team
+            else: 
+                self.adjustIds[id] = id
+            id += 1
+        
+        id = 1        
+        for team in self.teamData['teams']:
             teamId = team['id']                                     # Get the teamId of each team
             name = '%s %s' % (team['location'], team['nickname'])   # Get the name of each team
             swid = team['primaryOwner']                             # Get the swid of each team
@@ -136,12 +145,19 @@ class League():
                 matchupData = requests.get(self.url, cookies = self.cookies, params = { 'view' : 'mMatchupScore', 'view' : 'mMatchup', 'scoringPeriodId': week }).json()
             else: 
                 matchupData = self.matchupData
+                
+            
+            
             print('\tBuilding week %d/%d...' % (week, self.settings['scheduleSettings']['matchupPeriodCount']))             
             for m in range((week-1)*self.numTeams // 2, (week)*self.numTeams // 2):  
                 awayTeam = matchupData['schedule'][m]['away']           # Define the away team of the matchup
                 homeTeam = matchupData['schedule'][m]['home']           # Define the home team of the matchup
-                awayId = awayTeam['teamId']                             # Define the teamIndex of the away team
-                homeId = homeTeam['teamId']                             # Define the teamIndex of the home team
+                
+                #awayId = awayTeam['teamId']                             # Define the teamIndex of the away team
+                #homeId = homeTeam['teamId']                             # Define the teamIndex of the home team
+                awayId = self.adjustIds[awayTeam['teamId']]
+                homeId = self.adjustIds[homeTeam['teamId']]
+                
                 self.teams[awayId].schedule[week] = self.teams[homeId]  # Add this matchup to the schedule of the away team's Team object
                 self.teams[homeId].schedule[week] = self.teams[awayId]  # Add this matchup to the schedule of the home team's Team object
                 if m < numMatchups:
@@ -159,7 +175,25 @@ class League():
             rosterData = rosterData[0]                              # Adjust rosterData for ESPN API v2
         for teamId in self.teams:                                   # Fetch the roster of each team for the given week                 
             self.teams[teamId].fetchWeeklyRoster(rosterData['teams'][self.teams[teamId].teamId - 1]['roster'], week)
-        return   
+        return  
+    
+    def shiftKey(dictionary, shiftKey):
+        ''' This function takes a dictionary and a shiftKey, and shifts all elements with a key greater than or equal
+        to that key down by 1.
+        Example: a = {1: 'a', 2: 'b', 3: 'c', 5: 'd', 6: 'e', 8: 'f'}
+                 b = shiftKey(a, 4)
+                     {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e', 7: 'f'}
+                 c = shiftKey(b, 6)
+                     {1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e', 6: 'f'}
+        '''
+        newDict = {}
+        for key, val in dictionary.items():
+            if key < shiftKey:
+                newDict[key] = val
+            else:
+                newDict[key-1] = val
+        return newDict      
+    
     
     ''' **************************************************
         *         Begin advanced stats methods           *
