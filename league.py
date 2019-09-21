@@ -224,16 +224,30 @@ class League():
         bestTrio = round(qb + rb + max(wr, te), 2)
         return bestTrio  
     
-    # Returns the rank of a team based on the weekly score of a team for a given week.
     def weeklyFinish(self, teamId, week):
+        ''' Returns the rank of a team based on the weekly score of a team for a given week. '''
         team = self.teams[teamId]                           # Get the Team object associated with the input teamId
         teamIds = list(range(1, self.numTeams + 1))         # Get a list of teamIds 
-        teamIds.remove(team.teamId)                       # Remove the teamId of the working team from the list of teamIds
+        teamIds.remove(team.teamId)                         # Remove the teamId of the working team from the list of teamIds
         weeklyFinish = 1                                    # Initialize the weeklyFinish to 1
         for teamId in teamIds:
             if (team.scores[week] != self.teams[teamId].scores[week]) and (team.scores[week] <= self.teams[teamId].scores[week]):
                 weeklyFinish += 1;                          # Increment the weeklyFinish for every team with a higher weekly score
         return weeklyFinish
+    
+    def averageWeeklyFinish(self, teamId, week):
+        ''' This function returns the average weekly finish of a team through a certain week '''
+        finish = 0
+        for wk in range(1, week + 1):
+            finish += self.weeklyFinish(teamId, wk)
+        return finish / week    
+    
+    def averageOpponentFinish(self,  teamId, week):
+        ''' This function returns the average weekly finish of a team's weekly opponent through a certain week '''
+        finish = 0
+        for wk in range(1, week + 1):
+            finish += self.weeklyFinish(self.teams[teamId].schedule[wk].teamId, wk)
+        return finish / week     
     
     def weeklyLuckIndex(self, teamId, week):
         ''' This function returns an index quantifying how 'lucky' a team was in a given week '''
@@ -267,7 +281,21 @@ class League():
         lucks.sort(key = lambda x: x[1], reverse = True)
         print('\nThrough Week %d\n'% (week), table(lucks, headers = ["Team", "Luck Index", "Owner"])) 
         return
-        
+    
+    def resultsTopHalf(self, teamId, week):
+        ''' This function returns the number of wins and losses a team would have through a certain week
+        if a win was defined as scoring in the top half of teams for that week. I.e., in an 8 person league, the
+        4 teams that scored the most points would be granted a win, and the other 4 teams would be granted a loss.'''
+        wins, losses = 0, 0
+        for wk in range(1, week + 1):
+            place = self.weeklyFinish(teamId, wk)
+            if place <= self.numTeams // 2:
+                wins += 1
+            else:
+                losses += 1
+        return wins, losses        
+    
+    
 
     ''' **************************************************
         *          Begin stat sortitng methods           *

@@ -176,3 +176,57 @@ class Team():
             return 1
         else:
             return 0.5
+        
+    def averagePointsFor(self, week):
+        ''' This function returns the average points scored by the team through a certain week. '''
+        score = 0
+        for wk in range(1, week + 1):
+            score += self.scores[wk]
+        return score / week
+    
+    def averagePointsAllowed(self, week):
+        ''' This function returns the average points scored by the team's opponents through a certain week. '''
+        score = 0
+        for wk in range(1, week + 1):
+            score += self.schedule[wk].scores[wk]
+        return score / week    
+    
+    def averageLineupSetting(self, week):
+        ''' This function returns the average difference between the team's best possible score
+        and their actual score. Higher values mean the team's lineup was less optimized. '''
+        difference = 0
+        for wk in range(1, week + 1):
+            difference += self.bestLineup(wk) - self.scores[wk]
+        return difference / week              
+    
+    def resultsBothTeamsBest(self, week):
+        ''' This function returns the number of wins, losses, and ties the team should have,
+        if both the team and its opponent played their best possible lineup each week. '''
+        wins, losses, ties = 0, 0, 0
+        for wk in range(1, week + 1):
+            maxScore = self.bestLineup(wk)
+            oppScore = self.schedule[wk].bestLineup(wk)
+            if maxScore > oppScore:
+                wins += 1
+            elif maxScore < oppScore:
+                losses += 1
+            else:
+                ties += 1
+        return wins, losses, ties
+    
+    def resultsTeamBest(self, week):
+        ''' This function returns the number of wins, losses, and ties the team should have
+        if the team played their best possible lineup each week and their opponent's lineup was unchanged. '''
+        wins, losses, ties = 0, 0, 0
+        for wk in range(1, week + 1):
+            maxScore = self.bestLineup(wk)
+            oppScore = self.schedule[wk].scores[wk]
+            if maxScore > oppScore:
+                wins += 1
+            elif maxScore < oppScore:
+                losses += 1
+            else:
+                ties += 1
+        return wins, losses, ties  
+    
+    
