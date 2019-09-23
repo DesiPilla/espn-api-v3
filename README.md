@@ -9,7 +9,19 @@ This project was inspired and based off of [rbarton65/espnff](https://github.com
 
 Additional help/ideas were received from [cwendt94/ff-espn-api](https://github.com/cwendt94/ff-espn-api)
 
+## Table of Contents  
+*[Fetch public leagues](##fetchpublicleagues)
+*[Fetch private leagues](##fetchprivateleagues)
+*[View league information](##viewleagueinformation)
+*[View team information](##viewteaminformation)
+*[View player information](##viewplayerinformation)
+*[View stats for a specific week](##viewstatsforaspecificweek)
+*[Power Rankings](##powerrankings)
+*[Luck Index](##luckindex)
+*[Projected Standings](##projectedstandings)
 
+
+<a name="fetchpublicleagues"></a>
 ## Fetch public leagues
 In the main.py file, type:
 ```python
@@ -18,6 +30,7 @@ In the main.py file, type:
 >>> league = League(league_id, year)
 ```
 
+<a name="fetchprivateleagues"></a>
 ## Fetch private leagues
 By typing your script into the main.py file:
 ```python
@@ -50,6 +63,7 @@ League successfully built!
 League(La Lega di Cugino, 2019)
 ```
 
+<a name="viewleagueinformation"></a>
 ## View league information
 ```python
 >>> league.year
@@ -66,6 +80,7 @@ League(La Lega di Cugino, 2019)
 {1: Team(T.Y. Very Much), 2: Team(Home Sweet Mahomes), ... teamId: Team(Team n Name)}
 ```
 
+<a name="viewteaminformation"></a>
 ## View team information
 ```python
 >>> team = league.teams[1]
@@ -91,6 +106,7 @@ Under team.rosters, each value in the dictionary contains a list of player objec
 {1: [Player(Ezekiel Elliot), Player(Kyler Murray), .....], 2: [Player(Todd Gurley), Player(Kyler Murray) .... ] 
 ```
 
+<a name="viewplayerinformation"></a>
 ## View player information
 ```python
 >>> player = team.rosters[1][0]
@@ -106,6 +122,7 @@ Under team.rosters, each value in the dictionary contains a list of player objec
 True
 ```
 
+<a name="viewstatsforaspecificweek"></a>
 ## View stats for a specific week
 The two main purposes for this package is to be able to quickly and seamlessly view stats for a team or league that ESPN doesn't readily compute.
 Using the 'printWeeklyStats' method, you can view a weekly report for a certain week.
@@ -156,6 +173,8 @@ Worst DST:             Vincent
 Worst K:               Marc
 Worst Bench:           Gabriel
 ```
+
+<a name="powerrankings"></a>
 ## Power Rankings
 This package has its own formula for calculating power rankings each week. 
 The computation takes in a team's performance over the entire season (with more weight on the recent weeks), while also accounting for luck.
@@ -175,6 +194,7 @@ The Kamara adds 10 pounds       65.41  Julia Selleck
 Can you Diggs this?             64.38  Ellie Knecht
 ```
 
+<a name="luckindex"></a>
 ## Luck Index
 This package has its own formula for calculating how "lucky" a team has been over the course of a season. Each week, every team is assigned a luck score
 based on how they did relative to the rest of the league and the result of their weekly matchup. Teams that performed poorly but still won are assigned 
