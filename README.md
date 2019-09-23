@@ -10,15 +10,18 @@ This project was inspired and based off of [rbarton65/espnff](https://github.com
 Additional help/ideas were received from [cwendt94/ff-espn-api](https://github.com/cwendt94/ff-espn-api)
 
 ## Table of Contents  
-* [Fetch public leagues](##fetchpublicleagues)
-* [Fetch private leagues](##fetchprivateleagues)
-* [View league information](##viewleagueinformation)
-* [View team information](##viewteaminformation)
-* [View player information](##viewplayerinformation)
-* [View stats for a specific week](##viewstatsforaspecificweek)
-* [Power Rankings](##powerrankings)
-* [Luck Index](##luckindex)
-* [Projected Standings](##projectedstandings)
+* Fetching league
+  * [Fetch public leagues](##fetchpublicleagues)
+  * [Fetch private leagues](##fetchprivateleagues)
+* Viewing league information
+  * [View league information](##viewleagueinformation)
+  * [View team information](##viewteaminformation)
+  * [View player information](##viewplayerinformation)
+  * [View stats for a specific week](##viewstatsforaspecificweek)
+* Analytic Methods
+  * [Power Rankings](##powerrankings)
+  * [Luck Index](##luckindex)
+  * [Projected Standings](##projectedstandings)
 
 
 <a name="fetchpublicleagues"></a>
