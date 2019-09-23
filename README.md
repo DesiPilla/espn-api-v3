@@ -201,8 +201,11 @@ Can you Diggs this?             64.38  Ellie Knecht
 ## Luck Index
 This package has its own formula for calculating how "lucky" a team has been over the course of a season. Each week, every team is assigned a luck score
 based on how they did relative to the rest of the league and the result of their weekly matchup. Teams that performed poorly but still won are assigned 
-a higher score, while teams that did well but still lost are assigned lower scores. Over the course of the season, the luck scores are totaled and the luck
-index is compiled. The luck index can be viewed using the `printLuckIndex` method.
+a higher score, while teams that did well but still lost are assigned lower scores. The other determinant in a team's weekly luck score is how well they performed
+relative to their average performance, as well as how their opponent performed relative to their average score. Team's who scored exceptionally higher than they
+normally do will have a higher luck score, and vice versa. Likewise, team's who face opponents that over-acheive relative to their typical performance will have
+a lower (or more 'unlucky') score. Over the course of the season, the luck scores are totaled and the luck index is compiled. The luck index can be viewed using
+ the `printLuckIndex` method.
 ```python
 >>> league.printLuckIndex(2)
 Through Week 2

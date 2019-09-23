@@ -283,20 +283,101 @@ class League():
             finish += self.weeklyFinish(self.teams[teamId].schedule[wk].teamId, wk)
         return finish / week     
     
+    def teamWeeklyPRank(self, teamId, week):
+        ''' Returns the power rank score of a team for a certain week. '''
+        team = self.teams[teamId]
+        
+        # Points for score
+        bestWeeklyScore = self.sortWeeklyScore(week)[1].scores[week]
+        score = self.weeklyScore(teamId, week)
+        pfScore = score / bestWeeklyScore * 70
+        
+        # Team Record score
+        oppScore = team.schedule[week].scores[week]
+        if score > oppScore:
+            win = 5             # Team won this week
+        if score == oppScore:
+            win = 2.5           # Team tied this week
+        else:
+            win = 0             # Team lost this week
+        bestScore = team.bestLineup(week)    # Best possible lineup for team
+        oppBestScore = team.schedule[week].bestLineup(week)
+        if bestScore > oppBestScore:
+            luck = 10           # Team should have won if both lineups were their best
+        elif bestScore > oppScore:
+            luck = 5            # Team could have won if their lineup was its best
+        else: 
+            luck = 0            # Team could not have won
+        multiplier = 1 + (win + luck) / 100
+        
+        # Best lineup score
+        bestBestWeeklyScore = self.sortBestLineup(week)[1].scores[week]
+        bestLineupScore = bestScore / bestBestWeeklyScore * 20
+        
+        # Dominance score
+        if score > oppScore:
+            dominance = (score - oppScore) / score * 10
+        else:
+            dominance = 0
+            
+        return pfScore*multiplier + bestLineupScore + dominance
+    
+    def teamTotalPRank(self, teamId, week):
+        ''' Gets overall power ranking for a team. ''' 
+        pRank = 0
+        for wk in range(1, week+1):
+            pRank += self.teamWeeklyPRank(teamId, wk)
+        pRank += self.teamWeeklyPRank(teamId, week)*2
+        if week > 1:
+            pRank += self.teamWeeklyPRank(teamId, week-1)
+            week += 1
+        return pRank / (week + 2)
+    
+    def printPowerRankings(self, week):
+        ''' Print my power rankings in a nice table. '''
+        powerRankings = []
+        for teamId in range(1, self.numTeams + 1):
+            powerRankings += [[self.teamTotalPRank(teamId, week), self.teams[teamId]]]
+        sortedRankings = sorted(powerRankings, key=lambda x: x[0], reverse=True)        
+        powerRankingsTable = []
+        for team in sortedRankings:
+            powerRankingsTable += [[ team[1].teamName, team[0], team[1].owner ]]
+        print('\n','Week ',week, '\n', table( powerRankingsTable, headers = ['Team', 'Power Index', 'Owner'], floatfmt = '.2f'))
+    
     def weeklyLuckIndex(self, teamId, week):
         ''' This function returns an index quantifying how 'lucky' a team was in a given week '''
         team = self.teams[teamId]
-        teamScore = team.scores[week]
+        opp = team.schedule[week]
+                
+        # Luck Index based on where the team and its opponent finished compared to the rest of the league  
         result = team.weeklyResult(week)
         place = self.weeklyFinish(teamId, week)
         if result == 1:                                 # If the team won...
-            odds = (place - 1) / (self.numTeams - 1)    # Odds of this team playing a team with a higher score than it
+            odds = (place - 1) / (self.numTeams - 2)    # Odds of this team playing a team with a higher score than it
             luckIndex = 5*odds                          # The worse the team ranked, the luckier they were to have won
         else:                                                           # if the team lost or tied...
-            odds = (self.numTeams - place) / (self.numTeams - 1)    # Odds of this team playing a team with a lower score than it
+            odds = (self.numTeams - place) / (self.numTeams - 2)    # Odds of this team playing a team with a lower score than it
             luckIndex = -5*odds                                          # The better the team ranked, the unluckier they were to have lost or tied
         if result == 0.5:                               # If the team tied...
             luckIndex /= 2                              # They are only half as unlucky, because tying is not as bad as losing
+            
+        # Luck Index based on how the team scored compared to its opponent
+        teamScore = team.scores[week]
+        avgScore = team.avgPointsFor(week)
+        stdevScore = team.stdevPointsFor(week)
+        if stdevScore != 0:
+            zTeam = (teamScore - avgScore) / stdevScore     # Get z-score of the team's performance
+            effect = zTeam/(3*stdevScore)*2                 # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
+            luckIndex += (effect / abs(effect)) * min(abs(effect), 2)   # The maximum effect is +/- 2
+        
+        oppScore = opp.scores[week]
+        avgOpp = opp.avgPointsAllowed(week)
+        stdevOpp = opp.stdevPointsAllowed(week)
+        if stdevOpp != 0:
+            zOpp = (oppScore - avgOpp) / stdevOpp           # Get z-score of the opponent's performance
+            effect = zOpp/(3*stdevOpp)*2                    # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index     
+            luckIndex -= (effect / abs(effect)) * min(abs(effect), 2)   # The maximum effect is +/- 2
+      
         return luckIndex
                          
     def seasonLuckIndex(self, teamId, week):
@@ -511,64 +592,3 @@ class League():
         # ['Most Injuries: ', self.sortNumOut(week)[last].owner.split(' ')[0]],
         # ['Least Injuries: ', self.sortNumOut(week)[0].owner.split(' ')[0]],
         return
-    
-    def teamWeeklyPRank(self, teamId, week):
-        ''' Returns the power rank score of a team for a certain week. '''
-        team = self.teams[teamId]
-        
-        # Points for score
-        bestWeeklyScore = self.sortWeeklyScore(week)[1].scores[week]
-        score = self.weeklyScore(teamId, week)
-        pfScore = score / bestWeeklyScore * 70
-        
-        # Team Record score
-        oppScore = team.schedule[week].scores[week]
-        if score > oppScore:
-            win = 5             # Team won this week
-        if score == oppScore:
-            win = 2.5           # Team tied this week
-        else:
-            win = 0             # Team lost this week
-        bestScore = team.bestLineup(week)    # Best possible lineup for team
-        oppBestScore = team.schedule[week].bestLineup(week)
-        if bestScore > oppBestScore:
-            luck = 10           # Team should have won if both lineups were their best
-        elif bestScore > oppScore:
-            luck = 5            # Team could have won if their lineup was its best
-        else: 
-            luck = 0            # Team could not have won
-        multiplier = 1 + (win + luck) / 100
-        
-        # Best lineup score
-        bestBestWeeklyScore = self.sortBestLineup(week)[1].scores[week]
-        bestLineupScore = bestScore / bestBestWeeklyScore * 20
-        
-        # Dominance score
-        if score > oppScore:
-            dominance = (score - oppScore) / score * 10
-        else:
-            dominance = 0
-            
-        return pfScore*multiplier + bestLineupScore + dominance
-    
-    def teamTotalPRank(self, teamId, week):
-        ''' Gets overall power ranking for a team. ''' 
-        pRank = 0
-        for wk in range(1, week+1):
-            pRank += self.teamWeeklyPRank(teamId, wk)
-        pRank += self.teamWeeklyPRank(teamId, week)*2
-        if week > 1:
-            pRank += self.teamWeeklyPRank(teamId, week-1)
-            week += 1
-        return pRank / (week + 2)
-    
-    def printPowerRankings(self, week):
-        ''' Print my power rankings in a nice table. '''
-        powerRankings = []
-        for teamId in range(1, self.numTeams + 1):
-            powerRankings += [[self.teamTotalPRank(teamId, week), self.teams[teamId]]]
-        sortedRankings = sorted(powerRankings, key=lambda x: x[0], reverse=True)        
-        powerRankingsTable = []
-        for team in sortedRankings:
-            powerRankingsTable += [[ team[1].teamName, team[0], team[1].owner ]]
-        print('\n','Week ',week, '\n', table( powerRankingsTable, headers = ['Team', 'Power Index', 'Owner'], floatfmt = '.2f')) 

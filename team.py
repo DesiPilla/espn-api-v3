@@ -1,3 +1,4 @@
+import numpy as np
 from player import Player
 from tabulate import tabulate as table
 
@@ -176,21 +177,29 @@ class Team():
         else:
             return 0.5
         
-    def averagePointsFor(self, week):
+    def avgPointsFor(self, week):
         ''' This function returns the average points scored by the team through a certain week. '''
-        score = 0
-        for wk in range(1, week + 1):
-            score += self.scores[wk]
-        return score / week
+        return np.average(list(self.scores.values())[:week])
     
-    def averagePointsAllowed(self, week):
+    def stdevPointsFor(self, week):
+        ''' This function returns the standard deviation of the points scored by the team through a certain week. '''
+        return np.std(list(self.scores.values())[:week])
+    
+    def avgPointsAllowed(self, week):
         ''' This function returns the average points scored by the team's opponents through a certain week. '''
         score = 0
         for wk in range(1, week + 1):
             score += self.schedule[wk].scores[wk]
-        return score / week    
+        return score / week  
     
-    def averageLineupSetting(self, week):
+    def stdevPointsAllowed(self, week):
+        ''' This function returns the standard deviation of the points scored by the team's opponents through a certain week. '''
+        scores = []
+        for wk in range(1, week + 1):
+            scores += [self.schedule[wk].scores[wk]]
+        return np.std(scores)
+    
+    def avgLineupSetting(self, week):
         ''' This function returns the average difference between the team's best possible score
         and their actual score. Higher values mean the team's lineup was less optimized. '''
         difference = 0
