@@ -195,3 +195,24 @@ The Kamara adds 10 pounds         -2.14  Julia Selleck
 All Tom No Jerry                  -3.57  Vincent Chirico
 ```
  
+## Projected Standings
+Using the power rankings calculated by this package, projections for the final standings can be calculated. The `printExpectedStandings` method can be called to 
+view the expected standings based on the power rankings through a certain week. The current standings are found, and results of the following matchups are predicted.
+For example, if week 2 has just concluded, the most up-to-date projections can be viewed as follows:
+
+```python
+>>> league.printExpectedStandings(2)
+Week 2 
+ Team                         Wins    Losses    Ties  Owner
+-------------------------  ------  --------  ------  ----------------
+T.Y. Very Much                 12         0       0  Desi Pilla
+Sony with a Chance             11         1       0  Isabella Chirico
+Home Sweet Mahomes              8         4       0  Nikki  Pilla
+The Adams Family                6         6       0  Marc Chirico
+Good Ole   Christian Boys       5         7       0  Gabriel S
+All Tom No Jerry                3         9       0  Vincent Chirico
+Can you Diggs this?             3         9       0  Ellie Knecht
+The Kamara adds 10 pounds       0        12       0  Julia Selleck
+
+*These standings do not account for tiesbreakers
+```

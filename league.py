@@ -329,6 +329,55 @@ class League():
                 losses += 1
         return wins, losses        
     
+    def expectedFinish(self, teamId, week):
+        ''' Inputs: teamId, week (that just passed)
+            Returns: numWins, numLosses, numTies
+            This function estimates the results of every remaining matchup for a team
+            based on the team's and its opponent's power ranking. These results are 
+            added to the team's current matchup results.
+        '''
+        team = self.teams[teamId]
+        wins = team.wins
+        losses = team.losses
+        ties = team.ties
+        pRank = self.teamTotalPRank(teamId, week)
+        for wk in range(week + 1, self.regSeasonWeeks + 1):
+            oppId = self.getTeamId(team.schedule[wk])
+            oppPRank = self.teamTotalPRank(oppId, week)
+            if pRank > oppPRank:
+                wins += 1
+            elif pRank < oppPRank:
+                losses += 1
+            else:
+                ties += 1
+        return wins, losses, ties
+    
+    def printExpectedStandings(self, week):
+        ''' Inputs: week that just passed
+            Outputs: None (prints expected standings)
+            This function predicts the expected final standings for a league based
+            on the power rankings through a given week.
+            This function does NOT account for tiebreakers.
+        '''
+        results = []
+        for teamId in range(1, self.numTeams + 1):
+            wins, losses, ties = self.expectedFinish(teamId, week)
+            results += [[self.teams[teamId], wins, losses, ties]]
+        results.sort(key=lambda x: x[1], reverse=True)              # Sort first based on win total
+        results.sort(key=lambda x: x[2], reverse=False)             # Sort second based on loss total
+        resultsTable = []
+        for team in results:
+            resultsTable += [[ team[0].teamName, team[1], team[2], team[3], team[0].owner ]]
+        print('\nWeek', week, '\n', table( resultsTable, headers = ['Team', 'Wins', 'Losses', 'Ties', 'Owner'], floatfmt = '.2f'), '\n\n*These standings do not account for tiesbreakers')     
+            
+    def getTeamId(self, team):
+        ''' Inputs: Team object
+            Outputs: teamId
+            This function finds and returns the teamId of a Team object
+        '''
+        for i in range(1, self.numTeams + 1):
+            if self.teams[i] == team:
+                return self.adjustIds[self.teams[i].teamId]
     
 
     ''' **************************************************
@@ -433,7 +482,7 @@ class League():
     def printWeeklyStats(self, week):
         ''' Prints weekly stat report for a league during a given week. '''
         last = self.numTeams
-        stats_table = [['Most Points Scored: ', self.sortWeeklyScore(week)[1].owner.split(' ')[0]],
+        statsTable = [['Most Points Scored: ', self.sortWeeklyScore(week)[1].owner.split(' ')[0]],
                        ['Least Points Scored: ', self.sortWeeklyScore(week)[last].owner.split(' ')[0]],
                        ['Best Possible Lineup: ', self.sortBestLineup(week)[1].owner.split(' ')[0]],
                        ['Best Trio: ', self.sortBestTrio(week)[1].owner.split(' ')[0]],
@@ -457,7 +506,7 @@ class League():
                        ['Worst DST: ', self.sortPositionScore(week, 16)[last].owner.split(' ')[0]],
                        ['Worst K: ', self.sortPositionScore(week, 17)[last].owner.split(' ')[0]],
                        ['Worst Bench: ', self.sortBenchPoints(week)[last].owner.split(' ')[0]]]
-        print('\n', table(stats_table, headers = ['Week ' + str(week), '']))   
+        print('\n', table(statsTable, headers = ['Week ' + str(week), '']))   
     
         # ['Most Injuries: ', self.sortNumOut(week)[last].owner.split(' ')[0]],
         # ['Least Injuries: ', self.sortNumOut(week)[0].owner.split(' ')[0]],
@@ -505,8 +554,8 @@ class League():
     def teamTotalPRank(self, teamId, week):
         ''' Gets overall power ranking for a team. ''' 
         pRank = 0
-        for w in range(1, week+1):
-            pRank += self.teamWeeklyPRank(teamId, w)
+        for wk in range(1, week+1):
+            pRank += self.teamWeeklyPRank(teamId, wk)
         pRank += self.teamWeeklyPRank(teamId, week)*2
         if week > 1:
             pRank += self.teamWeeklyPRank(teamId, week-1)
@@ -521,7 +570,5 @@ class League():
         sortedRankings = sorted(powerRankings, key=lambda x: x[0], reverse=True)        
         powerRankingsTable = []
         for team in sortedRankings:
-            powerRankingsTable += [[ team[1].teamName,
-                                       team[0],
-                                       team[1].owner ]]
+            powerRankingsTable += [[ team[1].teamName, team[0], team[1].owner ]]
         print('\n','Week ',week, '\n', table( powerRankingsTable, headers = ['Team', 'Power Index', 'Owner'], floatfmt = '.2f')) 

@@ -1,4 +1,5 @@
 from player import Player
+from tabulate import tabulate as table
 
 class Team():
     """
@@ -144,24 +145,22 @@ class Team():
     
     def printWeeklyStats(self, week):
         ''' Print the weekly stats for the team during a given week. '''
-        print( '----------------------------' + '\n' + \
-            self.owner[0] + ' Week ' + str(week) + '\n' + \
-            '----------------------------' + '\n' + \
-            'Week Score: ' + str(self.scores[week]) + '\n' + \
-            'Best Possible Lineup: ' + str(self.bestLineup(week)) + '\n' + \
-            'Opponent Score: ' + str(self.schedule[week].scores[week]) + '\n' + \
-            'Weekly Finish: ' + str(self.weeklyFinish(week)) + '\n' + \
-            'Best Trio: ' + str(self.bestTrio(week)) + '\n' + \
-            'Number of Injuries: ' + str(self.numOut(week)) + '\n' + \
-            'Starting QB pts: ' + str(self.avgStartingScore(week, 0)) + '\n' + \
-            'Avg. Starting RB pts: ' + str(self.avgStartingScore(week, 2)) + '\n' + \
-            'Avg. Starting WR pts: ' + str(self.avgStartingScore(week, 4)) + '\n' + \
-            'Starting TE pts: ' + str(self.avgStartingScore(week, 6)) + '\n' + \
-            'Starting Flex pts: ' + str(self.avgStartingScore(week, 23)) + '\n' + \
-            'Starting DST pts: ' + str(self.avgStartingScore(week, 16)) + '\n' + \
-            'Starting K pts: ' + str(self.avgStartingScore(week, 17)) + '\n' + \
-            'Total Bench pts: ' + str(self.totalBenchPoints(week)) + '\n' + \
-            '----------------------------')    
+        statsTable = [['Week Score: ', self.scores[week]],
+                      ['Best Possible Lineup: ', self.bestLineup(week)],
+                      ['Opponent Score: ', self.schedule[week].scores[week]],
+                      ['Weekly Finish: ', self.weeklyFinish(week)],
+                      ['Best Trio: ', self.bestTrio(week)],
+                      ['Number of Injuries: ', self.numOut(week)],
+                      ['Starting QB pts: ', self.avgStartingScore(week, 0)],
+                      ['Avg. Starting RB pts: ', self.avgStartingScore(week, 2)],
+                      ['Avg. Starting WR pts: ', self.avgStartingScore(week, 4)],
+                      ['Starting TE pts: ', self.avgStartingScore(week, 6)],
+                      ['Starting Flex pts: ', self.avgStartingScore(week, 23)],
+                      ['Starting DST pts: ', self.avgStartingScore(week, 16)],
+                      ['Starting K pts: ', self.avgStartingScore(week, 17)],
+                      ['Total Bench pts: ', self.totalBenchPoints(week)]]
+        print('\n', table(statsTable, headers = ['Week ' + str(week), ''], numalign = 'left'))   
+
     
     def weeklyResult(self, week):
         ''' For a given week:
