@@ -30,9 +30,7 @@ year = 2019
 cookies = {'swid' : espnAuth, 'espn_s2' : espn_s2};
 url = getUrl(year, league_id)
 
-matt_client = Authorize('mattricupero@gmail.com', 'mar627')
-matt_cookies = {'swid' : matt_client.swid, 'espn_s2' : matt_client.espn_s2};
-mattUrl = getUrl(year, matt_league_id_1)
+
 
 
 if False:
@@ -57,22 +55,7 @@ if False:
     leg = League(league_id, 2018)
     print(leg)
 
-if False:
-    #matchups = requests.get(mattUrl, cookies = matt_cookies, params = { 'view' : 'mMatchupScore'}).json()
-    #teams = requests.get(mattUrl, cookies = matt_cookies, params = {'view' : 'mTeam'}).json()
-    leg = League(matt_league_id_1, 2019, 'mattricupero@gmail.com', 'mar627')
 
-if False:
-    deniz_id = 5194948
-    deniz_user = 'denizutku.aslan@gmail.com'
-    deniz_pass = 'Crew4132'
-    leg = League(deniz_id, 2019, deniz_user, deniz_pass)
-    
-if True:
-    pete_id = 79019832
-    pete_user = 'whiteshadowxiv@hotmail.com'
-    pete_pass = 'SPACE!1993rocket'
-    leg = League(pete_id, 2019, pete_user, pete_pass)  
 
 if False:
     t = leg.teams[1]
