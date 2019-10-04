@@ -34,12 +34,20 @@ class Team():
         self.owner = owner
         return
     
-    def addMatchup(self, teamData, week):
+    def addMatchup(self, teamData, week, year):
         ''' Currently only adds a team's score for a given week to its scores{} attribute 
-        teamData = matchupData['schedule'][m]['away' or 'home']
+        >= 2019: teamData = matchupData['schedule'][m]['away' or 'home']
+        < 2019:  teamData = rosterData['teams'][teamId - 1]['roster']
         '''
-        self.scores[week] = round(teamData['totalPoints'],1)   
-        self.fetchWeeklyRoster(teamData['rosterForCurrentScoringPeriod']['entries'], week)
+        if year >= 2019:
+            self.scores[week] = round(teamData['totalPoints'],1)   
+            self.fetchWeeklyRoster(teamData['rosterForCurrentScoringPeriod']['entries'], week)
+        else:
+            self.fetchWeeklyRoster(teamData, week)
+            self.scores[week] = 0
+            for p in self.rosters[week]:
+                if p.isStarting:
+                    self.scores[week] += p.score
         
         return
 
