@@ -11,5 +11,5 @@ password = 'password';
 league_id = 1086064
 year = 2019
 
-league = League(league_id, 2019, 'desidezdez@gmail.com', 'Italy100@')
+league = League(league_id, 2019, username, password)
 print(league)
