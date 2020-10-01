@@ -13,16 +13,18 @@ import matplotlib.pyplot as plt
 
 class League():
     
-    def __init__(self, league_id, year, username = None, password = None):
+    def __init__(self, league_id, year, username=None, password=None, swid=None, espn_s2=None):
         self.league_id = league_id
         self.year = year
-        if username and password:
+        if username and password and not (swid or espn_s2):
             client = Authorize(username, password)
             self.swid = client.swid
             self.espn_s2 = client.espn_s2
         else:
-            self.swid = None
-            self.espn_s2 = None            
+            self.username = username
+            self.password = password            
+            self.swid = swid
+            self.espn_s2 = espn_s2            
 
         buildLeague(self)
         return

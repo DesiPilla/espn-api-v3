@@ -22,7 +22,7 @@ def buildLeague(league):
         league.url = "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/" + \
             str(league.league_id) + "?seasonId=" + str(league.year)
     
-    league.cookies = {'swid' : league.swid, 'espn_s2' : league.espn_s2};
+    league.cookies = {'swid' : league.swid, 'espn_s2' : league.espn_s2}
     settings = requests.get(league.url, cookies = league.cookies, params = {'view' : 'mSettings'}).json()
     
     # Try navigating the settings tree. If an error occurs, the league is not accessible
@@ -188,3 +188,19 @@ def getWeeklyProjections(league):
                 player.testName = teamData[i]['playerPoolEntry']['player']['fullName']
                 i += 1
     return
+
+
+def getUrl(year, league_id):
+    '''
+    Define endpoint for accessing the ESPN API.
+    For seasons that started in 2018 and earlier, use the ESPN v2 endpoint.
+    For seasons that started in 2019 and later, use the ESPN v3 endpoint.
+    '''
+    url = ''
+    if (year >= 2019):         # ESPN API v3
+        url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/" + \
+            str(year) + "/segments/0/leagues/" + str(league_id)
+    else:                      # ESPN API v2
+        url = "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/" + \
+            str(league_id) + "?seasonId=" + str(year)
+    return url
