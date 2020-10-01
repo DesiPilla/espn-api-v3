@@ -31,19 +31,7 @@ class League():
     def __repr__(self):
         """This is what is displayed when print(league) is entered """
         return 'League(%s, %s)' % (self.settings['name'], self.year, ) 
-    
-    def getRosterSettings(self):
-        return getRosterSettings(self)
-    
-    def getTeamNames(self):
-        return getTeamNames(self)
-    
-    def buildTeams(self):
-        return buildTeams(self)
-            
-    def loadWeeklyRosters(self, week):
-        return loadWeeklyRosters(self, week)
-    
+ 
     
     ''' **************************************************
         *             Begin printing methods             *

@@ -88,11 +88,19 @@ class LoginDisplay(GridLayout):
         # TODO: What if league fetch fails
         if True:
             leagueId = int(self.leagueId.text)
-            year = 2019
+            year = 2020
             username = self.username.text
             password = self.password.text
             self.league = League(leagueId, year, username, password)    # Fetch league from input information
-        
+        elif False:
+            self.fetchLeagueButton.text = "Fetching league..."
+            self.league = League(79019832, 2019, 'whiteshadowxiv@hotmail.com', 'SPACE!1993rocket')     
+        elif True:
+            self.fetchLeagueButton.text = "Fetching league..."
+            self.league = League(5194948, 2019, 'denizutku.aslan@gmail.com', 'Crew4132')             
+        else: 
+            self.fetchLeagueButton.text = "Fetching league..."
+            self.league = League(1086064, 2019, 'desidezdez@gmail.com', 'Italy100@')
         
         self.fetchLeagueButton.text = "League Fetched!"
         
@@ -112,8 +120,8 @@ class LoginDisplay(GridLayout):
     def add_stats(self):      
         # Create the widget where the buttons for generating stats will be
         statButtons = GridLayout()
-        statButtons.rows = 2
-        statButtons.cols = 2
+        statButtons.rows = 3
+        statButtons.cols = 3
         
         # Create the printPowerRankings button
         self.printPowerRankingsButton = Button(text = "View Power Rankings")
@@ -133,13 +141,20 @@ class LoginDisplay(GridLayout):
         # Create the printWeeklyStats button
         self.printWeeklyStatsButton = Button(text = "View Weekly Awards")
         statButtons.add_widget(self.printWeeklyStatsButton)
-        self.printWeeklyStatsButton.bind(on_release = self.printWeeklyStats)        
+        self.printWeeklyStatsButton.bind(on_release = self.printWeeklyStats)   
+        
+        # Create the printCurrentStandings button
+        self.printCurrentStandingsButton = Button(text = "View Current Standnigs")
+        statButtons.add_widget(self.printCurrentStandingsButton)
+        self.printCurrentStandingsButton.bind(on_release = self.printCurrentStandings)           
+        
         self.infoAndStats.add_widget(statButtons)
         
         # Create a location for stats to be stored later
         self.statsTable = GridLayout()
         self.add_widget(self.statsTable)
-        self.statsTable.row_default_height = 20                 # Set the default height of each row to 20 px      
+        self.statsTable.row_default_height = 20                 # Set the default height of each row to 20 px 
+        self.statsTable.row_force_default = True
         return
         
     def printPowerRankings(self, instance):
@@ -160,7 +175,6 @@ class LoginDisplay(GridLayout):
             self.statsTable.add_widget(Label(text = powerRankings[i][0]))
             self.statsTable.add_widget(Label(text = str(round(powerRankings[i][1], 2))))
             self.statsTable.add_widget(Label(text = powerRankings[i][2]))        
-        
         return
     
     def printLuckIndex(self, instance):
@@ -181,11 +195,37 @@ class LoginDisplay(GridLayout):
             self.statsTable.add_widget(Label(text = luckIndex[i][0]))
             self.statsTable.add_widget(Label(text = str(round(luckIndex[i][1], 2))))
             self.statsTable.add_widget(Label(text = luckIndex[i][2]))        
-        
         return    
     
+    def printCurrentStandings(self, instance):
+        # Fetch the most recent standings for the league
+        currentStandings = self.league.printCurrentStandings()
+        
+        self.statsTable.clear_widgets()                     # Clear the stats table
+        self.statsTable.cols = 6                            # Add 6 columns
+        self.statsTable.rows = self.league.numTeams + 1     # Create enough rows for every team plus a header  
+        
+        # Add headers to the expected standings table
+        self.statsTable.add_widget(Label(text = "Team"))
+        self.statsTable.add_widget(Label(text = "Wins"))
+        self.statsTable.add_widget(Label(text = "Losses"))
+        self.statsTable.add_widget(Label(text = "Ties"))
+        self.statsTable.add_widget(Label(text = "Points Scored"))
+        self.statsTable.add_widget(Label(text = "Owner"))
+        
+        # Add the current standings for each team
+        for i in range(self.league.numTeams):
+            self.statsTable.add_widget(Label(text = currentStandings[i][0]))
+            self.statsTable.add_widget(Label(text = str(currentStandings[i][1])))
+            self.statsTable.add_widget(Label(text = str(currentStandings[i][2])))  
+            self.statsTable.add_widget(Label(text = str(currentStandings[i][3])))
+            self.statsTable.add_widget(Label(text = str(round(currentStandings[i][4], 2))))
+            self.statsTable.add_widget(Label(text = currentStandings[i][5]))
+        return        
+    
+    
     def printExpectedStandings(self, instance):
-        # Fetch the most recent luck index for the league
+        # Fetch the most recent expected standings for the league
         expectedStandings = self.league.printExpectedStandings(self.league.currentWeek - 1)
         
         self.statsTable.clear_widgets()                     # Clear the stats table
@@ -206,11 +246,10 @@ class LoginDisplay(GridLayout):
             self.statsTable.add_widget(Label(text = str(expectedStandings[i][2])))  
             self.statsTable.add_widget(Label(text = str(expectedStandings[i][3])))
             self.statsTable.add_widget(Label(text = expectedStandings[i][4]))
-        
         return        
 
     def printWeeklyStats(self, instance):
-        # Fetch the most recent luck index for the league
+        # Fetch the most recent weekly stats for the league
         weeklyStats = self.league.printWeeklyStats(self.league.currentWeek - 1)
         
         self.statsTable.clear_widgets()                     # Clear the stats table
@@ -218,7 +257,7 @@ class LoginDisplay(GridLayout):
         self.statsTable.rows = 20                           # Create enough rows for every team plus a header  
         self.statsTable.do_scroll_y = True
               
-        # Add the expected standings for each team
+        # Add the weekly stats for each team
         self.statsTable.add_widget(Label(text = weeklyStats[0][0]))  
         self.statsTable.add_widget(Label(text = str(weeklyStats[0][1])))
         self.statsTable.add_widget(Label(text = "|")) 
@@ -230,12 +269,12 @@ class LoginDisplay(GridLayout):
         self.statsTable.add_widget(Label(text = "----------------"))
         self.statsTable.add_widget(Label(text = "----------------"))
         
-        for i in range(3, 7):
+        for i in [3, 5]:
             self.statsTable.add_widget(Label(text = weeklyStats[i][0]))  
             self.statsTable.add_widget(Label(text = str(weeklyStats[i][1])))
             self.statsTable.add_widget(Label(text = "|")) 
-            self.statsTable.add_widget(Label(text = weeklyStats[i][0]))  
-            self.statsTable.add_widget(Label(text = str(weeklyStats[i][1])))            
+            self.statsTable.add_widget(Label(text = weeklyStats[i + 1][0]))  
+            self.statsTable.add_widget(Label(text = str(weeklyStats[i + 1][1])))            
         
         for i in range(8, 16):
             self.statsTable.add_widget(Label(text = weeklyStats[i][0]))
@@ -243,7 +282,6 @@ class LoginDisplay(GridLayout):
             self.statsTable.add_widget(Label(text = "|"))  
             self.statsTable.add_widget(Label(text = weeklyStats[i + 9][0])) 
             self.statsTable.add_widget(Label(text = str(weeklyStats[i + 9][1])))          
-        
         return        
 
 app = MainApp()

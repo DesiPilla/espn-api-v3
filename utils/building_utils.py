@@ -1,4 +1,5 @@
 import requests
+import datetime
 
 # Import the Team class (this is complicated because team.py is in the parent folder)
 import os, sys
@@ -14,7 +15,7 @@ from team import Team
 def buildLeague(league):
     # ESPN Fantasy Football API v3 came out for seasons in 2019 and beyond. v2 is used up until 2018
     print('Fetching league...')
-    if (league.year >= 2019):         # ESPN API v3
+    if (league.year >= (datetime.datetime.now() - datetime.timedelta(180)).year):         # ESPN API v3
         league.url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/" + \
             str(league.year) + "/segments/0/leagues/" + str(league.league_id)
     else:                           # ESPN API v2
@@ -47,9 +48,10 @@ def buildLeague(league):
         league.matchupData = league.matchupData[0]
             
     # Build league
-    league.getTeamNames() 
-    league.getRosterSettings() 
-    league.buildTeams()
+    getTeamNames(league) 
+    getRosterSettings(league) 
+    buildTeams(league)
+    #getWeeklyProjections(league)
     print('League successfully built!')    
     return
 
@@ -172,3 +174,17 @@ def loadWeeklyRosters(league, week):
     for teamId in league.teams:                                   # Fetch the roster of each team for the given week                 
         league.teams[teamId].fetchWeeklyRoster(rosterData['teams'][league.teams[teamId].teamId - 1]['roster'], week)
     return  
+
+
+def getWeeklyProjections(league):
+    # NOT WORKING
+    for week in range(1, league.currentWeek):
+        data = requests.get(league.url, cookies = league.cookies, params = {'scoringPeriodId': week}).json()
+        for team in data['teams']:
+            teamData = team['roster']['entries']
+            i = 0
+            for player in team.rosters[week]:
+                player.projection = teamData[i]['playerPoolEntry']['player']['stats'][1]['appliedTotal']
+                player.testName = teamData[i]['playerPoolEntry']['player']['fullName']
+                i += 1
+    return

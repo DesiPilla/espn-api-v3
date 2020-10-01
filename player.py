@@ -5,6 +5,7 @@ class Player():
     
     def __init__(self, playerData):
         
+        self.playerData = playerData
         self.id = playerData['playerId']
         self.positionId = playerData['lineupSlotId']
         self.acquisitionType = playerData['acquisitionType']
@@ -19,7 +20,7 @@ class Player():
         self.isStarting = self.positionId not in [20, 21, 24]
         self.injured = playerData['injured']
         self.nflTeamId = playerData['proTeamId']
-        #self.rankings = playerData['rankings']                 # Don't need this... yet?
+        
         try:
             self.outlook = playerData['outlooks']                  # Words describing the outlook for this week
             self.seasonOutlook = playerData['seasonOutlook']       # Words describing the outlook for the rest of the season
