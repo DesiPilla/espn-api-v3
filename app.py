@@ -2,6 +2,7 @@ from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.uix.dropdown import DropDown
 from kivy.properties import ObjectProperty
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
@@ -14,18 +15,11 @@ from authorize import Authorize
 from team import Team
 from player import Player
 
+import pandas as pd
 
-
-#class LoginScreen(Screen):
-    
-    #def __init__(self, **kwargs):
-        #super(LoginScreen, self).__init__(**kwargs)
-        ##self.display = LoginDisplay()
-        ##self.add_widget(self.display)
-    
-        
-#class StatsScreen(Screen):
-    #pass
+# Get login credentials for leagues
+login = pd.read_csv('login.csv')
+year = 2020
 
 
 class MainApp(App):
@@ -74,33 +68,44 @@ class LoginDisplay(GridLayout):
         self.password = TextInput(multiline = False, write_tab = False, password = True, on_text_validate = self.fetch_league)
         self.login.add_widget(self.password)
         
+        # Add pre-authenticated dropdown menu
+        self.login.add_widget(Label(text = "Select a pre-authenticated league:"))        
+        #dropdown = DropDown()
+        #for user in login.id:  
+            #btn = Button(text=user, size_hint_y=None, height=44) 
+            #btn.bind(on_release = lambda btn: dropdown.select(btn.text))
+            #dropdown.add_widget(btn)  
+        #mainButton = Button(text="Select...")
+        #mainButton.bind(on_release=dropdown.open)
+        #dropdown.bind(on_select= lambda instance, x: setattr(mainButton, 'text', x))
+        #dropdown.auto_dismiss = False
+        #self.login.add_widget(dropdown)
+        
+        self.preauthenticated = TextInput(multiline=False, write_tab=False, on_text_validate = self.fetch_league)
+        self.login.add_widget(self.preauthenticated)
+        
         self.add_widget(self.login)             # Add login grid to the main page
         
         # Add the button to fetch the league
-        fetchLeagueButton = Button(text = "Fetch League")
+        fetchLeagueButton = Button(text="Fetch League")
         self.fetchLeagueButton = fetchLeagueButton
         self.add_widget(self.fetchLeagueButton)
-        self.fetchLeagueButton.bind(on_release = self.fetch_league)     # When pressed, run fetch_league function
+        self.fetchLeagueButton.bind(on_release=self.fetch_league)     # When pressed, run fetch_league function
         
                
     def fetch_league(self, instance):
         # 1086064
         # TODO: What if league fetch fails
-        if True:
-            leagueId = int(self.leagueId.text)
-            year = 2020
-            username = self.username.text
-            password = self.password.text
-            self.league = League(leagueId, year, username, password)    # Fetch league from input information
-        elif False:
-            self.fetchLeagueButton.text = "Fetching league..."
-            self.league = League(79019832, 2019, 'whiteshadowxiv@hotmail.com', 'SPACE!1993rocket')     
-        elif True:
-            self.fetchLeagueButton.text = "Fetching league..."
-            self.league = League(5194948, 2019, 'denizutku.aslan@gmail.com', 'Crew4132')             
-        else: 
-            self.fetchLeagueButton.text = "Fetching league..."
-            self.league = League(1086064, 2019, 'desidezdez@gmail.com', 'Italy100@')
+        
+        if self.preauthenticated.text:
+            _, username, password, league_id, swid, espn_s2 = login[login['id'] == self.preauthenticated.text].values[0]
+            self.league = League(league_id, year, username, password, swid, espn_s2)    # Fetch league from input information            
+        else: # self.username.text:
+                print(self.username.text)
+                league_id = int(self.leagueId.text)
+                username = self.username.text
+                password = self.password.text
+                self.league = League(league_id, year, username, password)    # Fetch league from input information        
         
         self.fetchLeagueButton.text = "League Fetched!"
         
