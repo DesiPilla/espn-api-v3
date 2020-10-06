@@ -142,6 +142,7 @@ class Team():
             if (p.positionId == slotId) and (p.isStarting):
                 count += 1
                 sum += p.score
+        count = max(count, 1)
         avgScore = round(sum/count,2)
         return avgScore
     
