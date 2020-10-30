@@ -13,7 +13,7 @@ user_id = 'desi'
 year = 2020
 
 # Get login credentials for leagues
-login = pd.read_csv('login.csv')
+login = pd.read_csv('C:\\Users\\desid\\Documents\\Fantasy_Football\\espn-api-v3\\login.csv')
 _, username, password, league_id, swid, espn_s2 = login[login['id'] == user_id].values[0]
 
 # Generate cookies payload and API endpoint

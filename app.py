@@ -1,3 +1,9 @@
+import pandas as pd
+
+# Get login credentials for leagues
+login = pd.read_csv('login.csv')
+year = 2020
+
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.button import Button
@@ -15,11 +21,7 @@ from authorize import Authorize
 from team import Team
 from player import Player
 
-import pandas as pd
 
-# Get login credentials for leagues
-login = pd.read_csv('login.csv')
-year = 2020
 
 
 class MainApp(App):

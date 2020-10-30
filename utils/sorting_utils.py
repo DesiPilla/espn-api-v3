@@ -72,7 +72,7 @@ def sortDifference(league, week):
     ''' Sorts league teams for a given week based on the the difference between their 
     best possible score and their actual score (lowest difference is first). '''
     teams = league.dictValuesToList(league.teams)
-    sortedTeams = sorted(teams, key=lambda x: x.scores[week] - x.schedule[week].scores[week], reverse=True)
+    sortedTeams = sorted(teams, key=lambda x: x.scores[week] - x.bestLineup(week), reverse=True)
     ranks = list(range(1, league.numTeams + 1))
     sortedTeamDict = league.listsToDict(ranks, sortedTeams)
     return sortedTeamDict      
