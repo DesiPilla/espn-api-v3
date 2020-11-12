@@ -68,7 +68,7 @@ team_scores_headings = list(team_scores)
 
 # get headings for up to selected week
 current_week_headings = team_scores_headings[1:week+1]
-
+print(current_week_headings)
 # set the index to the team column
 team_scores = team_scores.set_index('Team')
 
@@ -84,9 +84,14 @@ team_scores = team_scores.drop("League Average") # leageue average no longer nec
 
 # get columns for calculating power score
 last = current_week_headings[-1]
-_2last = current_week_headings[-2]
-_3last = current_week_headings[-3]
-rest = current_week_headings[0:-3]
+if len(current_week_headings) > 1:
+    _2last = current_week_headings[-2]
+
+if len(current_week_headings) > 2:
+    _3last = current_week_headings[-3]
+
+if len(current_week_headings) > 3:
+    rest = current_week_headings[0:-3]
 
 
 if len(current_week_headings) == 1:
@@ -96,7 +101,7 @@ elif len(current_week_headings) == 2:
 elif len(current_week_headings) == 3:
     team_scores['Power_Score'] = ((team_scores[last]*.25) + (team_scores[_2last]*.15) + (team_scores[_3last]*.1))/.5
 else:
-    team_scores['Power_Score'] = ((team_scores[last]*.25) + (team_scores[_2last]*.15) + (team_scores[_3last]*.1) + (team_scores[rest].mean(axis=1)*.5))/1
+    team_scores['Power_Score'] = ((team_scores[last]*.3) + (team_scores[_2last]*.15) + (team_scores[_3last]*.1) + (team_scores[rest].mean(axis=1)*.45))/1
 
 team_scores = team_scores.sort_values(by='Power_Score', ascending=False)
 
@@ -109,8 +114,12 @@ season = season[1:-1]
 team_scores['Season_avg'] = (team_scores[season].sum(axis=1)/week).round(2)
 
 print(team_scores[['Power_Score']])
-
-
+print("\n")
+print("WEEK ", week, " POWER RANKINGS")
 league.printPowerRankings(week)
+print("\n")
+print("WEEK ", week, " LUCK INDEX")
 league.printLuckIndex(week)
+print("\n")
+print("WEEK ", week, " EXPECTED STANDINGS")
 league.printExpectedStandings(week)
