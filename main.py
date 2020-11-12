@@ -35,10 +35,16 @@ print(league)
 dynastyProcessValues = pd.read_csv("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/data/files/values-players.csv")
 dynastyProcessValues = dynastyProcessValues[["player","value_1qb"]]
 
-# week = int(input("Enter Week:"))
+week = int(input("Enter Week:"))
 
+# create for loop to add team names from team objects into list
 teams = league.teams
 teams_list = list(teams.values())
+team_names = []
+for team in teams_list:
+    team_name = team.teamName
+    team_names.append(team_name)
+
 # rosters = []
 # namesRoster = []
 seasonScores = []
@@ -54,10 +60,20 @@ for team in teams_list:
     seasonScores.append(weeklyScores)
 
 seasonScores_df = pd.DataFrame(data=seasonScores)
-teams_list_df = pd.DataFrame(data=teams_list)
-print(seasonScores_df)
-print(teams_list_df)
-teams_list_df.join(seasonScores_df)
+teams_names_df = pd.DataFrame(data=team_names,columns=['Team'])
+team_scores = teams_names_df.join(seasonScores_df)
+print(team_scores)
+
+last_3 = list(team_scores)
+last_3 = last_3[-3:]
+team_scores['3_wk_roll_avg'] = (team_scores[last_3].sum(axis=1)/3).round(2)
+
+season = list(team_scores)
+season = season[1:-1]
+print(season)
+team_scores['Season_avg'] = (team_scores[season].sum(axis=1)/week).round(2)
+print(team_scores)
+
 # rosters_flat = list(chain.from_iterable(rosters))
 # print(rosters_flat)
 
