@@ -12,7 +12,7 @@ from tabulate import tabulate as table
 import matplotlib.pyplot as plt
 
 class League():
-    
+
     def __init__(self, league_id, year, username=None, password=None, swid=None, espn_s2=None):
         self.league_id = league_id
         self.year = year
@@ -22,58 +22,58 @@ class League():
             self.espn_s2 = client.espn_s2
         else:
             self.username = username
-            self.password = password            
+            self.password = password
             self.swid = swid
-            self.espn_s2 = espn_s2            
+            self.espn_s2 = espn_s2
 
         buildLeague(self)
         return
-        
-        
+
+
     def __repr__(self):
         """This is what is displayed when print(league) is entered """
-        return 'League(%s, %s)' % (self.settings['name'], self.year, ) 
- 
-    
+        return 'League(%s, %s)' % (self.settings['name'], self.year, )
+
+
     ''' **************************************************
         *             Begin printing methods             *
         ************************************************** '''
-    
+
     def printWeeklyScores(self, teamId):
         printWeeklyScores(self, teamId)
         return
-    
+
     def printWeeklyMatchResults(self, teamId):
         printWeeklyMatchResults(self, teamId)
         return
-    
+
     def printPowerRankings(self, week):
         return printPowerRankings(self, week)
-        
+
     def printLuckIndex(self, week):
         return printLuckIndex(self, week)
-    
+
     def printCurrentStandings(self):
         return printCurrentStandings(self)
-    
+
     def printExpectedStandings(self, week):
         return printExpectedStandings(self, week)
-    
+
     def printWeeklyStats(self, week):
         return printWeeklyStats(self, week)
 
-    
+
     ''' **************************************************
         *         Begin advanced stats methods           *
         ************************************************** '''
-    
+
     def weeklyScore(self, teamId, week):
         ''' Returns the number of points scored by a team's starting roster for a given week. '''
         if week <= self.currentWeek:
             return self.teams[teamId].scores[week]
         else:
             return None
-        
+
     def topPlayers(self, teamId, week, slotCategoryId, n):
         ''' Takes a list of players and returns a list of the top n players based on points scored. '''
         # Gather players of the desired position
@@ -81,7 +81,7 @@ class League():
         for player in self.teams[teamId].rosters[week]:
             if slotCategoryId in player.eligibleSlots:
                 unsortedList += [player]
-                
+
         # Sort players by points scored
         sortedList = [unsortedList[0]]
         for player in unsortedList[1:]:
@@ -92,7 +92,7 @@ class League():
             if player not in sortedList:
                 sortedList += [player]
         return sortedList[:n]
-           
+
     def bestTrio(self, teamId, week):
         ''' Returns the the sum of the top QB/RB/Reciever trio for a team during a given week. '''
         qb = self.topPlayers(teamId, week, 0, 1)[0].score
@@ -100,42 +100,42 @@ class League():
         wr = self.topPlayers(teamId, week, 4, 1)[0].score
         te = self.topPlayers(teamId, week, 6, 1)[0].score
         bestTrio = round(qb + rb + max(wr, te), 2)
-        return bestTrio  
-    
+        return bestTrio
+
     def weeklyFinish(self, teamId, week):
         ''' Returns the rank of a team based on the weekly score of a team for a given week. '''
         team = self.teams[teamId]                           # Get the Team object associated with the input teamId
-        teamIds = list(range(1, self.numTeams + 1))         # Get a list of teamIds 
+        teamIds = list(range(1, self.numTeams + 1))         # Get a list of teamIds
         teamIds.remove(team.teamId)                         # Remove the teamId of the working team from the list of teamIds
         weeklyFinish = 1                                    # Initialize the weeklyFinish to 1
         for teamId in teamIds:
             if (team.scores[week] != self.teams[teamId].scores[week]) and (team.scores[week] <= self.teams[teamId].scores[week]):
                 weeklyFinish += 1;                          # Increment the weeklyFinish for every team with a higher weekly score
         return weeklyFinish
-    
+
     def averageWeeklyFinish(self, teamId, week):
         ''' This function returns the average weekly finish of a team through a certain week '''
         finish = 0
         for wk in range(1, week + 1):
             finish += self.weeklyFinish(teamId, wk)
-        return finish / week    
-    
+        return finish / week
+
     def averageOpponentFinish(self,  teamId, week):
         ''' This function returns the average weekly finish of a team's weekly opponent through a certain week '''
         finish = 0
         for wk in range(1, week + 1):
             finish += self.weeklyFinish(self.teams[teamId].schedule[wk].teamId, wk)
-        return finish / week     
-    
+        return finish / week
+
     def teamWeeklyPRank(self, teamId, week):
         ''' Returns the power rank score of a team for a certain week. '''
         team = self.teams[teamId]
-        
+
         # Points for score
         bestWeeklyScore = sortWeeklyScore(self, week)[1].scores[week]
         score = self.weeklyScore(teamId, week)
         pfScore = score / bestWeeklyScore * 70
-        
+
         '''
         # Team Record score (REDACTED - replaced with 'Team Weekly Finish Score')
         oppScore = team.schedule[week].scores[week]
@@ -151,39 +151,39 @@ class League():
             luck = 10           # Team should have won if both lineups were their best
         elif bestScore > oppScore:
             luck = 5            # Team could have won if their lineup was its best
-        else: 
+        else:
             luck = 0            # Team could not have won
         multiplier = 1 + (win + luck) / 200
         '''
-        
+
         # Team Weekly Finish Score
         place = self.weeklyFinish(teamId, week)
         if place <= self.numTeams / 2:
             win = 5            # Team deserved to be one of the winning teams
         else:
             win = 0             # Team didn't deserve to be one of the winning teams
-        multiplier = 1 + (win) / 100        
-        
+        multiplier = 1 + (win) / 100
+
         # Best lineup score
         bestScore = team.bestLineup(week)    # Best possible lineup for team
         bestBestWeeklyScore = sortBestLineup(self, week)[1].scores[week]
         bestLineupScore = bestScore / bestBestWeeklyScore * 20
-        
+
         '''(REDACTED)
         # Dominance score
         if score > oppScore:
             dominance = (score - oppScore) / score * 10
         else:
             dominance = 0
-        '''    
-        
-        return pfScore*multiplier + bestLineupScore
-    
+        '''
+
+        return pfScore*multiplier #+ bestLineupScore
+
     def teamTotalPRank(self, teamId, week):
-        ''' Gets overall power ranking for a team. ''' 
+        ''' Gets overall power ranking for a team. '''
         if week >= self.currentWeek:
-            week = self.currentWeek - 1        
-        
+            week = self.currentWeek - 1
+
         pRank = 0
         for wk in range(1, week+1):
             pRank += self.teamWeeklyPRank(teamId, wk)
@@ -192,13 +192,13 @@ class League():
             pRank += self.teamWeeklyPRank(teamId, week-1)
             week += 1
         return pRank / (week + 2)
-    
+
     def weeklyLuckIndex(self, teamId, week):
         ''' This function returns an index quantifying how 'lucky' a team was in a given week '''
         team = self.teams[teamId]
         opp = team.schedule[week]
-    
-        # Luck Index based on where the team and its opponent finished compared to the rest of the league  
+
+        # Luck Index based on where the team and its opponent finished compared to the rest of the league
         result = team.weeklyResult(week)
         place = self.weeklyFinish(teamId, week)
         if result == 1:                                 # If the team won...
@@ -209,33 +209,33 @@ class League():
             luckIndex = -5*odds                                          # The better the team ranked, the unluckier they were to have lost or tied
         if result == 0.5:                               # If the team tied...
             luckIndex /= 2                              # They are only half as unlucky, because tying is not as bad as losing
-            
-        # Luck Index based on how the team scored compared to its opponent
-        teamScore = team.scores[week]
-        avgScore = team.avgPointsFor(week)
-        stdevScore = team.stdevPointsFor(week)
-        if stdevScore != 0:
-            zTeam = (teamScore - avgScore) / stdevScore     # Get z-score of the team's performance
-            effect = zTeam/(3*stdevScore)*2                 # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
-            luckIndex += (effect / abs(effect)) * min(abs(effect), 2)   # The maximum effect is +/- 2
-        
-        oppScore = opp.scores[week]
-        avgOpp = opp.avgPointsAllowed(week)
-        stdevOpp = opp.stdevPointsAllowed(week)
-        if stdevOpp != 0:
-            zOpp = (oppScore - avgOpp) / stdevOpp                       # Get z-score of the opponent's performance
-            effect = zOpp/(3*stdevOpp)*2                        # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index     
-            luckIndex -= (effect / abs(effect)) * min(abs(effect), 2)   # The maximum effect is +/- 2
-      
+
+    ######################    # # Luck Index based on how the team scored compared to its opponent
+        # teamScore = team.scores[week]
+        # avgScore = team.avgPointsFor(week)
+        # stdevScore = team.stdevPointsFor(week)
+        # if stdevScore != 0:
+        #     zTeam = (teamScore - avgScore) / stdevScore     # Get z-score of the team's performance
+        #     effect = zTeam/(3*stdevScore)*2                 # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
+        #     luckIndex += (effect / abs(effect)) * min(abs(effect), 2)   # The maximum effect is +/- 2
+        #
+        # oppScore = opp.scores[week]
+        # avgOpp = opp.avgPointsAllowed(week)
+        # stdevOpp = opp.stdevPointsAllowed(week)
+        # if stdevOpp != 0:
+        #     zOpp = (oppScore - avgOpp) / stdevOpp                       # Get z-score of the opponent's performance
+        #     effect = zOpp/(3*stdevOpp)*2                        # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
+        #     luckIndex -= (effect / abs(effect)) * min(abs(effect), 2)   # The maximum effect is +/- 2
+
         return luckIndex
-                         
+
     def seasonLuckIndex(self, teamId, week):
         ''' This function returns an index quantifying how 'lucky' a team was all season long (up to a certain week) '''
         luckIndex = 0
         for week in range(1, week + 1):
             luckIndex += self.weeklyLuckIndex(teamId, week)
-        return luckIndex    
-    
+        return luckIndex
+
     def resultsTopHalf(self, teamId, week):
         ''' This function returns the number of wins and losses a team would have through a certain week
         if a win was defined as scoring in the top half of teams for that week. I.e., in an 8 person league, the
@@ -247,13 +247,13 @@ class League():
                 wins += 1
             else:
                 losses += 1
-        return wins, losses        
-    
+        return wins, losses
+
     def expectedFinish(self, teamId, week):
         ''' Inputs: teamId, week (that just passed)
             Returns: numWins, numLosses, numTies
             This function estimates the results of every remaining matchup for a team
-            based on the team's and its opponent's power ranking. These results are 
+            based on the team's and its opponent's power ranking. These results are
             added to the team's current matchup results.
         '''
         team = self.teams[teamId]
@@ -270,8 +270,8 @@ class League():
                 losses += 1
             else:
                 ties += 1
-        return wins, losses, ties  
-        
+        return wins, losses, ties
+
     def getTeamId(self, team):
         ''' Inputs: Team object
             Outputs: teamId
@@ -285,35 +285,35 @@ class League():
         ''' Takes a dictionary and creates a list containing all values. '''
         list = []
         for value in dict.values():
-            list += [value]  
+            list += [value]
         return list
-    
+
     def listsToDict(self, keys, vals):
         ''' Takes a list of keys and a list of values and creates a dictionary. '''
         dict = {}
         for i in range(len(keys)):
             dict[keys[i]] = vals[i]
-        return dict    
-    
+        return dict
+
     def getPRanksList(self, teamId, week):
         '''
         Inputs: int (teamId), int (week)
         Outputs: list of floats (power rank of the team for each week through week (inclusive))
-        
+
         This function takes a teamId and week as inputs and returns a list containing
         the team's power rank for each week up to and including the input week.
         '''
         pRanks = []
         for wk in range(1, week + 1):
             pRanks.append(self.teamTotalPRank(teamId, wk))
-        return pRanks     
-    
-    
+        return pRanks
+
+
     def pWin_score(self, teamId, week):
         '''
         Inputs: int (teamId), int (week of matchup)
         Output: float (probability that team will win)
-        
+
         This function takes in a team id and the week of the matchup and returns
         the probability that the team will win the matchup. This probability is
         caluclated by subtracting the probability distribution functions of the
@@ -323,42 +323,42 @@ class League():
         team = self.teams[teamId]
         avgScore = team.avgPointsFor(week - 1);
         stdScore = team.stdevPointsFor(week - 1)
-        
+
         avgOpp = team.schedule[week].avgPointsFor(week - 1)
         stdOpp = team.schedule[week].stdevPointsFor(week - 1)
-        
+
         return sp.stats.norm(avgScore - avgOpp, np.sqrt(stdScore**2 + stdOpp**2)).sf(0)
-    
+
     def pWin_pRank(self, teamId, week):
         '''
         Inputs: int (teamId), int (week of matchup)
         Output: float (probability that team will win)
-        
+
         This function takes in a team id and the week of the matchup and returns
         the probability that the team will win the matchup. This probability is
         caluclated by subtracting the probability distribution functions of the
-        team's power rank and its opponent's power rank. The pdf's are assumed 
+        team's power rank and its opponent's power rank. The pdf's are assumed
         to follow a normal distribution for both teams.
         '''
         team = self.teams[teamId]
         pRanks = self.getPRanksList(teamId, week)
-        
+
         oppPranks = []
         for wk in range(1, week):
             oppPranks.append(self.teamTotalPRank(team.schedule[wk].teamId, wk))
-        
+
         avgScore = np.mean(pRanks)
         stdScore = np.std(pRanks)
         avgOpp = np.mean(oppPranks)
         stdOpp = np.std(oppPranks)
-        
-        return sp.stats.norm(avgScore - avgOpp, np.sqrt(stdScore**2 + stdOpp**2)).sf(0)    
-    
+
+        return sp.stats.norm(avgScore - avgOpp, np.sqrt(stdScore**2 + stdOpp**2)).sf(0)
+
     def checkAccuracy(self, week, function):
         '''
         Inputs: int (week), function (to predict matchup result)
         Outputs: float (accuracy of model)
-        
+
         This function checks the accuracy of the input pWin function.
         It calls the function for every matchup that through (inclusive) the
         input week and compares the expected result with the actual result.
@@ -367,7 +367,7 @@ class League():
         '''
         if week >= self.currentWeek:
             week = self.currentWeek - 1
-            
+
         numMatchups = 0
         numCorrect = 0
         for team in self.teams.values():
@@ -378,11 +378,11 @@ class League():
                     numCorrect += 1
                 numMatchups += 1
         return numCorrect/2, numMatchups/2, numCorrect / numMatchups
-    
+
     def plotPRanks(self, week):
         if week >= self.currentWeek:
             week = self.currentWeek - 1
-        
+
         fig = plt.figure()
         graph = fig.add_subplot(1, 2, 1)
         wks = list(range(1, week + 1))
@@ -392,9 +392,7 @@ class League():
         plt.title("Power Rankings vs Week")
         plt.xlabel("Week")
         plt.ylabel("Power Rank")
-        plt.legend(loc=9, bbox_to_anchor = (1.4, 1))         
+        plt.legend(loc=9, bbox_to_anchor = (1.4, 1))
         fig.set_size_inches(10, 4)
-        plt.hold = False 
+        plt.hold = False
         return
-        
-        
