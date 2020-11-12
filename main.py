@@ -108,7 +108,7 @@ season = list(team_scores)
 season = season[1:-1]
 team_scores['Season_avg'] = (team_scores[season].sum(axis=1)/week).round(2)
 
-print(team_scores[['Power_Score','3_wk_roll_avg','Season_avg']])
+print(team_scores[['Power_Score']])
 
 
 league.printPowerRankings(week)
