@@ -35,7 +35,7 @@ print(league)
 dynastyProcessValues = pd.read_csv("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/data/files/values-players.csv")
 dynastyProcessValues = dynastyProcessValues[["player","value_1qb"]]
 
-week = int(input("Enter Week:"))
+week = int(input("Enter Week: "))
 
 # create for loop to add team names from team objects into list
 teams = league.teams
@@ -63,7 +63,11 @@ seasonScores_df = pd.DataFrame(data=seasonScores)
 teams_names_df = pd.DataFrame(data=team_names,columns=['Team'])
 team_scores = teams_names_df.join(seasonScores_df)
 
-print(team_scores)
+# get df headings for subsetting df
+team_scores_headings = list(team_scores)
+
+# get headings for up to selected week
+current_week_headings = team_scores_headings[1:week+1]
 
 # set the index to the team column
 team_scores = team_scores.set_index('Team')
@@ -78,29 +82,25 @@ team_scores_noavg = team_scores.copy()
 team_scores[:] = team_scores[:] - team_scores.loc['League Average']
 team_scores = team_scores.drop("League Average") # leageue average no longer necessary
 
-# creating 3 week rolling average column
-team_scores_headings = list(team_scores)
-noavg_headings = list(team_scores_noavg)
-
-
 # get columns for calculating power score
-last = team_scores_headings[-1]
-_2last = team_scores_headings[-2]
-_3last = team_scores_headings[-3]
-rest = team_scores_headings[0:-3]
+last = current_week_headings[-1]
+_2last = current_week_headings[-2]
+_3last = current_week_headings[-3]
+rest = current_week_headings[0:-3]
 
-last_nv = noavg_headings[-1]
-_2last_nv = noavg_headings[-2]
-_3last_nv = noavg_headings[-3]
-rest_nv = noavg_headings[0:-3]
 
-team_scores['Power_Score'] = (team_scores[last]*.25) + (team_scores[_2last]*.15) + (team_scores[_3last]*.1) + (team_scores[rest].mean(axis=1)*.5)/1
-team_scores_noavg['Power_Score'] = (team_scores_noavg[last]*.25) + (team_scores[_2last_nv]*.15) + (team_scores[_3last_nv]*.1) + (team_scores[rest_nv].mean(axis=1)*.5)/1
+if len(current_week_headings) == 1:
+    team_scores['Power_Score'] = (team_scores[last])
+elif len(current_week_headings) == 2:
+    team_scores['Power_Score'] = ((team_scores[last]*.6) + (team_scores[_2last])*.4)/1
+elif len(current_week_headings) == 3:
+    team_scores['Power_Score'] = ((team_scores[last]*.25) + (team_scores[_2last]*.15) + (team_scores[_3last]*.1))/.5
+else:
+    team_scores['Power_Score'] = ((team_scores[last]*.25) + (team_scores[_2last]*.15) + (team_scores[_3last]*.1) + (team_scores[rest].mean(axis=1)*.5))/1
 
 team_scores = team_scores.sort_values(by='Power_Score', ascending=False)
-team_scores_noavg = team_scores_noavg.sort_values(by='Power_Score', ascending=False)
 
-last_3 = team_scores_headings[-3:]
+last_3 = current_week_headings[-3:]
 team_scores['3_wk_roll_avg'] = (team_scores[last_3].sum(axis=1)/3).round(2)
 
 # creating season average column
