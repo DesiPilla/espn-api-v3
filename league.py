@@ -210,22 +210,22 @@ class League():
         if result == 0.5:                               # If the team tied...
             luckIndex /= 2                              # They are only half as unlucky, because tying is not as bad as losing
 
-    ######################    # # Luck Index based on how the team scored compared to its opponent
-        # teamScore = team.scores[week]
-        # avgScore = team.avgPointsFor(week)
-        # stdevScore = team.stdevPointsFor(week)
-        # if stdevScore != 0:
-        #     zTeam = (teamScore - avgScore) / stdevScore     # Get z-score of the team's performance
-        #     effect = zTeam/(3*stdevScore)*2                 # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
-        #     luckIndex += (effect / abs(effect)) * min(abs(effect), 2)   # The maximum effect is +/- 2
-        #
-        # oppScore = opp.scores[week]
-        # avgOpp = opp.avgPointsAllowed(week)
-        # stdevOpp = opp.stdevPointsAllowed(week)
-        # if stdevOpp != 0:
-        #     zOpp = (oppScore - avgOpp) / stdevOpp                       # Get z-score of the opponent's performance
-        #     effect = zOpp/(3*stdevOpp)*2                        # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
-        #     luckIndex -= (effect / abs(effect)) * min(abs(effect), 2)   # The maximum effect is +/- 2
+        # Luck Index based on how the team scored compared to its opponent
+        teamScore = team.scores[week]
+        avgScore = team.avgPointsFor(week)
+        stdevScore = team.stdevPointsFor(week)
+        if stdevScore != 0:
+            zTeam = (teamScore - avgScore) / stdevScore     # Get z-score of the team's performance
+            effect = zTeam/(3*stdevScore)*2                 # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
+            luckIndex += (effect / abs(effect)) * min(abs(effect), 2)   # The maximum effect is +/- 2
+
+        oppScore = opp.scores[week]
+        avgOpp = opp.avgPointsAllowed(week)
+        stdevOpp = opp.stdevPointsAllowed(week)
+        if stdevOpp != 0:
+            zOpp = (oppScore - avgOpp) / stdevOpp                       # Get z-score of the opponent's performance
+            effect = zOpp/(3*stdevOpp)*2                        # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
+            luckIndex -= (effect / abs(effect)) * min(abs(effect), 2)   # The maximum effect is +/- 2
 
         return luckIndex
 
