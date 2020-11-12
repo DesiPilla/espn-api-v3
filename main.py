@@ -62,25 +62,55 @@ for team in teams_list:
 seasonScores_df = pd.DataFrame(data=seasonScores)
 teams_names_df = pd.DataFrame(data=team_names,columns=['Team'])
 team_scores = teams_names_df.join(seasonScores_df)
+
 print(team_scores)
 
-last_3 = list(team_scores)
-last_3 = last_3[-3:]
+# set the index to the team column
+team_scores = team_scores.set_index('Team')
+
+# create a row for the league average for each week
+team_scores.loc['League Average'] = (team_scores.sum(numeric_only=True, axis=0)/8).round(2)
+
+# create a copy to not subract league Average
+team_scores_noavg = team_scores.copy()
+
+# subract each teams score from the league average for that week
+team_scores[:] = team_scores[:] - team_scores.loc['League Average']
+team_scores = team_scores.drop("League Average") # leageue average no longer necessary
+
+# creating 3 week rolling average column
+team_scores_headings = list(team_scores)
+noavg_headings = list(team_scores_noavg)
+
+
+# get columns for calculating power score
+last = team_scores_headings[-1]
+_2last = team_scores_headings[-2]
+_3last = team_scores_headings[-3]
+rest = team_scores_headings[0:-3]
+
+last_nv = noavg_headings[-1]
+_2last_nv = noavg_headings[-2]
+_3last_nv = noavg_headings[-3]
+rest_nv = noavg_headings[0:-3]
+
+team_scores['Power_Score'] = (team_scores[last]*.25) + (team_scores[_2last]*.15) + (team_scores[_3last]*.1) + (team_scores[rest].mean(axis=1)*.5)/1
+team_scores_noavg['Power_Score'] = (team_scores_noavg[last]*.25) + (team_scores[_2last_nv]*.15) + (team_scores[_3last_nv]*.1) + (team_scores[rest_nv].mean(axis=1)*.5)/1
+
+team_scores = team_scores.sort_values(by='Power_Score', ascending=False)
+team_scores_noavg = team_scores_noavg.sort_values(by='Power_Score', ascending=False)
+
+last_3 = team_scores_headings[-3:]
 team_scores['3_wk_roll_avg'] = (team_scores[last_3].sum(axis=1)/3).round(2)
 
+# creating season average column
 season = list(team_scores)
 season = season[1:-1]
-print(season)
 team_scores['Season_avg'] = (team_scores[season].sum(axis=1)/week).round(2)
-print(team_scores)
 
-# rosters_flat = list(chain.from_iterable(rosters))
-# print(rosters_flat)
+print(team_scores[['Power_Score','3_wk_roll_avg','Season_avg']])
 
-# print("\nFirst Roster:")
-# print(rosters[1])
-# print("\n Second Roster:")
-# print(rosters[2])
 
-# league.printPowerRankings(9)
-# league.printLuckIndex(9)
+league.printPowerRankings(week)
+league.printLuckIndex(week)
+league.printExpectedStandings(week)
