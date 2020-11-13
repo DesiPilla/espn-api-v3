@@ -7,6 +7,7 @@ from itertools import chain
 
 import pandas as pd
 import requests
+import math
 from tabulate import tabulate as table
 
 # Define user and season year
@@ -35,7 +36,7 @@ print(league)
 dynastyProcessValues = pd.read_csv("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/data/files/values-players.csv")
 dynastyProcessValues = dynastyProcessValues[["player","value_1qb"]]
 
-week = int(input("Enter Week: "))
+week = int(input("\n Enter Week: "))
 
 # create for loop to add team names from team objects into list
 teams = league.teams
@@ -45,18 +46,10 @@ for team in teams_list:
     team_name = team.teamName
     team_names.append(team_name)
 
-# rosters = []
-# namesRoster = []
 seasonScores = []
-
-# team = league.teams[1]
-# print(team)
-# print(team.rosters[week])
 
 for team in teams_list:
     weeklyScores = team.scores
-    # for player in weeklyRoster:
-    #     namesRoster.append(player.name)
     seasonScores.append(weeklyScores)
 
 seasonScores_df = pd.DataFrame(data=seasonScores)
@@ -68,9 +61,10 @@ team_scores_headings = list(team_scores)
 
 # get headings for up to selected week
 current_week_headings = team_scores_headings[1:week+1]
-print(current_week_headings)
+
 # set the index to the team column
 team_scores = team_scores.set_index('Team')
+scores = team_scores.copy()
 
 # create a row for the league average for each week
 team_scores.loc['League Average'] = (team_scores.sum(numeric_only=True, axis=0)/8).round(2)
@@ -113,13 +107,46 @@ season = list(team_scores)
 season = season[1:-1]
 team_scores['Season_avg'] = (team_scores[season].sum(axis=1)/week).round(2)
 
-print(team_scores[['Power_Score']])
-print("\n")
-print("WEEK ", week, " POWER RANKINGS")
+
+# All play power RANKINGS
+allplay = team_names.copy()
+allplay = pd.DataFrame(allplay,columns=['team'])
+allplay['allPlayWins'] = 0
+allplay['allPlayLosses'] = 0
+allplay['PowerScore'] = 0
+allplay = allplay.set_index('team')
+
+allplay_head = list(allplay)
+
+compare_week = current_week_headings[0]
+
+# compare with for loop
+while compare_week <= week:
+    for first_row in scores.itertuples():
+        for second_row in scores.itertuples():
+            if first_row[compare_week] > second_row[compare_week]:
+                allplay.loc[first_row[0],allplay_head[0]] += 1
+                allplay.loc[first_row[0],allplay_head[2]] += (1 + (math.log(compare_week)))
+            if first_row[compare_week] < second_row[compare_week]:
+                allplay.loc[first_row[0],allplay_head[1]] += 1
+            else:
+                continue
+    compare_week += 1
+
+
+allplay = allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False)
+allplay['PowerScore'] = allplay['PowerScore'].round(2)
+allplay = allplay.reset_index()
+
+# Print everything
+
+print("\n WEEK ", week, " POWER RANKINGS")
 league.printPowerRankings(week)
-print("\n")
-print("WEEK ", week, " LUCK INDEX")
+print("\n WEEK ", week, " LUCK INDEX")
 league.printLuckIndex(week)
-print("\n")
-print("WEEK ", week, " EXPECTED STANDINGS")
+print("\n WEEK ", week, " EXPECTED STANDINGS")
 league.printExpectedStandings(week)
+print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY WINS)")
+print(table(allplay, headers='keys', tablefmt='simple', numalign='decimal'))
+print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY POWER SCORE)")
+print("\n", table(allplay.sort_values(by='PowerScore', ascending=False), headers='keys', tablefmt='simple'))
