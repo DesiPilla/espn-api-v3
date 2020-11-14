@@ -1,11 +1,11 @@
 from .sorting_utils import *
 from tabulate import tabulate as table
 
-''' 
+'''
 **************************************************
 *       Printing methods for League class        *
-************************************************** 
-'''  
+**************************************************
+'''
 
 def printWeeklyScores(league, teamId):
     ''' Prints all weekly scores for a given team. '''
@@ -29,14 +29,14 @@ def printWeeklyMatchResults(league, teamId):
         print('%.2f' % team.scores[week], '-', '%.2f' % team.schedule[week].scores[week], end='')
         print('   vs.', team.schedule[week].owner)
     print('------------------------------------------------------------')
-    print('Season Record:',str(team.wins),'-',str(team.losses),'-',str(team.ties)) 
+    print('Season Record:',str(team.wins),'-',str(team.losses),'-',str(team.ties))
 
 def printPowerRankings(league, week):
     ''' Print my power rankings in a nice table. '''
     powerRankings = []
     for teamId in range(1, league.numTeams + 1):
         powerRankings += [[league.teamTotalPRank(teamId, week), league.teams[teamId]]]
-    sortedRankings = sorted(powerRankings, key=lambda x: x[0], reverse=True)        
+    sortedRankings = sorted(powerRankings, key=lambda x: x[0], reverse=True)
     powerRankingsTable = []
     for team in sortedRankings:
         powerRankingsTable += [[ team[1].teamName, team[0], team[1].owner ]]
@@ -50,7 +50,7 @@ def printLuckIndex(league, week):
         luck = league.seasonLuckIndex(teamId, week)
         lucks.append([league.teams[teamId].teamName, round(luck, 2), league.teams[teamId].owner])
     lucks.sort(key = lambda x: x[1], reverse = True)
-    print('\nThrough Week %d\n'% (week), table(lucks, headers = ["Team", "Luck Index", "Owner"])) 
+    print('\nThrough Week %d\n'% (week), table(lucks, headers = ["Team", "Luck Index", "Owner"]))
     return lucks
 
 def printCurrentStandings(league):
@@ -58,7 +58,7 @@ def printCurrentStandings(league):
         Outputs: table (prints current standings)
         This function prints the current standings for a league.
         This function does NOT account for tiebreakers.
-    '''        
+    '''
     results = []
     for teamId in range(1, league.numTeams + 1):
         wins = league.teams[teamId].wins
@@ -68,12 +68,12 @@ def printCurrentStandings(league):
         results += [[league.teams[teamId], wins, losses, ties, pf]]
     results.sort(key=lambda x: x[4], reverse=True)              # Sort first based on points for
     results.sort(key=lambda x: x[1], reverse=True)              # Sort second based on win total
-    results.sort(key=lambda x: x[2], reverse=False)             # Sort third based on loss total      
+    results.sort(key=lambda x: x[2], reverse=False)             # Sort third based on loss total
     resultsTable = []
     for team in results:
         resultsTable += [[ team[0].teamName, team[1], team[2], team[3], team[4], team[0].owner ]]
-    print('\nWeek', league.currentWeek, '\n', table( resultsTable, headers = ['Team', 'Wins', 'Losses', 'Ties', 'Points Scored', 'Owner'], floatfmt = '.2f'), '\n\n*These standings do not account for tiesbreakers')     
-    return resultsTable 
+    print('\nWeek', league.currentWeek, '\n', table( resultsTable, headers = ['Team', 'Wins', 'Losses', 'Ties', 'Points Scored', 'Owner'], floatfmt = '.2f'), '\n\n*These standings do not account for tiesbreakers')
+    return resultsTable
 
 def printExpectedStandings(league, week):
     ''' Inputs: week that just passed
@@ -91,7 +91,7 @@ def printExpectedStandings(league, week):
     resultsTable = []
     for team in results:
         resultsTable += [[ team[0].teamName, team[1], team[2], team[3], team[0].owner ]]
-    print('\nWeek', week, '\n', table( resultsTable, headers = ['Team', 'Wins', 'Losses', 'Ties', 'Owner'], floatfmt = '.2f'), '\n\n*These standings do not account for tiesbreakers')     
+    print('\nWeek', week, '\n', table( resultsTable, headers = ['Team', 'Wins', 'Losses', 'Ties', 'Owner'], floatfmt = '.2f'), '\n\n*These standings do not account for tiebreakers')     
     return resultsTable
 
 def printWeeklyStats(league, week):
@@ -107,7 +107,7 @@ def printWeeklyStats(league, week):
                    ['---------------------','----------------'],
                    ['Best QBs: ', sortPositionScore(league, week, 0)[1].owner],
                    ['Best RBs: ', sortPositionScore(league, week, 2)[1].owner],
-                   ['Best WRs: ', sortPositionScore(league, week, 4)[1].owner], 
+                   ['Best WRs: ', sortPositionScore(league, week, 4)[1].owner],
                    ['Best TEs: ', sortPositionScore(league, week, 6)[1].owner],
                    ['Best Flex: ', sortPositionScore(league, week, 23)[1].owner],
                    ['Best DST: ', sortPositionScore(league, week, 16)[1].owner],
@@ -116,13 +116,13 @@ def printWeeklyStats(league, week):
                    ['---------------------','----------------'],
                    ['Worst QBs: ', sortPositionScore(league, week, 0)[last].owner],
                    ['Worst RBs: ', sortPositionScore(league, week, 2)[last].owner],
-                   ['Worst WRs: ', sortPositionScore(league, week, 4)[last].owner], 
+                   ['Worst WRs: ', sortPositionScore(league, week, 4)[last].owner],
                    ['Worst TEs: ', sortPositionScore(league, week, 6)[last].owner],
                    ['Worst Flex: ', sortPositionScore(league, week, 23)[last].owner],
                    ['Worst DST: ', sortPositionScore(league, week, 16)[last].owner],
                    ['Worst K: ', sortPositionScore(league, week, 17)[last].owner],
                    ['Worst Bench: ', sortBenchPoints(league, week)[last].owner]]
-    print('\n', table(statsTable, headers = ['Week ' + str(week), '']))   
+    print('\n', table(statsTable, headers = ['Week ' + str(week), '']))
 
     # ['Most Injuries: ', league.sortNumOut(week)[last].owner.split(' ')[0]],
     # ['Least Injuries: ', league.sortNumOut(week)[0].owner.split(' ')[0]],
