@@ -6,9 +6,14 @@ from utils.building_utils import getUrl
 from itertools import chain
 
 import pandas as pd
+import numpy as np
 import requests
 import math
 from tabulate import tabulate as table
+import os
+import sys
+from fpdf import FPDF
+
 
 # Define user and season year
 user_id = 'desi'
@@ -107,6 +112,9 @@ season = list(team_scores)
 season = season[1:-1]
 team_scores['Season_avg'] = (team_scores[season].sum(axis=1)/week).round(2)
 
+team_scores_prt = team_scores['Power_Score'].round(2)
+team_scores_prt = team_scores_prt.reset_index()
+# team_scores_prt = team_scores.columns['team','Power Score']
 
 # All play power RANKINGS
 allplay = team_names.copy()
@@ -138,7 +146,19 @@ allplay = allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False)
 allplay['PowerScore'] = allplay['PowerScore'].round(2)
 allplay = allplay.reset_index()
 
+# create allplay table sorted by power score
+allplay_ps = allplay.sort_values(by='PowerScore', ascending=False)
+allplay_ps = allplay_ps.reset_index(drop=True)
+
+# Set index for printing tables to start at 1
+allplay.index = np.arange(1, len(allplay) + 1)
+allplay_ps.index = np.arange(1, len(allplay_ps) + 1)
+team_scores_prt.index = np.arange(1, len(team_scores_prt) + 1)
+
+
 # Print everything
+# open text file
+sys.stdout = open("powerrankings.pdf", "w")
 
 print("\n WEEK ", week, " POWER RANKINGS")
 league.printPowerRankings(week)
@@ -149,4 +169,23 @@ league.printExpectedStandings(week)
 print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY WINS)")
 print(table(allplay, headers='keys', tablefmt='simple', numalign='decimal'))
 print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY POWER SCORE)")
-print("\n", table(allplay.sort_values(by='PowerScore', ascending=False), headers='keys', tablefmt='simple'))
+print("\n", table(allplay_ps, headers='keys', tablefmt='simple'))
+print("\n WEEK ", week, " POWER SCORE (CALC W/ LEAGUE AVERAGE SCORE)")
+print("\n", table(team_scores_prt, headers='keys', tablefmt='simple', numalign='decimal'))
+
+# close text file
+sys.stdout.close()
+
+pdf = FPDF()
+# Add a page
+pdf.add_page()
+# set style and size of font
+# that you want in the pdf
+pdf.set_font("Arial", size = 15)
+# open the text file in read mode
+f = open("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/power_rankings/espn-api-v3/powerrankings.txt", "r")
+# insert the texts in pdf
+for x in f:
+    pdf.cell(50,5, txt = x, ln = 1, align = 'C')
+# save the pdf with name .pdf
+pdf.output("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/power_rankings/espn-api-v3\\powerrankings.pdf")
