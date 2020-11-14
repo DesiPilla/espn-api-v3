@@ -74,9 +74,6 @@ scores = team_scores.copy()
 # create a row for the league average for each week
 team_scores.loc['League Average'] = (team_scores.sum(numeric_only=True, axis=0)/8).round(2)
 
-# create a copy to not subract league Average
-team_scores_noavg = team_scores.copy()
-
 # subract each teams score from the league average for that week
 team_scores[:] = team_scores[:] - team_scores.loc['League Average']
 team_scores = team_scores.drop("League Average") # leageue average no longer necessary
