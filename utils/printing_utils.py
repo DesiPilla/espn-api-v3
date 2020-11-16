@@ -40,7 +40,7 @@ def printPowerRankings(league, week):
     powerRankingsTable = []
     for team in sortedRankings:
         powerRankingsTable += [[ team[1].teamName, team[0], team[1].owner ]]
-    print('\n','Week ',week)
+    # print('\n','Week ',week)
     print(table( powerRankingsTable, headers = ['Team', 'Power Index', 'Owner'], floatfmt = '.2f', tablefmt='github'))
     return powerRankingsTable
 
@@ -51,7 +51,7 @@ def printLuckIndex(league, week):
         luck = league.seasonLuckIndex(teamId, week)
         lucks.append([league.teams[teamId].teamName, round(luck, 2), league.teams[teamId].owner])
     lucks.sort(key = lambda x: x[1], reverse = True)
-    print('\nThrough Week %d\n'% (week))
+    # print('\nThrough Week %d\n'% (week))
     print(table(lucks, headers = ["Team", "Luck Index", "Owner"], tablefmt='github'))
     return lucks
 
