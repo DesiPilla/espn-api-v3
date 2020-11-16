@@ -259,18 +259,17 @@ class League():
         team = self.teams[teamId]
         wins = team.wins
         losses = team.losses
-        ties = team.ties
+        # ties = team.ties
         pRank = self.teamTotalPRank(teamId, week)
         for wk in range(week + 1, self.regSeasonWeeks + 1):
             oppId = self.getTeamId(team.schedule[wk])
             oppPRank = self.teamTotalPRank(oppId, week)
             if pRank > oppPRank:
                 wins += 1
-            elif pRank < oppPRank:
+            else pRank < oppPRank:
                 losses += 1
-            else:
-                ties += 1
-        return wins, losses, ties
+
+        return wins, losses
 
     def getTeamId(self, team):
         ''' Inputs: Team object

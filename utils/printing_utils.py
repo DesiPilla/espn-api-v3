@@ -86,15 +86,15 @@ def printExpectedStandings(league, week):
     '''
     results = []
     for teamId in range(1, league.numTeams + 1):
-        wins, losses, ties = league.expectedFinish(teamId, week)
-        results += [[league.teams[teamId], wins, losses, ties]]
+        wins, losses = league.expectedFinish(teamId, week)
+        results += [[league.teams[teamId], wins, losses]]
     results.sort(key=lambda x: x[1], reverse=True)              # Sort first based on win total
     results.sort(key=lambda x: x[2], reverse=False)             # Sort second based on loss total
     resultsTable = []
     for team in results:
-        resultsTable += [[ team[0].teamName, team[1], team[2], team[3], team[0].owner ]]
+        resultsTable += [[ team[0].teamName, team[1], team[2], team[0].owner ]]
     print('\nWeek', week)
-    print(table( resultsTable, headers = ['Team', 'Wins', 'Losses', 'Ties', 'Owner'], floatfmt = '.2f', tablefmt='github'), '\n\n*These standings do not account for tiebreakers')
+    print(table( resultsTable, headers = ['Team', 'Wins', 'Losses', 'Owner'], floatfmt = '.2f', tablefmt='github'), '\n\n*These standings do not account for tiebreakers')
     return resultsTable
 
 def printWeeklyStats(league, week):
