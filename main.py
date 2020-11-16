@@ -224,8 +224,8 @@ filepath = "/Users/christiangeer/Fantasy_Sports/Fantasy_FF/power_rankings/jtown-
 sys.stdout = open(filepath, "w")
 
 print("---")
-print("title: ")
-print("date: 2020-10-14T16:34:00.000Z")
+print("title: Week (WEEK) Report")
+print("date: 2020-MONTH-DAYT8:00:00.000Z")
 print("image: /images/week(ADD WEEK NUMBER HERE).jpg")
 print("draft: false")
 print("---")
