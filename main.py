@@ -205,6 +205,7 @@ while compare_week <= week:
 
     compare_week += 1
 
+
 allplay = allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False)
 allplay['PowerScore'] = allplay['PowerScore'].round(2)
 allplay = allplay.reset_index()
@@ -214,12 +215,12 @@ lw_allplay['PowerScore'] = lw_allplay['PowerScore'].round(2)
 lw_allplay = lw_allplay.reset_index()
 
 # create allplay table sorted by power score
-allplay_ps = allplay.sort_values(by='PowerScore', ascending=False)
-allplay_ps = allplay_ps.reset_index(drop=True)
+allplay_ps = allplay.copy()
+
 
 # create allplay table sorted by power score
-lw_allplay_ps = lw_allplay.sort_values(by='PowerScore', ascending=False)
-lw_allplay_ps = lw_allplay_ps.reset_index(drop=True)
+lw_allplay_ps = lw_allplay.copy()
+
 
 change = team_names.copy()
 diffs = []
@@ -235,17 +236,21 @@ for team in team_names:
     # print("Diff:",diff,"\n")
     diffs.append(diff)
 
+print(diffs)
+
 for item in diffs:
-    print(item, type(item))
-    if item > 0:
-        emojis.append(":chart_with_upwards_trend: " + str(item))
-    elif item < 0:
-        emojis.append(":chart_with_downwards_trend: " + str(item))
+    if item < 0:
+        emojis.append("⬆️ " + str(abs(item)))
+    elif item > 0:
+        emojis.append("⬇️ " + str(abs(item)))
     elif item == 0:
-        emojis.append(str(item))
+        emojis.append("")
+
+print(allplay_ps)
+print(emojis)
 
 allplay_ps.insert(loc=1, column='Weekly Change', value=emojis)
-
+print(allplay_ps)
 
 
 # allplay_ps['Weekly Change'] =
