@@ -200,16 +200,55 @@ while compare_week <= week:
                 allplay.loc[first_row[0],allplay_head[1]] += 1
             else:
                 continue
-    compare_week += 1
+    if compare_week == week-1:
+        lw_allplay = allplay.copy()
 
+    compare_week += 1
 
 allplay = allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False)
 allplay['PowerScore'] = allplay['PowerScore'].round(2)
 allplay = allplay.reset_index()
 
+lw_allplay = lw_allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False)
+lw_allplay['PowerScore'] = lw_allplay['PowerScore'].round(2)
+lw_allplay = lw_allplay.reset_index()
+
 # create allplay table sorted by power score
 allplay_ps = allplay.sort_values(by='PowerScore', ascending=False)
 allplay_ps = allplay_ps.reset_index(drop=True)
+
+# create allplay table sorted by power score
+lw_allplay_ps = lw_allplay.sort_values(by='PowerScore', ascending=False)
+lw_allplay_ps = lw_allplay_ps.reset_index(drop=True)
+
+change = team_names.copy()
+diffs = []
+emojis = []
+
+for team in team_names:
+    tw_index = allplay_ps[allplay_ps['team'] == team].index.values
+    lw_index = lw_allplay_ps[lw_allplay_ps['team'] == team].index.values
+    diff = lw_index-tw_index
+    diff = int(diff.item())
+    # print("This week:",tw_index,"\n")
+    # print("Lat week:",lw_index,"\n")
+    # print("Diff:",diff,"\n")
+    diffs.append(diff)
+
+for item in diffs:
+    print(item, type(item))
+    if item > 0:
+        emojis.append(":chart_with_upwards_trend: " + str(item))
+    elif item < 0:
+        emojis.append(":chart_with_downwards_trend: " + str(item))
+    elif item == 0:
+        emojis.append(str(item))
+
+allplay.insert(loc=1, column='Weekly Change', value=emojis)
+
+
+
+# allplay_ps['Weekly Change'] =
 
 # Set index for printing tables to start at 1
 allplay.index = np.arange(1, len(allplay) + 1)
@@ -225,7 +264,7 @@ sys.stdout = open(filepath, "w")
 
 print("---")
 print("title: Week (WEEK) Report")
-print("date: 2020-MONTH-DAYT8:00:00.000Z")
+print("date: 2020-MONTH-DAY")
 print("image: /images/week(ADD WEEK NUMBER HERE).jpg")
 print("draft: false")
 print("---")
