@@ -266,7 +266,7 @@ class League():
             oppPRank = self.teamTotalPRank(oppId, week)
             if pRank > oppPRank:
                 wins += 1
-            else pRank < oppPRank:
+            elif pRank < oppPRank:
                 losses += 1
 
         return wins, losses
