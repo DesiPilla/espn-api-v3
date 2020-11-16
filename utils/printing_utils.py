@@ -51,7 +51,7 @@ def printLuckIndex(league, week):
         luck = league.seasonLuckIndex(teamId, week)
         lucks.append([league.teams[teamId].teamName, round(luck, 2), league.teams[teamId].owner])
     lucks.sort(key = lambda x: x[1], reverse = True)
-    print('\nThrough Week %d'% (week))
+    print('\nThrough Week %d\n'% (week))
     print(table(lucks, headers = ["Team", "Luck Index", "Owner"], tablefmt='github'))
     return lucks
 
@@ -93,7 +93,7 @@ def printExpectedStandings(league, week):
     resultsTable = []
     for team in results:
         resultsTable += [[ team[0].teamName, team[1], team[2], team[0].owner ]]
-    print('\nWeek', week)
+    print('\nWeek', week,'\n')
     print(table( resultsTable, headers = ['Team', 'Wins', 'Losses', 'Owner'], floatfmt = '.2f', tablefmt='github'), '\n\n*These standings do not account for tiebreakers')
     return resultsTable
 

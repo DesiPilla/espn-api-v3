@@ -235,7 +235,7 @@ league.printExpectedStandings(week)
 
 print("<!-- excerpt -->")
 
-print("\n WEEK ", week, " POWER RANKINGS")
+print("\n WEEK ", week, " POWER RANKINGS\n")
 print(table(allplay_ps, headers='keys', tablefmt='github'))
 
 # print("\n # WEEK ", week, " POWER RANKINGS")
