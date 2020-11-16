@@ -235,13 +235,13 @@ league.printExpectedStandings(week)
 
 print("<!-- excerpt -->")
 
-print("\n### WEEK ", week, " POWER RANKINGS\n")
+print("\n### POWER RANKINGS\n")
 print(table(allplay_ps, headers='keys', tablefmt='github'))
 
 # print("\n # WEEK ", week, " POWER RANKINGS")
 # league.printPowerRankings(week)
 
-print("\n### WEEK ", week, " LUCK INDEX")
+print("\n### LUCK INDEX")
 league.printLuckIndex(week)
 
 # print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY WINS)")
