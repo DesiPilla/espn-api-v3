@@ -13,6 +13,13 @@ from tabulate import tabulate as table
 import os
 import sys
 from fpdf import FPDF
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("week", help='Get week of the season')
+args = parser.parse_args()
+week = int(args.week)
+
 
 
 # Define user and season year
@@ -41,7 +48,6 @@ print(league)
 dynastyProcessValues = pd.read_csv("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/data/files/values-players.csv")
 dynastyProcessValues = dynastyProcessValues[["player","value_1qb"]]
 
-week = int(input("\n Enter Week: "))
 
 # create for loop to add team names from team objects into list
 teams = league.teams
@@ -77,6 +83,64 @@ team_scores.loc['League Average'] = (team_scores.sum(numeric_only=True, axis=0)/
 # subract each teams score from the league average for that week
 team_scores[:] = team_scores[:] - team_scores.loc['League Average']
 team_scores = team_scores.drop("League Average") # leageue average no longer necessary
+team_scores_log = team_scores.copy()
+
+logged_ps = team_names.copy()
+logged_ps = pd.DataFrame(logged_ps, columns=['team'])
+logged_ps['lnPowerScore'] = 0
+logged_ps = logged_ps.set_index('team')
+
+column = []
+tables = []
+tables_names = team_names.copy()
+tables_names = pd.DataFrame(tables_names, columns=["team"])
+
+
+team_scores_log_col = list(team_scores_log[1:])
+compute_week = 1
+
+
+for col in current_week_headings:
+    for row in team_scores_log[col]:
+        if col == 1:
+            lnRow = row * 1
+        else:
+            lnRow = row * (math.log(col))
+        column.append(round(lnRow, 2))
+    tables.append(column)
+    column = []
+
+tables_df = pd.DataFrame(tables)
+
+
+tables_df = tables_df.T
+
+tables_df['PowerScore'] = tables_df.sum(numeric_only=True, axis=1)
+tables_df = tables_df.reset_index(drop=True)
+
+logWeightedPS = tables_names.join(tables_df)
+logWeightedPS = logWeightedPS.sort_values(by="PowerScore", ascending=False)
+logWeightedPS = logWeightedPS.reset_index(drop=True)
+logWeightedPS_prnt = logWeightedPS[['team', 'PowerScore']]
+
+
+# team_scores_pr = team_names.copy()
+# team_scores_pr = pd.DataFrame(team_scores_pr,columns=['team'])
+# team_scores_pr['Power Score'] = 0
+# team_scores_pr = team_scores_pr.set_index('team')
+#
+# team_scores_pr_head = list(team_scores_pr)
+# print(team_scores_pr)
+# print(team_scores_pr_head)
+
+# calculate with for loop
+# while compare_week <= week:
+#     for row in scores.itertuples():
+#         team_scores_pr.loc[row[0],team_scores_pr[0]] += (math.log(row))
+#
+#     compare_week += 1
+
+
 
 # get columns for calculating power score
 last = current_week_headings[-1]
@@ -151,13 +215,14 @@ allplay_ps = allplay_ps.reset_index(drop=True)
 allplay.index = np.arange(1, len(allplay) + 1)
 allplay_ps.index = np.arange(1, len(allplay_ps) + 1)
 team_scores_prt.index = np.arange(1, len(team_scores_prt) + 1)
+logWeightedPS_prnt.index = np.arange(1, len(logWeightedPS_prnt) + 1)
 
 
 # Print everything
 # open text file
-sys.stdout = open("powerrankings.pdf", "w")
+sys.stdout = open("powerrankings.md", "w")
 
-print("\n WEEK ", week, " POWER RANKINGS")
+print("\n **WEEK ", week, " POWER RANKINGS**")
 league.printPowerRankings(week)
 print("\n WEEK ", week, " LUCK INDEX")
 league.printLuckIndex(week)
@@ -169,20 +234,9 @@ print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY POWER SCORE)")
 print("\n", table(allplay_ps, headers='keys', tablefmt='simple'))
 print("\n WEEK ", week, " POWER SCORE (CALC W/ LEAGUE AVERAGE SCORE)")
 print("\n", table(team_scores_prt, headers='keys', tablefmt='simple', numalign='decimal'))
+print("\n WEEK ", week, " LOG WEIGHTED")
+print("\n ", table(logWeightedPS_prnt, headers='keys', tablefmt='simple', numalign='decimal'))
+
 
 # close text file
 sys.stdout.close()
-
-pdf = FPDF()
-# Add a page
-pdf.add_page()
-# set style and size of font
-# that you want in the pdf
-pdf.set_font("Arial", size = 15)
-# open the text file in read mode
-f = open("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/power_rankings/espn-api-v3/powerrankings.txt", "r")
-# insert the texts in pdf
-for x in f:
-    pdf.cell(50,5, txt = x, ln = 1, align = 'C')
-# save the pdf with name .pdf
-pdf.output("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/power_rankings/espn-api-v3\\powerrankings.pdf")
