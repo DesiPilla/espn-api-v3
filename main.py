@@ -227,7 +227,7 @@ print("---")
 print("title: ")
 print("date: 2020-10-14T16:34:00.000Z")
 print("image: /images/week.jpg")
-print("draft: true")
+print("draft: false")
 print("---")
 
 print("\n# WEEK ", week, " EXPECTED STANDINGS")
