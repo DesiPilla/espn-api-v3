@@ -230,7 +230,7 @@ print("image: /images/week(ADD WEEK NUMBER HERE).jpg")
 print("draft: false")
 print("---")
 
-print("\n### WEEK ", week, " EXPECTED STANDINGS")
+print("\n### EXPECTED STANDINGS (as of week ", week, ")")
 league.printExpectedStandings(week)
 
 print("<!-- excerpt -->")
