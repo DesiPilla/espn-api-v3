@@ -40,7 +40,8 @@ def printPowerRankings(league, week):
     powerRankingsTable = []
     for team in sortedRankings:
         powerRankingsTable += [[ team[1].teamName, team[0], team[1].owner ]]
-    print('\n','Week ',week, '\n', table( powerRankingsTable, headers = ['Team', 'Power Index', 'Owner'], floatfmt = '.2f'))
+    print('\n','Week ',week)
+    print(table( powerRankingsTable, headers = ['Team', 'Power Index', 'Owner'], floatfmt = '.2f', tablefmt='github'))
     return powerRankingsTable
 
 def printLuckIndex(league, week):
@@ -50,7 +51,8 @@ def printLuckIndex(league, week):
         luck = league.seasonLuckIndex(teamId, week)
         lucks.append([league.teams[teamId].teamName, round(luck, 2), league.teams[teamId].owner])
     lucks.sort(key = lambda x: x[1], reverse = True)
-    print('\nThrough Week %d\n'% (week), table(lucks, headers = ["Team", "Luck Index", "Owner"]))
+    print('\nThrough Week %d'% (week))
+    print(table(lucks, headers = ["Team", "Luck Index", "Owner"], tablefmt='github'))
     return lucks
 
 def printCurrentStandings(league):
@@ -91,7 +93,8 @@ def printExpectedStandings(league, week):
     resultsTable = []
     for team in results:
         resultsTable += [[ team[0].teamName, team[1], team[2], team[3], team[0].owner ]]
-    print('\nWeek', week, '\n', table( resultsTable, headers = ['Team', 'Wins', 'Losses', 'Ties', 'Owner'], floatfmt = '.2f'), '\n\n*These standings do not account for tiebreakers')     
+    print('\nWeek', week)
+    print(table( resultsTable, headers = ['Team', 'Wins', 'Losses', 'Ties', 'Owner'], floatfmt = '.2f', tablefmt='github'), '\n\n*These standings do not account for tiebreakers')
     return resultsTable
 
 def printWeeklyStats(league, week):

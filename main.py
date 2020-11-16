@@ -220,22 +220,22 @@ logWeightedPS_prnt.index = np.arange(1, len(logWeightedPS_prnt) + 1)
 
 # Print everything
 # open text file
-sys.stdout = open("powerrankings.md", "w")
+sys.stdout = open("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/power_rankings/jtown-dynasty/content/blog/powerrankings.md", "w")
 
-print("\n **WEEK ", week, " POWER RANKINGS**")
+print("\n # WEEK ", week, " POWER RANKINGS")
 league.printPowerRankings(week)
 print("\n WEEK ", week, " LUCK INDEX")
 league.printLuckIndex(week)
 print("\n WEEK ", week, " EXPECTED STANDINGS")
 league.printExpectedStandings(week)
 print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY WINS)")
-print(table(allplay, headers='keys', tablefmt='simple', numalign='decimal'))
+print(table(allplay, headers='keys', tablefmt='github', numalign='decimal'))
 print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY POWER SCORE)")
-print("\n", table(allplay_ps, headers='keys', tablefmt='simple'))
+print(table(allplay_ps, headers='keys', tablefmt='github'))
 print("\n WEEK ", week, " POWER SCORE (CALC W/ LEAGUE AVERAGE SCORE)")
-print("\n", table(team_scores_prt, headers='keys', tablefmt='simple', numalign='decimal'))
+print(table(team_scores_prt, headers='keys', tablefmt='github', numalign='decimal'))
 print("\n WEEK ", week, " LOG WEIGHTED")
-print("\n ", table(logWeightedPS_prnt, headers='keys', tablefmt='simple', numalign='decimal'))
+print(table(logWeightedPS_prnt, headers='keys', tablefmt='github', numalign='decimal'))
 
 
 # close text file
