@@ -244,7 +244,7 @@ for item in diffs:
     elif item == 0:
         emojis.append(str(item))
 
-allplay.insert(loc=1, column='Weekly Change', value=emojis)
+allplay_ps.insert(loc=1, column='Weekly Change', value=emojis)
 
 
 
