@@ -230,18 +230,18 @@ print("image: /images/week.jpg")
 print("draft: false")
 print("---")
 
-print("\n# WEEK ", week, " EXPECTED STANDINGS")
+print("\n### WEEK ", week, " EXPECTED STANDINGS")
 league.printExpectedStandings(week)
 
 print("<!-- excerpt -->")
 
-print("\n WEEK ", week, " POWER RANKINGS\n")
+print("\n### WEEK ", week, " POWER RANKINGS\n")
 print(table(allplay_ps, headers='keys', tablefmt='github'))
 
 # print("\n # WEEK ", week, " POWER RANKINGS")
 # league.printPowerRankings(week)
 
-print("\n WEEK ", week, " LUCK INDEX")
+print("\n### WEEK ", week, " LUCK INDEX")
 league.printLuckIndex(week)
 
 # print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY WINS)")
