@@ -215,42 +215,41 @@ lw_allplay['PowerScore'] = lw_allplay['PowerScore'].round(2)
 lw_allplay = lw_allplay.reset_index()
 
 # create allplay table sorted by power score
-allplay_ps = allplay.copy()
-
+allplay_ps = allplay.sort_values(by='PowerScore', ascending=False)
+allplay_ps = allplay_ps.reset_index(drop=True)
 
 # create allplay table sorted by power score
-lw_allplay_ps = lw_allplay.copy()
+lw_allplay_ps = lw_allplay.sort_values(by='PowerScore', ascending=False)
+lw_allplay_ps = lw_allplay_ps.reset_index(drop=True)
 
 
 change = team_names.copy()
 diffs = []
 emojis = []
+emoji_names = allplay_ps['team'].tolist()
 
-for team in team_names:
+for team in emoji_names:
     tw_index = allplay_ps[allplay_ps['team'] == team].index.values
     lw_index = lw_allplay_ps[lw_allplay_ps['team'] == team].index.values
     diff = lw_index-tw_index
     diff = int(diff.item())
-    # print("This week:",tw_index,"\n")
-    # print("Lat week:",lw_index,"\n")
+    # print("Team: ", team)
+    # print("This week:",tw_index)
+    # print("Last week:",lw_index)
     # print("Diff:",diff,"\n")
     diffs.append(diff)
 
-print(diffs)
+
 
 for item in diffs:
-    if item < 0:
+    if item > 0:
         emojis.append("⬆️ " + str(abs(item)))
-    elif item > 0:
+    elif item < 0:
         emojis.append("⬇️ " + str(abs(item)))
     elif item == 0:
         emojis.append("")
 
-print(allplay_ps)
-print(emojis)
-
 allplay_ps.insert(loc=1, column='Weekly Change', value=emojis)
-print(allplay_ps)
 
 
 # allplay_ps['Weekly Change'] =
