@@ -86,7 +86,9 @@ team_scores[:] = team_scores[:] - team_scores.loc['League Average']
 team_scores = team_scores.drop("League Average") # leageue average no longer necessary
 team_scores_log = team_scores.copy()
 
-### Log weighted rankings
+
+### LOG WEIGHTED RANKINGS
+
 
 # new dataframe for the logged power score calculation
 logged_ps = team_names.copy()
@@ -125,7 +127,9 @@ logWeightedPS = logWeightedPS.sort_values(by="PowerScore", ascending=False)
 logWeightedPS = logWeightedPS.reset_index(drop=True)
 logWeightedPS_prnt = logWeightedPS[['team', 'PowerScore']]
 
-### 3 week rolling average rankings
+
+### 3 WEEK ROLLING AVERAGE RANKINGS
+
 
 # get columns for calculating power score
 last = current_week_headings[-1]
@@ -165,7 +169,10 @@ team_scores_prt = team_scores['Power_Score'].round(2)
 team_scores_prt = team_scores_prt.reset_index()
 # team_scores_prt = team_scores.columns['team','Power Score']
 
-### All play power rankings
+
+### ALL PLAY POWER RANKINGS
+
+
 allplay = team_names.copy()
 allplay = pd.DataFrame(allplay,columns=['team'])
 
@@ -196,6 +203,9 @@ while compare_week <= week: # run until getting to current week
         lw_allplay = allplay.copy()
 
     compare_week += 1
+
+# create allplay win percentage
+allplay['AllPlay Win %'] = allplay['allPlayWins'] / (allplay['allPlayWins'] + allplay['allPlayLosses'])
 
 allplay = allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False) # Sort allplay by allplay wins with a powerscore tiebreaker
 allplay['PowerScore'] = allplay['PowerScore'].round(2) # round powerscore to 2 decimal points
@@ -236,6 +246,31 @@ for item in diffs:
         emojis.append("") # adds a index of nothing for teams that didn't move
 
 allplay_ps.insert(loc=1, column='Weekly Change', value=emojis) # insert the weekly change column
+
+
+# ### EXPCETED STANDINGS
+#
+# # crate copy of allplay for expected standings calculation
+# allplay_es = allplay.copy()
+# allplay_es = allplay_es.set_index('team')
+# print(allplay_es)
+#
+# team = teams_list[1]
+# teamName = team.teamName
+# print(teamName)
+# wins = team.wins
+# losses = team.losses
+# # ties = team.ties
+# print(allplay_es[['AllPlay Win %']].iloc(teamName))
+# for wk in range(week + 1, league.regSeasonWeeks + 1):
+#     oppId = team.schedule[wk]
+#     print(oppId)
+#     oppAllPlay = allplay.iloc(OppId)
+#     if pRank > oppPRank:
+#         wins += 1
+#     elif pRank < oppPRank:
+#         losses += 1
+
 
 # Set index for printing tables to start at 1
 allplay.index = np.arange(1, len(allplay) + 1)
