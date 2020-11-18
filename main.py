@@ -306,7 +306,7 @@ projectedStandings.insert(loc=2, column='TotalProjLoss', value=totalLossProj)
 projectedStandings = projectedStandings.sort_values(by='TotalProjWins', ascending=False)
 projectedStandings = projectedStandings.reset_index(drop=True)
 
-projectedStandings_prnt = projectedStandings[]['TotalProjWins','TotalProjLoss']
+projectedStandings_prnt = projectedStandings[['Team','TotalProjWins','TotalProjLoss']]
 
 # Set index for printing tables to start at 1
 allplay.index = np.arange(1, len(allplay) + 1)
@@ -332,11 +332,11 @@ print("---")
 print("<!-- excerpt -->")
 
 print("\n### POWER RANKINGS\n")
-print(table(allplay_ps, headers='keys', tablefmt='github'))
+print(table(allplay_ps, headers='keys', tablefmt='pipe', numalign='center'))
 
 print("\n### EXPECTED STANDINGS (as of week ", week, ")")
 # league.printExpectedStandings(week)
-print(table(projectedStandings_prnt, headers='keys', tablefmt='github'))
+print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
 
 # print("\n # WEEK ", week, " POWER RANKINGS")
 # league.printPowerRankings(week)
