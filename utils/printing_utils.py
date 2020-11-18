@@ -52,7 +52,7 @@ def printLuckIndex(league, week):
         lucks.append([league.teams[teamId].teamName, round(luck, 2), league.teams[teamId].owner])
     lucks.sort(key = lambda x: x[1], reverse = True)
     # print('\nThrough Week %d\n'% (week))
-    print(table(lucks, headers = ["Team", "Luck Index", "Owner"], tablefmt='github'))
+    print(table(lucks, headers = ["Team", "Luck Index", "Owner"], tablefmt='pipe', numalign='center'))
     return lucks
 
 def printCurrentStandings(league):
