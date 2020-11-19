@@ -482,6 +482,9 @@ print("\n### EXPECTED STANDINGS (as of week ", week, ")")
 # league.printExpectedStandings(week)
 print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
 
+print("\n### PLAYOFF PROBABILITIES (as of week ", week, ")")
+print(table(projections, headers='keys', tablefmt='pipe', numalign='center'))
+
 # print("\n # WEEK ", week, " POWER RANKINGS")
 # league.printPowerRankings(week)
 
