@@ -250,9 +250,9 @@ if week > 1:
     # iterate over diffs list and edit values to include up/down arrow emoji and the number of spots the team moved
     for item in diffs:
         if item > 0:
-            emojis.append("⬆️ " + str(abs(item)))
+            emojis.append("<span style=\"color: green;\">"+ + str(abs(item)) + "</span>" )
         elif item < 0:
-            emojis.append("⬇️ " + str(abs(item)))
+            emojis.append("<span style=\"color: red;\">" + str(abs(item)) + "</span> ")
         elif item == 0:
             emojis.append("") # adds a index of nothing for teams that didn't move
 
