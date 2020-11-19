@@ -208,6 +208,7 @@ while compare_week <= week: # run until getting to current week
 allplay['AllPlayWin%'] = allplay['allPlayWins'] / (allplay['allPlayWins'] + allplay['allPlayLosses'])
 allplay['AllPlayWin%'] = allplay['AllPlayWin%'].round(3)
 
+
 allplay = allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False) # Sort allplay by allplay wins with a powerscore tiebreaker
 allplay['PowerScore'] = allplay['PowerScore'].round(2) # round powerscore to 2 decimal points
 allplay = allplay.reset_index()
@@ -218,12 +219,17 @@ lw_allplay['PowerScore'] = lw_allplay['PowerScore'].round(2)
 lw_allplay = lw_allplay.reset_index()
 
 # create allplay table sorted by power score
-allplay_ps = allplay.sort_values(by='PowerScore', ascending=False)
+allplay_ps = allplay[['team', 'AllPlayWin%', 'PowerScore']]
+allplay_ps = allplay_ps.sort_values(by='PowerScore', ascending=False)
 allplay_ps = allplay_ps.reset_index(drop=True)
 
 # create allplay table sorted by power score
 lw_allplay_ps = lw_allplay.sort_values(by='PowerScore', ascending=False)
 lw_allplay_ps = lw_allplay_ps.reset_index(drop=True)
+
+allplay_ps['AllPlayWin%'] = (allplay_ps['AllPlayWin%'] * 100).round(2)
+allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
+
 
 # create empty lists to add to in the for loop
 diffs = []
@@ -314,7 +320,6 @@ allplay_ps.index = np.arange(1, len(allplay_ps) + 1)
 team_scores_prt.index = np.arange(1, len(team_scores_prt) + 1)
 logWeightedPS_prnt.index = np.arange(1, len(logWeightedPS_prnt) + 1)
 projectedStandings_prnt.index = np.arange(1, len(projectedStandings_prnt) + 1)
-
 
 # Print everything
 # open text file
