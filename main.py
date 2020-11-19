@@ -430,7 +430,10 @@ for x in range(1,len(stats_teams)+1):
 projections = pd.DataFrame(projections)
 projections.insert(loc=0, column='Team', value=team_names)
 projections = projections.set_axis(['Team', 'Playoffs', '1st Seed', '2nd Seed', '3rd Seed', '4th Seed'], axis=1, inplace=False)
-projections[['Playoffs','1st Seed','2nd Seed','3rd Seed', '4th Seed']] = projections[['Playoffs','1st Seed','2nd Seed','3rd Seed', '4th Seed']].astype(str) + "%"
+projections = projections.sort_values(by='Playoffs', ascending=False)
+projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']] = projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']].astype(str) + "%"
+projections['Playoffs'] = "**" + projections['Playoffs'].astype(str) + "%**"
+
 
 print("\n", projections)
 print('')
