@@ -213,46 +213,50 @@ allplay = allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False) 
 allplay['PowerScore'] = allplay['PowerScore'].round(2) # round powerscore to 2 decimal points
 allplay = allplay.reset_index()
 
-# create table for last week to compare for weekly change
-lw_allplay = lw_allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False)
-lw_allplay['PowerScore'] = lw_allplay['PowerScore'].round(2)
-lw_allplay = lw_allplay.reset_index()
-
 # create allplay table sorted by power score
 allplay_ps = allplay[['team', 'AllPlayWin%', 'PowerScore']]
 allplay_ps = allplay_ps.sort_values(by='PowerScore', ascending=False)
 allplay_ps = allplay_ps.reset_index(drop=True)
 
-# create allplay table sorted by power score
-lw_allplay_ps = lw_allplay.sort_values(by='PowerScore', ascending=False)
-lw_allplay_ps = lw_allplay_ps.reset_index(drop=True)
-
 allplay_ps['AllPlayWin%'] = (allplay_ps['AllPlayWin%'] * 100).round(2)
 allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
 
+if week > 1:
 
-# create empty lists to add to in the for loop
-diffs = []
-emojis = []
-emoji_names = allplay_ps['team'].tolist()
+    # create table for last week to compare for weekly change
+    lw_allplay = lw_allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False)
+    lw_allplay['PowerScore'] = lw_allplay['PowerScore'].round(2)
+    lw_allplay = lw_allplay.reset_index()
 
-for team in emoji_names:
-    tw_index = allplay_ps[allplay_ps['team'] == team].index.values # get index values of this weeks power rankigns
-    lw_index = lw_allplay_ps[lw_allplay_ps['team'] == team].index.values  # get index values of last weeks power rankings
-    diff = lw_index-tw_index # find the difference between last week to this week
-    diff = int(diff.item()) # turn into list to iterate over
-    diffs.append(diff) # append to the list
+    # create allplay table sorted by power score
+    lw_allplay_ps = lw_allplay.sort_values(by='PowerScore', ascending=False)
+    lw_allplay_ps = lw_allplay_ps.reset_index(drop=True)
 
-# iterate over diffs list and edit values to include up/down arrow emoji and the number of spots the team moved
-for item in diffs:
-    if item > 0:
-        emojis.append("⬆️ " + str(abs(item)))
-    elif item < 0:
-        emojis.append("⬇️ " + str(abs(item)))
-    elif item == 0:
-        emojis.append("") # adds a index of nothing for teams that didn't move
 
-allplay_ps.insert(loc=1, column='Weekly Change', value=emojis) # insert the weekly change column
+
+
+    # create empty lists to add to in the for loop
+    diffs = []
+    emojis = []
+    emoji_names = allplay_ps['team'].tolist()
+
+    for team in emoji_names:
+        tw_index = allplay_ps[allplay_ps['team'] == team].index.values # get index values of this weeks power rankigns
+        lw_index = lw_allplay_ps[lw_allplay_ps['team'] == team].index.values  # get index values of last weeks power rankings
+        diff = lw_index-tw_index # find the difference between last week to this week
+        diff = int(diff.item()) # turn into list to iterate over
+        diffs.append(diff) # append to the list
+
+    # iterate over diffs list and edit values to include up/down arrow emoji and the number of spots the team moved
+    for item in diffs:
+        if item > 0:
+            emojis.append("⬆️ " + str(abs(item)))
+        elif item < 0:
+            emojis.append("⬇️ " + str(abs(item)))
+        elif item == 0:
+            emojis.append("") # adds a index of nothing for teams that didn't move
+
+    allplay_ps.insert(loc=1, column='Weekly Change', value=emojis) # insert the weekly change column
 
 
 ### EXPCETED STANDINGS
