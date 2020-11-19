@@ -460,43 +460,43 @@ logWeightedPS_prnt.index = np.arange(1, len(logWeightedPS_prnt) + 1)
 projectedStandings_prnt.index = np.arange(1, len(projectedStandings_prnt) + 1)
 
 
-# # Print everything
-# # open text file
-# filepath = "/Users/christiangeer/Fantasy_Sports/Fantasy_FF/power_rankings/jtown-dynasty/content/blog/Week"+ str(week) + "PowerRankings.md"
-# sys.stdout = open(filepath, "w")
-#
-# # for the markdown files in blog
-# print("---")
-# print("title: Week (WEEK) Report")
-# print("date: 2020-MONTH-DAY")
-# print("image: /images/week(ADD WEEK NUMBER HERE).jpg")
-# print("draft: false")
-# print("---")
-#
-# print("<!-- excerpt -->")
-#
-# print("\n### POWER RANKINGS\n")
-# print(table(allplay_ps, headers='keys', tablefmt='pipe', numalign='center'))
-#
-# print("\n### EXPECTED STANDINGS (as of week ", week, ")")
-# # league.printExpectedStandings(week)
-# print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
-#
-# # print("\n # WEEK ", week, " POWER RANKINGS")
-# # league.printPowerRankings(week)
-#
-# print("\n### LUCK INDEX")
-# league.printLuckIndex(week)
-#
-# # print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY WINS)")
-# # print(table(allplay, headers='keys', tablefmt='github', numalign='decimal'))
-#
-# # print("\n WEEK ", week, " POWER SCORE (CALC W/ LEAGUE AVERAGE SCORE)")
-# # print(table(team_scores_prt, headers='keys', tablefmt='github', numalign='decimal'))
-#
-# # print("\n WEEK ", week, " LOG WEIGHTED")
-# # print(table(logWeightedPS_prnt, headers='keys', tablefmt='github', numalign='decimal'))
-#
-#
-# # close text file
-# sys.stdout.close()
+# Print everything
+# open text file
+filepath = "/Users/christiangeer/Fantasy_Sports/Fantasy_FF/power_rankings/jtown-dynasty/content/blog/Week"+ str(week) + "PowerRankings.md"
+sys.stdout = open(filepath, "w")
+
+# for the markdown files in blog
+print("---")
+print("title: Week (WEEK) Report")
+print("date: 2020-MONTH-DAY")
+print("image: /images/week(ADD WEEK NUMBER HERE).jpg")
+print("draft: false")
+print("---")
+
+print("<!-- excerpt -->")
+
+print("\n### POWER RANKINGS\n")
+print(table(allplay_ps, headers='keys', tablefmt='pipe', numalign='center'))
+
+print("\n### EXPECTED STANDINGS (as of week ", week, ")")
+# league.printExpectedStandings(week)
+print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
+
+# print("\n # WEEK ", week, " POWER RANKINGS")
+# league.printPowerRankings(week)
+
+print("\n### LUCK INDEX")
+league.printLuckIndex(week)
+
+# print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY WINS)")
+# print(table(allplay, headers='keys', tablefmt='github', numalign='decimal'))
+
+# print("\n WEEK ", week, " POWER SCORE (CALC W/ LEAGUE AVERAGE SCORE)")
+# print(table(team_scores_prt, headers='keys', tablefmt='github', numalign='decimal'))
+
+# print("\n WEEK ", week, " LOG WEIGHTED")
+# print(table(logWeightedPS_prnt, headers='keys', tablefmt='github', numalign='decimal'))
+
+
+# close text file
+sys.stdout.close()
