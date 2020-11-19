@@ -441,8 +441,6 @@ projections = projections.sort_values(by='Playoffs', ascending=False)
 projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']] = projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']].astype(str) + "%"
 projections['Playoffs'] = "**" + projections['Playoffs'].astype(str) + "%**"
 
-
-print("\n", projections)
 print('')
 
 # print('Average # of wins for playoff spot')
