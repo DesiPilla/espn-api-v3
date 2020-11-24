@@ -210,7 +210,7 @@ allplay['AllPlayWin%'] = allplay['AllPlayWin%'].round(3)
 
 
 allplay = allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False) # Sort allplay by allplay wins with a powerscore tiebreaker
-allplay['PowerScore'] = allplay['PowerScore'].round(2) # round powerscore to 2 decimal points
+allplay['PowerScore'] = allplay['PowerScore'].round(1) # round powerscore to 1 decimal points
 allplay = allplay.reset_index()
 
 # create allplay table sorted by power score
