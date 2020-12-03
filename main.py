@@ -340,8 +340,8 @@ teams_to_play_off = 4
 #Order needs to be the same as team_names
 
 # ['Red Zone  Rockets'[1], 'Final Deztination'[2], 'Game of  Jones'[3], 'Victorious Vikings'[4], 'OC Gang'[5], 'Sutton these  Nutz'[6], 'Karate Kickin Kylers'[7], 'Team Ger'[8]]
-home_teams = [2,3,1,7,8,5,4,6,3,2,7,1]
-away_teams = [8,5,4,6,7,1,2,3,8,5,4,6]
+home_teams = [3,2,7,1]
+away_teams = [8,5,4,6]
 # current_wins = [6.013909,6.014544,7.014027,5.014112,8.016490,3.012880,1.011269,4.012954]
 current_wins = []
 for team in teams_list:
