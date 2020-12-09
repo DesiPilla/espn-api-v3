@@ -340,8 +340,8 @@ teams_to_play_off = 4
 #Order needs to be the same as team_names
 
 # ['Red Zone  Rockets'[1], 'Final Deztination'[2], 'Game of  Jones'[3], 'Victorious Vikings'[4], 'OC Gang'[5], 'Sutton these  Nutz'[6], 'Karate Kickin Kylers'[7], 'Team Ger'[8]]
-home_teams = [3,2,7,1]
-away_teams = [8,5,4,6]
+home_teams = []
+away_teams = []
 # current_wins = [6.013909,6.014544,7.014027,5.014112,8.016490,3.012880,1.011269,4.012954]
 current_wins = []
 for team in teams_list:
@@ -441,7 +441,7 @@ for x in range(1,len(stats_teams)+1):
 projections = pd.DataFrame(projections)
 projections.insert(loc=0, column='Team', value=team_names)
 projections = projections.set_axis(['Team', 'Playoffs', '1st Seed', '2nd Seed', '3rd Seed', '4th Seed'], axis=1, inplace=False)
-projections = projections.sort_values(by='Playoffs', ascending=False)
+projections = projections.sort_values(by=['Playoffs','1st Seed', '2nd Seed', '3rd Seed', '4th Seed'], ascending=False)
 projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']] = projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']].astype(str) + "%"
 projections['Playoffs'] = "**" + projections['Playoffs'].astype(str) + "%**"
 
