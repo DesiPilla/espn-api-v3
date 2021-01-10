@@ -34,8 +34,11 @@ def buildLeague(league):
             league.currentWeek = settings[0]['scoringPeriodId']
             league.settings = settings[0]['settings']
         print('[BUILDING LEAGUE] League authenticated!')
-    except:
-        raise Exception('[BUILDING LEAGUE] ERROR: League is not accessible: swid and espn_s2 needed.')
+    except Exception as e:
+        if settings["messages"] == ['Not Found']:
+            raise Exception("[BUILDING LEAGUE] ERROR: League not found. Check that the league_id is correct.")
+        else:
+            raise Exception('[BUILDING LEAGUE] ERROR: League is not accessible: swid and espn_s2 needed.')
     
     # Gather league information
     print('[BUILDING LEAGUE] Gathering team information...')
