@@ -1,4 +1,10 @@
-from authorize import Authorize
+# Packages for fetching ESPN credentials
+from authorize import get_credentials
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import InvalidArgumentException
+
+# Packages for building League
 from team import Team
 from utils.building_utils import *
 from utils.sorting_utils import *
@@ -6,6 +12,7 @@ from utils.printing_utils import *
 
 import requests
 import numpy as np
+import pandas as pd
 import scipy as sp
 from scipy import stats
 from tabulate import tabulate as table
@@ -16,17 +23,30 @@ class League():
     def __init__(self, league_id, year, username=None, password=None, swid=None, espn_s2=None):
         self.league_id = league_id
         self.year = year
-        if username and password and not (swid or espn_s2):
-            client = Authorize(username, password)
-            self.swid = client.swid
-            self.espn_s2 = client.espn_s2
-        else:
-            self.username = username
-            self.password = password            
+        
+        self.username = username
+        self.password = password
+        
+        new_league = False
+        if (swid is not None) and (espn_s2 is not None):
             self.swid = swid
-            self.espn_s2 = espn_s2            
+            self.espn_s2 = espn_s2
+        else:
+            # Get ESPN credentials
+            self.swid, self.espn_s2 = get_credentials(league_id)
+            new_league = True
 
+        # Build league week-by-week
         buildLeague(self)
+        
+        # Save ESPN credentials
+        if new_league:
+            login = pd.read_csv('login.csv').iloc[:, 1:]
+            creds = {'manager':self.teams[1].owner, 'league_name':self.settings['name'], 'league_id':league_id, 'swid':self.swid, 'espn_s2':self.espn_s2}
+            login = login.append(creds, ignore_index=True)
+            login.to_csv('login.csv', index=False) 
+            print("[BUILDING LEAGUE] League credentials saved.")
+            
         return
         
         

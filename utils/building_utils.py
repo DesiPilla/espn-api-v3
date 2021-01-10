@@ -14,7 +14,7 @@ from team import Team
 
 def buildLeague(league):
     # ESPN Fantasy Football API v3 came out for seasons in 2019 and beyond. v2 is used up until 2018
-    print('Fetching league...')
+    print('[BUILDING LEAGUE] Fetching league...')
     if (league.year >= (datetime.datetime.now() - datetime.timedelta(180)).year):         # ESPN API v3
         league.url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/" + \
             str(league.year) + "/segments/0/leagues/" + str(league.league_id)
@@ -33,15 +33,15 @@ def buildLeague(league):
         else:
             league.currentWeek = settings[0]['scoringPeriodId']
             league.settings = settings[0]['settings']
-        print('League authenticated!')
+        print('[BUILDING LEAGUE] League authenticated!')
     except:
-        raise Exception('ERROR: League is not accessible: swid and espn_s2 needed.')
+        raise Exception('[BUILDING LEAGUE] ERROR: League is not accessible: swid and espn_s2 needed.')
     
     # Gather league information
-    print('Gathering team information...')
+    print('[BUILDING LEAGUE] Gathering team information...')
     league.regSeasonWeeks = league.settings['scheduleSettings']['matchupPeriodCount']
     league.teamData = requests.get(league.url, cookies = league.cookies, params = {'view' : 'mTeam'}).json()
-    print('Gathering matchup data...')
+    print('[BUILDING LEAGUE] Gathering matchup data...')
     league.matchupData = requests.get(league.url, cookies = league.cookies, params = {'view' : 'mMatchupScore'}).json()
     if league.year < 2019:
         league.teamData = league.teamData[0]
@@ -52,7 +52,7 @@ def buildLeague(league):
     getRosterSettings(league) 
     buildTeams(league)
     #getWeeklyProjections(league)
-    print('League successfully built!')    
+    print('[BUILDING LEAGUE] League successfully built!')    
     return
 
 def getRosterSettings(league):
@@ -62,7 +62,7 @@ def getRosterSettings(league):
             - Creates a dictionary startingRosterSlots{} that is a subset of rosterSlots{} and only includes slotIds that are on the starting roster
             - Add rosterSlots{} and startingRosterSlots{} to the League attribute League.rosterSettings
     '''
-    print('Gathering roster settings information...')
+    print('[BUILDING LEAGUE] Gathering roster settings information...')
     
     # This dictionary maps each slotId to the position it represents
     league.rosterMap = { 0 : 'QB', 1 : 'TQB', 2 : 'RB', 3 : 'RB/WR', 4 : 'WR',
@@ -120,15 +120,15 @@ def buildTeams(league):
     """ This function builds the Team objects for each team in the league """
     league.teams = {}                                                             # Create an empty teams dictionary
     matchupData = league.matchupData
-    print("Current Week:",league.currentWeek)
-    print('Building teams...')
+    print("[BUILDING LEAGUE] Current Week:",league.currentWeek)
+    print('[BUILDING LEAGUE] Building teams...')
     for teamId in range(1, league.numTeams + 1):
         team = Team(league.teamData['teams'][teamId-1])                           # Create a Team object for each team in the league
         team.nameOwner(league.teamNames[teamId])                                  # Name the team owner
         team.startingRosterSlots = league.rosterSettings['startingRosterSlots']   # Define the league startingRosterSlots setting for each team
         league.teams[teamId] = team                                               # Add each Team object to the teams dictionary
     
-    print('Building schedule...')
+    print('[BUILDING LEAGUE] Building schedule...')
     numMatchups = (league.currentWeek - 1)*league.numTeams // 2     # Determines the number of matchups that have been completed (not including the current week)
     for week in range(1, league.settings['scheduleSettings']['matchupPeriodCount'] + 1):
         # Build the matchups for every week
@@ -140,7 +140,7 @@ def buildTeams(league):
             matchupData = league.matchupData
         
         
-        print('\tBuilding week %d/%d...' % (week, league.settings['scheduleSettings']['matchupPeriodCount']))             
+        print('[BUILDING LEAGUE] \tBuilding week %d/%d...' % (week, league.settings['scheduleSettings']['matchupPeriodCount']))             
         for m in range((week-1)*league.numTeams // 2, (week)*league.numTeams // 2):  
             awayTeam = matchupData['schedule'][m]['away']           # Define the away team of the matchup
             homeTeam = matchupData['schedule'][m]['home']           # Define the home team of the matchup
