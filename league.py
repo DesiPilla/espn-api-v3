@@ -33,7 +33,7 @@ class League():
             self.espn_s2 = espn_s2
         else:
             # Get ESPN credentials
-            self.swid, self.espn_s2 = get_credentials(league_id)
+            self.swid, self.espn_s2 = get_credentials()
             new_league = True
 
         # Build league week-by-week
@@ -41,8 +41,11 @@ class League():
         
         # Save ESPN credentials
         if new_league:
-            login = pd.read_csv('login.csv').iloc[:, 1:]
-            creds = {'manager':self.teams[1].owner, 'league_name':self.settings['name'], 'league_id':league_id, 'swid':self.swid, 'espn_s2':self.espn_s2}
+            try:
+                login = pd.read_csv('login.csv').iloc[:, 1:]
+            except:
+                login = pd.DataFrame(columns=['manager', 'league_name', 'league_id', 'swid', 'espn_s2'])
+            creds = {'manager':self.teams[1].owner, 'league_name':self.settings['name'], 'league_id':self.league_id, 'swid':self.swid, 'espn_s2':self.espn_s2}
             login = login.append(creds, ignore_index=True)
             login.to_csv('login.csv', index=False) 
             print("[BUILDING LEAGUE] League credentials saved.")
