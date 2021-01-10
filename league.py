@@ -24,21 +24,18 @@ class League():
         self.league_id = league_id
         self.year = year
         
-        self.username = username
-        self.password = password
+        #self.username = username
+        #self.password = password   
+        self.swid = swid
+        self.espn_s2 = espn_s2   
         
         new_league = False
-        if (swid is not None) and (espn_s2 is not None):
-            self.swid = swid
-            self.espn_s2 = espn_s2
-        else:
-            # Get ESPN credentials
-            self.swid, self.espn_s2 = get_credentials()
+        if (swid is None) and (espn_s2 is None):
             new_league = True
-
+            
         # Build league week-by-week
-        buildLeague(self)
-        
+        buildLeague(self, fetch_credentials=False)
+
         # Save ESPN credentials
         if new_league:
             try:

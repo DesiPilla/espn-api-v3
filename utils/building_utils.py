@@ -1,10 +1,12 @@
 import requests
 import datetime
 
-# Import the Team class (this is complicated because team.py is in the parent folder)
 import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from pathlib import Path
+sys.path.append(str(Path('.').absolute().parent))  # Add parent directory to path
+
 from team import Team
+from authorize import get_credentials
 
 ''' 
 ***********************************************************
@@ -12,7 +14,7 @@ from team import Team
 ***********************************************************
 '''  
 
-def buildLeague(league):
+def buildLeague(league, fetch_credentials=False):
     # ESPN Fantasy Football API v3 came out for seasons in 2019 and beyond. v2 is used up until 2018
     print('[BUILDING LEAGUE] Fetching league...')
     if (league.year >= (datetime.datetime.now() - datetime.timedelta(180)).year):         # ESPN API v3
@@ -22,8 +24,12 @@ def buildLeague(league):
         league.url = "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/" + \
             str(league.league_id) + "?seasonId=" + str(league.year)
     
+    # Get credentials for league
+    if fetch_credentials:
+        league.swid, league.espn_s2 = get_credentials()
+        
     league.cookies = {'swid' : league.swid, 'espn_s2' : league.espn_s2}
-    settings = requests.get(league.url, cookies = league.cookies, params = {'view' : 'mSettings'}).json()
+    settings = requests.get(league.url, cookies=league.cookies, params={'view' : 'mSettings'}).json()
     
     # Try navigating the settings tree. If an error occurs, the league is not accessible
     try:
@@ -35,10 +41,21 @@ def buildLeague(league):
             league.settings = settings[0]['settings']
         print('[BUILDING LEAGUE] League authenticated!')
     except Exception as e:
-        if settings["messages"] == ['Not Found']:
+        if settings["messages"][0] == 'Not Found':
             raise Exception("[BUILDING LEAGUE] ERROR: League not found. Check that the league_id is correct.")
+        
+        elif settings["messages"][0] == 'You are not authorized to view this League.':
+            # If credentials were not looked for, turn this argument on and try again
+            if not fetch_credentials:
+                print('[BUILDING LEAGUE] League is PRIVATE. Attempting to fetch credentials...')
+                return buildLeague(league, fetch_credentials=True)
+                
+            # If credentials were looked for and this still failed, then you are not abile to access the league.
+            else:
+                raise Exception('[BUILDING LEAGUE] ERROR: League is not accessible: swid and espn_s2 needed.')
+            
         else:
-            raise Exception('[BUILDING LEAGUE] ERROR: League is not accessible: swid and espn_s2 needed.')
+            raise Exception('[BUILDING LEAGUE] ERROR: An unknown error has occurred.')
     
     # Gather league information
     print('[BUILDING LEAGUE] Gathering team information...')
