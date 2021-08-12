@@ -17,7 +17,7 @@ from authorize import get_credentials
 def buildLeague(league, fetch_credentials=False):
     # ESPN Fantasy Football API v3 came out for seasons in 2019 and beyond. v2 is used up until 2018
     print('[BUILDING LEAGUE] Fetching league...')
-    if (league.year >= (datetime.datetime.now() - datetime.timedelta(180)).year):         # ESPN API v3
+    if (league.year >= (datetime.datetime.now() - datetime.timedelta(540)).year):         # ESPN API v3
         league.url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/" + \
             str(league.year) + "/segments/0/leagues/" + str(league.league_id)
     else:                           # ESPN API v2
