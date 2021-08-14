@@ -14,9 +14,9 @@ def get_lineup(league: League, team: Team, week: int):
     box_scores = league.box_scores(week)
     for box_score in box_scores:
         if team == box_score.home_team:
-            return = box_score.home_lineup
+            return box_score.home_lineup
         elif team == box_score.away_team:
-            return = box_score.away_lineup
+            return box_score.away_lineup
 
 def get_top_players(lineup: list, slot: str, n: int):
     ''' Takes a list of players and returns a list of the top n players based on points scored. '''
