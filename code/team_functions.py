@@ -8,76 +8,104 @@ from collections import Counter
 
 
 
-def get_top_players(team: Team, slot: str, n: int):
+def get_lineup(league: League, team: Team, week: int):
+    ''' Return the lineup of the given team during the given week '''
+    # Get the lineup for the team during the specified week
+    box_scores = league.box_scores(week)
+    for box_score in box_scores:
+        if team == box_score.home_team:
+            return = box_score.home_lineup
+        elif team == box_score.away_team:
+            return = box_score.away_lineup
+
+def get_top_players(lineup: list, slot: str, n: int):
     ''' Takes a list of players and returns a list of the top n players based on points scored. '''
     # Gather players of the desired position
     eligible_players = []
-    for player in team.roster:
+    for player in lineup:
         if slot in player.eligibleSlots:
             eligible_players.append(player)
             
-    return sorted(eligible_players, key=lambda x: x.stats[1]['points'], reverse=True)[:n]
+    return sorted(eligible_players, key=lambda x: x.points, reverse=True)[:n]
 
 
-def get_best_lineup(team: Team):
+def get_best_lineup(lineup: list):
     ''' Returns the best possible lineup for team during the loaded week. '''
-    # Save full roster 
-    saved_roster = team.roster[:]
-
+    # Save full roster
+    saved_roster = copy(lineup)
+    
     # Find Best Lineup
     best_lineup = []
     for slot in sorted(starting_roster_slots.keys(), key=len):  # Get best RB before best RB/WR/TE
         num_players = starting_roster_slots[slot]
-        best_players = get_top_players(team, slot, num_players)
+        best_players = get_top_players(saved_roster, slot, num_players)
         best_lineup.extend(best_players)
         
         # Remove selected players from consideration for other slots
         for player in best_players:
-            team.roster.remove(player)
-            
-    # Restore original roster
-    team.roster = saved_roster
+            saved_roster.remove(player)
 
-    return np.sum([player.stats[1]['points'] for player in best_lineup])
+    return np.sum([player.points for player in best_lineup])
 
 
-def get_best_trio(team: Team):
+def get_best_trio(lineup: list):
     ''' Returns the the sum of the top QB/RB/Reciever trio for a team during the loaded week. '''
-    qb = get_top_players(team, 'QB', 1)[0].stats[1]['points']
-    rb = get_top_players(team, 'RB', 1)[0].stats[1]['points']
-    wr = get_top_players(team, 'WR', 1)[0].stats[1]['points']
-    te = get_top_players(team, 'TE', 1)[0].stats[1]['points']
+    qb = get_top_players(lineup, 'QB', 1)[0].points
+    rb = get_top_players(lineup, 'RB', 1)[0].points
+    wr = get_top_players(lineup, 'WR', 1)[0].points
+    te = get_top_players(lineup, 'TE', 1)[0].points
     best_trio = round(qb + rb + max(wr, te), 2)
     return best_trio
 
-def get_weekly_finish(team: Team):
+def get_weekly_finish(league: League, team: Team, week: int):
     ''' Returns the rank of a team compared to the rest of the league by points for (for the loaded week) '''
-    league_scores = sorted(league.teams, key=lambda x: x.scores[week], reverse=True)
-    return league_scores.index(team) + 1
+    league_scores = [tm.scores[week-1] for tm in league.teams]
+    league_scores = sorted(league_scores, reverse=True)
+    return league_scores.index(team.scores[week-1]) + 1
 
-def get_num_out(team: Team):
+def get_num_out(lineup: list):
     ''' Returns the (esimated) number of players who did not play for a team for the loaded week (excluding IR slot players). '''
     num_out = 0
     # TODO: write new code based on if player was injured
     return num_out
 
-def avg_starting_score_slot(lineup: list, slot: str):
+def avg_slot_score(lineup: list, slot: str):
     ''' 
     Returns the average score for starting players of a specified slot.
     `lineup` is either BoxScore().away_lineup or BoxScore().home_lineup (a list of BoxPlayers)
     '''
-    return np.mean([player.stats[1]['points'] for player in box_score.home_lineup if player.slot_position == slot])
+    return np.mean([player.points for player in lineup if player.slot_position == slot])
 
-def total_bench_points(lineup: list):
+def sum_bench_points(lineup: list):
     ''' 
     Returns the total score for bench players
     `lineup` is either BoxScore().away_lineup or BoxScore().home_lineup (a list of BoxPlayers)
     '''
-    return np.sum([player.stats[1]['points'] for player in box_score.home_lineup if player.slot_position == 'BE'])
+    return np.sum([player.points for player in lineup if player.slot_position == 'BE'])
 
+def print_weekly_stats(league: League, team: Team, week: int):
+    ''' Print the weekly stats for the team during a given week. '''
 
-
-
+    lineup = get_lineup(league, team, week)
+    stats_table = [['Week Score: ', team.scores[week-1]],
+                   ['Best Possible Lineup: ', get_best_lineup(lineup)],
+                   ['Opponent Score: ', team.schedule[week-1].scores[week-1]],
+                   
+                   ['Weekly Finish: ', get_weekly_finish(league, team, week)],
+                   ['Best Trio: ', get_best_trio(lineup)],
+                   ['Number of Injuries: ', get_num_out(lineup)],
+                   ['Starting QB pts: ', avg_slot_score(lineup, 'QB')],
+                   ['Avg. Starting RB pts: ', avg_slot_score(lineup, 'RB')],
+                   ['Avg. Starting WR pts: ', avg_slot_score(lineup, 'WR')],
+                   ['Starting TE pts: ', avg_slot_score(lineup, 'TE')],
+                   ['Starting Flex pts: ', avg_slot_score(lineup, 'RB/WR/TE')],
+                   ['Starting DST pts: ', avg_slot_score(lineup, r'D/ST')],
+                   ['Starting K pts: ', avg_slot_score(lineup, 'K')],
+                   ['Total Bench pts: ', sum_bench_points(lineup)]]
+    
+    print('\n', table(stats_table, headers = ['Week ' + str(week), ''], numalign = 'left'))
+    
+print_weekly_stats(league, team, week)
 
 
 
