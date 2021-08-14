@@ -4,14 +4,15 @@ import matplotlib.pyplot as plt
 
 from espn_api.football import League, Team, Player
 
+from copy import copy
 from collections import Counter
+from tabulate import tabulate as table
 
 
-
-def get_lineup(league: League, team: Team, week: int):
+def get_lineup(league: League, team: Team, week: int, box_scores=None):
     ''' Return the lineup of the given team during the given week '''
     # Get the lineup for the team during the specified week
-    box_scores = league.box_scores(week)
+    if box_scores is None: box_scores = league.box_scores(week)
     for box_score in box_scores:
         if team == box_score.home_team:
             return box_score.home_lineup
@@ -57,6 +58,11 @@ def get_best_trio(lineup: list):
     best_trio = round(qb + rb + max(wr, te), 2)
     return best_trio
 
+def get_lineup_efficiency(lineup: list):
+    max_score = get_best_lineup(lineup)
+    real_score = np.sum([player.points for player in lineup if player.slot_position not in ('BE', 'IR')])
+    return real_score / max_score
+    
 def get_weekly_finish(league: League, team: Team, week: int):
     ''' Returns the rank of a team compared to the rest of the league by points for (for the loaded week) '''
     league_scores = [tm.scores[week-1] for tm in league.teams]
@@ -105,8 +111,6 @@ def print_weekly_stats(league: League, team: Team, week: int):
     
     print('\n', table(stats_table, headers = ['Week ' + str(week), ''], numalign = 'left'))
     
-print_weekly_stats(league, team, week)
-
 
 
 ''' ADVANCED STATS '''
