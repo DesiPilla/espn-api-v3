@@ -9,6 +9,9 @@ from collections import Counter
 from tabulate import tabulate as table
 
 
+# Get a dictionary of the starting roster slots and number of each for the League (Week 1 must have passed already)
+starting_roster_slots = Counter([p.slot_position for p in league.box_scores(1)[0].home_lineup if p.slot_position not in ['BE', 'IR']])
+
 def get_lineup(league: League, team: Team, week: int, box_scores=None):
     ''' Return the lineup of the given team during the given week '''
     # Get the lineup for the team during the specified week
