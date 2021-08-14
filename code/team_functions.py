@@ -187,6 +187,10 @@ def get_season_luck_indices(league: League, week: int):
     return luck_indices
 
 
+
+
+''' GENERAL REPORTING '''
+
 def sort_lineups_by_func(league: League, week: int, func, box_scores=None, **kwargs):
     ''' 
     Sorts league teams according to function. 
@@ -229,3 +233,17 @@ def print_weekly_stats(league: League, week: int):
                    ]
     print('\n', table(statsTable, headers = ['Week ' + str(week), ''])) 
     
+def print_current_standings(league: League):
+    ''' Inputs: None
+        Outputs: table (prints current standings)
+        This function prints the current standings for a league.
+        This function does NOT account for tiebreakers.
+    '''        
+    standings = league.standings()
+    results_table = []
+    for team in standings:
+        results_table += [[ team.team_name, team.wins, team.losses, team.ties, team.points_for, team.owner ]]
+    print('\nWeek {}\n'.format(league.currentMatchupPeriod),  
+          table(results_table, 
+                headers = ['Team', 'Wins', 'Losses', 'Ties', 'Points Scored', 'Owner'], 
+                floatfmt = '.2f'))     
