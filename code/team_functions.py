@@ -12,6 +12,9 @@ from tabulate import tabulate as table
 # Get a dictionary of the starting roster slots and number of each for the League (Week 1 must have passed already)
 starting_roster_slots = Counter([p.slot_position for p in league.box_scores(1)[0].home_lineup if p.slot_position not in ['BE', 'IR']])
 
+
+''' ANALYTIC FUNCTIONS '''
+
 def get_lineup(league: League, team: Team, week: int, box_scores=None):
     ''' Return the lineup of the given team during the given week '''
     # Get the lineup for the team during the specified week
@@ -117,8 +120,9 @@ def print_weekly_stats(league: League, team: Team, week: int):
 
 
 ''' ADVANCED STATS '''
+#league.power_rankings(week)
 
-def get_weekly_luck_index(league: League, team: Team, week: int, num_teams: int):
+def get_weekly_luck_index(league: League, team: Team, week: int):
     ''' 
     This function returns an index quantifying how 'lucky' a team was in a given week 
     
@@ -128,6 +132,7 @@ def get_weekly_luck_index(league: League, team: Team, week: int, num_teams: int)
         25% opp's play compared to previous weeks
     '''
     opp = team.schedule[week-1]
+    num_teams = len(league.teams)
     
     # Luck Index based on where the team and its opponent finished compared to the rest of the league  
     rank = get_weekly_finish(league, team, week)
@@ -178,5 +183,5 @@ def get_season_luck_indices(league: League, week: int):
     for wk in range(1, week + 1):
         # Update luck_index for each team
         for team in league.teams:
-            luck_indices[team] += get_weekly_luck_index(team, week, len(league.teams))
+            luck_indices[team] += get_weekly_luck_index(league, team, week)
     return luck_indices
