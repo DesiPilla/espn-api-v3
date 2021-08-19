@@ -247,3 +247,64 @@ def print_current_standings(league: League):
           table(results_table, 
                 headers = ['Team', 'Wins', 'Losses', 'Ties', 'Points Scored', 'Owner'], 
                 floatfmt = '.2f'))     
+    
+    
+''' HISTORICAL DRAFT ANALYTICS '''
+def get_draft_details(league: League):
+    draft = pd.DataFrame()
+    
+    primary_slots = [slot for slot in starting_roster_slots.keys() if ('/' not in slot) or (slot == 'D/ST')]
+    for i, player in enumerate(league.draft):
+        draft.loc[i, 'year'] = league.year
+        draft.loc[i, 'team_owner'] = player.team.owner
+        draft.loc[i, 'team_id'] = player.team.team_id
+        draft.loc[i, 'player_name'] = player.playerName
+        draft.loc[i, 'player_id'] = player.playerId
+        draft.loc[i, 'round_num'] = player.round_num
+        draft.loc[i, 'round_pick'] = player.round_pick
+        try:
+            # Get more player details (can take 1.5 min)
+            player = league.player_info(playerId=draft.loc[i, 'player_id'])
+            draft.loc[i, 'pro_team'] = player.proTeam
+            draft.loc[i, 'position'] = [slot for slot in player.eligibleSlots if slot in primary_slots][0]
+            draft.loc[i, 'proj_points'] = player.projected_total_points
+            draft.loc[i, 'total_points'] = player.total_points
+        except:
+            print(player, draft.loc[i, 'player_id'], player.eligibleSlots)
+            print(primary_slots)
+            raise Exception
+    return draft
+
+def get_multiple_drafts(league: League, start_year: int = 2020, end_year: int = 2021, swid=None, espn_s2=None):
+    draft = pd.DataFrame()
+    for year in range(start_year, end_year+1):
+        print('Fetching {} draft...'.format(year), end='')
+        draft_league = League(league_id=league.league_id,
+                              year=year,
+                              swid=swid, 
+                              espn_s2=espn_s2)
+        draft = pd.concat([draft, get_draft_details(draft_league)])
+        print('Done.')
+    return draft
+
+def get_team_max(df, col, by='team_owner', keep=None):
+    '''
+    `by` = 'team_id', 'team_owner'
+    '''
+    
+    def get_maxs(s):
+        return ' | '.join(s[s == s.max()].index.values)
+
+    value_counts = df.groupby([by, col])\
+                     .count()['player_id']\
+                     .unstack()\
+                     .fillna(0)
+
+    value_counts['max_value'] = value_counts.apply(get_maxs, axis=1)
+    value_counts['max_count'] = value_counts.max(axis=1)
+    value_counts = value_counts.iloc[:, -2:]
+    
+    if keep is not None:
+        return value_counts[value_counts.index.isin(keep)]
+    
+    else: return value_counts
