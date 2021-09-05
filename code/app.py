@@ -154,10 +154,10 @@ class LoginDisplay(GridLayout):
         statButtons.add_widget(self.printLuckIndexButton)
         self.printLuckIndexButton.bind(on_release = self.print_luck_index)
         
-        # Create the printExpectedStandings button
+        # Create the print_expected_standings button
         self.printExpectedStandingsButton = Button(text = "View Expected Standings")
         statButtons.add_widget(self.printExpectedStandingsButton)
-        self.printExpectedStandingsButton.bind(on_release = self.printExpectedStandings)
+        self.printExpectedStandingsButton.bind(on_release = self.print_expected_standings)
         
         # Create the printWeeklyStats button
         self.printWeeklyStatsButton = Button(text = "View Weekly Awards")
@@ -246,30 +246,6 @@ class LoginDisplay(GridLayout):
             self.statsTable.add_widget(Label(text = current_standings[i].owner))
         return        
     
-    
-    def printExpectedStandings(self, instance):
-        # Fetch the most recent expected standings for the league
-        expectedStandings = self.league.printExpectedStandings(self.league.currentWeek - 1)
-        
-        self.statsTable.clear_widgets()                     # Clear the stats table
-        self.statsTable.cols = 5                            # Add 5 columns
-        self.statsTable.rows = self.league.num_teams + 1     # Create enough rows for every team plus a header  
-        
-        # Add headers to the expected standings table
-        self.statsTable.add_widget(Label(text = "Team"))
-        self.statsTable.add_widget(Label(text = "Wins"))
-        self.statsTable.add_widget(Label(text = "Losses"))
-        self.statsTable.add_widget(Label(text = "Ties"))
-        self.statsTable.add_widget(Label(text = "Owner"))
-        
-        # Add the expected standings for each team
-        for i in range(self.league.num_teams):
-            self.statsTable.add_widget(Label(text = expectedStandings[i][0]))
-            self.statsTable.add_widget(Label(text = str(expectedStandings[i][1])))
-            self.statsTable.add_widget(Label(text = str(expectedStandings[i][2])))  
-            self.statsTable.add_widget(Label(text = str(expectedStandings[i][3])))
-            self.statsTable.add_widget(Label(text = expectedStandings[i][4]))
-        return        
 
     def printWeeklyStats(self, instance):
         # Fetch the most recent weekly stats for the league
