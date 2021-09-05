@@ -1,4 +1,5 @@
 import pandas as pd
+import requests
 
 # Get login credentials for leagues
 login = pd.read_csv('login.csv')
@@ -17,7 +18,7 @@ from kivy.graphics import Color
 from kivy.core.window import Window
 
 from espn_api.football import League, Team, Player
-from util_functions import get_season_luck_indices
+from util_functions import fetch_league, get_season_luck_indices, print_weekly_stats
 #from authorize import Authorize
 
 
@@ -67,31 +68,8 @@ class LoginDisplay(GridLayout):
         self.espn_s2 = TextInput(multiline=False, write_tab=False, on_text_validate = self.fetch_league)
         self.login.add_widget(self.espn_s2)
     
-        
-        ## Add username label and text box
-        #self.login.add_widget(Label(text = "Username (email):"))
-        #self.username = TextInput(multiline = False, write_tab = False)
-        #self.login.add_widget(self.username)
-        
-        ## Add password label and text box
-        #passwordInput = Label(text = "Password:")
-        #self.login.add_widget(passwordInput)
-        #self.password = TextInput(multiline = False, write_tab = False, password = True, on_text_validate = self.fetch_league)
-        #self.login.add_widget(self.password)
-        
         # Add pre-authenticated dropdown menu
-        self.login.add_widget(Label(text = "Select a pre-authenticated league:"))        
-        #dropdown = DropDown()
-        #for user in login.id:  
-            #btn = Button(text=user, size_hint_y=None, height=44) 
-            #btn.bind(on_release = lambda btn: dropdown.select(btn.text))
-            #dropdown.add_widget(btn)  
-        #mainButton = Button(text="Select...")
-        #mainButton.bind(on_release=dropdown.open)
-        #dropdown.bind(on_select= lambda instance, x: setattr(mainButton, 'text', x))
-        #dropdown.auto_dismiss = False
-        #self.login.add_widget(dropdown)
-        
+        self.login.add_widget(Label(text = "Select a pre-authenticated league:"))          
         self.preauthenticated = TextInput(multiline=False, write_tab=False, on_text_validate=self.fetch_league)
         self.login.add_widget(self.preauthenticated)
         
@@ -112,13 +90,13 @@ class LoginDisplay(GridLayout):
         if self.preauthenticated.text:
             print('Logging in using preauthenticated league: {}'.format(self.preauthenticated.text))
             manager, league_name, league_id, swid, espn_s2 = login[login['league_id'].astype(str) == self.preauthenticated.text].values[0]
-            self.league = League(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)    # Fetch league from input information            
+            self.league = fetch_league(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)    # Fetch league from input information            
         else:
             print('Logging in using entered credentials.')
             league_id = int(self.league_id.text)
             swid = self.swid.text
             espn_s2 = self.espn_s2.text
-            self.league = League(league_id, year, swid=swid, espn_s2=espn_s2)    # Fetch league from input information        
+            self.league = fetuch_league(league_id, year, swid=swid, espn_s2=espn_s2)    # Fetch league from input information        
         
         print('League fetched!')
         self.fetchLeagueButton.text = "League Fetched!"
@@ -154,15 +132,10 @@ class LoginDisplay(GridLayout):
         statButtons.add_widget(self.printLuckIndexButton)
         self.printLuckIndexButton.bind(on_release = self.print_luck_index)
         
-        # Create the print_expected_standings button
-        self.printExpectedStandingsButton = Button(text = "View Expected Standings")
-        statButtons.add_widget(self.printExpectedStandingsButton)
-        self.printExpectedStandingsButton.bind(on_release = self.print_expected_standings)
-        
-        # Create the printWeeklyStats button
+        # Create the print_weekly_stats button
         self.printWeeklyStatsButton = Button(text = "View Weekly Awards")
         statButtons.add_widget(self.printWeeklyStatsButton)
-        self.printWeeklyStatsButton.bind(on_release = self.printWeeklyStats)   
+        self.printWeeklyStatsButton.bind(on_release = self.print_weekly_stats)   
         
         # Create the print_current_standings button
         self.printCurrentStandingsButton = Button(text = "View Current Standnigs")
@@ -228,7 +201,7 @@ class LoginDisplay(GridLayout):
         self.statsTable.cols = 6                            # Add 6 columns
         self.statsTable.rows = self.league.num_teams + 1     # Create enough rows for every team plus a header  
         
-        # Add headers to the expected standings table
+        # Add headers to the current standings table
         self.statsTable.add_widget(Label(text = "Team"))
         self.statsTable.add_widget(Label(text = "Wins"))
         self.statsTable.add_widget(Label(text = "Losses"))
@@ -247,9 +220,9 @@ class LoginDisplay(GridLayout):
         return        
     
 
-    def printWeeklyStats(self, instance):
+    def print_weekly_stats(self, instance):
         # Fetch the most recent weekly stats for the league
-        weeklyStats = self.league.printWeeklyStats(self.league.currentWeek - 1)
+        weeklyStats = print_weekly_stats(self.league, self.league.current_week)
         
         self.statsTable.clear_widgets()                     # Clear the stats table
         self.statsTable.cols = 5                            # Add 5 columns
