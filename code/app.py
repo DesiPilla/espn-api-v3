@@ -143,10 +143,10 @@ class LoginDisplay(GridLayout):
         statButtons.rows = 3
         statButtons.cols = 3
         
-        # Create the printPowerRankings button
+        # Create the print_power_rankings button
         self.printPowerRankingsButton = Button(text = "View Power Rankings")
         statButtons.add_widget(self.printPowerRankingsButton)
-        self.printPowerRankingsButton.bind(on_release = self.printPowerRankings)
+        self.printPowerRankingsButton.bind(on_release = self.print_power_rankings)
         
         # Create the printLuckIndex button
         self.printLuckIndexButton = Button(text = "View Luck Index")
@@ -163,10 +163,10 @@ class LoginDisplay(GridLayout):
         statButtons.add_widget(self.printWeeklyStatsButton)
         self.printWeeklyStatsButton.bind(on_release = self.printWeeklyStats)   
         
-        # Create the printCurrentStandings button
+        # Create the print_current_standings button
         self.printCurrentStandingsButton = Button(text = "View Current Standnigs")
         statButtons.add_widget(self.printCurrentStandingsButton)
-        self.printCurrentStandingsButton.bind(on_release = self.printCurrentStandings)           
+        self.printCurrentStandingsButton.bind(on_release = self.print_current_standings)           
         
         self.infoAndStats.add_widget(statButtons)
         
@@ -178,9 +178,9 @@ class LoginDisplay(GridLayout):
         return
         
     
-    def printPowerRankings(self, instance):
+    def print_power_rankings(self, instance):
         # Fetch the most recent power rankings for the league
-        powerRankings = self.league.printPowerRankings(self.league.currentWeek - 1)
+        power_rankings = self.league.power_rankings()
         
         self.statsTable.clear_widgets()                         # Clear the stats table
         self.statsTable.cols = 3                                # Add 3 columns
@@ -193,9 +193,9 @@ class LoginDisplay(GridLayout):
         
         # Add the power rankings for each team
         for i in range(self.league.num_teams):
-            self.statsTable.add_widget(Label(text = powerRankings[i][0]))
-            self.statsTable.add_widget(Label(text = str(round(powerRankings[i][1], 2))))
-            self.statsTable.add_widget(Label(text = powerRankings[i][2]))        
+            self.statsTable.add_widget(Label(text = power_rankings[i][1].team_name))
+            self.statsTable.add_widget(Label(text = power_rankings[i][0]))
+            self.statsTable.add_widget(Label(text = power_rankings[i][1].owner))        
         return
     
     def printLuckIndex(self, instance):
@@ -218,7 +218,7 @@ class LoginDisplay(GridLayout):
             self.statsTable.add_widget(Label(text = luckIndex[i][2]))        
         return    
     
-    def printCurrentStandings(self, instance):
+    def print_current_standings(self, instance):
         # Fetch the most recent standings for the league
         current_standings = self.league.standings()
         
@@ -240,7 +240,7 @@ class LoginDisplay(GridLayout):
             self.statsTable.add_widget(Label(text = str(current_standings[i].wins)))
             self.statsTable.add_widget(Label(text = str(current_standings[i].losses)))  
             self.statsTable.add_widget(Label(text = str(current_standings[i].ties)))
-            self.statsTable.add_widget(Label(text = '{:.1f}'.format(current_standings[i].points_for, 2)))
+            self.statsTable.add_widget(Label(text = '{:.1f}'.format(current_standings[i].points_for)))
             self.statsTable.add_widget(Label(text = current_standings[i].owner))
         return        
     
