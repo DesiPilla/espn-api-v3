@@ -17,6 +17,7 @@ from kivy.graphics import Color
 from kivy.core.window import Window
 
 from espn_api.football import League, Team, Player
+from util_functions import get_season_luck_indices
 #from authorize import Authorize
 
 
@@ -148,10 +149,10 @@ class LoginDisplay(GridLayout):
         statButtons.add_widget(self.printPowerRankingsButton)
         self.printPowerRankingsButton.bind(on_release = self.print_power_rankings)
         
-        # Create the printLuckIndex button
+        # Create the print_luck_index button
         self.printLuckIndexButton = Button(text = "View Luck Index")
         statButtons.add_widget(self.printLuckIndexButton)
-        self.printLuckIndexButton.bind(on_release = self.printLuckIndex)
+        self.printLuckIndexButton.bind(on_release = self.print_luck_index)
         
         # Create the printExpectedStandings button
         self.printExpectedStandingsButton = Button(text = "View Expected Standings")
@@ -198,9 +199,10 @@ class LoginDisplay(GridLayout):
             self.statsTable.add_widget(Label(text = power_rankings[i][1].owner))        
         return
     
-    def printLuckIndex(self, instance):
+    def print_luck_index(self, instance):
         # Fetch the most recent luck index for the league
-        luckIndex = self.league.printLuckIndex(self.league.currentWeek - 1)
+        
+        luck_index = get_season_luck_indices(self.league, self.league.current_week)
         
         self.statsTable.clear_widgets()                         # Clear the stats table
         self.statsTable.cols = 3                                # Add 3 columns
@@ -212,10 +214,10 @@ class LoginDisplay(GridLayout):
         self.statsTable.add_widget(Label(text = "Owner"))
         
         # Add the luck index for each team
-        for i in range(self.league.num_teams):
-            self.statsTable.add_widget(Label(text = luckIndex[i][0]))
-            self.statsTable.add_widget(Label(text = str(round(luckIndex[i][1], 2))))
-            self.statsTable.add_widget(Label(text = luckIndex[i][2]))        
+        for (team, luck) in sorted(luck_index.items(), key=lambda x:x[1], reverse=True):
+            self.statsTable.add_widget(Label(text = team.team_name))
+            self.statsTable.add_widget(Label(text = '{:.1f}'.format(luck)))
+            self.statsTable.add_widget(Label(text = team.owner))        
         return    
     
     def print_current_standings(self, instance):
