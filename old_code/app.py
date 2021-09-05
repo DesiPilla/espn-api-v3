@@ -16,8 +16,11 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.graphics import Color
 from kivy.core.window import Window
 
-from espn_api.football import League, Team, Player
-#from authorize import Authorize
+from league import League
+from authorize import Authorize
+from team import Team
+from player import Player
+
 
 
 
@@ -55,28 +58,17 @@ class LoginDisplay(GridLayout):
         self.login.add_widget(Label(text = "League ID:"))
         self.leagueId = TextInput(multiline = False, write_tab = False)
         self.login.add_widget(self.leagueId)
-
-        # Add SWID label and text box
-        self.login.add_widget(Label(text = "SWID:"))
-        self.swid = TextInput(multiline=False, write_tab=False)
-        self.login.add_widget(self.swid)
         
-        # Add espn_s2 label and text box
-        self.login.add_widget(Label(text="espn_s2:"))
-        self.espn_s2 = TextInput(multiline=False, write_tab=False, on_text_validate = self.fetch_league)
-        self.login.add_widget(self.espn_s2)
-    
+        # Add username label and text box
+        self.login.add_widget(Label(text = "Username (email):"))
+        self.username = TextInput(multiline = False, write_tab = False)
+        self.login.add_widget(self.username)
         
-        ## Add username label and text box
-        #self.login.add_widget(Label(text = "Username (email):"))
-        #self.username = TextInput(multiline = False, write_tab = False)
-        #self.login.add_widget(self.username)
-        
-        ## Add password label and text box
-        #passwordInput = Label(text = "Password:")
-        #self.login.add_widget(passwordInput)
-        #self.password = TextInput(multiline = False, write_tab = False, password = True, on_text_validate = self.fetch_league)
-        #self.login.add_widget(self.password)
+        # Add password label and text box
+        passwordInput = Label(text = "Password:")
+        self.login.add_widget(passwordInput)
+        self.password = TextInput(multiline = False, write_tab = False, password = True, on_text_validate = self.fetch_league)
+        self.login.add_widget(self.password)
         
         # Add pre-authenticated dropdown menu
         self.login.add_widget(Label(text = "Select a pre-authenticated league:"))        
@@ -91,7 +83,7 @@ class LoginDisplay(GridLayout):
         #dropdown.auto_dismiss = False
         #self.login.add_widget(dropdown)
         
-        self.preauthenticated = TextInput(multiline=False, write_tab=False, on_text_validate=self.fetch_league)
+        self.preauthenticated = TextInput(multiline=False, write_tab=False, on_text_validate = self.fetch_league)
         self.login.add_widget(self.preauthenticated)
         
         self.add_widget(self.login)             # Add login grid to the main page
@@ -107,22 +99,17 @@ class LoginDisplay(GridLayout):
         # 1086064
         # TODO: What if league fetch fails
         
-        self.preauthenticated.text = '1086064'
         if self.preauthenticated.text:
-            print('Logging in using preauthenticated league: {}'.format(self.preauthenticated.text))
-            manager, league_name, league_id, swid, espn_s2 = login[login['league_id'].astype(str) == self.preauthenticated.text].values[0]
-            self.league = League(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)    # Fetch league from input information            
-        else:
-            print('Logging in using entered credentials.')
-            league_id = int(self.league_id.text)
-            swid = self.swid.text
-            espn_s2 = self.espn_s2.text
-            self.league = League(league_id, year, swid=swid, espn_s2=espn_s2)    # Fetch league from input information        
+            _, username, password, league_id, swid, espn_s2 = login[login['id'] == self.preauthenticated.text].values[0]
+            self.league = League(league_id, year, username, password, swid, espn_s2)    # Fetch league from input information            
+        else: # self.username.text:
+                print(self.username.text)
+                league_id = int(self.leagueId.text)
+                username = self.username.text
+                password = self.password.text
+                self.league = League(league_id, year, username, password)    # Fetch league from input information        
         
-        print('League fetched!')
         self.fetchLeagueButton.text = "League Fetched!"
-        
-        self.league.num_teams = len(self.league.teams)
         
         self.remove_widget(self.login)                      # Remove the login information from the screen
         self.remove_widget(self.fetchLeagueButton)          # Remove the fetchLeagueButton
@@ -130,8 +117,8 @@ class LoginDisplay(GridLayout):
         # Create the league info and stats buttons widget
         self.infoAndStats = GridLayout()
         self.infoAndStats.cols = 1
-        league_name = Label(text = "League Name: " + self.league.settings.name)
-        self.infoAndStats.add_widget(league_name)                         # Add the league name as a label to the (now) top of the screen
+        leagueName = Label(text = "League Name: " + self.league.settings['name'])
+        self.infoAndStats.add_widget(leagueName)                         # Add the league name as a label to the (now) top of the screen
         self.add_widget(self.infoAndStats)
         
         self.add_stats()
@@ -177,14 +164,13 @@ class LoginDisplay(GridLayout):
         self.statsTable.row_force_default = True
         return
         
-    
     def printPowerRankings(self, instance):
         # Fetch the most recent power rankings for the league
         powerRankings = self.league.printPowerRankings(self.league.currentWeek - 1)
         
         self.statsTable.clear_widgets()                         # Clear the stats table
         self.statsTable.cols = 3                                # Add 3 columns
-        self.statsTable.rows = self.league.num_teams + 1         # Create enough rows for every team plus a header  
+        self.statsTable.rows = self.league.numTeams + 1         # Create enough rows for every team plus a header  
         
         # Add headers to the power rankings table
         self.statsTable.add_widget(Label(text = "Team"))        
@@ -192,7 +178,7 @@ class LoginDisplay(GridLayout):
         self.statsTable.add_widget(Label(text = "Owner"))
         
         # Add the power rankings for each team
-        for i in range(self.league.num_teams):
+        for i in range(self.league.numTeams):
             self.statsTable.add_widget(Label(text = powerRankings[i][0]))
             self.statsTable.add_widget(Label(text = str(round(powerRankings[i][1], 2))))
             self.statsTable.add_widget(Label(text = powerRankings[i][2]))        
@@ -204,7 +190,7 @@ class LoginDisplay(GridLayout):
         
         self.statsTable.clear_widgets()                         # Clear the stats table
         self.statsTable.cols = 3                                # Add 3 columns
-        self.statsTable.rows = self.league.num_teams + 1         # Create enough rows for every team plus a header  
+        self.statsTable.rows = self.league.numTeams + 1         # Create enough rows for every team plus a header  
         
         # Add headers to the luck index table
         self.statsTable.add_widget(Label(text = "Team"))
@@ -212,7 +198,7 @@ class LoginDisplay(GridLayout):
         self.statsTable.add_widget(Label(text = "Owner"))
         
         # Add the luck index for each team
-        for i in range(self.league.num_teams):
+        for i in range(self.league.numTeams):
             self.statsTable.add_widget(Label(text = luckIndex[i][0]))
             self.statsTable.add_widget(Label(text = str(round(luckIndex[i][1], 2))))
             self.statsTable.add_widget(Label(text = luckIndex[i][2]))        
@@ -220,11 +206,11 @@ class LoginDisplay(GridLayout):
     
     def printCurrentStandings(self, instance):
         # Fetch the most recent standings for the league
-        current_standings = self.league.standings()
+        currentStandings = self.league.printCurrentStandings()
         
         self.statsTable.clear_widgets()                     # Clear the stats table
         self.statsTable.cols = 6                            # Add 6 columns
-        self.statsTable.rows = self.league.num_teams + 1     # Create enough rows for every team plus a header  
+        self.statsTable.rows = self.league.numTeams + 1     # Create enough rows for every team plus a header  
         
         # Add headers to the expected standings table
         self.statsTable.add_widget(Label(text = "Team"))
@@ -235,13 +221,13 @@ class LoginDisplay(GridLayout):
         self.statsTable.add_widget(Label(text = "Owner"))
         
         # Add the current standings for each team
-        for i in range(self.league.num_teams):
-            self.statsTable.add_widget(Label(text = current_standings[i].team_name))
-            self.statsTable.add_widget(Label(text = str(current_standings[i].wins)))
-            self.statsTable.add_widget(Label(text = str(current_standings[i].losses)))  
-            self.statsTable.add_widget(Label(text = str(current_standings[i].ties)))
-            self.statsTable.add_widget(Label(text = '{:.1f}'.format(current_standings[i].points_for, 2)))
-            self.statsTable.add_widget(Label(text = current_standings[i].owner))
+        for i in range(self.league.numTeams):
+            self.statsTable.add_widget(Label(text = currentStandings[i][0]))
+            self.statsTable.add_widget(Label(text = str(currentStandings[i][1])))
+            self.statsTable.add_widget(Label(text = str(currentStandings[i][2])))  
+            self.statsTable.add_widget(Label(text = str(currentStandings[i][3])))
+            self.statsTable.add_widget(Label(text = str(round(currentStandings[i][4], 2))))
+            self.statsTable.add_widget(Label(text = currentStandings[i][5]))
         return        
     
     
@@ -251,7 +237,7 @@ class LoginDisplay(GridLayout):
         
         self.statsTable.clear_widgets()                     # Clear the stats table
         self.statsTable.cols = 5                            # Add 5 columns
-        self.statsTable.rows = self.league.num_teams + 1     # Create enough rows for every team plus a header  
+        self.statsTable.rows = self.league.numTeams + 1     # Create enough rows for every team plus a header  
         
         # Add headers to the expected standings table
         self.statsTable.add_widget(Label(text = "Team"))
@@ -261,7 +247,7 @@ class LoginDisplay(GridLayout):
         self.statsTable.add_widget(Label(text = "Owner"))
         
         # Add the expected standings for each team
-        for i in range(self.league.num_teams):
+        for i in range(self.league.numTeams):
             self.statsTable.add_widget(Label(text = expectedStandings[i][0]))
             self.statsTable.add_widget(Label(text = str(expectedStandings[i][1])))
             self.statsTable.add_widget(Label(text = str(expectedStandings[i][2])))  
