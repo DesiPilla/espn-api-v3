@@ -23,7 +23,7 @@ week = int(args.week)
 
 # Define user and season year
 user_id = 'desi'
-year = 2020
+year = 2021
 
 # Get login credentials for leagues
 # login = pd.read_csv('C:\\Users\\desid\\Documents\\Fantasy_Football\\espn-api-v3\\login.csv')
@@ -32,7 +32,7 @@ username = 'cgeer98'
 password = 'Penguins1'
 league_id = 916709
 swid = '{75C7094F-C467-4145-8709-4FC467C1457E}'
-espn_s2 = 'AEAVW%2B1kBbZavpoBSNScdoswT0j4x1tctoQm4hzikgixD4YmSRMxlsEdnREHR4%2F4FcLfrxfmrRi06ARQNc9WU%2FKEdSjfB5inJeGqIW4E%2BO98dbPDADbaAWIoYaIGp074d4jr7Glf%2Fm1TkBEYhpAa%2F5gAnyrj7GEfPPy7O20%2FWQnenImjXccRFKN%2Bi23D19zshjZRZkENyN5txKmi8%2BdKr%2BTY4tiJEG5PHeAysqougAPJPexDYu2Lj3XSmzc4pkBVXHM0058gmcylXnxmraYxp34K3tMkXxjXIs0sEJ9nuI4nIw%3D%3D'
+espn_s2 = 'AECbQaX7HoUGyJ5X5cmNlFHVs%2FmDl0RKfnVV%2FazefK9PxoSfENQFF6ULNnR421xium4UYV5dC0GsOhS%2BeigBuhk1abpSjhlXDCJnIGt0PjUHCZpV6qF5S9qMS40ichi2XnVZFSKwAid6h8bFbWA4eHclC%2BJHqMyirQ85yLRG6zc6nULRaovpF2Cx2j5U55OuvwTnI2HCztRnEJIVucnKxlem7pAidup27BIggM3c42%2BrH7vXUlRaIYXhjE%2BGH3cWbL88H8AcpIQpG%2Bft96vAZXuB'
 
 
 
@@ -44,8 +44,8 @@ url = getUrl(year, league_id)
 league = League(league_id, year, username, password, swid, espn_s2)
 print(league, "\n")
 # import dynasty process values
-dynastyProcessValues = pd.read_csv("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/data/files/values-players.csv")
-dynastyProcessValues = dynastyProcessValues[["player","value_1qb"]]
+# dynastyProcessValues = pd.read_csv("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/data/files/values-players.csv")
+# dynastyProcessValues = dynastyProcessValues[["player","value_1qb"]]
 
 
 # create for loop to add team names from team objects into list
@@ -339,9 +339,12 @@ teams_to_play_off = 4
 #The decimal is used to further order teams based on points for eg 644.8 points would be 0.006448.
 #Order needs to be the same as team_names
 
-# ['Red Zone  Rockets'[1], 'Final Deztination'[2], 'Game of  Jones'[3], 'Victorious Vikings'[4], 'OC Gang'[5], 'Sutton these  Nutz'[6], 'Karate Kickin Kylers'[7], 'Team Ger'[8]]
-home_teams = []
-away_teams = []
+# teams already added to list in code above
+# ['Pat'[1], 'Trevor'[2], 'Billy'[3], 'Jack'[4], 'Travis'[5], 'Lucas'[6], 'Cade'[7], 'Christian'[8]]
+
+# Remaining schedule
+home_teams = [5,3,7,6,4,7,2,5,2,7,4,3,8,5,4,6,3,1,7,2,8,5,4,6,6,3,2,4,8,2,1,4,8,3,1,6,8,5,4,6,7,3,2,1,8,5,4,1]
+away_teams = [8,2,1,4,8,3,1,6,8,6,1,5,7,1,2,3,8,6,4,5,1,7,3,2,8,1,7,5,5,3,7,6,4,7,2,5,2,3,1,7,8,6,4,5,3,2,7,6]
 # current_wins = [6.013909,6.014544,7.014027,5.014112,8.016490,3.012880,1.011269,4.012954]
 current_wins = []
 for team in teams_list:
@@ -474,21 +477,24 @@ projectedStandings_prnt.index = np.arange(1, len(projectedStandings_prnt) + 1)
 
 # Print everything
 # open text file
-filepath = "/Users/christiangeer/Fantasy_Sports/Fantasy_FF/power_rankings/jtown-dynasty/content/blog/Week"+ str(week) + "PowerRankings.md"
+filepath = "/Users/christiangeer/Fantasy_Sports/football/power_rankings/jtown-dynasty/content/blog/Week"+ str(week) + str(year) + "PowerRankings.md"
 sys.stdout = open(filepath, "w")
 
 # for the markdown files in blog
 print("---")
-print("title: Week (WEEK) Report")
+print("title: Week (WEEK) (YEAR) Report")
 print("date: 2020-MONTH-DAY")
-print("image: /images/week(ADD WEEK NUMBER HERE).jpg")
+print("image: /images/(YEAR)week(ADD WEEK NUMBER HERE).jpg")
 print("draft: false")
 print("---")
 
 print("<!-- excerpt -->")
 
 print("\n### POWER RANKINGS\n")
-print(table(allplay_ps, headers='keys', tablefmt='pipe', numalign='center'))
+print(table(allplay_ps, headers='keys', tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
+
+print("\n### WEEK ", week, " POWER RANKINGS")
+league.printPowerRankings(week)
 
 print("\n### EXPECTED STANDINGS (as of week ", week, ")")
 # league.printExpectedStandings(week)
@@ -498,8 +504,6 @@ if week > 5:
     print("\n### PLAYOFF PROBABILITIES (as of week ", week, ")")
     print(table(projections, headers='keys', tablefmt='pipe', numalign='center'))
 
-# print("\n # WEEK ", week, " POWER RANKINGS")
-# league.printPowerRankings(week)
 
 print("\n### LUCK INDEX")
 league.printLuckIndex(week)
