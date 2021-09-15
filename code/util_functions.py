@@ -18,7 +18,7 @@ from tabulate import tabulate as table
 def set_league_endpoint(league: League):
     if (league.year >= pd.datetime.today().year):#(dt.datetime.now() - dt.timedelta(540)).year):         # ESPN API v3
         league.endpoint = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/" + \
-            str(league.year) + "/segments/0/leagues/" + str(league.league_id)
+            str(league.year) + "/segments/0/leagues/" + str(league.league_id) + "?"
     else:                           # ESPN API v2
         league.endpoint = "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/" + \
             str(league.league_id) + "?seasonId=" + str(league.year)
@@ -41,7 +41,8 @@ def get_roster_settings(league: League):
                        20 : 'BE', 21 : 'IR', 22 : '', 23 : 'RB/WR/TE', 24 : ' '
                        }
         
-    endpoint = '{}&view=mMatchupScore&view=mTeam&view=mSettings'.format(league.endpoint, league.year, league.league_id)    
+    endpoint = '{}&view=mMatchupScore&view=mTeam&view=mSettings'.format(league.endpoint, league.year, league.league_id)
+    print("Fetching league settings at: {}".format(endpoint))
     r = requests.get(endpoint, cookies=league.cookies).json()
     if type(r) == list:
         r = r[0]

@@ -1,9 +1,10 @@
 import pandas as pd
 import requests
+from sys import platform
 
 # Get login credentials for leagues
 login = pd.read_csv('login.csv')
-year = 2020
+year = 2021
 
 from kivy.app import App
 from kivy.lang import Builder
@@ -50,7 +51,10 @@ class LoginDisplay(GridLayout):
         
         self.login = GridLayout()               # Create login grid
         self.login.cols = 2                     # Login grid will have two columns (labels and text inputs)
-        self.login.row_default_height = 30      # Login rows will have a size of 30 px
+        if platform == 'darwin': # macOS
+            self.login.row_default_height = 60      # Login rows will have a size of 30 px
+        else:
+            self.login.row_default_height = 30      # Login rows will have a size of 30 px
         self.login.row_force_default = True     # Force login rows to be 30 px
         
         # Add league id label and text box
@@ -147,7 +151,10 @@ class LoginDisplay(GridLayout):
         # Create a location for stats to be stored later
         self.statsTable = GridLayout()
         self.add_widget(self.statsTable)
-        self.statsTable.row_default_height = 20                 # Set the default height of each row to 20 px 
+        if platform == 'darwin': # macOS
+            self.statsTable.row_default_height = 40                 # Set the default height of each row to 20 px
+        else:
+            self.statsTable.row_default_height = 20                 # Set the default height of each row to 20 px
         self.statsTable.row_force_default = True
         return
         
