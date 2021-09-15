@@ -84,13 +84,16 @@ class LoginDisplay(GridLayout):
         self.fetchLeagueButton = fetchLeagueButton
         self.add_widget(self.fetchLeagueButton)
         self.fetchLeagueButton.bind(on_release=self.fetch_league)     # When pressed, run fetch_league function
+        self.fetch_league(None)
         
                
     def fetch_league(self, instance):
         # 1086064
+        # 1769296
         # TODO: What if league fetch fails
-        
-        self.preauthenticated.text = '1086064'
+                
+        self.preauthenticated.text = '1769296'
+#        self.preauthenticated.text = '1086064'
         if self.preauthenticated.text:
             print('Logging in using preauthenticated league: {}'.format(self.preauthenticated.text))
             manager, league_name, league_id, swid, espn_s2 = login[login['league_id'].astype(str) == self.preauthenticated.text].values[0]
@@ -161,8 +164,8 @@ class LoginDisplay(GridLayout):
     
     def print_power_rankings(self, instance):
         # Fetch the most recent power rankings for the league
-        power_rankings = self.league.power_rankings()
-        
+        power_rankings = self.league.power_rankings(self.league.current_week-1)
+        print(power_rankings)
         self.statsTable.clear_widgets()                         # Clear the stats table
         self.statsTable.cols = 3                                # Add 3 columns
         self.statsTable.rows = self.league.num_teams + 1         # Create enough rows for every team plus a header  
@@ -182,7 +185,7 @@ class LoginDisplay(GridLayout):
     def print_luck_index(self, instance):
         # Fetch the most recent luck index for the league
         
-        luck_index = get_season_luck_indices(self.league, self.league.current_week)
+        luck_index = get_season_luck_indices(self.league, self.league.current_week-1)
         
         self.statsTable.clear_widgets()                         # Clear the stats table
         self.statsTable.cols = 3                                # Add 3 columns
@@ -229,7 +232,7 @@ class LoginDisplay(GridLayout):
 
     def print_weekly_stats(self, instance):
         # Fetch the most recent weekly stats for the league
-        weeklyStats = print_weekly_stats(self.league, self.league.current_week)
+        weeklyStats = print_weekly_stats(self.league, self.league.current_week-1)
         
         self.statsTable.clear_widgets()                     # Clear the stats table
         self.statsTable.cols = 5                            # Add 5 columns

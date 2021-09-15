@@ -42,7 +42,7 @@ def get_roster_settings(league: League):
                        }
         
     endpoint = '{}&view=mMatchupScore&view=mTeam&view=mSettings'.format(league.endpoint, league.year, league.league_id)
-    print("Fetching league settings at: {}".format(endpoint))
+    print("[BUILDING LEAGUE] Fetching league settings at: {}".format(endpoint))
     r = requests.get(endpoint, cookies=league.cookies).json()
     if type(r) == list:
         r = r[0]
