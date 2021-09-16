@@ -222,6 +222,50 @@ allplay_ps = allplay_ps.reset_index(drop=True)
 allplay_ps['AllPlayWin%'] = (allplay_ps['AllPlayWin%'] * 100).round(2)
 allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
 
+# PLayer value Power Rankings
+
+# Load player values for last weeks starting lineup
+player_values = playerID.get_player_values(week)
+
+# Group by team and average the values to get average team value
+groupby_teams = player_values.groupby('team')
+team_values = player_values.groupby('team').value_1qb.mean().reset_index()
+
+# Difference between team value and the top team value
+team_values['Value Diff'] = team_values['value_1qb'] - team_values['value_1qb'].max()
+
+# As a percent of the worst value (to get on same scale as Power Score)
+team_values['% Value Diff'] = abs(team_values['Value Diff']) / team_values['Value Diff'].min()
+
+# Calculate total value as a percent of the highest value team
+team_values['% Total Value'] = team_values['value_1qb']/team_values['value_1qb'].max()
+team_values = team_values.round(1)
+
+
+# team_values = team_values.sort_values(by = '% Total Value', ascending=False)
+# Merge with Power Rankings to get PowerScore
+allplay_ps_val = allplay_ps.merge(team_values, on='team')
+
+# Calculate power score as percent of highest score
+allplay_ps_val['% PowerScore'] = allplay_ps_val['PowerScore'] / allplay_ps_val['PowerScore'].max()
+# allplay_ps_val['ps w/ values'] = allplay_ps_val['% PowerScore'] + allplay_ps_val['% Total Value']
+
+# Unweighted rankings
+allplay_ps_val['Ranked'] = allplay_ps_val['% PowerScore'] + allplay_ps_val['% Value Diff']
+allplay_ps_val['Ranked clean'] = allplay_ps_val['Ranked'] + abs(allplay_ps_val['Ranked'].min())
+
+# Weighted rankings
+allplay_ps_val['Weighted Avg'] = (allplay_ps_val['% PowerScore']*.60) + (allplay_ps_val['% Value Diff']*.40)
+
+# Rank and print values for analysis
+Value_Power_Rankings = allplay_ps_val[['% PowerScore','% Value Diff', 'Weighted Avg']].rank(ascending=False, method='min')
+Value_Power_Rankings.insert(loc=0, column='AllPlayWin%', value=allplay['allPlayWins'] / (allplay['allPlayWins'] + allplay['allPlayLosses']))
+Value_Power_Rankings.insert(loc=0, column='Team',value=allplay_ps_val['team'])
+Value_Power_Rankings['AllPlayWin%'] = Value_Power_Rankings['AllPlayWin%'].rank(ascending=False, method='min')
+
+print("\nValue Power Rankings: \n", allplay_ps_val[['team','AllPlayWin%','% PowerScore','% Value Diff','Weighted Avg']].sort_values(by='Weighted Avg', ascending=False))
+print("\nValue Power Rankings Ranks: \n", Value_Power_Rankings.sort_values(by = 'Weighted Avg'))
+
 if week > 1:
 
     # create table for last week to compare for weekly change
@@ -465,52 +509,6 @@ delta = datetime.datetime.now() - begin
 
 
 print('\n{0:,}'.format(simulations) +" Simulations ran in "+str(delta))
-
-
-
-# PLayer value Power Rankings
-
-# Load player values for last weeks starting lineup
-player_values = playerID.get_player_values(week)
-
-# Group by team and average the values to get average team value
-groupby_teams = player_values.groupby('team')
-team_values = player_values.groupby('team').value_1qb.mean().reset_index()
-
-# Difference between team value and the top team value
-team_values['Value Diff'] = team_values['value_1qb'] - team_values['value_1qb'].max()
-
-# As a percent of the worst value (to get on same scale as Power Score)
-team_values['% Value Diff'] = abs(team_values['Value Diff']) / team_values['Value Diff'].min()
-
-# Calculate total value as a percent of the highest value team
-team_values['% Total Value'] = team_values['value_1qb']/team_values['value_1qb'].max()
-team_values = team_values.round(1)
-
-
-# team_values = team_values.sort_values(by = '% Total Value', ascending=False)
-# Merge with Power Rankings to get PowerScore
-allplay_ps_val = allplay_ps.merge(team_values, on='team')
-
-# Calculate power score as percent of highest score
-allplay_ps_val['% PowerScore'] = allplay_ps_val['PowerScore'] / allplay_ps_val['PowerScore'].max()
-# allplay_ps_val['ps w/ values'] = allplay_ps_val['% PowerScore'] + allplay_ps_val['% Total Value']
-
-# Unweighted rankings
-allplay_ps_val['Ranked'] = allplay_ps_val['% PowerScore'] + allplay_ps_val['% Value Diff']
-allplay_ps_val['Ranked clean'] = allplay_ps_val['Ranked'] + abs(allplay_ps_val['Ranked'].min())
-
-# Weighted rankings
-allplay_ps_val['Weighted Avg'] = (allplay_ps_val['% PowerScore']*.60) + (allplay_ps_val['% Value Diff']*.40)
-
-# Rank and print values for analysis
-Value_Power_Rankings = allplay_ps_val[['% PowerScore','% Value Diff', 'Weighted Avg']].rank(ascending=False, method='min')
-Value_Power_Rankings.insert(loc=0, column='AllPlayWin%', value=allplay['allPlayWins'] / (allplay['allPlayWins'] + allplay['allPlayLosses']))
-Value_Power_Rankings.insert(loc=0, column='Team',value=allplay_ps_val['team'])
-Value_Power_Rankings['AllPlayWin%'] = Value_Power_Rankings['AllPlayWin%'].rank(ascending=False, method='min')
-
-print("Value Power Rankings: \n", allplay_ps_val[['team','AllPlayWin%','% PowerScore','% Value Diff','Weighted Avg']].sort_values(by='Weighted Avg', ascending=False))
-print("\nValue Power Rankings Ranks: \n", Value_Power_Rankings.sort_values(by = 'Weighted Avg'))
 
 # Set index for printing tables to start at 1
 allplay.index = np.arange(1, len(allplay) + 1)
