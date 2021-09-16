@@ -38,3 +38,51 @@ url = getUrl(year, league_id)
 
 league = League(league_id, year, username, password, swid, espn_s2)
 print(league, "\n")
+
+# create list of team objects
+teams = league.teams
+teams = list(teams.values())
+
+# week = 1
+
+def get_player_values(week):
+    # create list of player objects from list of team objects
+    players = []
+    rosters = []
+
+    for team in teams:
+        rosters = team.rosters
+
+        thisWkRosters = rosters.get(week)
+
+        for player in thisWkRosters:
+            playerID = [team.teamName, player.name, player.positionId, player.id]
+            players.append(playerID)
+
+        # print(players)
+
+    values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
+    values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
+    # print(values)
+
+    players = pd.DataFrame(players, columns = ['team', 'player', 'posID', 'espn_id'])
+    players = players[players['posID'] != 17]
+    players = players[players['espn_id'] > 0]
+    players = players[(players['posID'] < 17) | (players['posID'] == 23)]
+
+    # print("PLAYERS :", players)
+
+    players['player'] = players['player'].map(str)
+    values['player'] = values['player'].map(str)
+
+    # print(players.dtypes)
+    # print(values.dtypes)
+
+    players.set_index('player')
+    values.set_index('player')
+
+    joined = players.merge(values, how='left')
+    # joined = joined.set_axis(['Player','ESPN ID', 'Age', 'Value', 'FP ID'], axis=1, inplace=False)
+    # print(table(joined, headers=['Team','Player','Pos ID', 'ESPN ID', 'Age', 'Value', 'FP ID']))
+
+    return(joined)
