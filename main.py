@@ -222,6 +222,7 @@ allplay_ps = allplay_ps.reset_index(drop=True)
 allplay_ps['AllPlayWin%'] = (allplay_ps['AllPlayWin%'] * 100).round(2)
 allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
 
+
 # PLAYER VALUE POWER RANKINGS
 
 # Load player values for last weeks starting lineup
@@ -270,7 +271,6 @@ print("\nValue Power Rankings Ranks: \n", Value_Power_Rankings.sort_values(by = 
 Value_Power_Rankings_print = allplay_ps_val[['team','AllPlayWin%','Weighted Avg']].sort_values(by='Weighted Avg', ascending=False)
 Value_Power_Rankings_print['Weighted Avg'] = (Value_Power_Rankings_print['Weighted Avg']*100).round(2)
 # Value_Power_Rankings_print.rename(columns={'team':'Team'}, inplace=True)
-
 
 # Create last week value informed power rankings
 if week > 1:
