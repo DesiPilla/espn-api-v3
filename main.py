@@ -363,6 +363,8 @@ if week > 1:
 
 ### EXPCETED STANDINGS
 
+#### TODO: Update to use the new Value Informed Power Rankings instead of just AllPlayWin%
+
 allplay_es = allplay.copy() # creat copy of all play to be used for expected standings
 allplay_es = allplay_es.set_index('team') # set the index to team for .loc
 
@@ -444,9 +446,11 @@ teams_to_play_off = 4
 # teams already added to list in code above
 # ['Pat'[1], 'Trevor'[2], 'Billy'[3], 'Jack'[4], 'Travis'[5], 'Lucas'[6], 'Cade'[7], 'Christian'[8]]
 
-# Remaining schedule
-home_teams = [5,3,7,6,4,7,2,5,2,7,4,3,8,5,4,6,3,1,7,2,8,5,4,6,6,3,2,4,8,2,1,4,8,3,1,6,8,5,4,6,7,3,2,1,8,5,4,1]
-away_teams = [8,2,1,4,8,3,1,6,8,6,1,5,7,1,2,3,8,6,4,5,1,7,3,2,8,1,7,5,5,3,7,6,4,7,2,5,2,3,1,7,8,6,4,5,3,2,7,6]
+# Remaining schedule (week 5 and on)
+home_teams = [3,1,7,2,8,5,4,6,6,3,2,4,8,2,1,4,8,3,1,6,8,5,4,6,7,3,2,1,8,5,4,1]
+away_teams = [8,6,4,5,1,7,3,2,8,1,7,5,5,3,7,6,4,7,2,5,2,3,1,7,8,6,4,5,3,2,7,6]
+
+# only update current wins at week 5
 # current_wins = [6.013909,6.014544,7.014027,5.014112,8.016490,3.012880,1.011269,4.012954]
 current_wins = []
 for team in teams_list:
@@ -606,7 +610,7 @@ print("\n### EXPECTED STANDINGS (as of week ", week, ")")
 # league.printExpectedStandings(week)
 print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
 
-if week > 5:
+if week >= 5:
     print("\n### PLAYOFF PROBABILITIES (as of week ", week, ")")
     print(table(projections, headers='keys', tablefmt='pipe', numalign='center'))
 
