@@ -370,7 +370,7 @@ if week > 1:
 
 ValuePowerRankings_ES = allplay_ps_val[['team','Weighted Avg']]
 ValuePowerRankings_ES = ValuePowerRankings_ES.set_index('team')
-ValuePowerRankings_ES = ValuePowerRankings_ES['Weighted Avg'] + ValuePowerRankings_ES['Weighted Avg'].min()
+ValuePowerRankings_ES['Weighted Avg'] = ValuePowerRankings_ES['Weighted Avg'] + ValuePowerRankings_ES['Weighted Avg'].min()
 
 
 allScheduleProb = [] # empty list to be filled with win probabilties for each teams schedule
@@ -566,20 +566,20 @@ if week >= 5:
 
     print('')
 
-# print('Average # of wins for playoff spot')
-# for x in range(1,teams_to_play_off+1):
-#     print(str(x)+'\t'+str(round((avg_wins[x-1])/simulations,2)))
+    # print('Average # of wins for playoff spot')
+    # for x in range(1,teams_to_play_off+1):
+    #     print(str(x)+'\t'+str(round((avg_wins[x-1])/simulations,2)))
 
 
-delta = datetime.datetime.now() - begin
+    delta = datetime.datetime.now() - begin
 
-# print('')
-# print('Histrogram of wins required for final playoff spot')
-# for x in range(1,len(last_playoff_wins)+1):
-#     print(str(x)+'\t'+str(round((last_playoff_wins[x-1])/(simulations*1.0)*100,3))+'\t'+str(round((first_playoff_miss[x-1])/(simulations*1.0)*100,3)))
+    # print('')
+    # print('Histrogram of wins required for final playoff spot')
+    # for x in range(1,len(last_playoff_wins)+1):
+    #     print(str(x)+'\t'+str(round((last_playoff_wins[x-1])/(simulations*1.0)*100,3))+'\t'+str(round((first_playoff_miss[x-1])/(simulations*1.0)*100,3)))
 
 
-print('\n{0:,}'.format(simulations) +" Simulations ran in "+str(delta))
+    print('\n{0:,}'.format(simulations) +" Simulations ran in "+str(delta))
 
 # Set index for printing tables to start at 1
 allplay.index = np.arange(1, len(allplay) + 1)
