@@ -257,7 +257,7 @@ allplay_ps_val['Ranked clean'] = allplay_ps_val['Ranked'] + abs(allplay_ps_val['
 
 # Weighted rankings
 allplay_ps_val['Weighted Avg'] = (allplay_ps_val['% PowerScore']*.60) + (allplay_ps_val['% Value Diff']*.40)
-allplay_ps_val['Weighted Avg'] = allplay_ps_val['Weighted Avg'] + abs(allplay_ps_val['Weighted Avg'].min())
+# allplay_ps_val['Weighted Avg'] = allplay_ps_val['Weighted Avg'] + abs(allplay_ps_val['Weighted Avg'].min())
 
 # Rank and print values for analysis
 Value_Power_Rankings = allplay_ps_val[['% PowerScore','% Value Diff', 'Weighted Avg']].rank(ascending=False, method='min')
