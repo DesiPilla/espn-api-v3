@@ -45,6 +45,8 @@ teams = list(teams.values())
 
 # week = 1
 
+#### TODO: Find a way to cleanly merge espn IDs with Dynasty Process ID chart
+
 def get_player_values(week):
     # create list of player objects from list of team objects
     players = []
