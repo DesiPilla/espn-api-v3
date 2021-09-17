@@ -370,6 +370,8 @@ if week > 1:
 
 ValuePowerRankings_ES = allplay_ps_val[['team','Weighted Avg']]
 ValuePowerRankings_ES = ValuePowerRankings_ES.set_index('team')
+ValuePowerRankings_ES = ValuePowerRankings_ES['Weighted Avg'] + ValuePowerRankings_ES['Weighted Avg'].min()
+
 
 allScheduleProb = [] # empty list to be filled with win probabilties for each teams schedule
 
