@@ -584,7 +584,8 @@ if week >= 5:
 # Set index for printing tables to start at 1
 allplay.index = np.arange(1, len(allplay) + 1)
 allplay_ps.index = np.arange(1, len(allplay_ps) + 1)
-projections.index = np.arange(1, len(projections) + 1)
+if week >5:
+    projections.index = np.arange(1, len(projections) + 1)
 team_scores_prt.index = np.arange(1, len(team_scores_prt) + 1)
 logWeightedPS_prnt.index = np.arange(1, len(logWeightedPS_prnt) + 1)
 projectedStandings_prnt.index = np.arange(1, len(projectedStandings_prnt) + 1)
