@@ -365,19 +365,27 @@ if week > 1:
 
 #### TODO: Update to use the new Value Informed Power Rankings instead of just AllPlayWin%
 
-allplay_es = allplay.copy() # creat copy of all play to be used for expected standings
-allplay_es = allplay_es.set_index('team') # set the index to team for .loc
+# allplay_es = allplay.copy() # creat copy of all play to be used for expected standings
+# allplay_es = allplay_es.set_index('team') # set the index to team for .loc
+
+ValuePowerRankings_ES = allplay_ps_val[['team','Weighted Avg']]
+ValuePowerRankings_ES = ValuePowerRankings_ES.set_index('team')
 
 allScheduleProb = [] # empty list to be filled with win probabilties for each teams schedule
 
 for team in teams_list:
-    teamAP = allplay_es['AllPlayWin%'].loc[team.teamName] # Get each teams current All Play Win Percentage
+    # teamAP = allplay_es['AllPlayWin%'].loc[team.teamName] # Get each teams current All Play Win Percentage
+    teamPS = ValuePowerRankings_ES['Weighted Avg'].loc[team.teamName] # Get each teams current All Play Win Percentage
 
     scheduleOBJ = list((team.schedule).values()) # get list of team objects
     scheduleProb = [] # tempory list to fill in inner for loop
     for opp in scheduleOBJ:
-        oppAP = allplay_es['AllPlayWin%'].loc[opp.teamName]
-        prob = teamAP / (oppAP + teamAP)
+        # oppAP = allplay_es['AllPlayWin%'].loc[opp.teamName]
+        # prob = teamAP / (oppAP + teamAP)
+
+        oppPS = ValuePowerRankings_ES['Weighted Avg'].loc[opp.teamName]
+        prob = teamPS / (oppPS + teamPS)
+
         scheduleProb.append(prob)
         # for values in key:
         #      schedule.append(item.teamName)
@@ -463,98 +471,98 @@ for team in teams_list:
 
 ###ONLY CONFIGURE THE VALUES ABOVE
 
-
-teams = [int(x) for x in range(1,len(team_names)+1)]
-weeks_played = (league_weeks)-((len(home_teams))/(len(teams)/2))
-
-
-last_playoff_wins = [0] * (league_weeks)
-first_playoff_miss = [0] * (league_weeks)
-
-import datetime
-
-begin = datetime.datetime.now()
-import random
+if week >= 5:
+    teams = [int(x) for x in range(1,len(team_names)+1)]
+    weeks_played = (league_weeks)-((len(home_teams))/(len(teams)/2))
 
 
-league_size = len(teams)
+    last_playoff_wins = [0] * (league_weeks)
+    first_playoff_miss = [0] * (league_weeks)
+
+    import datetime
+
+    begin = datetime.datetime.now()
+    import random
 
 
-games_per_week = int(league_size/2)
-weeks_to_play = int(league_weeks-weeks_played)
-total_games = int(league_weeks * games_per_week)
-games_left = int(weeks_to_play * games_per_week)
-
-stats_teams = [0] * (league_size)
+    league_size = len(teams)
 
 
-play_off_matrix = [[0 for x in range(teams_to_play_off)] for x in range(league_size)]
+    games_per_week = int(league_size/2)
+    weeks_to_play = int(league_weeks-weeks_played)
+    total_games = int(league_weeks * games_per_week)
+    games_left = int(weeks_to_play * games_per_week)
 
-pad = int(games_left)
-
-avg_wins = [0.0] * teams_to_play_off
-
-
-for sims in progressbar.progressbar(range(1,simulations+1)):
-    #create random binary array representing a single season's results
-    val = [int(random.getrandbits(1)) for x in range(1,(games_left+1))]
-
-    empty_teams = [0.0] * league_size
-
-    i = 0
-    #assign wins based on 1 or 0 to home or away team
-    for x in val:
-        if (val[i] == 1):
-            empty_teams[home_teams[i]-1] = empty_teams[home_teams[i]-1]+1
-        else:
-            empty_teams[away_teams[i]-1] = empty_teams[away_teams[i]-1]+1
-        i=i+1
-
-    #add the current wins to the rest of season's results
-    empty_teams = [sum(x) for x in zip(empty_teams,current_wins)]
-
-    #sort the teams
-    sorted_teams = sorted(empty_teams)
+    stats_teams = [0] * (league_size)
 
 
+    play_off_matrix = [[0 for x in range(teams_to_play_off)] for x in range(league_size)]
 
-    last_playoff_wins[int(round(sorted_teams[(league_size-teams_to_play_off)],0))-1] = last_playoff_wins[int(round(sorted_teams[(league_size-teams_to_play_off)],0))-1] + 1
-    first_playoff_miss[int(round(sorted_teams[league_size-(teams_to_play_off+1)],0))-1] = first_playoff_miss[int(round(sorted_teams[league_size-(teams_to_play_off+1)],0))-1] + 1
+    pad = int(games_left)
+
+    avg_wins = [0.0] * teams_to_play_off
+
+
+    for sims in progressbar.progressbar(range(1,simulations+1)):
+        #create random binary array representing a single season's results
+        val = [int(random.getrandbits(1)) for x in range(1,(games_left+1))]
+
+        empty_teams = [0.0] * league_size
+
+        i = 0
+        #assign wins based on 1 or 0 to home or away team
+        for x in val:
+            if (val[i] == 1):
+                empty_teams[home_teams[i]-1] = empty_teams[home_teams[i]-1]+1
+            else:
+                empty_teams[away_teams[i]-1] = empty_teams[away_teams[i]-1]+1
+            i=i+1
+
+        #add the current wins to the rest of season's results
+        empty_teams = [sum(x) for x in zip(empty_teams,current_wins)]
+
+        #sort the teams
+        sorted_teams = sorted(empty_teams)
 
 
 
-    #pick the teams making the playoffs
-    for x in range(1,teams_to_play_off+1):
-        stats_teams[empty_teams.index(sorted_teams[league_size-x])] = stats_teams[empty_teams.index(sorted_teams[league_size-x])] + 1
-        avg_wins[x-1] = avg_wins[x-1] + round(sorted_teams[league_size-x],0)
-        play_off_matrix[empty_teams.index(sorted_teams[league_size-x])][x-1] = play_off_matrix[empty_teams.index(sorted_teams[league_size-x])][x-1] + 1
+        last_playoff_wins[int(round(sorted_teams[(league_size-teams_to_play_off)],0))-1] = last_playoff_wins[int(round(sorted_teams[(league_size-teams_to_play_off)],0))-1] + 1
+        first_playoff_miss[int(round(sorted_teams[league_size-(teams_to_play_off+1)],0))-1] = first_playoff_miss[int(round(sorted_teams[league_size-(teams_to_play_off+1)],0))-1] + 1
 
-projections = []
 
-playSpots = []
 
-for x in range(1,len(stats_teams)+1):
-    vals = ''
-    for y in range(1,teams_to_play_off+1):
-        vals = vals +'\t'+str(round((play_off_matrix[x-1][y-1])/simulations*100.0,2))
+        #pick the teams making the playoffs
+        for x in range(1,teams_to_play_off+1):
+            stats_teams[empty_teams.index(sorted_teams[league_size-x])] = stats_teams[empty_teams.index(sorted_teams[league_size-x])] + 1
+            avg_wins[x-1] = avg_wins[x-1] + round(sorted_teams[league_size-x],0)
+            play_off_matrix[empty_teams.index(sorted_teams[league_size-x])][x-1] = play_off_matrix[empty_teams.index(sorted_teams[league_size-x])][x-1] + 1
 
-        playSpots.append(round((play_off_matrix[x-1][y-1])/simulations*100.0,2))
+    projections = []
 
-    playProb = round((stats_teams[x-1])/simulations*100.0,2)
-    playSpots.insert(0, playProb)
-    # print("Vals: ", playSpots)
-    projections.append(playSpots)
     playSpots = []
-    # print(team_names[x-1]+'\t'+str(round((stats_teams[x-1])/simulations*100.0,2))+vals)
 
-projections = pd.DataFrame(projections)
-projections.insert(loc=0, column='Team', value=team_names)
-projections = projections.set_axis(['Team', 'Playoffs', '1st Seed', '2nd Seed', '3rd Seed', '4th Seed'], axis=1, inplace=False)
-projections = projections.sort_values(by=['Playoffs','1st Seed', '2nd Seed', '3rd Seed', '4th Seed'], ascending=False)
-projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']] = projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']].astype(str) + "%"
-projections['Playoffs'] = "**" + projections['Playoffs'].astype(str) + "%**"
+    for x in range(1,len(stats_teams)+1):
+        vals = ''
+        for y in range(1,teams_to_play_off+1):
+            vals = vals +'\t'+str(round((play_off_matrix[x-1][y-1])/simulations*100.0,2))
 
-print('')
+            playSpots.append(round((play_off_matrix[x-1][y-1])/simulations*100.0,2))
+
+        playProb = round((stats_teams[x-1])/simulations*100.0,2)
+        playSpots.insert(0, playProb)
+        # print("Vals: ", playSpots)
+        projections.append(playSpots)
+        playSpots = []
+        # print(team_names[x-1]+'\t'+str(round((stats_teams[x-1])/simulations*100.0,2))+vals)
+
+    projections = pd.DataFrame(projections)
+    projections.insert(loc=0, column='Team', value=team_names)
+    projections = projections.set_axis(['Team', 'Playoffs', '1st Seed', '2nd Seed', '3rd Seed', '4th Seed'], axis=1, inplace=False)
+    projections = projections.sort_values(by=['Playoffs','1st Seed', '2nd Seed', '3rd Seed', '4th Seed'], ascending=False)
+    projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']] = projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']].astype(str) + "%"
+    projections['Playoffs'] = "**" + projections['Playoffs'].astype(str) + "%**"
+
+    print('')
 
 # print('Average # of wins for playoff spot')
 # for x in range(1,teams_to_play_off+1):
