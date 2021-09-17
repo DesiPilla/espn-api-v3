@@ -368,12 +368,16 @@ if week > 1:
 # allplay_es = allplay.copy() # creat copy of all play to be used for expected standings
 # allplay_es = allplay_es.set_index('team') # set the index to team for .loc
 
+# new dataframe for expected standings
 ValuePowerRankings_ES = allplay_ps_val[['team','Weighted Avg']]
 ValuePowerRankings_ES = ValuePowerRankings_ES.set_index('team')
-ValuePowerRankings_ES['Weighted Avg'] = ValuePowerRankings_ES['Weighted Avg'] + ValuePowerRankings_ES['Weighted Avg'].min()
+
+# move everything to positive
+ValuePowerRankings_ES['Weighted Avg'] = ValuePowerRankings_ES['Weighted Avg'] + abs(ValuePowerRankings_ES['Weighted Avg'].min())
 
 
 allScheduleProb = [] # empty list to be filled with win probabilties for each teams schedule
+sos = [] # strength of schedule list
 
 for team in teams_list:
     # teamAP = allplay_es['AllPlayWin%'].loc[team.teamName] # Get each teams current All Play Win Percentage
@@ -381,6 +385,7 @@ for team in teams_list:
 
     scheduleOBJ = list((team.schedule).values()) # get list of team objects
     scheduleProb = [] # tempory list to fill in inner for loop
+    teamSOS = 0 # initialize to 0 for each team
     for opp in scheduleOBJ:
         # oppAP = allplay_es['AllPlayWin%'].loc[opp.teamName]
         # prob = teamAP / (oppAP + teamAP)
@@ -388,12 +393,20 @@ for team in teams_list:
         oppPS = ValuePowerRankings_ES['Weighted Avg'].loc[opp.teamName]
         prob = teamPS / (oppPS + teamPS)
 
+        teamSOS += oppPS
         scheduleProb.append(prob)
         # for values in key:
         #      schedule.append(item.teamName)
     allScheduleProb.append(scheduleProb) # append each team
+    addToSOS = [team.teamName, teamSOS]
+    sos.append(addToSOS) # append each team's SOS
 
+# convert to pandas dataframes
 allScheduleProb = pd.DataFrame(allScheduleProb)
+sos = pd.DataFrame(sos).round(2)
+
+sos = sos.iloc[:,0:2] # remove empty end column
+sos = sos.set_axis(['Team', 'SOS'], axis=1, inplace=False) # set column names
 
 probSched = pd.DataFrame(team_names, columns = ['Team'])
 
@@ -432,6 +445,8 @@ projectedStandings = projectedStandings.reset_index(drop=True)
 
 projectedStandings_prnt = projectedStandings[['Team','TotalProjWins','TotalProjLoss']]
 
+# Merge in SOS
+# projectedStandings_prnt = projectedStandings_prnt.merge(sos, on='Team')
 
 ## MONTE CARLO PLAYOFF PROBABILIIES
 
