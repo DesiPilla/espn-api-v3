@@ -29,7 +29,7 @@ def league_input(request):
 
     try: 
         league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
-    except DoesNotExist:  
+    except LeagueInfo.DoesNotExist:  
         league = fetch_league(league_id, league_year, swid, espn_s2)  
         league_info = LeagueInfo(league_id=league_id, 
                                 league_year=league_year, 
@@ -50,7 +50,7 @@ def standings(reqeust):
 
 
 def all_leagues(request):
-    leagues = LeagueInfo.objects.all()
+    leagues = LeagueInfo.objects.order_by('-league_id', '-league_year')
     return render(request, 'fantasy_stats/all_leagues.html', {'leagues':leagues})
 
 

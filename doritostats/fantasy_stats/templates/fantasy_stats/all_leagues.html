@@ -8,7 +8,7 @@
     <h1>Leagues existing in the database</h1>
     <ul>
     {% for league in leagues %}
-        <li>{{ league.league_name }} ({{ league.league_year }}, id={{league.league_id}})</li>
+        <li><a href="/fantasy_stats/league/{{ league.league_year }}/{{ league.league_id }}/">{{ league.league_name }}</a> ({{ league.league_year }}, id={{league.league_id}})</li>
     {% endfor %}
     </ul>
   </body>
