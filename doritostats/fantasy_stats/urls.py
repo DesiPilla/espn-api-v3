@@ -18,9 +18,6 @@ urlpatterns = [
 
     # ex: /fantasy_stats/league/1086064
     path('league/<int:league_year>/<int:league_id>', views.league, name='league'),
-    
-    # ex: /fantasy_stats/home
-    path('home', views.home, name='home'),
 
     # ex: fantasy_stats/all_leagues
     path('all_leagues', views.all_leagues, name='all_leagues'),
