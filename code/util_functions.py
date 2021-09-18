@@ -16,9 +16,9 @@ from tabulate import tabulate as table
 
 ''' FETCH LEAGUE '''
 def set_league_endpoint(league: League):
-    if (league.year >= pd.datetime.today().year):#(dt.datetime.now() - dt.timedelta(540)).year):         # ESPN API v3
+    if (league.year == pd.datetime.today().year):#(dt.datetime.now() - dt.timedelta(540)).year):         # ESPN API v3
         league.endpoint = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/" + \
-            str(league.year) + "/segments/0/leagues/" + str(league.league_id)
+            str(league.year) + "/segments/0/leagues/" + str(league.league_id) + "?"
     else:                           # ESPN API v2
         league.endpoint = "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/" + \
             str(league.league_id) + "?seasonId=" + str(league.year)

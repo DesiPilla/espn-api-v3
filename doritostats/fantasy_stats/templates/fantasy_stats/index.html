@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Dorito Stats</title>
+  </head>
+  <body>
+    <h1>Recently posted questions</h1>
+    {% if most_recent_questions %}
+        <ul>
+        {% for question in most_recent_questions %}
+            <li><a href="{% url 'fantasy_stats:detail' question.id %}">{{ question.question_text }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No polls are available.</p>
+    {% endif %}
+
+    <h1>Welcome to Dorito Stats!</h1>
+    <h2>League Details</h2>
+    {% if not league %}
+    {# If no league exists, use a form for user input #}
+      <form method="POST" action="{% url 'fantasy_stats:home' %}">
+        {% csrf_token %}
+        <label>League ID: </label>
+        <input type="integer" name="league_id", value=1086064>
+      <br>
+        <label>League year: </label>
+        <input type="integer" name="league_year", value=2021>
+      <br> 
+        <label>SWID: </label>  
+        <input type="text" name="swid">
+      <br>
+        <label>ESPN s2: </label>
+        <input type="text" name="espn_s2">
+      <br>  
+        <button type="submit">Fetch league</button>
+      </form>
+
+    {% else %}
+    {# If league has been fetched, display high level details #}
+      <p>League ID: {{league.league_id}}</p>
+      <p>League year: {{league.year}}</p>
+      <p>SWID: {{league.cookies.swid|truncatechars:10}}</p>
+      <p>ESPN s2: {{league.cookies.espn_s2|truncatechars:10}}</p>  
+      <hr>
+      {% comment %}
+      <form method="POST" action="{% url 'fantasy_stats:standings' %}">
+        <button type="submit">Get current standings</button>
+      </form>
+      {% endcomment %}
+    {% endif %}
+  </body>
+</html>
+
