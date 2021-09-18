@@ -10,11 +10,14 @@ from util_functions import *
 
 
 # Create your models here.
-class League(models.Model):
+class LeagueInfo(models.Model):
     league_id = models.IntegerField()
     league_year = models.IntegerField()
     swid = models.CharField(max_length=50)
     espn_s2 = models.CharField(max_length=300)
+    league_name = models.CharField(max_length=50, default="<Name Missing>")
+
+    # league_name = models.CharField(max_length=50, default="<Name Missing>")
 
     # league = fetch_league(league_id.value, league_year.value, swid.value, espn_s2.value)
 

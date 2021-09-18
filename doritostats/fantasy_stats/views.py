@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 
-from .models import Question, League
+from .models import Question, LeagueInfo
 
 import os, sys
 sys.path.insert(0, os.path.join('..', 'code'))
@@ -22,37 +22,36 @@ def index(request):
 
 
 def league_input(request):
-    # league_id = int(request.POST.get('league_id'))
-    # return redirect('fantasy_stats:home', league_id=league_id)
-
-    league_id = request.POST.get('league_id', None)
-    league_year = int(request.POST.get('league_year', None))
-    swid = request.POST.get('swid', None)
-    espn_s2 = request.POST.get('espn_s2', None)
-    league = fetch_league(league_id, league_year, swid, espn_s2)
-
-    request.session['league'] = league
-    return redirect('fantasy_stats:home')
-
-
-
-def home(request):
     league_id = request.POST.get('league_id', None)
     league_year = int(request.POST.get('league_year', None))
     swid = request.POST.get('swid', None)
     espn_s2 = request.POST.get('espn_s2', None)
 
-    league = fetch_league(league_id, league_year, swid, espn_s2)
-    # league = request.POST.get('league', None)
-    return HttpResponse(render(request, 'fantasy_stats/index.html', {'league':league}))
+    try: 
+        league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
+    except DoesNotExist:  
+        league = fetch_league(league_id, league_year, swid, espn_s2)  
+        league_info = LeagueInfo(league_id=league_id, 
+                                league_year=league_year, 
+                                swid=swid, 
+                                espn_s2=espn_s2, 
+                                league_name=league.name)
+        league_info.save()
 
+    return redirect('league/{}/{}'.format(league_year, league_id))
+
+def league(request, league_id, league_year):
+    league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
+    return HttpResponse(render(request, 'fantasy_stats/index.html', {'league':league_info}))
 
 
 def standings(reqeust):
     return HttpResponse('League still exitst')
 
 
-
+def all_leagues(request):
+    leagues = LeagueInfo.objects.all()
+    return render(request, 'fantasy_stats/all_leagues.html', {'leagues':leagues})
 
 
 

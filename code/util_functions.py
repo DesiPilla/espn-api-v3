@@ -47,6 +47,7 @@ def get_roster_settings(league: League):
     if type(r) == list:
         r = r[0]
     settings = r['settings']
+    league.name = settings['name']
 
     roster = settings['rosterSettings']['lineupSlotCounts']    # Grab the dictionary containing the number of players of each position a roster contains
     rosterSlots = {}                                                # Create an empty dictionary that will replace roster{}
