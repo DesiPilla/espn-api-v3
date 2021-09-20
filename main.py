@@ -227,22 +227,28 @@ allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
 
 # Load player values for last weeks starting lineup
 player_values = playerID.get_player_values(week)
-print(player_values)
+player_values.rename(columns={'salary [$]': 'salary'}, inplace=True)
+# print(player_values)
 
 # Group by team and average the values to get average team value
+
+### TODO: Group by team for analysis
+
+
 groupby_teams = player_values.groupby('team')
-team_values = player_values.groupby('team').value_1qb.mean().reset_index()
+team_values = player_values.groupby('team').salary.mean().reset_index()
+# print(team_values)
 
 # Difference between team value and the top team value
-team_values['Value Diff'] = team_values['value_1qb'] - team_values['value_1qb'].max()
+team_values['Value Diff'] = team_values['salary'] - team_values['salary'].max()
 
 # As a percent of the worst value (to get on same scale as Power Score)
 team_values['% Value Diff'] = abs(team_values['Value Diff']) / team_values['Value Diff'].min()
 
 # Calculate total value as a percent of the highest value team
-team_values['% Total Value'] = team_values['value_1qb']/team_values['value_1qb'].max()
+team_values['% Total Value'] = team_values['salary']/team_values['salary'].max()
 team_values = team_values.round(2)
-
+print(team_values)
 
 # team_values = team_values.sort_values(by = '% Total Value', ascending=False)
 # Merge with Power Rankings to get PowerScore

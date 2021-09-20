@@ -73,11 +73,11 @@ def get_player_values(week):
     # print(values)
 
     # Remove team from FFanalytics_week2
-    print(values)
+    # print(values)
     values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
     # values['player'] = re.sub(r"\([^()]*\)", "", values['player'])
 
-    print(values)
+    # print(values)
 
     # Get starters only
     players = pd.DataFrame(players, columns = ['team', 'player', 'posID', 'espn_id'])
@@ -96,13 +96,13 @@ def get_player_values(week):
     players.set_index('player')
     values.set_index('player')
 
-    print("players: \n", players)
-    print("\nvalues: \n", values)
+    # print("players: \n", players)
+    # print("\nvalues: \n", values)
 
     joined = players.merge(values, how='left')
     # print(joined)
     # joined = joined.set_axis(['Player','ESPN ID', 'Age', 'Value', 'FP ID'], axis=1, inplace=False)
-    print(table(joined, headers=['Team','Player','Pos ID', 'ESPN ID', 'Position', 'Salary', 'Mean']))
+    # print(table(joined, headers=['Team','Player','Pos ID', 'ESPN ID', 'Position', 'Salary', 'Mean']))
 
     return(joined)
 
@@ -130,7 +130,6 @@ def get_player_values_lw(week):
     # print(values)
 
     # Remove team from FFanalytics_week2
-    print(values)
     values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
     # values['player'] = re.sub(r"\([^()]*\)", "", values['player'])
 
