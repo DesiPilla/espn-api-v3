@@ -15,6 +15,7 @@ import sys
 from fpdf import FPDF
 import argparse
 import progressbar
+import re
 
 
 user_id = 'desi'
@@ -63,14 +64,26 @@ def get_player_values(week):
 
         # print(players)
 
-    values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
-    values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
+    # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
+    values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FFanalytics_Values.csv")
+    # values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
+    values = values[['Player','Position','Salary [$]','Mean']]
+    # print(values)
+    values.columns = values.columns.str.lower()
     # print(values)
 
+    # Remove team from FFanalytics_week2
+    print(values)
+    values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
+    # values['player'] = re.sub(r"\([^()]*\)", "", values['player'])
+
+    print(values)
+
+    # Get starters only
     players = pd.DataFrame(players, columns = ['team', 'player', 'posID', 'espn_id'])
-    players = players[players['posID'] != 17]
-    players = players[players['espn_id'] > 0]
-    players = players[(players['posID'] < 17) | (players['posID'] == 23)]
+    players = players[players['posID'] != 17] # remove kickers
+    players = players[players['espn_id'] > 0] # remove D/ST
+    players = players[(players['posID'] < 17) | (players['posID'] == 23)] # starters and flex ONLY
 
     # print("PLAYERS :", players)
 
@@ -83,9 +96,13 @@ def get_player_values(week):
     players.set_index('player')
     values.set_index('player')
 
+    print("players: \n", players)
+    print("\nvalues: \n", values)
+
     joined = players.merge(values, how='left')
+    # print(joined)
     # joined = joined.set_axis(['Player','ESPN ID', 'Age', 'Value', 'FP ID'], axis=1, inplace=False)
-    # print(table(joined, headers=['Team','Player','Pos ID', 'ESPN ID', 'Age', 'Value', 'FP ID']))
+    print(table(joined, headers=['Team','Player','Pos ID', 'ESPN ID', 'Position', 'Salary', 'Mean']))
 
     return(joined)
 

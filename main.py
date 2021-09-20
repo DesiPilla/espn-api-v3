@@ -227,6 +227,7 @@ allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
 
 # Load player values for last weeks starting lineup
 player_values = playerID.get_player_values(week)
+print(player_values)
 
 # Group by team and average the values to get average team value
 groupby_teams = player_values.groupby('team')
