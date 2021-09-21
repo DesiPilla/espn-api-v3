@@ -227,12 +227,17 @@ allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
 
 # Load player values for last weeks starting lineup
 player_values = playerID.get_player_values(week)
-
+print('player_values: \n', player_values)
 
 # Group by team and average the values to get average team value
 
 ### TODO: Group by pos for analysis
 
+
+# covnert rating to a float from object
+player_values['rating'] = player_values['rating'].astype(str).astype(float)
+
+# group by team and get the average rating of starters
 # team_values = player_values.groupby('team').value_1qb.mean().reset_index()
 team_values = player_values.groupby('team').rating.mean().reset_index()
 
@@ -293,6 +298,9 @@ if week > 1:
     # Load player values for previous week starting lineup
     lw_player_values = playerID.get_player_values(week-1)
     print('\nWeek ', week-1, ' Rosters NaN: \n', player_values[player_values['rating'].isna()])
+
+    # covnert rating to a float from object
+    lw_player_values['rating'] = lw_player_values['rating'].astype(str).astype(float)
 
     # Group by team and average the values to get average team value
     # lw_team_values = lw_player_values.groupby('team').value_1qb.mean().reset_index()

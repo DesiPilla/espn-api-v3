@@ -16,6 +16,7 @@ from fpdf import FPDF
 import argparse
 import progressbar
 import re
+import scrape_values
 
 
 user_id = 'desi'
@@ -38,7 +39,7 @@ url = getUrl(year, league_id)
 
 
 league = League(league_id, year, username, password, swid, espn_s2)
-print(league, "\n")
+# print(league, "\n")
 
 # create list of team objects
 teams = league.teams
@@ -67,8 +68,10 @@ def get_player_values(week):
     # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
     # values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
     values_file = '/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FantasySP_values' + str(week) + '.csv'
-    print(values_file)
+
     values = pd.read_csv(values_file)
+
+    values = scrape_values.player_values(week)
 
     # print(values)
     values.columns = values.columns.str.lower()
