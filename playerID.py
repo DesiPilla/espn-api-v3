@@ -66,8 +66,9 @@ def get_player_values(week):
 
     # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
     # values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
-    values_file = "/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FantasySP_values",week,".csv"
-    values_file = pd.read_csv(values_file)
+    values_file = '/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FantasySP_values' + str(week) + '.csv'
+    print(values_file)
+    values = pd.read_csv(values_file)
 
     # print(values)
     values.columns = values.columns.str.lower()
