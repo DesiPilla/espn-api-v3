@@ -228,7 +228,6 @@ allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
 # Load player values for last weeks starting lineup
 player_values = playerID.get_player_values(week)
 
-# player_values.rename(columns={'salary [$]': 'salary'}, inplace=True)
 
 # Group by team and average the values to get average team value
 
@@ -236,7 +235,6 @@ player_values = playerID.get_player_values(week)
 
 team_values = player_values.groupby('team').value_1qb.mean().reset_index()
 
-# team_values = player_values.groupby('team').salary.mean().reset_index()
 # print('Week ', week, ' Team Values: \n', team_values)
 
 # team_pos_values = team_pos_values[['team','position','salary','mean']].round(2)
@@ -245,14 +243,12 @@ team_values = player_values.groupby('team').value_1qb.mean().reset_index()
 # Difference between team value and the top team value / team percent of total league value
 team_values['Value Diff'] = team_values['value_1qb'] - team_values['value_1qb'].max()
 # print('team_values: \n', team_values)
-# team_values['Value Diff'] = team_values['salary'] - team_values['salary'].max()
 
 # As a percent of the worst value (to get on same scale as Power Score)
 team_values['% Value Diff'] = abs(team_values['Value Diff']) / team_values['Value Diff'].min()
 
 # Calculate total value as a percent of the total league value
 team_values['% Total Value'] = team_values['value_1qb']/team_values['value_1qb'].sum()
-# team_values['% Total Value'] = team_values['salary']/team_values['salary'].max()
 team_values = team_values.round(2)
 
 # team_values = team_values.sort_values(by = '% Total Value', ascending=False)
@@ -279,6 +275,9 @@ Value_Power_Rankings_rank = allplay_ps_val[['% PowerScore','% Value Diff','% Tot
 Value_Power_Rankings_rank.insert(loc=0, column='AllPlayWin%', value=allplay['allPlayWins'] / (allplay['allPlayWins'] + allplay['allPlayLosses']))
 Value_Power_Rankings_rank.insert(loc=0, column='Team',value=allplay_ps_val['team'])
 Value_Power_Rankings_rank['AllPlayWin%'] = Value_Power_Rankings_rank['AllPlayWin%'].rank(ascending=False, method='min')
+
+print("WEEK ", week, " POWER RANKINGS")
+league.printPowerRankings(week)
 
 print("\nValue Power Rankings: \n", allplay_ps_val[['team','AllPlayWin%','% PowerScore','% Value Diff', '% Total Value','Weighted Avg']].sort_values(by='Weighted Avg', ascending=False).reset_index(drop=True))
 print("\nValue Power Rankings Ranks: \n", Value_Power_Rankings_rank.sort_values(by = 'Weighted Avg').reset_index(drop=True), "\n")
@@ -655,9 +654,6 @@ print("\n### POWER RANKINGS\n")
 
 # Value Informed
 print(table(Value_Power_Rankings_print, headers='keys',tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
-
-# print("\n### WEEK ", week, " POWER RANKINGS")
-# league.printPowerRankings(week)
 
 print("\n### EXPECTED STANDINGS (as of week ", week, ")")
 # league.printExpectedStandings(week)

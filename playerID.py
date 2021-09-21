@@ -65,9 +65,7 @@ def get_player_values(week):
         # print(players)
 
     values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
-    # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FFanalytics_Values.csv")
     values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
-    # values = values[['Player','Position','Salary [$]','Mean']]
     # print(values)
     values.columns = values.columns.str.lower()
 
@@ -76,8 +74,6 @@ def get_player_values(week):
     values['player'] = values['player'].replace('D.K. Metcalf', 'DK Metcalf', regex=True)
     values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
 
-    # Remove team from FFanalytics_week2
-    # print(values)
     # values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
     # values['player'] = re.sub(r"\([^()]*\)", "", values['player'])
 
@@ -104,10 +100,6 @@ def get_player_values(week):
     # print("\nvalues: \n", values)
 
     joined = players.merge(values, how='left')
-    
-    # print(joined)
-    # joined = joined.set_axis(['Player','ESPN ID', 'Age', 'Value', 'FP ID'], axis=1, inplace=False)
-    # print(table(joined, headers=['Team','Player','Pos ID', 'ESPN ID', 'Position', 'Salary', 'Mean']))
 
     return(joined)
 
@@ -128,21 +120,14 @@ def get_player_values_lw(week):
             # print(players)
 
     values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
-    # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FFanalytics_Values.csv")
     values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
-    # values = values[['Player','Position','Salary [$]','Mean']]
 
     values.columns = values.columns.str.lower()
     # print(values)
 
-    # print(values)
-
-    values.columns = values.columns.str.lower()
-    # print(values)
 
     # Remove team from FFanalytics_week2
-    values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
-    # values['player'] = re.sub(r"\([^()]*\)", "", values['player'])
+    # values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
 
 
     players = pd.DataFrame(players, columns = ['team', 'player', 'posID', 'espn_id'])
@@ -162,7 +147,5 @@ def get_player_values_lw(week):
     values.set_index('player')
 
     joined = players.merge(values, how='left')
-    # joined = joined.set_axis(['Player','ESPN ID', 'Age', 'Value', 'FP ID'], axis=1, inplace=False)
-    # print(table(joined, headers=['Team','Player','Pos ID', 'ESPN ID', 'Age', 'Value', 'FP ID']))
 
     return(joined)
