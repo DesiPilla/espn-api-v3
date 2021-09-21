@@ -70,7 +70,11 @@ def get_player_values(week):
     # values = values[['Player','Position','Salary [$]','Mean']]
     # print(values)
     values.columns = values.columns.str.lower()
-    # print(values)
+
+    # fix player names to match between dataframes
+    values['player'] = values['player'].replace('Patrick Mahomes II', 'Patrick Mahomes', regex=True)
+    values['player'] = values['player'].replace('D.K. Metcalf', 'DK Metcalf', regex=True)
+    values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
 
     # Remove team from FFanalytics_week2
     # print(values)
@@ -100,6 +104,7 @@ def get_player_values(week):
     # print("\nvalues: \n", values)
 
     joined = players.merge(values, how='left')
+    
     # print(joined)
     # joined = joined.set_axis(['Player','ESPN ID', 'Age', 'Value', 'FP ID'], axis=1, inplace=False)
     # print(table(joined, headers=['Team','Player','Pos ID', 'ESPN ID', 'Position', 'Salary', 'Mean']))
@@ -120,7 +125,7 @@ def get_player_values_lw(week):
             playerID = [team.teamName, player.name, player.positionId, player.id]
             players.append(playerID)
 
-        # print(players)
+            # print(players)
 
     values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
     # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FFanalytics_Values.csv")
