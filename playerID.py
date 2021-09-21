@@ -64,15 +64,22 @@ def get_player_values(week):
 
         # print(players)
 
-    values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
-    values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
+    # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
+    # values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
+    values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FantasySP_values.csv")
+
     # print(values)
     values.columns = values.columns.str.lower()
 
     # fix player names to match between dataframes
-    values['player'] = values['player'].replace('Patrick Mahomes II', 'Patrick Mahomes', regex=True)
-    values['player'] = values['player'].replace('D.K. Metcalf', 'DK Metcalf', regex=True)
+    # values['player'] = values['player'].replace('Patrick Mahomes II', 'Patrick Mahomes', regex=True)
+    # values['player'] = values['player'].replace('D.K. Metcalf', 'DK Metcalf', regex=True)
+    # values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
+
+    values['player'] = values['player'].replace('D.J. Chark', 'DJ Chark Jr.', regex=True)
+    values['player'] = values['player'].replace('Allen Robinson', 'Allen Robinson II', regex=True)
     values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
+    values['player'] = values['player'].replace('Michael Pittman', 'Michael Pittman Jr.', regex=True)
 
     # values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
     # values['player'] = re.sub(r"\([^()]*\)", "", values['player'])

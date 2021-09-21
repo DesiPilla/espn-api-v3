@@ -233,7 +233,8 @@ player_values = playerID.get_player_values(week)
 
 ### TODO: Group by pos for analysis
 
-team_values = player_values.groupby('team').value_1qb.mean().reset_index()
+# team_values = player_values.groupby('team').value_1qb.mean().reset_index()
+team_values = player_values.groupby('team').rating.mean().reset_index()
 
 # print('Week ', week, ' Team Values: \n', team_values)
 
@@ -241,14 +242,16 @@ team_values = player_values.groupby('team').value_1qb.mean().reset_index()
 # print(team_pos_values)
 
 # Difference between team value and the top team value / team percent of total league value
-team_values['Value Diff'] = team_values['value_1qb'] - team_values['value_1qb'].max()
+# team_values['Value Diff'] = team_values['value_1qb'] - team_values['value_1qb'].max()
+team_values['Value Diff'] = team_values['rating'] - team_values['rating'].max()
 # print('team_values: \n', team_values)
 
 # As a percent of the worst value (to get on same scale as Power Score)
 team_values['% Value Diff'] = abs(team_values['Value Diff']) / team_values['Value Diff'].min()
 
 # Calculate total value as a percent of the total league value
-team_values['% Total Value'] = team_values['value_1qb']/team_values['value_1qb'].sum()
+# team_values['% Total Value'] = team_values['value_1qb']/team_values['value_1qb'].sum()
+team_values['% Total Value'] = team_values['rating']/team_values['rating'].sum()
 team_values = team_values.round(2)
 
 # team_values = team_values.sort_values(by = '% Total Value', ascending=False)
@@ -276,9 +279,6 @@ Value_Power_Rankings_rank.insert(loc=0, column='AllPlayWin%', value=allplay['all
 Value_Power_Rankings_rank.insert(loc=0, column='Team',value=allplay_ps_val['team'])
 Value_Power_Rankings_rank['AllPlayWin%'] = Value_Power_Rankings_rank['AllPlayWin%'].rank(ascending=False, method='min')
 
-print("WEEK ", week, " POWER RANKINGS")
-league.printPowerRankings(week)
-
 print("\nValue Power Rankings: \n", allplay_ps_val[['team','AllPlayWin%','% PowerScore','% Value Diff', '% Total Value','Weighted Avg']].sort_values(by='Weighted Avg', ascending=False).reset_index(drop=True))
 print("\nValue Power Rankings Ranks: \n", Value_Power_Rankings_rank.sort_values(by = 'Weighted Avg').reset_index(drop=True), "\n")
 
@@ -286,25 +286,27 @@ Value_Power_Rankings_print = allplay_ps_val[['team','AllPlayWin%','Weighted Avg'
 Value_Power_Rankings_print['Weighted Avg'] = (Value_Power_Rankings_print['Weighted Avg']*100).round(2)
 Value_Power_Rankings_print = Value_Power_Rankings_print.rename(columns={'Weighted Avg':'Value Power Score'})
 
+print('Week ', week, ' Rosters NaN: \n', player_values[player_values['rating'].isna()])
+
 # Create last week value informed power rankings
 if week > 1:
     # Load player values for previous week starting lineup
     lw_player_values = playerID.get_player_values(week-1)
-    # lw_player_values.rename(columns={'salary [$]': 'salary'}, inplace=True)
+    print('\nWeek ', week-1, ' Rosters NaN: \n', player_values[player_values['rating'].isna()])
 
     # Group by team and average the values to get average team value
-    lw_team_values = lw_player_values.groupby('team').value_1qb.mean().reset_index()
-    # lw_team_values = lw_player_values.groupby('team').salary.mean().reset_index()
-    # print('lw_team_values: \n', lw_team_values)
+    # lw_team_values = lw_player_values.groupby('team').value_1qb.mean().reset_index()
+    lw_team_values = lw_player_values.groupby('team').rating.mean().reset_index()
 
     # Difference between team value and the top team value
-    lw_team_values['Value Diff'] = lw_team_values['value_1qb'] - lw_team_values['value_1qb'].max()
+    # lw_team_values['Value Diff'] = lw_team_values['value_1qb'] - lw_team_values['value_1qb'].max()
+    lw_team_values['Value Diff'] = lw_team_values['rating'] - lw_team_values['rating'].max()
     # print('lw_team_values: \n', lw_team_values)
-    # lw_team_values['Value Diff'] = lw_team_values['salary'] - lw_team_values['salary'].max()
 
     # As a percent of the worst value (to get on same scale as Power Score) OR % of total league value
     lw_team_values['% Value Diff'] = abs(lw_team_values['Value Diff']) / lw_team_values['Value Diff'].min()
-    lw_team_values['% Total Value'] = lw_team_values['value_1qb'] / lw_team_values['value_1qb'].sum()
+    # lw_team_values['% Total Value'] = lw_team_values['value_1qb'] / lw_team_values['value_1qb'].sum()
+    lw_team_values['% Total Value'] = lw_team_values['rating'] / lw_team_values['rating'].sum()
 
     # Merge with Power Rankings to get PowerScore
     lw_allplay.reset_index() #reset the index so we can merge on team
