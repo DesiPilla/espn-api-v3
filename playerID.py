@@ -64,17 +64,17 @@ def get_player_values(week):
 
         # print(players)
 
-    # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
-    values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FFanalytics_Values.csv")
-    # values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
-    values = values[['Player','Position','Salary [$]','Mean']]
+    values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
+    # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FFanalytics_Values.csv")
+    values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
+    # values = values[['Player','Position','Salary [$]','Mean']]
     # print(values)
     values.columns = values.columns.str.lower()
     # print(values)
 
     # Remove team from FFanalytics_week2
     # print(values)
-    values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
+    # values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
     # values['player'] = re.sub(r"\([^()]*\)", "", values['player'])
 
     # print(values)
@@ -122,8 +122,14 @@ def get_player_values_lw(week):
 
         # print(players)
 
-    values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FFanalytics_Values.csv")
-    values = values[['Player','Position','Salary [$]','Mean']]
+    values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
+    # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FFanalytics_Values.csv")
+    values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
+    # values = values[['Player','Position','Salary [$]','Mean']]
+
+    values.columns = values.columns.str.lower()
+    # print(values)
+
     # print(values)
 
     values.columns = values.columns.str.lower()
