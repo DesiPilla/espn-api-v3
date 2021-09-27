@@ -665,6 +665,9 @@ print("\n### POWER RANKINGS\n")
 # Value Informed
 print(table(Value_Power_Rankings_print, headers='keys',tablefmt='pipe', numalign='center')) # have to manually center all play % and weekly change because not an int
 
+print("**Highlights:**")
+
+
 print("\n### EXPECTED STANDINGS (as of week ", week, ")")
 # league.printExpectedStandings(week)
 print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
