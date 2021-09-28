@@ -663,24 +663,25 @@ print("---")
 
 print("<!-- excerpt -->")
 
-print("\n### POWER RANKINGS\n")
+print("\n# POWER RANKINGS\n")
 # Value un-informed
 # print(table(allplay_ps, headers='keys', tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
 
 # Value Informed
 print(table(Value_Power_Rankings_print, headers='keys',tablefmt='pipe', numalign='center')) # have to manually center all play % and weekly change because not an int
 
+print('\n##Highlights:\n')
 
-print("\n### EXPECTED STANDINGS (as of week ", week, ")")
+print("\n# EXPECTED STANDINGS (as of week ", week, ")")
 # league.printExpectedStandings(week)
 print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
 
 if week >= 5:
-    print("\n### PLAYOFF PROBABILITIES (as of week ", week, ")")
+    print("\n# PLAYOFF PROBABILITIES (as of week ", week, ")")
     print(table(projections, headers='keys', tablefmt='pipe', numalign='center'))
 
 
-print("\n### LUCK INDEX")
+print("\n# LUCK INDEX")
 league.printLuckIndex(week)
 
 # print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY WINS)")
