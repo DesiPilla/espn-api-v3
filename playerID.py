@@ -67,11 +67,14 @@ def get_player_values(week):
 
     # values = pd.read_csv("/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/playerValues.csv")
     # values = values[['player','pos', 'age', 'value_1qb', 'fp_id']]
-    values_file = '/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/FantasySP_values' + str(week) + '.csv'
-
-    values = pd.read_csv(values_file)
-
     values = scrape_values.player_values(week)
+
+    values = pd.DataFrame(values)
+
+    # values_file = '/users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/values/week' + str(week) + '.csv'
+
+    # values = pd.read_csv(values_file)
+
 
     # print(values)
     values.columns = values.columns.str.lower()
@@ -85,6 +88,10 @@ def get_player_values(week):
     values['player'] = values['player'].replace('Allen Robinson', 'Allen Robinson II', regex=True)
     values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
     values['player'] = values['player'].replace('Michael Pittman', 'Michael Pittman Jr.', regex=True)
+
+    missingPlayer = ['William Fuller V','8.37','+0.7']
+    missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
+    values = values.append(missing, ignore_index=True)
 
     # values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
     # values['player'] = re.sub(r"\([^()]*\)", "", values['player'])

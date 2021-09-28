@@ -227,7 +227,7 @@ allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
 
 # Load player values for last weeks starting lineup
 player_values = playerID.get_player_values(week)
-print('player_values: \n', player_values)
+# print('player_values: \n', player_values)
 
 # Group by team and average the values to get average team value
 
@@ -330,6 +330,11 @@ if week > 1:
     lw_allplay_ps_val = lw_allplay_ps_val.sort_values(by='Weighted Avg', ascending=False).reset_index()
 
     # print("lw_allplay_ps_val \n", lw_allplay_ps_val[['team','% Value Diff','% PowerScore','Weighted Avg']])
+
+# Print current and last week team values for evaluation
+print("\nThis Week Team Values:\n", team_values)
+print("\nLast Week Team Values:\n", lw_team_values.round(2))
+
 
 if week > 1:
 
@@ -664,8 +669,6 @@ print("\n### POWER RANKINGS\n")
 
 # Value Informed
 print(table(Value_Power_Rankings_print, headers='keys',tablefmt='pipe', numalign='center')) # have to manually center all play % and weekly change because not an int
-
-print("**Highlights:**")
 
 
 print("\n### EXPECTED STANDINGS (as of week ", week, ")")
