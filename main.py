@@ -356,10 +356,12 @@ if week > 1:
     # lw_allplay['PowerScore'] = lw_allplay['PowerScore'].round(2)
     # lw_allplay = lw_allplay.reset_index()
 
-    # create table for last week to compare for weekly change with Value Informed Rankings
-    lw_allplay_compare = lw_allplay_ps_val[['team','Weighted Avg']].sort_values(by=['Weighted Avg'], ascending=False)
-    lw_allplay_compare['Weighted Avg'] = lw_allplay_compare['Weighted Avg'].round(4)
-    lw_allplay_compare = lw_allplay_compare.reset_index(drop=True)
+    # DEPRACATED
+
+    # # create table for last week to compare for weekly change with Value Informed Rankings
+    # lw_allplay_compare = lw_allplay_ps_val[['team','Weighted Avg']].sort_values(by=['Weighted Avg'], ascending=False)
+    # lw_allplay_compare['Weighted Avg'] = lw_allplay_compare['Weighted Avg'].round(4)
+    # lw_allplay_compare = lw_allplay_compare.reset_index(drop=True)
 
     # # create allplay table sorted by power score
     # lw_allplay_ps = lw_allplay.sort_values(by='PowerScore', ascending=False)
@@ -400,8 +402,8 @@ if week > 1:
     print('Last week: \n', lw_rankings)
 
     for team in emoji_names:
-        tw_index = Value_Power_Rankings[Value_Power_Rankings['team'] == team].index.values # get index values of this weeks power rankigns
-        lw_index = lw_allplay_compare[lw_allplay_compare['team'] == team].index.values  # get index values of last weeks power rankings
+        tw_index = tw_rankings[tw_rankings['team'] == team].index.values # get index values of this weeks power rankigns
+        lw_index = lw_rankings[lw_rankings['team'] == team].index.values  # get index values of last weeks power rankings
         diff = lw_index-tw_index # find the difference between last week to this week
         diff = int(diff.item()) # turn into list to iterate over
         diffs.append(diff) # append to the list
