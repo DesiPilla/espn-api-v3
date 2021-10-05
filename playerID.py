@@ -89,8 +89,13 @@ def get_player_values(week):
     values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
     values['player'] = values['player'].replace('Michael Pittman', 'Michael Pittman Jr.', regex=True)
 
-    missingPlayer = ['William Fuller V','8.37','+0.7']
+    missingPlayer = ['William Fuller V','7.76','-0.6']
+    missingPlayer2 = ['Chuba Hubbard','5.09','+1.3']
+
     missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
+    values = values.append(missing, ignore_index=True)
+
+    missing = pd.DataFrame([missingPlayer2],columns=['player','rating','change'])
     values = values.append(missing, ignore_index=True)
 
     # values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
@@ -119,6 +124,9 @@ def get_player_values(week):
     # print("\nvalues: \n", values)
 
     joined = players.merge(values, how='left')
+
+    joined.to_csv(root + str(week) + '.csv')
+
 
     return(joined)
 
