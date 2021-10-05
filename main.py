@@ -35,7 +35,7 @@ league_id = 916709
 swid = '{75C7094F-C467-4145-8709-4FC467C1457E}'
 espn_s2 = 'AECbQaX7HoUGyJ5X5cmNlFHVs%2FmDl0RKfnVV%2FazefK9PxoSfENQFF6ULNnR421xium4UYV5dC0GsOhS%2BeigBuhk1abpSjhlXDCJnIGt0PjUHCZpV6qF5S9qMS40ichi2XnVZFSKwAid6h8bFbWA4eHclC%2BJHqMyirQ85yLRG6zc6nULRaovpF2Cx2j5U55OuvwTnI2HCztRnEJIVucnKxlem7pAidup27BIggM3c42%2BrH7vXUlRaIYXhjE%2BGH3cWbL88H8AcpIQpG%2Bft96vAZXuB'
 
-
+root = '/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/'
 
 # Generate cookies payload and API endpoint
 cookies = {'swid' : swid, 'espn_s2' : espn_s2}
@@ -392,6 +392,9 @@ if week > 1:
     diffs = []
     emojis = []
     emoji_names = Value_Power_Rankings['team'].tolist()
+
+    tw_rankings = pd.read_csv(root + 'past_rankings/week' + str(week) + '.csv')
+    lw_rankings = pd.read_csv(root + 'past_rankings/week' + str(week-1) + '.csv)'
 
     # print('value power rankings: \n', Value_Power_Rankings)
     # print('lw_allplay_compare: \n', lw_allplay_compare)
