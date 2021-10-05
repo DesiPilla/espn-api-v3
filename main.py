@@ -673,9 +673,9 @@ sys.stdout = open(filepath, "w")
 
 # for the markdown files in blog
 print("---")
-print("title: Week (WEEK) (YEAR) Report")
+print("title: Week " + str(week) + " 2021 Report")
 print("date: 2020-MONTH-DAY")
-print("image: /images/(YEAR)week(WEEK).jpeg")
+print("image: /images/2021week" + str(week) + ".jpeg")
 print("draft: false")
 print("---")
 
