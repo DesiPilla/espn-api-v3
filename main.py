@@ -293,11 +293,24 @@ Value_Power_Rankings_print = Value_Power_Rankings_print.rename(columns={'Weighte
 
 print('Week ', week, ' Rosters NaN: \n', player_values[player_values['rating'].isna()])
 
+Value_Power_Rankings_print.index = np.arange(1, len(Value_Power_Rankings_print) + 1)
+Value_Power_Rankings_print.to_csv('/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/past_rankings/week' + str(week) + '.csv')
+
 # Create last week value informed power rankings
 if week > 1:
     # Load player values for previous week starting lineup
-    lw_player_values = playerID.get_player_values(week-1)
-    print('\nWeek ', week-1, ' Rosters NaN: \n', player_values[player_values['rating'].isna()])
+    lw_player_values = pd.read_csv('/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/values/week' + str(week-1) + '.csv')
+
+    # missingPlayer = ['Chuba Hubbard','5.09','+1.3']
+    lw_player_values.loc[(lw_player_values.player == 'Ty\'Son Williams'), 'rating'] = '8.30'
+
+    # missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
+    # lw_player_values = lw_player_values.append(missing, ignore_index=True)
+    #
+    # missing = pd.DataFrame([missingPlayer2],columns=['player','rating','change'])
+    # lw_player_values = lw_player_values.append(missing, ignore_index=True)
+
+    print('\nWeek ', week-1, ' Rosters NaN: \n', lw_player_values[lw_player_values['rating'].isna()])
 
     # covnert rating to a float from object
     lw_player_values['rating'] = lw_player_values['rating'].astype(str).astype(float)
@@ -332,8 +345,8 @@ if week > 1:
     # print("lw_allplay_ps_val \n", lw_allplay_ps_val[['team','% Value Diff','% PowerScore','Weighted Avg']])
 
 # Print current and last week team values for evaluation
-print("\nThis Week Team Values:\n", team_values)
-print("\nLast Week Team Values:\n", lw_team_values.round(2))
+print("\nThis Week Team Values:\n", team_values.sort_values(by='rating',ascending=False))
+print("\nLast Week Team Values:\n", lw_team_values.sort_values(by='rating',ascending=False).round(2))
 
 
 if week > 1:
