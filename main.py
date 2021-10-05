@@ -503,7 +503,7 @@ projectedStandings = projectedStandings.reset_index(drop=True)
 
 projectedStandings_prnt = projectedStandings[['Team','TotalProjWins','TotalProjLoss']]
 
-if week > 5:
+if week >= 5:
     # Merge in SOS
     projectedStandings_prnt = projectedStandings_prnt.merge(sos, on='Team')
 
