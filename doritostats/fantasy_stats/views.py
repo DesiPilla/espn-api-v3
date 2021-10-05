@@ -42,7 +42,21 @@ def league_input(request):
 
 def league(request, league_id, league_year):
     league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
-    return HttpResponse(render(request, 'fantasy_stats/index.html', {'league':league_info}))
+    league = fetch_league(league_info.league_id, league_info.league_year, league_info.swid, league_info.espn_s2)
+    
+    weekly_awards = django_weekly_stats(league, league.current_week-1)
+    power_rankings = django_power_rankings(league, league.current_week-1)
+    luck_index = django_luck_index(league, league.current_week-1)
+    standings = django_standings(league)
+
+    context = {'league_info':league_info, 
+               'league':league,
+               'weekly_awards':weekly_awards,
+               'power_rankings':power_rankings,
+               'luck_index':luck_index,
+               'standings':standings
+               }
+    return HttpResponse(render(request, 'fantasy_stats/league.html', context))
 
 
 def standings(reqeust):

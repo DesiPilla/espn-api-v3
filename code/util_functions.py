@@ -193,6 +193,15 @@ def print_weekly_stats(league: League, team: Team, week: int):
 
 ''' ADVANCED STATS '''
 #league.power_rankings(week)
+def django_power_rankings(league: League, week: int):
+    power_rankings = []
+    for p_rank in league.power_rankings(week):
+        power_rankings.append({
+            'team': p_rank[1].team_name,
+            'value': p_rank[0],
+            'owner': p_rank[1].owner
+            })
+    return power_rankings
 
 def get_weekly_luck_index(league: League, team: Team, week: int):
     ''' 
@@ -258,8 +267,31 @@ def get_season_luck_indices(league: League, week: int):
             luck_indices[team] += get_weekly_luck_index(league, team, week)
     return luck_indices
 
+def django_luck_index(league: League, week: int):
+    luck_index = []
+    luck_index_results = get_season_luck_indices(league, league.current_week-1)
+    for (team, luck) in sorted(luck_index_results.items(), key=lambda x:x[1], reverse=True):
+        luck_index.append({
+            'team': team.team_name,
+            'value': '{:.1f}'.format(luck),
+            'owner': team.owner
+            })
+    return luck_index
 
 
+def django_standings(league: League):
+    standings = []
+    for team in league.standings():
+        standings.append({
+            'team': team.team_name,
+            'wins': team.wins,
+            'losses': team.losses,
+            'ties': team.ties,
+            'points_for': team.points_for,
+            'owner': team.owner
+            })
+
+    return standings
 
 ''' GENERAL REPORTING '''
 
@@ -305,6 +337,48 @@ def print_weekly_stats(league: League, week: int):
                    ]
     print('\n', table(statsTable, headers = ['Week ' + str(week), ''])) 
     return statsTable
+
+def django_weekly_stats(league: League, week: int):
+    ''' Prints weekly stat report for a league during a given week '''
+    # Load box scores for specified week
+    box_scores = league.box_scores(week)
+    
+    best_table =  [['Most Points Scored: ', sorted(league.teams, key=lambda x:x.scores[week-1], reverse=True)[0].owner],
+                   ['Best Possible Lineup: ', sort_lineups_by_func(league, week, get_best_lineup, box_scores)[-1].owner],
+                   ['Best Trio: ', sort_lineups_by_func(league, week, get_best_trio, box_scores)[-1].owner],
+                   ['Best Lineup Setter', sort_lineups_by_func(league, week, get_lineup_efficiency, box_scores)[-1].owner],
+                   ['Best QBs: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot='QB')[-1].owner],
+                   ['Best RBs: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot='RB')[-1].owner],
+                   ['Best WRs: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot='WR')[-1].owner], 
+                   ['Best TEs: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot='TE')[-1].owner],
+                   ['Best Flex: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot=r'RB/WR/TE')[-1].owner],
+                   ['Best DST: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot=r'D/ST')[-1].owner],
+                   ['Best K: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot='K')[-1].owner],
+                   ['Best Bench:', sort_lineups_by_func(league, week, sum_bench_points, box_scores)[-1].owner]]
+    
+    worst_table = [['Least Points Scored: ', sorted(league.teams, key=lambda x:x.scores[week-1])[0].owner],
+                   ['---------------------','----------------'],
+                   ['Worst Trio: ', sort_lineups_by_func(league, week, get_best_trio, box_scores)[0].owner],
+                   ['Worst Lineup Setter', sort_lineups_by_func(league, week, get_lineup_efficiency, box_scores)[0].owner],
+                   ['Worst QBs: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot='QB')[0].owner],
+                   ['Worst RBs: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot='RB')[0].owner],
+                   ['Worst WRs: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot='WR')[0].owner], 
+                   ['Worst TEs: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot='TE')[0].owner],
+                   ['Worst Flex: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot=r'RB/WR/TE')[0].owner],
+                   ['Worst DST: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot=r'D/ST')[0].owner],
+                   ['Worst K: ', sort_lineups_by_func(league, week, avg_slot_score, box_scores, slot='K')[0].owner],
+                   ['Worst Bench:', sort_lineups_by_func(league, week, sum_bench_points, box_scores)[0].owner]]
+    
+    weekly_awards = []
+    for i in range(len(best_table)):
+        weekly_awards.append({
+            'best_label': best_table[i][0],
+            'best_owner': best_table[i][1],
+            'worst_label': worst_table[i][0],
+            'worst_owner': worst_table[i][1]
+        })
+
+    return weekly_awards
     
 
 def print_current_standings(league: League):
