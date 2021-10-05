@@ -1,176 +1,65 @@
-,Player,RATING,change
-1,Derrick Henry,31.01,-0.8
-2,Tyreek Hill,29.82,+5.8
-3,Austin Ekeler,29.05,+2.3
-4,Patrick Mahomes,26.89,+0.8
-5,Ezekiel Elliott,26.70,+0.9
-6,Alvin Kamara,26.19,-0.3
-7,Travis Kelce,25.83,-1.4
-8,Christian McCaffrey,25.82,-5.8
-9,Najee Harris,25.57,+1.5
-10,Davante Adams,25.53,-1.6
-11,Kyler Murray,25.40,-0.1
-12,Aaron Jones,25.11,-2.0
-13,Justin Jefferson,25.07,+0.6
-14,Cooper Kupp,24.99,-2.1
-15,D.J. Moore,24.86,+3.5
-16,Saquon Barkley,24.37,+4.2
-17,Nick Chubb,23.71,-1.2
-18,DK Metcalf,23.53,+0.8
-19,Terry McLaurin,23.45,+3.0
-20,Deebo Samuel,23.28,+3.5
-21,James Robinson,23.22,+2.3
-22,David Montgomery,23.16,+2.6
-23,Stefon Diggs,22.83,+1.2
-24,Darren Waller,22.62,+0.3
-25,Jalen Hurts,22.52,+1.5
-26,Dalvin Cook,22.50,+0.3
-27,Dak Prescott,22.35,+2.1
-28,Tom Brady,22.35,-2.2
-29,D'Andre Swift,22.33,-1.1
-30,Russell Wilson,22.00,-0.3
-31,Lamar Jackson,21.74,-0.9
-32,Justin Herbert,21.71,+0.3
-33,Joe Mixon,21.69,+0.3
-34,Jonathan Taylor,21.68,+2.2
-35,DeAndre Hopkins,21.55,-1.1
-36,Calvin Ridley,21.55,+0.0
-37,Chris Godwin,21.50,-1.8
-38,Matthew Stafford,21.44,-0.7
-39,Mike Williams,20.93,-2.6
-40,Keenan Allen,20.86,-1.6
-41,Josh Allen,20.85,-0.8
-42,Clyde Edwards-Helaire,20.84,+2.1
-43,Antonio Gibson,20.61,+0.5
-44,Amari Cooper,20.55,+0.6
-45,Mike Evans,20.36,-0.7
-46,Adam Thielen,19.94,-1.7
-47,Sam Darnold,19.89,+1.9
-48,Kareem Hunt,19.74,+0.8
-49,Aaron Rodgers,19.57,+0.2
-50,Tyler Lockett,19.56,-2.4
-51,Daniel Jones,19.26,+0.3
-52,Ja'Marr Chase,18.95,-0.8
-53,Chase Edmonds,18.94,+1.2
-54,Brandin Cooks,18.84,-3.0
-55,Chris Carson,18.72,-2.1
-56,Robert Woods,18.64,+1.3
-57,Kirk Cousins,18.24,-2.7
-58,T.J. Hockenson,18.14,-1.3
-59,Corey Davis,18.09,+2.3
-60,Diontae Johnson,18.06,+4.3
-61,Ryan Tannehill,18.05,-0.4
-62,Joe Burrow,18.01,+1.1
-63,CeeDee Lamb,17.99,-2.6
-64,Cordarrelle Patterson,17.93,+3.5
-65,Derek Carr,17.90,-1.8
-66,George Kittle,17.56,-0.5
-67,Noah Fant,17.37,+0.9
-68,Matt Ryan,17.21,+2.3
-69,Dallas Goedert,17.03,+1.4
-70,Marquise Brown,16.85,-0.4
-71,James Conner,16.47,+3.1
-72,Mark Andrews,16.36,+0.2
-73,Mike Davis,16.31,+0.5
-74,Tyler Boyd,16.30,+2.3
-75,Melvin Gordon,16.06,-1.3
-76,Dawson Knox,16.04,+2.5
-77,Darrell Henderson,15.73,+1.0
-78,Allen Robinson,15.69,-0.8
-79,Jared Goff,15.66,-0.3
-80,Rob Gronkowski,15.49,-3.3
-81,Mike Gesicki,15.31,+2.4
-82,Kyle Pitts,15.22,-0.5
-83,Emmanuel Sanders,15.14,-0.4
-84,Henry Ruggs III,15.10,-1.4
-85,Marvin Jones,14.95,-2.8
-86,Leonard Fournette,14.83,+2.3
-87,Zack Moss,14.77,+0.7
-88,Tyler Higbee,14.75,-0.5
-89,Logan Thomas,14.72,-2.4
-90,DeVonta Smith,14.58,+2.1
-91,Dalton Schultz,14.46,+3.3
-92,Javonte Williams,14.36,+0.1
-93,Michael Pittman,14.34,-1.7
-94,Jared Cook,14.31,+2.8
-95,Jamaal Williams,14.00,-1.6
-96,Miles Sanders,13.96,-1.3
-97,Trevor Lawrence,13.92,+0.2
-98,Zach Ertz,13.92,+1.7
-99,A.J. Brown,13.83,-2.1
-100,DeVante Parker,13.82,+3.3
-101,Jonnu Smith,13.78,+2.4
-102,Baker Mayfield,13.76,-1.7
-103,Kenny Golladay,13.43,+1.4
-104,Jakobi Meyers,13.41,+1.1
-105,Hunter Renfrow,13.36,+2.8
-106,D.J. Chark,13.27,-2.4
-107,Carson Wentz,13.19,+0.5
-108,Jameis Winston,13.14,-0.9
-109,Laviska Shenault,12.98,+2.2
-110,Hunter Henry,12.90,+2.1
-111,Teddy Bridgewater,12.82,-2.1
-112,Rondale Moore,12.69,-1.3
-113,A.J. Green,12.52,+3.1
-114,Courtland Sutton,12.49,-2.2
-115,Robby Anderson,12.48,-0.4
-116,Brandon Aiyuk,12.46,+0.2
-117,Tyler Conklin,12.45,-1.2
-118,Josh Jacobs,12.38,+0.4
-119,Damien Harris,12.35,-2.2
-120,JuJu Smith-Schuster,12.22,-2.0
-121,Austin Hooper,12.19,-1.3
-122,Jaylen Waddle,12.16,-1.6
-123,Nyheim Hines,12.07,-1.7
-124,Devin Singletary,12.04,-1.0
-125,Robert Tonyan,11.91,-1.3
-126,Cole Beasley,11.82,-1.5
-127,Ben Roethlisberger,11.67,-2.2
-128,Tee Higgins,11.60,-2.7
-129,Chase Claypool,11.56,-4.5
-130,Antonio Brown,11.54,-0.1
-131,Mac Jones,11.53,+0.9
-132,Odell Beckham,11.48,+0.1
-133,Tony Pollard,11.39,-1.5
-134,Jarvis Landry,11.39,-0.6
-135,Kenneth Gainwell,11.38,+4.7
-136,Kenyan Drake,11.32,-1.8
-137,Christian Kirk,11.31,-2.3
-138,Julio Jones,11.28,-3.8
-139,J.D. McKissic,11.22,+0.8
-140,Darnell Mooney,11.20,+1.6
-141,Mecole Hardman,11.15,-1.2
-142,Myles Gaskin,10.86,-2.4
-143,Jerry Jeudy,10.66,-1.2
-144,Zach Pascal,10.64,-0.5
-145,Zach Wilson,10.44,+1.4
-146,Justin Tucker,10.38,+0.2
-147,Tua Tagovailoa,10.15,-0.6
-148,Tyler Bass,10.05,+0.6
-149,Marquez Callaway,10.01,+0.1
-150,Gus Edwards,9.90,-0.6
-151,Trey Lance,9.81,+1.8
-152,Tim Patrick,9.73,-1.5
-153,Tyrod Taylor,9.71,-0.7
-154,Van Jefferson,9.69,+2.0
-155,Sterling Shepard,9.69,-4.7
-156,Trey Sermon,9.66,+0.5
-157,Justin Fields,9.53,+0.0
-158,Blake Jarwin,9.49,+1.0
-159,Matt Prater,9.37,+0.3
-160,Michael Carter,9.21,+0.1
-161,Jamison Crowder,9.20,+4.6
-162,Sammy Watkins,9.15,-0.6
-163,Ryan Succop,9.13,+0.6
-164,Randall Cobb,9.10,+2.8
-165,Rodrigo Blankenship,9.04,-0.2
-166,Nelson Agholor,9.04,-0.3
-167,Matt Gay,8.97,-0.3
-168,Jalen Reagor,8.95,-1.3
-169,Daniel Carlson,8.91,-0.9
-170,Chase McLaughlin,8.87,-0.3
-171,Mason Crosby,8.85,-0.1
-172,Bills DST DST ,8.75,+4.3
-173,Greg Zuerlein,8.68,-0.4
-174,Harrison Butker,8.66,-0.1
-175,Alexander Mattison,8.58,-1.1
+,team,player,posID,espn_id,rating,change
+0,Red Zone  Rockets,Patrick Mahomes,0,3139477,26.89,+0.8
+1,Red Zone  Rockets,Saquon Barkley,2,3929630,24.37,+4.2
+2,Red Zone  Rockets,Tyreek Hill,4,3116406,29.82,+5.8
+3,Red Zone  Rockets,Tyler Boyd,23,3045144,16.30,+2.3
+4,Red Zone  Rockets,Chuba Hubbard,2,4241416,5.09,+1.3
+5,Red Zone  Rockets,Tyler Higbee,6,2573401,14.75,-0.5
+6,Red Zone  Rockets,Tim Patrick,4,3134353,9.73,-1.5
+7,Red Zone  Rockets,Jakobi Meyers,4,3916433,13.41,+1.1
+8,Final Deztination,DK Metcalf,4,4047650,23.53,+0.8
+9,Final Deztination,Travis Kelce,6,15847,25.83,-1.4
+10,Final Deztination,Aaron Jones,2,3042519,25.11,-2.0
+11,Final Deztination,Josh Jacobs,2,4047365,12.38,+0.4
+12,Final Deztination,Lamar Jackson,0,3916387,21.74,-0.9
+13,Final Deztination,Robert Woods,4,15880,18.64,+1.3
+14,Final Deztination,DJ Chark Jr.,23,3115394,13.27,-2.4
+15,Final Deztination,Ja'Marr Chase,4,4362628,18.95,-0.8
+16,Game of  Jones,Derrick Henry,2,3043078,31.01,-0.8
+17,Game of  Jones,Cooper Kupp,4,2977187,24.99,-2.1
+18,Game of  Jones,Amari Cooper,4,2976499,20.55,+0.6
+19,Game of  Jones,Joe Mixon,2,3116385,21.69,+0.3
+20,Game of  Jones,Stefon Diggs,4,2976212,22.83,+1.2
+21,Game of  Jones,Russell Wilson,0,14881,22.00,-0.3
+22,Game of  Jones,Mark Andrews,6,3116365,16.36,+0.2
+23,Game of  Jones,Deebo Samuel,23,3126486,23.20,+3.4
+24,King's  Landry,Dalvin Cook,2,3116593,22.50,+0.3
+25,King's  Landry,Darren Waller,6,2576925,22.62,+0.3
+26,King's  Landry,Justin Jefferson,4,4262921,25.07,+0.6
+27,King's  Landry,Chris Godwin,4,3116165,21.50,-1.8
+28,King's  Landry,Calvin Ridley,4,3925357,21.55,+0.0
+29,King's  Landry,Justin Herbert,0,4038941,21.71,+0.3
+30,King's  Landry,Chris Carson,23,3919596,18.72,-2.1
+31,King's  Landry,Chase Edmonds,2,3119195,18.94,+1.2
+32,OC Gang,George Kittle,6,3040151,17.56,-0.5
+33,OC Gang,Davante Adams,4,16800,25.53,-1.6
+34,OC Gang,Jonathan Taylor,2,4242335,21.68,+2.2
+35,OC Gang,DeAndre Hopkins,4,15795,21.55,-1.1
+36,OC Gang,Nick Chubb,23,3128720,23.71,-1.2
+37,OC Gang,Alvin Kamara,2,3054850,26.19,-0.3
+38,OC Gang,Jalen Hurts,0,4040715,22.52,+1.5
+39,OC Gang,Allen Robinson II,4,16799,15.69,-0.8
+40,Sutton these  Nutz,Dak Prescott,0,2577417,22.35,+2.1
+41,Sutton these  Nutz,Keenan Allen,4,15818,20.86,-1.6
+42,Sutton these  Nutz,Courtland Sutton,4,3128429,12.49,-2.2
+43,Sutton these  Nutz,Miles Sanders,2,4045163,13.96,-1.3
+44,Sutton these  Nutz,D'Andre Swift,2,4259545,22.33,-1.1
+45,Sutton these  Nutz,T.J. Hockenson,6,4036133,18.14,-1.3
+46,Sutton these  Nutz,Antonio Gibson,23,4360294,20.61,+0.5
+47,Sutton these  Nutz,DeVonta Smith,4,4241478,14.58,+2.1
+48,Da Coldest In the Game,Kyler Murray,0,3917315,25.47,+0.0
+49,Da Coldest In the Game,Adam Thielen,23,16460,19.94,-1.7
+50,Da Coldest In the Game,Tyler Lockett,4,2577327,19.56,-2.4
+51,Da Coldest In the Game,Austin Ekeler,2,3068267,29.05,+2.3
+52,Da Coldest In the Game,Noah Fant,6,4036131,17.37,+0.9
+53,Da Coldest In the Game,DJ Moore,4,3915416,24.86,+3.5
+54,Da Coldest In the Game,Brandin Cooks,4,16731,18.84,-3.0
+55,Da Coldest In the Game,Najee Harris,2,4241457,25.57,+1.5
+56,Team Ger,Josh Allen,0,3918298,20.85,-0.8
+57,Team Ger,Ezekiel Elliott,2,3051392,26.70,+0.9
+58,Team Ger,CeeDee Lamb,4,4241389,17.99,-2.6
+59,Team Ger,Terry McLaurin,4,3121422,23.45,+3.0
+60,Team Ger,David Montgomery,2,4035538,23.16,+2.6
+61,Team Ger,Kyle Pitts,6,4360248,15.22,-0.5
+62,Team Ger,Diontae Johnson,23,3932905,18.06,+4.3
+63,Team Ger,Mike Williams,4,3045138,20.93,-2.6
