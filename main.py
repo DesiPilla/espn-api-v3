@@ -675,7 +675,7 @@ sys.stdout = open(filepath, "w")
 print("---")
 print("title: Week (WEEK) (YEAR) Report")
 print("date: 2020-MONTH-DAY")
-print("image: /images/(YEAR)week(WEEK).jpg")
+print("image: /images/(YEAR)week(WEEK).jpeg")
 print("draft: false")
 print("---")
 
