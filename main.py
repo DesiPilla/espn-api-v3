@@ -293,7 +293,7 @@ Value_Power_Rankings_print = Value_Power_Rankings_print.rename(columns={'Weighte
 
 print('Week ', week, ' Rosters NaN: \n', player_values[player_values['rating'].isna()])
 
-Value_Power_Rankings_print.index = np.arange(1, len(Value_Power_Rankings_print) + 1)
+# Value_Power_Rankings_print.index = np.arange(1, len(Value_Power_Rankings_print) + 1)
 Value_Power_Rankings_print.to_csv('/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/past_rankings/week' + str(week) + '.csv')
 
 # Create last week value informed power rankings
@@ -394,10 +394,10 @@ if week > 1:
     emoji_names = Value_Power_Rankings['team'].tolist()
 
     tw_rankings = pd.read_csv(root + 'past_rankings/week' + str(week) + '.csv')
-    lw_rankings = pd.read_csv(root + 'past_rankings/week' + str(week-1) + '.csv)'
+    lw_rankings = pd.read_csv(root + 'past_rankings/week' + str(week-1) + '.csv')
 
-    # print('value power rankings: \n', Value_Power_Rankings)
-    # print('lw_allplay_compare: \n', lw_allplay_compare)
+    print('This week: \n', tw_rankings)
+    print('Last week: \n', lw_rankings)
 
     for team in emoji_names:
         tw_index = Value_Power_Rankings[Value_Power_Rankings['team'] == team].index.values # get index values of this weeks power rankigns
