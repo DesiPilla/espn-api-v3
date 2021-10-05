@@ -54,5 +54,5 @@ def player_values(week):
     # subset columns that we need
     stats = stats[['Player','RATING','change']]
 
-    stats.to_csv(root + str(week))
+    stats.to_csv(root + str(week) + '.csv')
     return stats
