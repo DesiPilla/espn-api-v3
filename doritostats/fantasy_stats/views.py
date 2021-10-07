@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 
-from .models import Question, LeagueInfo
+from .models import Queston, LeagueInfo
 
 import os, sys
 sys.path.insert(0, os.path.join('..', 'code'))
