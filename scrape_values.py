@@ -19,6 +19,7 @@ def player_values(week):
 
     # use findALL() to get the column headers
     soup.findAll('tr', limit=2)
+
     # use getText()to extract the text we need into a list
     headers = [th.getText() for th in soup.findAll('tr', limit=2)[1].findAll('th')]
     # exclude the first column
