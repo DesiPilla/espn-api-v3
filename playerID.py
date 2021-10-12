@@ -89,8 +89,8 @@ def get_player_values(week):
     values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
     values['player'] = values['player'].replace('Michael Pittman', 'Michael Pittman Jr.', regex=True)
 
-    missingPlayer = ['William Fuller V','7.76','-0.6']
-    missingPlayer2 = ['Chuba Hubbard','5.09','+1.3']
+    missingPlayer = ['William Fuller V','7.00','-0.8']
+    missingPlayer2 = ['Chuba Hubbard','6.61','+1.5']
 
     missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
     values = values.append(missing, ignore_index=True)
