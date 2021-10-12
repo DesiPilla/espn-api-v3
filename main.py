@@ -503,7 +503,7 @@ projectedStandings = projectedStandings.reset_index(drop=True)
 
 projectedStandings_prnt = projectedStandings[['Team','TotalProjWins','TotalProjLoss']]
 
-if week >= 5:
+if week >= 9:
     # Merge in SOS
     projectedStandings_prnt = projectedStandings_prnt.merge(sos, on='Team')
 
@@ -635,8 +635,26 @@ if week >= 5:
     projections.insert(loc=0, column='Team', value=team_names)
     projections = projections.set_axis(['Team', 'Playoffs', '1st Seed', '2nd Seed', '3rd Seed', '4th Seed'], axis=1, inplace=False)
     projections = projections.sort_values(by=['Playoffs','1st Seed', '2nd Seed', '3rd Seed', '4th Seed'], ascending=False)
-    projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']] = projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']].astype(str) + "%"
-    projections['Playoffs'] = "**" + projections['Playoffs'].astype(str) + "%**"
+    # projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']] = projections[['1st Seed','2nd Seed','3rd Seed', '4th Seed']].astype(str) + "%"
+    projections.index = np.arange(1, len(projections) + 1)
+
+    median = projections['Playoffs'].median()
+
+    # bold only the playoff teams
+    for index, row in projections.iterrows():
+        if row['Playoffs'] > median:
+            projections.loc[index, 'Team'] = '**' + str(row['Team']) + '**'
+            projections.loc[index, 'Playoffs'] = '**' + str(row['Playoffs']) + '%**'
+            projections.loc[index, '1st Seed'] = '**' + str(row['1st Seed']) + '%**'
+            projections.loc[index, '2nd Seed'] = '**' + str(row['2nd Seed']) + '%**'
+            projections.loc[index, '3rd Seed'] = '**' + str(row['3rd Seed']) + '%**'
+            projections.loc[index, '4th Seed'] = '**' + str(row['4th Seed']) + '%**'
+        else:
+            projections.loc[index, 'Playoffs'] = str(row['Playoffs']) + '%'
+            projections.loc[index, '1st Seed'] = str(row['1st Seed']) + '%'
+            projections.loc[index, '2nd Seed'] = str(row['2nd Seed']) + '%'
+            projections.loc[index, '3rd Seed'] = str(row['3rd Seed']) + '%'
+            projections.loc[index, '4th Seed'] = str(row['4th Seed']) + '%'
 
     print('')
 
