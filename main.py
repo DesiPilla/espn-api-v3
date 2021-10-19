@@ -237,6 +237,13 @@ player_values = playerID.get_player_values(week)
 # covnert rating to a float from object
 player_values['rating'] = player_values['rating'].astype(str).astype(float)
 
+# missing PLAYERS
+player_values.loc[(player_values.player == 'Damien Williams'), 'rating'] = '8.1'
+player_values.loc[(player_values.player == 'Devontae Booker'), 'rating'] = '6.34'
+player_values.loc[(player_values.player == 'Khalil Herbert'), 'rating'] = '3.47'
+player_values.loc[(player_values.player == 'Taylor Heinicke'), 'rating'] = '5.58'
+
+
 # group by team and get the average rating of starters
 # team_values = player_values.groupby('team').value_1qb.mean().reset_index()
 team_values = player_values.groupby('team').rating.mean().reset_index()
@@ -303,9 +310,6 @@ if week > 1:
 
     # missingPlayer = ['Chuba Hubbard','5.09','+1.3']
     lw_player_values.loc[(lw_player_values.player == 'Damien Williams'), 'rating'] = '8.18'
-    lw_player_values.loc[(lw_player_values.player == 'Devontae Booker'), 'rating'] = '6.34'
-    lw_player_values.loc[(lw_player_values.player == 'Khalil Herbert'), 'rating'] = '3.47'
-    lw_player_values.loc[(lw_player_values.player == 'Taylor Heinicke'), 'rating'] = '5.58'
 
     # missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
     # lw_player_values = lw_player_values.append(missing, ignore_index=True)
