@@ -303,6 +303,9 @@ if week > 1:
 
     # missingPlayer = ['Chuba Hubbard','5.09','+1.3']
     lw_player_values.loc[(lw_player_values.player == 'Damien Williams'), 'rating'] = '8.18'
+    lw_player_values.loc[(lw_player_values.player == 'Devontae Booker'), 'rating'] = '6.34'
+    lw_player_values.loc[(lw_player_values.player == 'Khalil Herbert'), 'rating'] = '3.47'
+    lw_player_values.loc[(lw_player_values.player == 'Taylor Heinicke'), 'rating'] = '5.58'
 
     # missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
     # lw_player_values = lw_player_values.append(missing, ignore_index=True)
