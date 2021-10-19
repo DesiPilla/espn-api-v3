@@ -302,7 +302,7 @@ if week > 1:
     lw_player_values = pd.read_csv('/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/values/week' + str(week-1) + '.csv')
 
     # missingPlayer = ['Chuba Hubbard','5.09','+1.3']
-    lw_player_values.loc[(lw_player_values.player == 'Ty\'Son Williams'), 'rating'] = '8.30'
+    lw_player_values.loc[(lw_player_values.player == 'Damien Williams'), 'rating'] = '8.18'
 
     # missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
     # lw_player_values = lw_player_values.append(missing, ignore_index=True)

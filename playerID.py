@@ -88,6 +88,8 @@ def get_player_values(week):
     values['player'] = values['player'].replace('Allen Robinson', 'Allen Robinson II', regex=True)
     values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
     values['player'] = values['player'].replace('Michael Pittman', 'Michael Pittman Jr.', regex=True)
+    values['player'] = values['player'].replace('Odell Beckham Jr.', 'Odell Beckham', regex=True)
+    values['player'] = values['player'].replace('Laviska Shenault Jr.', 'Laviska Shenault', regex=True)
 
     missingPlayer = ['William Fuller V','7.00','-0.8']
     missingPlayer2 = ['Chuba Hubbard','6.61','+1.5']
