@@ -238,10 +238,6 @@ player_values = playerID.get_player_values(week)
 player_values['rating'] = player_values['rating'].astype(str).astype(float)
 
 # missing PLAYERS
-player_values.loc[(player_values.player == 'Damien Williams'), 'rating'] = '8.1'
-player_values.loc[(player_values.player == 'Devontae Booker'), 'rating'] = '6.34'
-player_values.loc[(player_values.player == 'Khalil Herbert'), 'rating'] = '3.47'
-player_values.loc[(player_values.player == 'Taylor Heinicke'), 'rating'] = '5.58'
 
 
 # group by team and get the average rating of starters

@@ -90,15 +90,32 @@ def get_player_values(week):
     values['player'] = values['player'].replace('Michael Pittman', 'Michael Pittman Jr.', regex=True)
     values['player'] = values['player'].replace('Odell Beckham', 'Odell Beckham Jr.', regex=True)
     values['player'] = values['player'].replace('Laviska Shenault', 'Laviska Shenault Jr.', regex=True)
-    values['player'] = values['player'].replace('Darrel Henderson', 'Darrell Henderson Jr.', regex=True)
+    values['player'] = values['player'].replace('Darrell Henderson', 'Darrell Henderson Jr.', regex=True)
 
     missingPlayer = ['William Fuller V','7.00','-0.8']
     missingPlayer2 = ['Chuba Hubbard','6.61','+1.5']
+    missingPlayer3 = ['Damien Williams','8.1','-2.6']
+    missingPlayer4 = ['Devontae Booker','6.34','+1.3']
+    missingPlayer5 = ['Khalil Herbert','3.47','+3.3']
+    missingPlayer6 = ['Taylor Heinicke','5.58','-1.3']
+
 
     missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
     values = values.append(missing, ignore_index=True)
 
     missing = pd.DataFrame([missingPlayer2],columns=['player','rating','change'])
+    values = values.append(missing, ignore_index=True)
+
+    missing = pd.DataFrame([missingPlayer3],columns=['player','rating','change'])
+    values = values.append(missing, ignore_index=True)
+
+    missing = pd.DataFrame([missingPlayer4],columns=['player','rating','change'])
+    values = values.append(missing, ignore_index=True)
+
+    missing = pd.DataFrame([missingPlayer5],columns=['player','rating','change'])
+    values = values.append(missing, ignore_index=True)
+
+    missing = pd.DataFrame([missingPlayer6],columns=['player','rating','change'])
     values = values.append(missing, ignore_index=True)
 
     # values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
