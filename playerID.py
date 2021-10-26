@@ -80,75 +80,100 @@ def get_player_values(week):
     values.columns = values.columns.str.lower()
 
     # fix player names to match between dataframes
-    # values['player'] = values['player'].replace('Patrick Mahomes II', 'Patrick Mahomes', regex=True)
-    # values['player'] = values['player'].replace('D.K. Metcalf', 'DK Metcalf', regex=True)
-    # values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
-
+    values['player'] = values['player'].replace('Darrell Henderson', 'Darrell Henderson Jr.', regex=True)
+    values['player'] = values['player'].replace('Melvin Gordon', 'Melvin Gordon III', regex=True)
+    values['player'] = values['player'].replace('JK Dobbins', 'J.K. Dobbins', regex=True)
+    values['player'] = values['player'].replace('Michael Pittman', 'Michael Pittman Jr.', regex=True)
     values['player'] = values['player'].replace('D.J. Chark', 'DJ Chark Jr.', regex=True)
+    values['player'] = values['player'].replace('Marvin Jones', 'Marvin Jones Jr.', regex=True)
+    values['player'] = values['player'].replace('Odell Beckham', 'Odell Beckham Jr.', regex=True)
     values['player'] = values['player'].replace('Allen Robinson', 'Allen Robinson II', regex=True)
     values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
-    values['player'] = values['player'].replace('Michael Pittman', 'Michael Pittman Jr.', regex=True)
-    values['player'] = values['player'].replace('Odell Beckham', 'Odell Beckham Jr.', regex=True)
-    values['player'] = values['player'].replace('Laviska Shenault', 'Laviska Shenault Jr.', regex=True)
-    values['player'] = values['player'].replace('Darrell Henderson', 'Darrell Henderson Jr.', regex=True)
 
-    missingPlayer = ['William Fuller V','7.00','-0.8']
-    missingPlayer2 = ['Chuba Hubbard','6.61','+1.5']
-    missingPlayer3 = ['Damien Williams','8.1','-2.6']
-    missingPlayer4 = ['Devontae Booker','6.34','+1.3']
-    missingPlayer5 = ['Khalil Herbert','3.47','+3.3']
-    missingPlayer6 = ['Taylor Heinicke','5.58','-1.3']
-
-
-    missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
-    values = values.append(missing, ignore_index=True)
-
-    missing = pd.DataFrame([missingPlayer2],columns=['player','rating','change'])
-    values = values.append(missing, ignore_index=True)
-
-    missing = pd.DataFrame([missingPlayer3],columns=['player','rating','change'])
-    values = values.append(missing, ignore_index=True)
-
-    missing = pd.DataFrame([missingPlayer4],columns=['player','rating','change'])
-    values = values.append(missing, ignore_index=True)
-
-    missing = pd.DataFrame([missingPlayer5],columns=['player','rating','change'])
-    values = values.append(missing, ignore_index=True)
-
-    missing = pd.DataFrame([missingPlayer6],columns=['player','rating','change'])
-    values = values.append(missing, ignore_index=True)
+    # values['player'] = values['player'].replace('D.J. Chark', 'DJ Chark Jr.', regex=True)
+    # values['player'] = values['player'].replace('Allen Robinson', 'Allen Robinson II', regex=True)
+    # values['player'] = values['player'].replace('D.J. Moore', 'DJ Moore', regex=True)
+    # values['player'] = values['player'].replace('Michael Pittman', 'Michael Pittman Jr.', regex=True)
+    # values['player'] = values['player'].replace('Odell Beckham', 'Odell Beckham Jr.', regex=True)
+    # values['player'] = values['player'].replace('Laviska Shenault', 'Laviska Shenault Jr.', regex=True)
+    # values['player'] = values['player'].replace('Darrell Henderson', 'Darrell Henderson Jr.', regex=True)
+    #
+    # missingPlayer = ['William Fuller V','7.00','-0.8']
+    # missingPlayer2 = ['Chuba Hubbard','6.61','+1.5']
+    # missingPlayer3 = ['Damien Williams','8.1','-2.6']
+    # missingPlayer4 = ['Devontae Booker','6.34','+1.3']
+    # missingPlayer5 = ['Khalil Herbert','3.47','+3.3']
+    # missingPlayer6 = ['Taylor Heinicke','5.58','-1.3']
+    #
+    #
+    # missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
+    # values = values.append(missing, ignore_index=True)
+    #
+    # missing = pd.DataFrame([missingPlayer2],columns=['player','rating','change'])
+    # values = values.append(missing, ignore_index=True)
+    #
+    # missing = pd.DataFrame([missingPlayer3],columns=['player','rating','change'])
+    # values = values.append(missing, ignore_index=True)
+    #
+    # missing = pd.DataFrame([missingPlayer4],columns=['player','rating','change'])
+    # values = values.append(missing, ignore_index=True)
+    #
+    # missing = pd.DataFrame([missingPlayer5],columns=['player','rating','change'])
+    # values = values.append(missing, ignore_index=True)
+    #
+    # missing = pd.DataFrame([missingPlayer6],columns=['player','rating','change'])
+    # values = values.append(missing, ignore_index=True)
 
     # values['player'] = values['player'].replace(r' \(.*\)', '', regex=True)
     # values['player'] = re.sub(r"\([^()]*\)", "", values['player'])
-
-    # print(values)
 
     # Get starters only
     players = pd.DataFrame(players, columns = ['team', 'player', 'posID', 'espn_id'])
     players = players[players['posID'] != 17] # remove kickers
     players = players[players['espn_id'] > 0] # remove D/ST
-    players = players[(players['posID'] < 17) | (players['posID'] == 23)] # starters and flex ONLY
-
+    # players = players[(players['posID'] < 17) | (players['posID'] == 23)] # starters and flex ONLY
+    players = players.drop(['posID','espn_id'], axis=1)
     # print("PLAYERS :", players)
 
-    players['player'] = players['player'].map(str)
-    values['player'] = values['player'].map(str)
+    # players['player'] = players['player'].astype(str)
+    # values['player'] = values['player'].astype(str)
 
     # print(players.dtypes)
     # print(values.dtypes)
 
-    players.set_index('player')
-    values.set_index('player')
+    # players.set_index('player')
+    # values.set_index('player')
 
-    # print("players: \n", players)
-    # print("\nvalues: \n", values)
+    joined = players.merge(values, on='player', how='left')
+    joined['rating'] = joined['rating'].map(float)
 
-    joined = players.merge(values, how='left')
+    grouped = joined.groupby(['team', 'position'])
 
-    joined.to_csv(root + '/values/week' + str(week) + '.csv')
+    # for key, item in grouped:
+    #     print(grouped.get_group(key), "\n\n")
+
+    joined['pos_rank'] = joined.groupby(['team', 'position'])['rating'].rank(method='first',ascending=False)
+
+    flexConditions = [
+    (joined['position'] == 'RB') & (joined['pos_rank'] > 2),
+    (joined['position'] == 'WR') & (joined['pos_rank'] > 3),
+    (joined['position'] == 'TE') & (joined['pos_rank'] > 1),
+    ]
+
+    flex = [1, 1, 1]
+
+    joined['flex'] = np.select(flexConditions, flex)
+
+    joined['flexRank'] = joined.groupby(['team','flex'])['rating'].rank(method='first',ascending=False)
+
+    starters = joined[(joined['position'] == 'QB') & (joined['pos_rank'] ==  1) | (joined['position'] == 'RB') & (joined['pos_rank'] <= 2) | (joined['position'] == 'WR') & (joined['pos_rank'] <= 3) | (joined['position'] == 'TE') & (joined['pos_rank'] == 1) | (joined['flex'] == 1) & (joined['flexRank'] == 1)]
+    # print(table(starters, headers='keys'))
 
 
-    return(joined)
+    starters.to_csv(root + '/values/week' + str(week) + '.csv')
+
+
+    return(starters)
 
 # def get_player_values_lw(week):
     # create list of player objects from list of team objects
