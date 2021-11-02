@@ -538,8 +538,9 @@ home_teams = [8,2,1,4,8,3,1,6,8,5,4,6,7,3,2,1,8,5,4,1]
 away_teams = [5,3,7,6,4,7,2,5,2,3,1,7,8,6,4,5,3,2,7,6]
 
 # only update current wins at week 5
-current_wins = [2.010742,3.011697,7.013179,2.010177,6.011863,1.010001,6.012642,5.011502]
-# current_wins = []
+# don't need to do below, taken care of in for loop
+# current_wins = [2.010742,3.011697,7.013179,2.010177,6.011863,1.010001,6.012642,5.011502]
+current_wins = []
 for team in teams_list:
     wins = team.wins
     scores = team.scores
