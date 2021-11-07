@@ -259,7 +259,7 @@ def get_weekly_luck_index(league: League, team: Team, week: int, verbose=False):
         print("Opponent std: {:.2f}".format(opp_std))
         print("Opponent z: {}".format(opp_z))
         print("Opponent z_norm: {}".format(opp_z_norm))
-    return luck_index / 10
+    return luck_index * 10
 
 def get_season_luck_indices(league: League, week: int):
     ''' This function returns an index quantifying how 'lucky' a team was all season long (up to a certain week) '''
