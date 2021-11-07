@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 
-from .models import Queston, LeagueInfo
+from .models import LeagueInfo
 
 import os, sys
 sys.path.insert(0, os.path.join('..', 'code'))
@@ -76,12 +76,12 @@ def all_leagues(request):
 
 
 
-def detail(request, question_id):
-    question = get_object_or_404(Question, pk=question_id)
-    return render(request, 'fantasy_stats/detail.html', {'question': question})
+# def detail(request, question_id):
+#     question = get_object_or_404(Question, pk=question_id)
+#     return render(request, 'fantasy_stats/detail.html', {'question': question})
 
-def results(request, question_id):
-    return HttpResponse("You're looking at the results of question {}.".format(question_id))
+# def results(request, question_id):
+#     return HttpResponse("You're looking at the results of question {}.".format(question_id))
 
-def vote(request, question_id):
-    return HttpResponse("You're voting on question {}.".format(question_id))
+# def vote(request, question_id):
+#     return HttpResponse("You're voting on question {}.".format(question_id))
