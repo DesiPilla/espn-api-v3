@@ -506,9 +506,9 @@ projectedStandings = projectedStandings.reset_index(drop=True)
 
 projectedStandings_prnt = projectedStandings[['Team','TotalProjWins','TotalProjLoss']]
 
-if week >= 9:
-    # Merge in SOS
-    projectedStandings_prnt = projectedStandings_prnt.merge(sos, on='Team')
+# if week >= 9:
+#     # Merge in SOS
+#     projectedStandings_prnt = projectedStandings_prnt.merge(sos, on='Team')
 
 ## MONTE CARLO PLAYOFF PROBABILIIES
 
@@ -534,8 +534,8 @@ teams_to_play_off = 4
 # ['Pat'[1], 'Trevor'[2], 'Billy'[3], 'Jack'[4], 'Travis'[5], 'Lucas'[6], 'Cade'[7], 'Christian'[8]]
 
 # Remaining schedule (week 5 and on)
-home_teams = [8,2,1,4,8,3,1,6,8,5,4,6,7,3,2,1,8,5,4,1]
-away_teams = [5,3,7,6,4,7,2,5,2,3,1,7,8,6,4,5,3,2,7,6]
+home_teams = [8,3,1,6,8,5,4,6,7,3,2,1,8,5,4,1]
+away_teams = [4,7,2,5,2,3,1,7,8,6,4,5,3,2,7,6]
 
 # only update current wins at week 5
 # don't need to do below, taken care of in for loop
