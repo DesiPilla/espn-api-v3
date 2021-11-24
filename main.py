@@ -516,7 +516,7 @@ projectedStandings_prnt = projectedStandings[['Team','TotalProjWins','TotalProjL
 #number of random season's to simulate
 simulations = 1000000
 #weeks in the regular season
-league_weeks = 13
+league_weeks = 15
 #number of teams to playoffs
 teams_to_play_off = 4
 
@@ -534,8 +534,8 @@ teams_to_play_off = 4
 # ['Pat'[1], 'Trevor'[2], 'Billy'[3], 'Jack'[4], 'Travis'[5], 'Lucas'[6], 'Cade'[7], 'Christian'[8]]
 
 # Remaining schedule (week 5 and on)
-home_teams = [8,3,1,6,8,5,4,6,7,3,2,1,8,5,4,1]
-away_teams = [4,7,2,5,2,3,1,7,8,6,4,5,3,2,7,6]
+home_teams = [8,5,4,1,8,4,6,5,8,4,6,5]
+away_teams = [3,2,7,6,1,3,2,7,2,3,7,1]
 
 # only update current wins at week 5
 # don't need to do below, taken care of in for loop
