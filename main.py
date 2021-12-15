@@ -534,8 +534,8 @@ teams_to_play_off = 4
 # ['Pat'[1], 'Trevor'[2], 'Billy'[3], 'Jack'[4], 'Travis'[5], 'Lucas'[6], 'Cade'[7], 'Christian'[8]]
 
 # Remaining schedule (week 5 and on)
-home_teams = [8,4,6,5,8,4,6,5]
-away_teams = [1,3,2,7,2,3,7,1]
+home_teams = [8,4,6,5]
+away_teams = [2,3,7,1]
 
 # only update current wins at week 5
 # don't need to do below, taken care of in for loop
