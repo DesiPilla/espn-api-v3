@@ -1,0 +1,65 @@
+,team,player,rating,position,pos_rank,flex,flexRank
+1,Red Zone  Rockets,Patrick Mahomes,20.64,QB,1.0,0,2.0
+2,Red Zone  Rockets,Saquon Barkley,15.73,RB,1.0,0,3.0
+3,Red Zone  Rockets,Tyreek Hill,30.94,WR,1.0,0,1.0
+6,Red Zone  Rockets,Tee Higgins,14.71,WR,3.0,0,6.0
+7,Red Zone  Rockets,Chase Claypool,15.28,WR,2.0,0,5.0
+10,Red Zone  Rockets,D'Ernest Johnson,2.82,RB,2.0,0,8.0
+11,Red Zone  Rockets,Elijah Moore,11.28,WR,4.0,1,1.0
+13,Red Zone  Rockets,Pat Freiermuth,14.49,TE,1.0,0,7.0
+16,Final Deztination,DK Metcalf,21.6,WR,1.0,0,4.0
+19,Final Deztination,Travis Kelce,28.42,TE,1.0,0,1.0
+20,Final Deztination,Aaron Jones,27.46,RB,1.0,0,2.0
+21,Final Deztination,Josh Jacobs,19.45,RB,3.0,1,1.0
+24,Final Deztination,James Conner,23.79,RB,2.0,0,3.0
+25,Final Deztination,Michael Pittman Jr.,17.48,WR,3.0,0,6.0
+26,Final Deztination,Ja'Marr Chase,21.26,WR,2.0,0,5.0
+29,Final Deztination,Carson Wentz,12.75,QB,1.0,0,7.0
+34,Game of  Jones,Derrick Henry,27.22,RB,2.0,0,3.0
+35,Game of  Jones,Cooper Kupp,30.58,WR,1.0,0,2.0
+37,Game of  Jones,Joe Mixon,26.84,RB,3.0,1,1.0
+38,Game of  Jones,Russell Wilson,13.51,QB,1.0,0,7.0
+39,Game of  Jones,Mark Andrews,25.73,TE,1.0,0,4.0
+40,Game of  Jones,Deebo Samuel,24.38,WR,2.0,0,5.0
+41,Game of  Jones,Marquise Brown,17.19,WR,3.0,0,6.0
+46,Game of  Jones,Austin Ekeler,34.39,RB,1.0,0,1.0
+49,King's  Landry,Dalvin Cook,26.78,RB,1.0,0,2.0
+50,King's  Landry,Darren Waller,14.97,TE,2.0,1,1.0
+51,King's  Landry,Justin Jefferson,27.62,WR,1.0,0,1.0
+52,King's  Landry,Clyde Edwards-Helaire,15.24,RB,2.0,0,6.0
+53,King's  Landry,Chris Godwin,23.54,WR,2.0,0,3.0
+55,King's  Landry,Justin Herbert,20.5,QB,1.0,0,4.0
+57,King's  Landry,Dallas Goedert,18.72,TE,1.0,0,5.0
+62,King's  Landry,Van Jefferson,13.97,WR,3.0,0,7.0
+64,OC Gang,George Kittle,23.98,TE,1.0,0,4.0
+65,OC Gang,Davante Adams,29.59,WR,1.0,0,2.0
+66,OC Gang,Jonathan Taylor,33.35,RB,1.0,0,1.0
+67,OC Gang,DeAndre Hopkins,16.67,WR,3.0,0,8.0
+69,OC Gang,Alvin Kamara,27.71,RB,2.0,0,3.0
+70,OC Gang,Aaron Rodgers,19.47,QB,1.0,0,5.0
+76,OC Gang,Hunter Renfrow,16.77,WR,2.0,0,7.0
+77,OC Gang,Javonte Williams,22.13,RB,3.0,1,1.0
+82,Sutton these  Nutz,Keenan Allen,22.79,WR,1.0,0,3.0
+86,Sutton these  Nutz,T.J. Hockenson,15.22,TE,1.0,0,5.0
+87,Sutton these  Nutz,James Robinson,19.55,RB,3.0,1,1.0
+88,Sutton these  Nutz,Leonard Fournette,27.15,RB,1.0,0,1.0
+89,Sutton these  Nutz,Tom Brady,19.18,QB,1.0,0,4.0
+90,Sutton these  Nutz,Antonio Gibson,23.89,RB,2.0,0,2.0
+92,Sutton these  Nutz,DeVonta Smith,12.45,WR,3.0,0,8.0
+94,Sutton these  Nutz,Tyler Boyd,14.65,WR,2.0,0,7.0
+101,Da Coldest In the Game,Noah Fant,17.58,TE,1.0,0,7.0
+102,Da Coldest In the Game,DJ Moore,20.63,WR,3.0,0,4.0
+103,Da Coldest In the Game,Brandin Cooks,19.72,WR,4.0,1,1.0
+104,Da Coldest In the Game,Matthew Stafford,18.46,QB,1.0,0,6.0
+105,Da Coldest In the Game,Najee Harris,30.33,RB,1.0,0,1.0
+106,Da Coldest In the Game,Mike Evans,22.75,WR,2.0,0,3.0
+109,Da Coldest In the Game,Cordarrelle Patterson,19.67,RB,2.0,0,5.0
+110,Da Coldest In the Game,Stefon Diggs,24.99,WR,1.0,0,2.0
+111,Team Ger,Josh Allen,18.28,QB,1.0,0,7.0
+112,Team Ger,Ezekiel Elliott,29.04,RB,1.0,0,1.0
+113,Team Ger,CeeDee Lamb,22.01,WR,2.0,0,3.0
+115,Team Ger,Terry McLaurin,18.73,WR,4.0,1,1.0
+116,Team Ger,David Montgomery,19.15,RB,2.0,0,5.0
+117,Team Ger,Kyle Pitts,18.46,TE,1.0,0,6.0
+120,Team Ger,Diontae Johnson,24.0,WR,1.0,0,2.0
+122,Team Ger,Mike Williams,19.63,WR,3.0,0,4.0
