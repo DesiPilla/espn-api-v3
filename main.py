@@ -23,17 +23,17 @@ args = parser.parse_args()
 week = int(args.week)
 
 # Define user and season year
-user_id = 'desi'
-year = 2021
+user_id = 'cgeer98'
+year = 2022
 
 # Get login credentials for leagues
 # login = pd.read_csv('C:\\Users\\desid\\Documents\\Fantasy_Football\\espn-api-v3\\login.csv')
 # _, username, password, league_id, swid, espn_s2 = login[login['id'] == user_id].values[0]
-username = 'cgeer98'
-password = 'Penguins1'
+# username = 'cgeer98'
+# password = 'Penguins1!'
 league_id = 916709
 swid = '{75C7094F-C467-4145-8709-4FC467C1457E}'
-espn_s2 = 'AECbQaX7HoUGyJ5X5cmNlFHVs%2FmDl0RKfnVV%2FazefK9PxoSfENQFF6ULNnR421xium4UYV5dC0GsOhS%2BeigBuhk1abpSjhlXDCJnIGt0PjUHCZpV6qF5S9qMS40ichi2XnVZFSKwAid6h8bFbWA4eHclC%2BJHqMyirQ85yLRG6zc6nULRaovpF2Cx2j5U55OuvwTnI2HCztRnEJIVucnKxlem7pAidup27BIggM3c42%2BrH7vXUlRaIYXhjE%2BGH3cWbL88H8AcpIQpG%2Bft96vAZXuB'
+espn_s2 = 'AECXDGyxeyvWg3q33zWyXckVU%2FqZH45Qw%2B64kUZUQJ50tKlmzF68tC63jCe%2B31dJNxdLxbcJ7Eu%2BiSIDP5QlRdTABIPl2UdYXqcXV1PWWCx0so2GVGplEIcKYXW7L%2FqSYzju9ZOR0HsDsw7f9QV8OCAVwTC0Sl6AVZ0Bgz1fh4vElwpzjDq0qoD7tYoZe0YX41zGEUUNn%2BUcQd4ee4VLBq%2F%2BIA6rUJmQEu3%2FxpO%2F9OmtCsxmNvEf7R%2Fy%2FHwRyWZb%2Bb2ggZmZAjNnx5Ko%2BLa5SslH'
 
 root = '/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/'
 
@@ -534,8 +534,8 @@ teams_to_play_off = 4
 # ['Pat'[1], 'Trevor'[2], 'Billy'[3], 'Jack'[4], 'Travis'[5], 'Lucas'[6], 'Cade'[7], 'Christian'[8]]
 
 # Remaining schedule (week 5 and on)
-home_teams = []
-away_teams = []
+home_teams = [8,5,4,6,3,1,7,2,1,7,3,2,6,3,2,4,8,2,1,4,8,3,1,6,8,5,4,6,7,3,2,1,8,5,4,1,1,3,2,7,2,3,7,1]
+away_teams = [7,1,2,3,8,6,4,5,8,5,4,6,8,1,7,5,5,3,7,6,4,7,2,5,2,3,1,7,8,6,4,5,3,2,7,6,8,4,6,5,8,4,6,5]
 
 # only update current wins at week 5
 # don't need to do below, taken care of in for loop
