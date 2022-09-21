@@ -33,7 +33,7 @@ year = 2022
 # password = 'Penguins1!'
 league_id = 916709
 swid = '{75C7094F-C467-4145-8709-4FC467C1457E}'
-espn_s2 = 'AECXDGyxeyvWg3q33zWyXckVU%2FqZH45Qw%2B64kUZUQJ50tKlmzF68tC63jCe%2B31dJNxdLxbcJ7Eu%2BiSIDP5QlRdTABIPl2UdYXqcXV1PWWCx0so2GVGplEIcKYXW7L%2FqSYzju9ZOR0HsDsw7f9QV8OCAVwTC0Sl6AVZ0Bgz1fh4vElwpzjDq0qoD7tYoZe0YX41zGEUUNn%2BUcQd4ee4VLBq%2F%2BIA6rUJmQEu3%2FxpO%2F9OmtCsxmNvEf7R%2Fy%2FHwRyWZb%2Bb2ggZmZAjNnx5Ko%2BLa5SslH'
+espn_s2 = 'AEAyUEeFyWRO%2B7dqz67xWSlgF49tdAj6czygxVfwSeIty8%2Byz3iVdVcOC9FcP8tiHHoL%2Bo4SycHPPS47hpmC5FeBA1FJqMCCs68sRBWu8716JAYXah5yJagXyafPB0FhFBUA9OS01Gi78EcAdNSmdS4NnJaggCVn8w9HPRgqpPuD52oWWVmRkTYfg%2BMRqkqdrezyLfKA6UIE0DtsyA4UY5OLi1cfCksUpCD2lpPvejybuyyd019xemkmEdCs8awtGE3OrOnZz79ISc20hTBCVP4m'
 
 root = '/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/'
 
