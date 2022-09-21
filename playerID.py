@@ -29,7 +29,7 @@ username = 'cgeer98'
 password = 'Penguins1'
 league_id = 916709
 swid = '{75C7094F-C467-4145-8709-4FC467C1457E}'
-espn_s2 = 'AECbQaX7HoUGyJ5X5cmNlFHVs%2FmDl0RKfnVV%2FazefK9PxoSfENQFF6ULNnR421xium4UYV5dC0GsOhS%2BeigBuhk1abpSjhlXDCJnIGt0PjUHCZpV6qF5S9qMS40ichi2XnVZFSKwAid6h8bFbWA4eHclC%2BJHqMyirQ85yLRG6zc6nULRaovpF2Cx2j5U55OuvwTnI2HCztRnEJIVucnKxlem7pAidup27BIggM3c42%2BrH7vXUlRaIYXhjE%2BGH3cWbL88H8AcpIQpG%2Bft96vAZXuB'
+espn_s2 = 'AEAyUEeFyWRO%2B7dqz67xWSlgF49tdAj6czygxVfwSeIty8%2Byz3iVdVcOC9FcP8tiHHoL%2Bo4SycHPPS47hpmC5FeBA1FJqMCCs68sRBWu8716JAYXah5yJagXyafPB0FhFBUA9OS01Gi78EcAdNSmdS4NnJaggCVn8w9HPRgqpPuD52oWWVmRkTYfg%2BMRqkqdrezyLfKA6UIE0DtsyA4UY5OLi1cfCksUpCD2lpPvejybuyyd019xemkmEdCs8awtGE3OrOnZz79ISc20hTBCVP4m'
 root = '/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3'
 
 
