@@ -29,8 +29,8 @@ year = 2022
 # Get login credentials for leagues
 # login = pd.read_csv('C:\\Users\\desid\\Documents\\Fantasy_Football\\espn-api-v3\\login.csv')
 # _, username, password, league_id, swid, espn_s2 = login[login['id'] == user_id].values[0]
-# username = 'cgeer98'
-# password = 'Penguins1!'
+username = 'cgeer98'
+password = 'Penguins1!'
 league_id = 916709
 swid = '{75C7094F-C467-4145-8709-4FC467C1457E}'
 espn_s2 = 'AEB4Tzt1PN9oqwmXbUlA6%2FaS0wvXcIkhqPekpynMVZq%2B85A5D%2FTfqsRPr7sjDpJrmXh470zXqzHCjACbl2Miord4wepaYFXf3EcyofIT4WaZ88Nde9MhpczGUWqWs44ehs3dE3DBgXEcNSU%2BcnMwqgG8c6YcV86pPfua0dzBkTfbmKO7fwi1R1tX3GS3eoNXRLVYsSuy0Gxm%2B8Ru8KRbsc0a7rOt29Xd4Z8U8MG3j58DLEKvSpxbtTAx00%2F3%2FMkgsK180I9d1wuBLGlflrP8sKql'
