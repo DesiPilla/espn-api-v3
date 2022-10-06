@@ -146,7 +146,7 @@ nose @ file:///tmp/build/80754af9/nose_1606773131901/work
 notebook @ file:///opt/concourse/worker/volumes/live/06e4d8fc-70ed-4cb0-554c-65c20061cb7f/volume/notebook_1616443453928/work
 numba @ file:///opt/concourse/worker/volumes/live/263a950e-7ddc-4297-63df-0c284f0b6d22/volume/numba_1616774255536/work
 numexpr @ file:///opt/concourse/worker/volumes/live/e845d683-bbb9-4fa2-79ce-743b84c61560/volume/numexpr_1618856522192/work
-numpy==1.21.2
+numpy==1.22.0
 numpydoc @ file:///tmp/build/80754af9/numpydoc_1605117425582/work
 olefile==0.46
 openpyxl @ file:///tmp/build/80754af9/openpyxl_1615411699337/work
