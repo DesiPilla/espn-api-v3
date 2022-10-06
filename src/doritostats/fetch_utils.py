@@ -346,6 +346,10 @@ def get_historical_stats(league_id: int, start_year: int, end_year: int, swid: s
             df_year = get_stats_by_week(league_id, year, swid, espn_s2)
             df_year['box_score_available'] = True
 
+        # Properly cast boolean columns to bool
+        bool_cols = {col:bool for col in df_year.columns[df_year.columns.str.contains("is_")]}
+        df_year = df_year.astype(bool_cols)
+        
         # Concatenate week's data
         df = pd.concat([df, df_year])
 
