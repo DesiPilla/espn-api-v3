@@ -1,4 +1,5 @@
 import pandas as pd
+from .fetch_utils import fetch_league
 from espn_api.football import League
 
 ''' HISTORICAL DRAFT ANALYTICS '''
@@ -41,18 +42,18 @@ def get_draft_details(league: League):
     draft['pick_num'] = (draft.round_num - 1) * \
         len(draft.team_id.unique()) + draft.round_pick
 
-    draft_pick_values = pd.read_csv('./pick_value.csv')
+    draft_pick_values = pd.read_csv('./doritostats/pick_value.csv')
     draft = pd.merge(draft, draft_pick_values, left_on='pick_num',
                      right_on='pick', how='left').drop(columns=['pick'])
     return draft
 
 
-def get_multiple_drafts(league: League, start_year: int = 2020, end_year: int = 2021, swid=None, espn_s2=None):
+def get_multiple_drafts(league_id: int, start_year: int = 2020, end_year: int = 2021, swid=None, espn_s2=None):
     draft = pd.DataFrame()
     for year in range(start_year, end_year+1):
         print('Fetching {} draft...'.format(year), end='')
         try:
-            draft_league = League(league_id=league.league_id,
+            draft_league = fetch_league(league_id=league_id,
                                   year=year,
                                   swid=swid,
                                   espn_s2=espn_s2)
