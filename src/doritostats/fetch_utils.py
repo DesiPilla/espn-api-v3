@@ -320,6 +320,57 @@ def get_stats_by_matchup(league_id: int, year: int, swid: str, espn_s2: str):
 
     return df
 
+def append_streaks(df: pd.DataFrame):
+    """ Add the win streak for a team to the Historical stats dataframe
+
+    Args:
+        df (pd.DataFrame): Historical stats
+
+    Returns:
+        pd.DataFrame: Historical stats with `streaks` column appended
+    """
+    df = df.sort_values(['team_owner', 'year', 'week'])
+
+    streaks = [1 if df.score_dif.tolist()[0] > 0 else -1]
+    for i in range(1, len(df)):
+        # New team: did the team win or lose their first game? (ties handled at the end)
+        if df.team_owner.tolist()[i] != df.team_owner.tolist()[i-1]:
+            streaks.append(1 if df.score_dif.tolist()[i] > 0 else -1)
+            
+        # COMMENT OUT IF YOU WANT WIN STREAKS TO ROLL INTO THE NEXT SEASON
+        # New year
+        elif df.year.tolist()[i] != df.year.tolist()[i-1]:
+            streaks.append(1 if df.score_dif.tolist()[i] > 0 else -1)
+        
+        # Begin new streak: won this week, lost/tie last week
+        elif (df.score_dif.tolist()[i] > 0) and (df.score_dif.tolist()[i-1] <= 0):
+            streaks.append(1)
+            
+        # Add to win streak: won this week, won last week
+        elif (df.score_dif.tolist()[i] > 0):
+            streaks.append(streaks[-1] + 1)
+        
+        # Begin losing streak: lost this week, won/tie last week
+        elif (df.score_dif.tolist()[i] < 0) and (df.score_dif.tolist()[i-1] >= 0):
+            streaks.append(-1)
+            
+        # Add to losing streak: lost this week, lost last week
+        elif (df.score_dif.tolist()[i] < 0):
+            streaks.append(streaks[-1] - 1)
+            
+        # Tie
+        elif (df.score_dif.tolist()[i] == 0):
+            streaks.append(0)
+            
+        else:
+            streaks.append('error')
+            
+    df['streak'] = streaks
+    return df
+
+
+
+
 def get_historical_stats(league_id: int, start_year: int, end_year: int, swid: str, espn_s2: str):
     """ Generate a table with weekly matchup statistics for every owner and every week over multiple years.
 
@@ -353,9 +404,14 @@ def get_historical_stats(league_id: int, start_year: int, end_year: int, swid: s
         # Concatenate week's data
         df = pd.concat([df, df_year])
 
+    # Get adjusted score
     year_multiplier_map = (df[df.is_meaningful_game][['year', 'team_score']].groupby('year').median().team_score / df[(df.is_meaningful_game) & (df.year == 2022)].team_score.median()).to_dict()
     def get_adjusted_score(s):
         return s.team_score / year_multiplier_map[s.year]
         
     df['team_score_adj'] = df.apply(get_adjusted_score, axis=1)
+    
+    # Get win streak data for each owner
+    df = append_streaks(df)
+
     return df
