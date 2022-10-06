@@ -1,11 +1,20 @@
 import requests
 import pandas as pd
-from espn_api.football import League
+import datetime
+from espn_api.football import League, Team
+from .analytic_utils import (
+    get_best_trio,
+    get_lineup_efficiency,
+    avg_slot_score,
+    sum_bench_points,
+    get_top_players,
+    get_weekly_finish
+)
 
 ''' FETCH LEAGUE '''
 def set_league_endpoint(league: League):
     # (dt.datetime.now() - dt.timedelta(540)).year):         # ESPN API v3
-    if (league.year >= (pd.datetime.today() - pd.DateOffset(months=1)).year):
+    if (league.year >= (datetime.datetime.today() - datetime.timedelta(weeks=12)).year):
         league.endpoint = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/" + \
             str(league.year) + "/segments/0/leagues/" + \
             str(league.league_id) + "?"
