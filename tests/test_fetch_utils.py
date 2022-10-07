@@ -1,6 +1,5 @@
 import pytest
-import pandas as pd
-from espn_api.football import League, Team, Matchup
+from espn_api.football import League, Matchup
 import doritostats.fetch_utils as fetch   # The code to test
 
 import os
@@ -10,8 +9,8 @@ load_dotenv(override=True)
 league_id = os.getenv('LEAGUE_ID')
 swid = os.getenv('SWID')
 espn_s2 = os.getenv('ESPN_S2')
-league_2018 = fetch.fetch_league(league_id, 2018, swid, espn_s2)
-league_2022 = fetch.fetch_league(league_id, 2022, swid, espn_s2)
+league_2018 = League(league_id=league_id, year=2018, swid=swid, espn_s2=espn_s2)
+league_2022 = League(league_id=league_id, year=2022, swid=swid, espn_s2=espn_s2)
 
 @pytest.mark.parametrize("league, endpoint",
                          [(league_2018, "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/1086064?seasonId=2018&"),
@@ -21,9 +20,9 @@ def test_set_league_endpoint(league: League, endpoint: str):
     assert league.endpoint == endpoint
     
 
-@pytest.mark.parametrize("league, results",
+@pytest.mark.parametrize("league, swid, espn_s2, results",
                          [
-                             (league_2018,
+                             (league_2018, swid, espn_s2,
                              {
                                 "league_name" : "Make Football Great Again",
                                 "roster_settings" : {
@@ -49,7 +48,7 @@ def test_set_league_endpoint(league: League, endpoint: str):
                                     }
                                 }
                             }),
-                             (league_2022,
+                             (league_2022, swid, espn_s2,
                               {
                                 "league_name" : "La Lega dei Cugini",
                                 "roster_settings" : {
@@ -76,7 +75,8 @@ def test_set_league_endpoint(league: League, endpoint: str):
                                 }
                             })
                          ])
-def test_get_roster_settings(league: League, results: dict):
+def test_get_roster_settings(league: League, swid: str, espn_s2: str, results: dict):
+    league.cookies = {'swid': swid, 'espn_s2': espn_s2}
     fetch.get_roster_settings(league)
     assert league.name == results['league_name']
     assert league.roster_settings == results['roster_settings']
@@ -98,7 +98,7 @@ def test_get_roster_settings(league: League, results: dict):
                          ])
 def test_fetch_league(league_id: int, year: int, swid: str, espn_s2: str, results: dict):
     league = fetch.fetch_league(league_id, year, swid, espn_s2)
-    assert league.name == results['league_name']
+    assert type(league)
     assert league.cookies == results['cookies']
 
 
