@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 import datetime
-from espn_api.football import League, Team
+from espn_api.football import League, Team, Matchup
 from .analytic_utils import (
     get_best_trio,
     get_lineup_efficiency,
@@ -13,11 +13,12 @@ from .analytic_utils import (
 
 ''' FETCH LEAGUE '''
 def set_league_endpoint(league: League):
-    # (dt.datetime.now() - dt.timedelta(540)).year):         # ESPN API v3
+    # ESPN API v3
     if (league.year >= (datetime.datetime.today() - datetime.timedelta(weeks=12)).year):
         league.endpoint = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/" + \
             str(league.year) + "/segments/0/leagues/" + \
             str(league.league_id) + "?"
+            
     else:                           # ESPN API v2
         league.endpoint = "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/" + \
             str(league.league_id) + "?seasonId=" + str(league.year) + '&'
@@ -91,7 +92,7 @@ def fetch_league(league_id: int, year: int, swid: str, espn_s2: str):
 
 
 """ HISTORICAL STATS """
-def is_playoff_game(league: League, matchup, week):
+def is_playoff_game(league: League, matchup: Matchup, week: int):
     ''' Accepts a League and Matchup object and determines if the matchup was a playoff game '''
 
     # False if not playoff time yet
