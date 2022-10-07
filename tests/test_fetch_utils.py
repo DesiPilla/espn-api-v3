@@ -20,6 +20,68 @@ def test_set_league_endpoint(league: League, endpoint: str):
     fetch.set_league_endpoint(league)
     assert league.endpoint == endpoint
     
+
+@pytest.mark.parametrize("league, results",
+                         [
+                             (league_2018,
+                             {
+                                "league_name" : "Make Football Great Again",
+                                "roster_settings" : {
+                                    'roster_slots': {
+                                        'QB': 1,
+                                        'RB': 3,
+                                        'WR': 3,
+                                        'TE': 1,
+                                        'D/ST': 1,
+                                        'K': 1,
+                                        'BE': 8,
+                                        'IR': 1,
+                                        'RB/WR/TE': 1
+                                    },
+                                    'starting_roster_slots': {
+                                        'QB': 1,
+                                        'RB': 3,
+                                        'WR': 3,
+                                        'TE': 1,
+                                        'D/ST': 1,
+                                        'K': 1,
+                                        'RB/WR/TE': 1
+                                    }
+                                }
+                            }),
+                             (league_2022,
+                              {
+                                "league_name" : "La Lega dei Cugini",
+                                "roster_settings" : {
+                                    'roster_slots': {
+                                        'QB': 1,
+                                        'RB': 2,
+                                        'WR': 2,
+                                        'TE': 1,
+                                        'D/ST': 1,
+                                        'K': 1,
+                                        'BE': 8,
+                                        'IR': 1,
+                                        'RB/WR/TE': 2
+                                    },
+                                    'starting_roster_slots': {
+                                        'QB': 1,
+                                        'RB': 2,
+                                        'WR': 2,
+                                        'TE': 1,
+                                        'D/ST': 1,
+                                        'K': 1,
+                                        'RB/WR/TE': 2
+                                    }
+                                }
+                            })
+                         ])
+def test_get_roster_settings(league: League, results: dict):
+    fetch.get_roster_settings(league)
+    assert league.name == results['league_name']
+    assert league.roster_settings == results['roster_settings']
+
+
     
 @pytest.mark.parametrize("league_id, year, swid, espn_s2, results",
                          [
