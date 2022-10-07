@@ -1,11 +1,15 @@
 import pytest
 import pandas as pd
 from espn_api.football import League, Team, Matchup
-import src.doritostats.fetch_utils as fetch   # The code to test
+import doritostats.fetch_utils as fetch   # The code to test
 
-# Import example creds
-login = pd.read_csv('./login.csv')
-_, _, league_id, swid, espn_s2 = login.iloc[0]
+import os
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+league_id = os.getenv('LEAGUE_ID')
+swid = os.getenv('SWID')
+espn_s2 = os.getenv('ESPN_S2')
 league_2018 = fetch.fetch_league(league_id, 2018, swid, espn_s2)
 league_2022 = fetch.fetch_league(league_id, 2022, swid, espn_s2)
 
