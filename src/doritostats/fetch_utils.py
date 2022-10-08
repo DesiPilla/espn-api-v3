@@ -172,7 +172,7 @@ def get_stats_by_week(league_id, year, swid, espn_s2):
             # Add observation for home team
             df_week.loc[i, 'year'] = year
             df_week.loc[i, 'week'] = week + 1
-            df_week.loc[i, 'location'] = team.outcomes[week]
+            df_week.loc[i, 'location'] = 'unknown'
             df_week.loc[i, 'team_owner'] = team.owner
             df_week.loc[i, 'team_name'] = team.team_name
             df_week.loc[i, 'team_division'] = team.division_name
@@ -188,11 +188,9 @@ def get_stats_by_week(league_id, year, swid, espn_s2):
 
             # Is the game a playoff game? (not including consolation)
             # Home team is the lower seed
-            matchup_teams = sorted(
-                [team, team.schedule[week]], key=lambda x: x.standing)
+            matchup_teams = sorted([team, team.schedule[week]], key=lambda x: x.standing)
             matchup = PseudoMatchup(matchup_teams[0], matchup_teams[1])
-            df_week.loc[i, 'is_playoff'] = is_playoff_game(
-                league, matchup, week+1)
+            df_week.loc[i, 'is_playoff'] = is_playoff_game(league, matchup, week+1)
 
         df = pd.concat([df, df_week])
 
@@ -239,7 +237,7 @@ def get_stats_by_matchup(league_id: int, year: int, swid: str, espn_s2: str):
             # Add observation for home team
             df_week.loc[i*2, 'year'] = year
             df_week.loc[i*2, 'week'] = week + 1
-            df_week.loc[i*2, 'location'] = matchup.home_team.outcomes[week]
+            df_week.loc[i*2, 'location'] = 'HOME'
             df_week.loc[i*2, 'team_owner'] = matchup.home_team.owner
             df_week.loc[i*2, 'team_name'] = matchup.home_team.team_name
             df_week.loc[i*2, 'team_division'] = matchup.home_team.division_name
@@ -249,8 +247,7 @@ def get_stats_by_matchup(league_id: int, year: int, swid: str, espn_s2: str):
             df_week.loc[i*2, 'opp_division'] = matchup.away_team.division_name
             df_week.loc[i*2, 'opp_score'] = matchup.away_score
             df_week.loc[i*2, 'is_regular_season'] = week < league.settings.reg_season_count
-            df_week.loc[i*2,
-                        'is_playoff'] = is_playoff_game(league, matchup, week+1)
+            df_week.loc[i*2, 'is_playoff'] = is_playoff_game(league, matchup, week+1)
 
             home_lineup = matchup.home_lineup
             df_week.loc[i*2, 'weekly_finish'] = get_weekly_finish(
@@ -270,7 +267,7 @@ def get_stats_by_matchup(league_id: int, year: int, swid: str, espn_s2: str):
             # Add observation for away team
             df_week.loc[i*2+1, 'year'] = year
             df_week.loc[i*2+1, 'week'] = week + 1
-            df_week.loc[i*2+1, 'location'] = matchup.away_team.outcomes[week]
+            df_week.loc[i*2+1, 'location'] = 'AWAY'
             df_week.loc[i*2+1, 'team_owner'] = matchup.away_team.owner
             df_week.loc[i*2+1, 'team_name'] = matchup.away_team.team_name
             df_week.loc[i*2+1, 'team_division'] = matchup.away_team.division_name
@@ -400,7 +397,7 @@ def get_historical_stats(league_id: int, start_year: int, end_year: int, swid: s
             df_year['box_score_available'] = False
         else:
             # Get year's data
-            df_year = get_stats_by_week(league_id, year, swid, espn_s2)
+            df_year = get_stats_by_matchup(league_id, year, swid, espn_s2)
             df_year['box_score_available'] = True
 
         # Properly cast boolean columns to bool
