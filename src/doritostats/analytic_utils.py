@@ -94,9 +94,6 @@ def sum_bench_points(league: League, lineup: list):
 
 
 ''' ADVANCED STATS '''
-#league.power_rankings(week)
-
-
 def get_weekly_luck_index(league: League, team: Team, week: int):
     ''' 
     This function returns an index quantifying how 'lucky' a team was in a given week 
