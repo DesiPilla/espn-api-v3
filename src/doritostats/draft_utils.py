@@ -69,7 +69,6 @@ def get_team_max(df, col, by='team_owner', keep=None):
     '''
     `by` = 'team_id', 'team_owner'
     '''
-
     def get_maxs(s):
         return ' | '.join(s[s == s.max()].index.values)
 
