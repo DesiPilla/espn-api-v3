@@ -109,6 +109,11 @@ def is_playoff_game(league: League, matchup: Matchup, week: int):
 
     # Is it at least 1 week after playoffs began?
     elif (week - 1) > league.settings.reg_season_count:
+        # Check if team has already lost a playoff game
+        for wk in range(league.settings.reg_season_count+1, week):
+            if matchup.away_team.outcomes[wk-1] == 'L':
+                return False
+        
         last_week_score = matchup.away_team.scores[week-2]
         last_week_opp_score = matchup.away_team.schedule[week-2].scores[week-2]
 
