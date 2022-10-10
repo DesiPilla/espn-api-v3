@@ -2,8 +2,9 @@ from calendar import week
 import pandas as pd
 
 
-def filter_df(df: pd.DataFrame, 
+def filter_df(df: pd.DataFrame,
               team_owner: str = None,
+              opp_owner: str = None,
               year: int = None,
               week: int = None,
               division: str = None,
@@ -16,6 +17,7 @@ def filter_df(df: pd.DataFrame,
     Args:
         df (pd.DataFrame): Historical stats dataframe
         team_owner (str): Team owner to filter to
+        opp_owner (str): Opponent owner to filter to
         year (int): Year to filter to
         week (int): Week to filter to
         division (str): Division to filter to
@@ -27,6 +29,8 @@ def filter_df(df: pd.DataFrame,
     """
     if team_owner is not None:
         df = df[df.team_owner == team_owner]
+    if opp_owner is not None:
+        df = df[df.opp_owner == opp_owner]
     if year is not None:
         df = df[df.year == year]
     if week is not None:
