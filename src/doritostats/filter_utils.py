@@ -1,5 +1,6 @@
-from calendar import week
+from typing import Callable
 import pandas as pd
+from espn_api.football import League, Team
 
 
 def filter_df(df: pd.DataFrame,
@@ -130,3 +131,10 @@ def leaderboard_change(df: pd.DataFrame, leaderboard_func: Callable = get_wins_l
     
     return leaderboard_change
 
+
+def get_team(league: League, team_owner: str):
+    for team in league.teams:
+        if team.owner == team_owner:
+            return team
+
+    raise Exception(f'Owner {team_owner} not in league.')
