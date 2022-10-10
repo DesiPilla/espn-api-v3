@@ -138,3 +138,11 @@ def get_team(league: League, team_owner: str):
             return team
 
     raise Exception(f'Owner {team_owner} not in league.')
+
+
+def get_division_standings(league: League):
+    standings = {}
+    for division in league.settings.division_map.values():
+        teams = [team for team in league.teams if team.division_name == division]
+        standings[division] = sorted(teams, key=lambda x: x.standing)
+    return standings
