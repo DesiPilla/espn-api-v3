@@ -94,3 +94,39 @@ def exclude_most_recent_week(df: pd.DataFrame):
     year_to_exclude = df.year.max()
     week_to_exclude = filter_df(df, year=year_to_exclude).week.max()
     return exclude_df(df, year=year_to_exclude, week=week_to_exclude)
+
+def get_wins_leaderboard(df: pd.DataFrame):
+    """Get the all time wins leaderboard for the league.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+
+    Returns:
+        pd.Series: Ordered leaderboard by career wins
+    """
+    df = filter_df(df, outcome='win', meaningful=True)
+    leaderboard_df = df.groupby('team_owner').count()['outcome'].sort_values(ascending=False).reset_index()
+    leaderboard_df.index += 1
+    return leaderboard_df
+
+
+def leaderboard_change(df: pd.DataFrame, leaderboard_func: Callable = get_wins_leaderboard):
+
+    # Get current leaderboard
+    current_leaderboard = leaderboard_func(df).reset_index()
+    
+    # Get leaderboard from last week
+    last_week_df = exclude_most_recent_week(df)
+    last_week_leaderboard = leaderboard_func(
+        last_week_df).reset_index()
+
+    # Merge the leaderboards on 'team_owner'
+    leaderboard_change = current_leaderboard.drop(columns=['outcome']).merge(
+        last_week_leaderboard.drop(columns=['outcome']), on='team_owner', suffixes=('_current', '_last')).set_index('team_owner')
+    
+    # Subtract the two weeks to find the change in leaderboard postioning
+    leaderboard_change['change'] = leaderboard_change.index_last - \
+        leaderboard_change.index_current
+    
+    return leaderboard_change
+
