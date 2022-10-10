@@ -111,6 +111,22 @@ def get_wins_leaderboard(df: pd.DataFrame):
     return leaderboard_df
 
 
+def get_losses_leaderboard(df: pd.DataFrame):
+    """Get the all time losses leaderboard for the league.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+
+    Returns:
+        pd.Series: Ordered leaderboard by career wins
+    """
+    df = filter_df(df, outcome='lose', meaningful=True)
+    leaderboard_df = df.groupby('team_owner').count(
+    )['outcome'].sort_values(ascending=False).reset_index()
+    leaderboard_df.index += 1
+    return leaderboard_df
+
+
 def leaderboard_change(df: pd.DataFrame, leaderboard_func: Callable = get_wins_leaderboard):
 
     # Get current leaderboard
