@@ -207,3 +207,52 @@ def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2
                                                              len(
                                                                  division_standings[team2.division_name]),
                                                              team2.division_name))
+
+def get_leader_str(stats_list: list, high_first: bool = True):
+    """Return a list of team owners who have the best stat, 
+    given a list of teams and stat values.
+
+    Args:
+        stats_list (list): list of teams and a stat value
+          - Ex: [('Team 1', 103.7), ('Team 2', 83.7), ('Team 3', 98.8)]
+        high_first (bool, optional): Are higher values better than lower values?. Defaults to True.
+
+    Returns:
+        str: List of team owners with the highest value
+    """
+    
+    # Sort list
+    sorted_stats_list = sorted(
+        stats_list, key=lambda x: x[1], reverse=high_first)
+    
+    # Check if there is no tie
+    if sorted_stats_list[0][1] != sorted_stats_list[1][1]:
+        return sorted_stats_list[0][1], "{}".format(sorted_stats_list[0][0])
+    
+    # If there is a tie, return all teams tied for first
+    else:
+        leaders = [sorted_stats_list[0][0]]
+        for i in range(1, len(sorted_stats_list)):
+            if sorted_stats_list[i][1] == sorted_stats_list[i-1][1]:
+                leaders.append(sorted_stats_list[i][0])
+            else:
+                return sorted_stats_list[0][1], "{}".format(", ".join(leaders))
+
+
+def weekly_stats_analysis(league: League, df: pd.DataFrame):
+    print("--------------------------------")
+    print("|       Week {:2.0f} Analysis       |".format(league.current_week - 1))
+    print("--------------------------------")
+    
+    df = filter_df(df, meaningful=True)
+    df_current_year = filter_df(df, year=league.year)
+    
+    # Check who has the most wins and losses
+    print("Most wins this season   - {:.0f} wins - {}".format(
+        *get_leader_str([(team, team.wins) for team in league.teams])))
+    print("Most losses this season - {:.0f} losses - {}".format(
+        *get_leader_str([(team, team.losses) for team in league.teams])))
+    print("Highest average points this season - {:.0f} pts/gm - {}".format(
+        *get_leader_str(df_current_year.groupby('team_owner').mean()['team_score'].to_dict().items())))
+    print("Lowest average points this season - {:.0f} pts/gm - {}".format(
+        *get_leader_str(df_current_year.groupby('team_owner').mean()['team_score'].to_dict().items(), reverse=False)))
