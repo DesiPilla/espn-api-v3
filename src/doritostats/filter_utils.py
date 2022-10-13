@@ -249,10 +249,10 @@ def weekly_stats_analysis(league: League, df: pd.DataFrame):
     
     # Check who has the most wins and losses
     print("Most wins this season   - {:.0f} wins - {}".format(
-        *get_leader_str([(team, team.wins) for team in league.teams])))
+        *get_leader_str([(team.owner, team.wins) for team in league.teams])))
     print("Most losses this season - {:.0f} losses - {}".format(
-        *get_leader_str([(team, team.losses) for team in league.teams])))
+        *get_leader_str([(team.owner, team.losses) for team in league.teams])))
     print("Highest average points this season - {:.0f} pts/gm - {}".format(
         *get_leader_str(df_current_year.groupby('team_owner').mean()['team_score'].to_dict().items())))
     print("Lowest average points this season - {:.0f} pts/gm - {}".format(
-        *get_leader_str(df_current_year.groupby('team_owner').mean()['team_score'].to_dict().items(), reverse=False)))
+        *get_leader_str(df_current_year.groupby('team_owner').mean()['team_score'].to_dict().items(), high_first=False)))
