@@ -1,7 +1,8 @@
 # espn-api-v3
+
 Link to [Heroku website](https://doritostats.herokuapp.com/fantasy_stats/)
 
-This project aims to make ESPN Fantasy Football statistics easily available. 
+This project aims to make ESPN Fantasy Football statistics easily available.
 With the introduction of version 3 of the ESPN's API, this structure creates leagues, teams, and player classes that allow for advanced data analytics and the potential for many new features to be added.
 
 I am new to the Git interface, but any recommendations and pull requests are welcome.
@@ -10,24 +11,27 @@ This project was inspired and based off of [rbarton65/espnff](https://github.com
 
 Additional help/ideas were received from [cwendt94/ff-espn-api](https://github.com/cwendt94/ff-espn-api)
 
-## Table of Contents  
-* Fetching league
-  * [Fetch public leagues](##fetchpublicleagues)
-  * [Fetch private leagues](##fetchprivateleagues)
-* Viewing league information
-  * [View league information](##viewleagueinformation)
-  * [View team information](##viewteaminformation)
-  * [View player information](##viewplayerinformation)
-  * [View stats for a specific week](##viewstatsforaspecificweek)
-* Analytic Methods
-  * [Power Rankings](##powerrankings)
-  * [Luck Index](##luckindex)
-  * [Projected Standings](##projectedstandings)
+## Table of Contents
 
+- Fetching league
+  - [Fetch public leagues](##fetchpublicleagues)
+  - [Fetch private leagues](##fetchprivateleagues)
+- Viewing league information
+  - [View league information](##viewleagueinformation)
+  - [View team information](##viewteaminformation)
+  - [View player information](##viewplayerinformation)
+  - [View stats for a specific week](##viewstatsforaspecificweek)
+- Analytic Methods
+  - [Power Rankings](##powerrankings)
+  - [Luck Index](##luckindex)
+  - [Projected Standings](##projectedstandings)
 
 <a name="fetchpublicleagues"></a>
+
 ## Fetch public leagues
+
 In the main.py file, type:
+
 ```python
 >>> league_id = 1234
 >>> year = 2019
@@ -57,8 +61,11 @@ In the main.py file, type:
 ```
 
 <a name="fetchprivateleagues"></a>
+
 ## Fetch private leagues
+
 By typing your script into the main.py file:
+
 ```python
 >>> league_id = 1234
 >>> year = 2020
@@ -100,7 +107,9 @@ By typing your script into the main.py file:
 ```
 
 <a name="viewleagueinformation"></a>
+
 ## View league information
+
 ```python
 >>> league.year
 2019
@@ -117,7 +126,9 @@ By typing your script into the main.py file:
 ```
 
 <a name="viewteaminformation"></a>
+
 ## View team information
+
 ```python
 >>> team = league.teams[1]
 Team(T.Y. Very Much')
@@ -136,14 +147,18 @@ Team(T.Y. Very Much')
 >>> team.scores
 {1: 163.7, 2: 124.2, ... weekNum: score }
 ```
+
 Under team.rosters, each value in the dictionary contains a list of player objects that relate to the team's roster for the given week.
+
 ```python
 >>> team.rosters
-{1: [Player(Ezekiel Elliot), Player(Kyler Murray), .....], 2: [Player(Todd Gurley), Player(Kyler Murray) .... ] 
+{1: [Player(Ezekiel Elliot), Player(Kyler Murray), .....], 2: [Player(Todd Gurley), Player(Kyler Murray) .... ]
 ```
 
 <a name="viewplayerinformation"></a>
+
 ## View player information
+
 ```python
 >>> player = team.rosters[1][0]
 >>> player.name
@@ -159,9 +174,12 @@ True
 ```
 
 <a name="viewstatsforaspecificweek"></a>
+
 ## View stats for a specific week
+
 The two main purposes for this package is to be able to quickly and seamlessly view stats for a team or league that ESPN doesn't readily compute.
 Using the 'printWeeklyStats' method, you can view a weekly report for a certain week.
+
 ```python
 >>> team.printWeeklyStats(1)
 ----------------------------
@@ -211,13 +229,16 @@ Worst Bench:           Gabriel
 ```
 
 <a name="powerrankings"></a>
+
 ## Power Rankings
-This package has its own formula for calculating power rankings each week. 
+
+This package has its own formula for calculating power rankings each week.
 The computation takes in a team's performance over the entire season (with more weight on the recent weeks), while also accounting for luck.
 The power rankings for a given week can be viewed using the `printPowerRankings` method.
+
 ```python
 >>> league.printPowerRankings(1)
- Week  1 
+ Week  1
  Power Index                      Team  Owner
 -----------------------------  ------  ----------------
 The Adams Family               101.52  Marc Chirico
@@ -231,14 +252,17 @@ Can you Diggs this?             64.38  Ellie Knecht
 ```
 
 <a name="luckindex"></a>
+
 ## Luck Index
+
 This package has its own formula for calculating how "lucky" a team has been over the course of a season. Each week, every team is assigned a luck score
-based on how they did relative to the rest of the league and the result of their weekly matchup. Teams that performed poorly but still won are assigned 
+based on how they did relative to the rest of the league and the result of their weekly matchup. Teams that performed poorly but still won are assigned
 a higher score, while teams that did well but still lost are assigned lower scores. The other determinant in a team's weekly luck score is how well they performed
 relative to their average performance, as well as how their opponent performed relative to their average score. Team's who scored exceptionally higher than they
 normally do will have a higher luck score, and vice versa. Likewise, team's who face opponents that over-acheive relative to their typical performance will have
 a lower (or more 'unlucky') score. Over the course of the season, the luck scores are totaled and the luck index is compiled. The luck index can be viewed using
- the `printLuckIndex` method.
+the `printLuckIndex` method.
+
 ```python
 >>> league.printLuckIndex(2)
 Through Week 2
@@ -253,15 +277,16 @@ Home Sweet Mahomes                -1.43  Nikki  Pilla
 The Kamara adds 10 pounds         -2.14  Julia Selleck
 All Tom No Jerry                  -3.57  Vincent Chirico
 ```
- 
+
 ## Projected Standings
-Using the power rankings calculated by this package, projections for the final standings can be calculated. The `printExpectedStandings` method can be called to 
+
+Using the power rankings calculated by this package, projections for the final standings can be calculated. The `printExpectedStandings` method can be called to
 view the expected standings based on the power rankings through a certain week. The current standings are found, and results of the following matchups are predicted.
 For example, if week 2 has just concluded, the most up-to-date projections can be viewed as follows:
 
 ```python
 >>> league.printExpectedStandings(2)
-Week 2 
+Week 2
  Team                         Wins    Losses    Ties  Owner
 -------------------------  ------  --------  ------  ----------------
 T.Y. Very Much                 12         0       0  Desi Pilla
@@ -274,4 +299,111 @@ Can you Diggs this?             3         9       0  Ellie Knecht
 The Kamara adds 10 pounds       0        12       0  Julia Selleck
 
 *These standings do not account for tiesbreakers
+```
+
+## Historical stats
+
+If a league has been around for more than one season, historical records can be easily fetched. A row will exist for each team's matchup.
+
+```python
+from doritostats.fetch_utils import get_historical_stats
+
+historical_df = get_historical_stats(league_id, start_year, end_year, swid, espn_s2)
+```
+
+The list of fields available for each record includes:
+
+- `year`
+- `week`
+- `location`
+- `team_owner`
+- `team_name`
+- `team_division`
+- `team_score`
+- `opp_owner`
+- `opp_name`
+- `opp_division`
+- `opp_score`
+- `is_regular_season`
+- `is_playoff`
+- `score_dif`
+- `outcome`
+- `is_meaningful_game`
+- `box_score_available`
+- `weekly_finish`
+- `lineup_efficiency`
+- `best_trio`
+- `bench_points`
+- `QB_pts`
+- `best_QB`
+- `RB_pts`
+- `best_RB`
+- `WR_pts`
+- `best_WR`
+- `TE_pts`
+- `best_TE`
+- `RB_WR_TE_pts`
+- `best_RB_WR_TE`
+- `D_ST_pts`
+- `best_D_ST`
+- `K_pts`
+- `best_K`
+- `team_score_adj`
+- `streak`
+
+## Weekly stats analysis
+
+To see if any records were broken during a given week
+
+```python
+>>> from doritostats.analytic_utils import weekly_stats_analysis
+
+>>> weekly_stats_analysis(records_df, year=2022, week=1)
+
+----------------------------------------------------------------
+|                        Week  1 Analysis                      |
+----------------------------------------------------------------
+Carmine Pilla had the 5th highest D_ST_pts (25.0 pts) in league history
+Marc Chirico had the 1st lowest TE_pts (0.0 pts) in league history
+```
+
+## Season stats analysis
+
+To see the records for a given season
+
+```python
+>>> from doritostats.analytic_utils import season_stats_analysis
+
+>>> season_stats_analysis(league, records_df)
+
+----------------------------------------------------------------
+|             Season 2022 Analysis (through Week  6)           |
+----------------------------------------------------------------
+Most wins this season              - 6 wins - Julia Selleck
+Highest single game score          - 160 pts - Julia Selleck
+Highest average points this season - 133 pts/gm - Julia Selleck
+Longest active win streak          - 6 gms - Julia Selleck
+Longest win streak this season     - 6 gms - Julia Selleck
+
+Most losses this season           - 5 losses - Carmine Pilla
+Lowest single game score          - 66 pts - James Selleck
+Lowest average points this season - 108 pts/gm - Carmine Pilla
+Longest active loss streak        - -5 gms - Carmine Pilla
+Longest loss streak this season   - -5 gms - Carmine Pilla
+
+Most QB pts this season           - 173 pts - Vincent Chirico
+Most RB pts this season           - 98 pts - Ben Caro
+Most WR pts this season           - 97 pts - Marc Chirico
+Most TE pts this season           - 110 pts - Desi Pilla
+Most RB/WR/TE pts this season     - 82 pts - Julia Selleck
+Most D/ST pts this season         - 72 pts - Vincent Chirico
+Most K pts this season            - 66 pts - Gianna Selleck
+
+Fewest QB pts this season         - 83 pts - James Selleck
+Fewest RB pts this season         - 52 pts - Gianna Selleck
+Fewest WR pts this season         - 48 pts - Ben Caro
+Fewest TE pts this season         - 12 pts - Marc Chirico
+Fewest RB/WR/TE pts this season   - 38 pts - Carmine Pilla
+Fewest D/ST pts this season       - 25 pts - Nikki  Pilla
+Fewest K pts this season          - 20 pts - Marc Chirico
 ```
