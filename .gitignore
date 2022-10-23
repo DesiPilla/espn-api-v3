@@ -6,3 +6,5 @@
 .DS_Store
 .vscode*
 dist/*
+*historical_stats.csv
+*new_espn.ipynb
