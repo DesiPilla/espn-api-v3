@@ -260,14 +260,9 @@ def print_records(
         )
 
 
-def weekly_stats_analysis(league: League, df: pd.DataFrame, year: int = None, week: int = None):
+def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
 
     df = filter_df(df, meaningful=True)
-
-    if year is None:
-        year = league.year
-    if week is None:
-        week = league.current_week
 
     print("----------------------------------------------------------------")
     print(
@@ -336,19 +331,22 @@ def weekly_stats_analysis(league: League, df: pd.DataFrame, year: int = None, we
                   stat_units='pts', high_first=False)
 
 
-def season_stats_analysis(league: League, df: pd.DataFrame):
-    print("----------------------------------------------------------------")
-    print(
-        "|             Season {:2.0f} Analysis (through Week {:2.0f})           |".format(
-            league.year, league.current_week - 1
-        )
-    )
-    print("----------------------------------------------------------------")
+def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
+    if week is None:
+        week = filter_df(df, year=df.year.max()).week.max()
 
     df = filter_df(df, meaningful=True)
     df_current_year = filter_df(df, year=league.year)
     df_current_week = filter_df(
         df, year=league.year, week=league.current_week - 1)
+
+    print("----------------------------------------------------------------")
+    print(
+        "|             Season {:2.0f} Analysis (through Week {:2.0f})           |".format(
+            league.year,  week
+        )
+    )
+    print("----------------------------------------------------------------")
 
     # Good awards
     print(
