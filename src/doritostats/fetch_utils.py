@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 import datetime
 from espn_api.football import League, Team, Matchup
-from .analytic_utils import (
+from src.doritostats.analytic_utils import (
     get_best_trio,
     get_lineup_efficiency,
     avg_slot_score,
@@ -12,13 +12,15 @@ from .analytic_utils import (
 )
 
 ''' FETCH LEAGUE '''
+
+
 def set_league_endpoint(league: League):
     # ESPN API v3
     if (league.year >= (datetime.datetime.today() - datetime.timedelta(weeks=12)).year):
         league.endpoint = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/" + \
             str(league.year) + "/segments/0/leagues/" + \
             str(league.league_id) + "?"
-            
+
     else:                           # ESPN API v2
         league.endpoint = "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/" + \
             str(league.league_id) + "?seasonId=" + str(league.year) + '&'
@@ -92,6 +94,8 @@ def fetch_league(league_id: int, year: int, swid: str, espn_s2: str):
 
 
 """ HISTORICAL STATS """
+
+
 def is_playoff_game(league: League, matchup: Matchup, week: int):
     ''' Accepts a League and Matchup object and determines if the matchup was a playoff game '''
 
@@ -113,7 +117,7 @@ def is_playoff_game(league: League, matchup: Matchup, week: int):
         for wk in range(league.settings.reg_season_count+1, week):
             if matchup.away_team.outcomes[wk-1] == 'L':
                 return False
-        
+
         last_week_score = matchup.away_team.scores[week-2]
         last_week_opp_score = matchup.away_team.schedule[week-2].scores[week-2]
 
@@ -188,9 +192,11 @@ def get_stats_by_week(league_id, year, swid, espn_s2):
 
             # Is the game a playoff game? (not including consolation)
             # Home team is the lower seed
-            matchup_teams = sorted([team, team.schedule[week]], key=lambda x: x.standing)
+            matchup_teams = sorted(
+                [team, team.schedule[week]], key=lambda x: x.standing)
             matchup = PseudoMatchup(matchup_teams[0], matchup_teams[1])
-            df_week.loc[i, 'is_playoff'] = is_playoff_game(league, matchup, week+1)
+            df_week.loc[i, 'is_playoff'] = is_playoff_game(
+                league, matchup, week+1)
 
         df = pd.concat([df, df_week])
 
@@ -247,7 +253,8 @@ def get_stats_by_matchup(league_id: int, year: int, swid: str, espn_s2: str):
             df_week.loc[i*2, 'opp_division'] = matchup.away_team.division_name
             df_week.loc[i*2, 'opp_score'] = matchup.away_score
             df_week.loc[i*2, 'is_regular_season'] = week < league.settings.reg_season_count
-            df_week.loc[i*2, 'is_playoff'] = is_playoff_game(league, matchup, week+1)
+            df_week.loc[i*2,
+                        'is_playoff'] = is_playoff_game(league, matchup, week+1)
 
             home_lineup = matchup.home_lineup
             df_week.loc[i*2, 'weekly_finish'] = get_weekly_finish(
@@ -323,6 +330,7 @@ def get_stats_by_matchup(league_id: int, year: int, swid: str, espn_s2: str):
 
     return df
 
+
 def append_streaks(df: pd.DataFrame):
     """ Add the win streak for a team to the Historical stats dataframe
 
@@ -339,39 +347,37 @@ def append_streaks(df: pd.DataFrame):
         # New team: did the team win or lose their first game? (ties handled at the end)
         if df.team_owner.tolist()[i] != df.team_owner.tolist()[i-1]:
             streaks.append(1 if df.score_dif.tolist()[i] > 0 else -1)
-            
+
         # COMMENT OUT IF YOU WANT WIN STREAKS TO ROLL INTO THE NEXT SEASON
         # New year
         elif df.year.tolist()[i] != df.year.tolist()[i-1]:
             streaks.append(1 if df.score_dif.tolist()[i] > 0 else -1)
-        
+
         # Begin new streak: won this week, lost/tie last week
         elif (df.score_dif.tolist()[i] > 0) and (df.score_dif.tolist()[i-1] <= 0):
             streaks.append(1)
-            
+
         # Add to win streak: won this week, won last week
         elif (df.score_dif.tolist()[i] > 0):
             streaks.append(streaks[-1] + 1)
-        
+
         # Begin losing streak: lost this week, won/tie last week
         elif (df.score_dif.tolist()[i] < 0) and (df.score_dif.tolist()[i-1] >= 0):
             streaks.append(-1)
-            
+
         # Add to losing streak: lost this week, lost last week
         elif (df.score_dif.tolist()[i] < 0):
             streaks.append(streaks[-1] - 1)
-            
+
         # Tie
         elif (df.score_dif.tolist()[i] == 0):
             streaks.append(0)
-            
+
         else:
             streaks.append('error')
-            
+
     df['streak'] = streaks
     return df
-
-
 
 
 def get_historical_stats(league_id: int, start_year: int, end_year: int, swid: str, espn_s2: str):
@@ -383,7 +389,7 @@ def get_historical_stats(league_id: int, start_year: int, end_year: int, swid: s
         end_year (int): Most recent year to get data from
         swid (str): ESPN SWID credential
         espn_s2 (str): ESPN_S2 credential
-        
+
     Returns:
         pandas dataframe: Weekly historical stats for the given league
     """
@@ -401,21 +407,24 @@ def get_historical_stats(league_id: int, start_year: int, end_year: int, swid: s
             df_year['box_score_available'] = True
 
         # Properly cast boolean columns to bool
-        bool_cols = {col:bool for col in df_year.columns[df_year.columns.str.contains("is_")]}
+        bool_cols = {
+            col: bool for col in df_year.columns[df_year.columns.str.contains("is_")]}
         df_year = df_year.astype(bool_cols)
-        
+
         # Concatenate week's data
         df = pd.concat([df, df_year])
 
     # Get adjusted score
-    year_multiplier_map = (df[df.is_meaningful_game][['year', 'team_score']].groupby('year').median().team_score / df[(df.is_meaningful_game) & (df.year == 2022)].team_score.median()).to_dict()
+    year_multiplier_map = (df[df.is_meaningful_game][['year', 'team_score']].groupby('year').median(
+    ).team_score / df[(df.is_meaningful_game) & (df.year == 2022)].team_score.median()).to_dict()
+
     def get_adjusted_score(s):
         return s.team_score / year_multiplier_map[s.year]
     df['team_score_adj'] = df.apply(get_adjusted_score, axis=1)
-    
+
     # Correct capitalization of team owners
     df['team_owner'] = df.team_owner.str.title()
-    
+
     # Get win streak data for each owner
     df = append_streaks(df)
 

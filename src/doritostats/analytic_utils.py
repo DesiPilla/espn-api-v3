@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from copy import copy
 from espn_api.football import League, Team
-from doritostats.filter_utils import (
+from src.doritostats.filter_utils import (
     filter_df,
     get_any_records
 )

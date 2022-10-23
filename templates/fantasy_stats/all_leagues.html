@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/league.css' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/favicon.png' %}" />
+    <title>Dorito Stats | All leagues in database</title>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-45P4BQ6XJR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-45P4BQ6XJR');
+    </script>
+
+  </head>
+  <body>
+    <h1>Leagues existing in the database</h1>
+    <ul>
+    {% for league in leagues %}
+        <li><a href="/fantasy_stats/league/{{ league.league_year }}/{{ league.league_id }}/">{{ league.league_name }}</a> ({{ league.league_year }}, id={{league.league_id}})</li>
+    {% endfor %}
+    </ul>
+  </body>
+</html>
