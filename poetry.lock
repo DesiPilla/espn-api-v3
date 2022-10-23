@@ -93,6 +93,14 @@ psycopg2-binary = "*"
 whitenoise = "*"
 
 [[package]]
+name = "dotenv"
+version = "0.0.5"
+description = "Handle .env files"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "espn-api"
 version = "0.24.0"
 description = "ESPN API"
@@ -383,7 +391,7 @@ brotli = ["Brotli"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "da41715fc77f93b34a2ab7fc61cc1a5b4a361661dc017ba17958bcb32f11686e"
+content-hash = "a726ffcaebaa461e21411122423e26a6f6f499164eb828867207c9c59f571a25"
 
 [metadata.files]
 asgiref = [
@@ -417,6 +425,9 @@ Django = [
 django-on-heroku = [
     {file = "django-on-heroku-1.1.2.tar.gz", hash = "sha256:a41fe83ef7ecb022ca92b2950a61f79fef156e58f4f35fc7fc4ecacdc5225fb8"},
     {file = "django_on_heroku-1.1.2-py2.py3-none-any.whl", hash = "sha256:4a72ade056335112cba22eea332552d840b718dd8140d43c2d70bb739875955b"},
+]
+dotenv = [
+    {file = "dotenv-0.0.5.tar.gz", hash = "sha256:b58d2ab3f83dbd4f8a362b21158a606bee87317a9444485566b3c8f0af847091"},
 ]
 espn-api = [
     {file = "espn_api-0.24.0.tar.gz", hash = "sha256:69e9fa62d7b1680bf83d52d119b3fb46e5dd34b3b5d40cc98b29837e1bf0e4ae"},
