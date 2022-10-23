@@ -3,14 +3,17 @@ import pandas as pd
 from espn_api.football import League, Team
 
 
-def filter_df(df: pd.DataFrame,
-              team_owner: str = None,
-              opp_owner: str = None,
-              year: int = None,
-              week: int = None,
-              division: str = None,
-              meaningful: bool = None,
-              outcome: str = None
+def filter_df(
+    df: pd.DataFrame,
+    team_owner: str = None,
+    opp_owner: str = None,
+    year: int = None,
+    week: int = None,
+    division: str = None,
+    meaningful: bool = None,
+    is_playoff: bool = None,
+    is_regular_season: bool = None,
+    outcome: str = None,
 ):
     """Filter a historical stats dataframe by some fields.
     Only records that match all conditions will be returned.
@@ -23,6 +26,8 @@ def filter_df(df: pd.DataFrame,
         week (int): Week to filter to
         division (str): Division to filter to
         meaningful (bool): Include only 'meaningful' games
+        is_playoff_game (bool): Include only playoff games games
+        is_regular_season (bool): Include only regular season games
         outcome (str): Outcome to filter to ('win', 'lose', 'tie')
 
     Returns:
@@ -40,6 +45,10 @@ def filter_df(df: pd.DataFrame,
         df = df[df.division == division]
     if meaningful is not None:
         df = df[df.is_meaningful_game == meaningful]
+    if is_playoff is not None:
+        df = df[df.is_playoff == is_playoff]
+    if is_regular_season is not None:
+        df = df[df.is_regular_season == is_regular_season]
     if outcome is not None:
         df = df[df.outcome == outcome]
     return df
