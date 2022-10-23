@@ -411,8 +411,10 @@ def get_historical_stats(league_id: int, start_year: int, end_year: int, swid: s
     year_multiplier_map = (df[df.is_meaningful_game][['year', 'team_score']].groupby('year').median().team_score / df[(df.is_meaningful_game) & (df.year == 2022)].team_score.median()).to_dict()
     def get_adjusted_score(s):
         return s.team_score / year_multiplier_map[s.year]
-        
     df['team_score_adj'] = df.apply(get_adjusted_score, axis=1)
+    
+    # Correct capitalization of team owners
+    df['team_owner'] = df.team_owner.str.title()
     
     # Get win streak data for each owner
     df = append_streaks(df)
