@@ -5,9 +5,7 @@ description = "This project aims to make ESPN Fantasy Football statistics easily
 authors = ["Desi Pilla <desi.m.pilla@gmail.com>"]
 license = "https://github.com/DesiPilla/espn-api-v3/blob/master/LICENSE"
 readme = "README.md"
-packages = [
-    { from = "src", include = "doritostats" }
-]
+packages = [{ from = "src", include = "doritostats" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -23,6 +21,8 @@ Django = "^4.1.2"
 django-on-heroku = "^1.1.2"
 joblib = "^1.2.0"
 scikit-learn = "^1.1.2"
+dotenv = "^0.0.5"
+gunicorn = "^20.1.0"
 
 [build-system]
 requires = ["poetry-core"]
