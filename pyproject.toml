@@ -21,6 +21,8 @@ python-dotenv = "^0.21.0"
 
 Django = "^4.1.2"
 django-on-heroku = "^1.1.2"
+joblib = "^1.2.0"
+scikit-learn = "^1.1.2"
 
 [build-system]
 requires = ["poetry-core"]
