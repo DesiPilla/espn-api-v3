@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{ from = "src", include = "doritostats" }]
 
 [tool.poetry.dependencies]
-python = "^3.8.8"
+python = "^3.10"
 espn-api = "^0.24.0"
 pandas = "^1.5.0"
 numpy = "^1.23.3"
@@ -22,6 +22,7 @@ django-on-heroku = "^1.1.2"
 joblib = "^1.2.0"
 scikit-learn = "^1.1.2"
 dotenv = "^0.0.5"
+gunicorn = "^20.1.0"
 
 [build-system]
 requires = ["poetry-core"]
