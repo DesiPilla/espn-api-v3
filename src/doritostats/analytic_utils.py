@@ -244,12 +244,12 @@ def print_records(
     """
     records_df = get_any_records(
         df=df, year=year, week=week, stat=stat, high_first=high_first, n=n)
-    superlative = "highest" if high_first else "lowest"
 
     # Print out any records
+    superlative = "highest" if high_first else "lowest"
     for (_, row) in records_df.iterrows():
         print(
-            "{} had the {} {} {} ({} {}) in league history".format(
+            "{} had the {} {} {} ({:.2f} {}) in league history".format(
                 row.team_owner,
                 make_ordinal(row["rank"]),
                 superlative,
@@ -258,6 +258,49 @@ def print_records(
                 stat_units,
             )
         )
+
+
+def print_franchise_records(
+    df: pd.DataFrame, year: int, week: int, stat: str, stat_units: str, high_first: bool = True, n: int = 1
+):
+    """Print out any franchise records.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+        year (int): Year to check for a record
+        week (int): Week to check for a record
+        stat (str): The stat of note ('team_score', 'QB_pts', etc.)
+        stat_units (str): ('pts', 'pts/gm', etc.)
+        high_first (bool): Are higher values better than lower values?. Defaults to True.
+        n (int): How far down the record list to check (defaults to 5)
+    """
+    # Get a list of all active teams that have been in the league for 2+ years
+    current_teams = filter_df(df, year=df.year.max()).team_owner.unique()
+    list_of_teams = df.groupby(["team_owner"]).nunique()
+    list_of_teams = list_of_teams[(list_of_teams.year > 1) &
+                                  list_of_teams.index.isin(current_teams)].index.tolist()
+
+    for team_owner in list_of_teams:
+        # Get all rows for the given team
+        team_df = filter_df(df, team_owner=team_owner)
+
+        # Get any records for that team
+        records_df = get_any_records(
+            df=team_df, year=year, week=week, stat=stat, high_first=high_first, n=n)
+
+        # Print out any records
+        superlative = "highest" if high_first else "lowest"
+        for (_, row) in records_df.iterrows():
+            print(
+                "{} had the {} {} {} ({:.2f} {}) in franchise history".format(
+                    row.team_owner,
+                    make_ordinal(row["rank"]),
+                    superlative,
+                    stat,
+                    row[stat],
+                    stat_units,
+                )
+            )
 
 
 def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
@@ -273,6 +316,7 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
     print("----------------------------------------------------------------")
 
     # Good awards
+    print("League-wide POSITIVE stats\n--------------------------")
     print_records(df, year=year, week=week,
                   stat='team_score', stat_units='pts', high_first=True)
     print_records(df, year=year, week=week,
@@ -302,7 +346,39 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
     print_records(df, year=year, week=week, stat='streak',
                   stat_units='pts', high_first=True)
 
+    # Good franchise awards
+    print("\n\nFranchise POSITIVE stats\n--------------------------")
+    print_franchise_records(df, year=year, week=week,
+                            stat='team_score', stat_units='pts', high_first=True, n=3)
+    print_franchise_records(df, year=year, week=week,
+                            stat='team_score_adj', stat_units='pts', high_first=True, n=3)
+    print_franchise_records(df, year=year, week=week, stat='score_dif',
+                            stat_units='pts', high_first=True, n=3)
+    print_franchise_records(df, year=year, week=week,
+                            stat='lineup_efficiency', stat_units='pts', high_first=True)
+    print_franchise_records(df, year=year, week=week, stat='best_trio',
+                            stat_units='pts', high_first=True)
+    print_franchise_records(df, year=year, week=week, stat='QB_pts',
+                            stat_units='pts', high_first=True)
+    print_franchise_records(df, year=year, week=week, stat='RB_pts',
+                            stat_units='pts', high_first=True)
+    print_franchise_records(df, year=year, week=week, stat='WR_pts',
+                            stat_units='pts', high_first=True)
+    print_franchise_records(df, year=year, week=week, stat='TE_pts',
+                            stat_units='pts', high_first=True)
+    print_franchise_records(df, year=year, week=week,
+                            stat='RB_WR_TE_pts', stat_units='pts', high_first=True)
+    print_franchise_records(df, year=year, week=week, stat='D_ST_pts',
+                            stat_units='pts', high_first=True)
+    print_franchise_records(df, year=year, week=week, stat='K_pts',
+                            stat_units='pts', high_first=True)
+    print_franchise_records(df, year=year, week=week,
+                            stat='bench_points', stat_units='pts', high_first=True)
+    print_franchise_records(df, year=year, week=week, stat='streak',
+                            stat_units='pts', high_first=True, n=3)
+
     # Bad awards
+    print("\n\nLeague-wide NEGATIVE stats\n--------------------------")
     print_records(df, year=year, week=week,
                   stat='team_score', stat_units='pts', high_first=False)
     print_records(df, year=year, week=week,
@@ -329,6 +405,35 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
                   stat='bench_points', stat_units='pts', high_first=False)
     print_records(df, year=year, week=week, stat='streak',
                   stat_units='pts', high_first=False)
+
+    # Bad franchise records
+    print("\n\nFranchise NEGATIVE stats\n--------------------------")
+    print_franchise_records(df, year=year, week=week,
+                            stat='team_score', stat_units='pts', high_first=False, n=3)
+    print_franchise_records(df, year=year, week=week,
+                            stat='team_score_adj', stat_units='pts', high_first=False, n=3)
+    print_franchise_records(df, year=year, week=week,
+                            stat='lineup_efficiency', stat_units='pts', high_first=False)
+    print_franchise_records(df, year=year, week=week, stat='best_trio',
+                            stat_units='pts', high_first=False)
+    print_franchise_records(df, year=year, week=week, stat='QB_pts',
+                            stat_units='pts', high_first=False)
+    print_franchise_records(df, year=year, week=week, stat='RB_pts',
+                            stat_units='pts', high_first=False)
+    print_franchise_records(df, year=year, week=week, stat='WR_pts',
+                            stat_units='pts', high_first=False)
+    print_franchise_records(df, year=year, week=week, stat='TE_pts',
+                            stat_units='pts', high_first=False)
+    print_franchise_records(df, year=year, week=week,
+                            stat='RB_WR_TE_pts', stat_units='pts', high_first=False)
+    print_franchise_records(df, year=year, week=week, stat='D_ST_pts',
+                            stat_units='pts', high_first=False)
+    print_franchise_records(df, year=year, week=week, stat='K_pts',
+                            stat_units='pts', high_first=False)
+    print_franchise_records(df, year=year, week=week,
+                            stat='bench_points', stat_units='pts', high_first=False)
+    print_franchise_records(df, year=year, week=week, stat='streak',
+                            stat_units='pts', high_first=False, n=3)
 
 
 def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
