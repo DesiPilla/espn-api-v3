@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 from copy import copy
+from typing import Callable
 from espn_api.football import League, Team
 from src.doritostats.filter_utils import (
     filter_df,
-    get_any_records
+    get_any_records,
+    exclude_most_recent_week
 )
 
 ''' ANALYTIC FUNCTIONS '''
@@ -303,6 +305,176 @@ def print_franchise_records(
             )
 
 
+def get_wins_leaderboard(df: pd.DataFrame):
+    """Get the all time wins leaderboard for the league.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+
+    Returns:
+        pd.Series: Ordered leaderboard by career wins
+    """
+    df = filter_df(df, outcome="win", meaningful=True)
+    leaderboard_df = (
+        df.groupby("team_owner")
+        .count()["outcome"]
+        .sort_values(ascending=False)
+        .reset_index()
+    )
+    leaderboard_df.index += 1
+    return leaderboard_df
+
+
+def get_losses_leaderboard(df: pd.DataFrame):
+    """Get the all time losses leaderboard for the league.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+
+    Returns:
+        pd.Series: Ordered leaderboard by career wins
+    """
+    df = filter_df(df, outcome="lose", meaningful=True)
+    leaderboard_df = (
+        df.groupby("team_owner")
+        .count()["outcome"]
+        .sort_values(ascending=False)
+        .reset_index()
+    )
+    leaderboard_df.index += 1
+    return leaderboard_df
+
+
+def leaderboard_change(
+    df: pd.DataFrame, leaderboard_func: Callable = get_wins_leaderboard
+):
+
+    # Get current leaderboard
+    current_leaderboard = leaderboard_func(df).reset_index()
+
+    # Get leaderboard from last week
+    last_week_df = exclude_most_recent_week(df)
+    last_week_leaderboard = leaderboard_func(last_week_df).reset_index()
+
+    # Merge the leaderboards on 'team_owner'
+    leaderboard_change = (
+        current_leaderboard.drop(columns=["outcome"])
+        .merge(
+            last_week_leaderboard.drop(columns=["outcome"]),
+            on="team_owner",
+            suffixes=("_current", "_last"),
+        )
+        .set_index("team_owner")
+    )
+
+    # Subtract the two weeks to find the change in leaderboard postioning
+    leaderboard_change["change"] = (
+        leaderboard_change.index_last - leaderboard_change.index_current
+    )
+
+    return leaderboard_change
+
+
+def get_team(league: League, team_owner: str):
+    """Get the Team object corresponding to the team_owner
+
+    Args:
+        league (League): League object containing the teams
+        team_owner (str): Team owner to get Team object of
+
+    Raises:
+        Exception: If the team owner does not have a Team object in the league
+
+    Returns:
+        Team: Team object
+    """
+    for team in league.teams:
+        if team.owner == team_owner:
+            return team
+
+    raise Exception(f"Owner {team_owner} not in league.")
+
+
+def get_division_standings(league: League):
+    standings = {}
+    for division in league.settings.division_map.values():
+        teams = [team for team in league.teams if team.division_name == division]
+        standings[division] = sorted(teams, key=lambda x: x.standing)
+    return standings
+
+
+def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2: str):
+    gow_df = filter_df(df, team_owner=owner1,
+                       opp_owner=owner2, meaningful=True)
+    gow_df.sort_values(["year", "week"], ascending=True, inplace=True)
+
+    print(
+        "{} has won {} / {} matchups.".format(
+            owner1, len(filter_df(gow_df, outcome="win")), len(gow_df)
+        )
+    )
+    print(
+        "{} has won {} / {} matchups.".format(
+            owner2, len(filter_df(gow_df, outcome="lose")), len(gow_df)
+        )
+    )
+    print("There have been {} ties".format(
+        len(filter_df(gow_df, outcome="tie"))))
+
+    last_matchup = gow_df.iloc[-1]
+    print(
+        "\nMost recent game: {:.0f} Week {:.0f}".format(
+            last_matchup.year, last_matchup.week
+        )
+    )
+    print(
+        "{} {:.2f} - {:.2f} {}".format(
+            last_matchup.team_owner,
+            last_matchup.team_score,
+            last_matchup.opp_score,
+            last_matchup.opp_owner,
+        )
+    )
+
+    team1 = get_team(league, owner1)
+    team2 = get_team(league, owner2)
+    division_standings = get_division_standings(league)
+    print("\nThis season:\n-----------------------")
+    print(f"{owner1} has a record of {team1.wins}-{team1.losses}-{team1.ties}")
+    print(
+        "They have averaged {:.2f} points per game.".format(
+            filter_df(
+                df, team_owner=owner1, year=league.year, meaningful=True
+            ).team_score.mean()
+        )
+    )
+    print(
+        "{} is currently {}/{} in the {} division.".format(
+            team1.team_name,
+            division_standings[team1.division_name].index(team1) + 1,
+            len(division_standings[team1.division_name]),
+            team1.division_name,
+        )
+    )
+    print()
+    print(f"{owner2} has a record of {team2.wins}-{team2.losses}-{team2.ties}")
+    print(
+        "They have averaged {:.2f} points per game.".format(
+            filter_df(
+                df, team_owner=owner2, year=league.year, meaningful=True
+            ).team_score.mean()
+        )
+    )
+    print(
+        "{} is currently {}/{} in the {} division.".format(
+            team2.team_name,
+            division_standings[team2.division_name].index(team2) + 1,
+            len(division_standings[team2.division_name]),
+            team2.division_name,
+        )
+    )
+
+
 def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
 
     df = filter_df(df, meaningful=True)
@@ -437,6 +609,13 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
 
 
 def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
+    """Display season-bests and -worsts.
+
+    Args:
+        league (League): League object
+        df (pd.DataFrame): Historical records dataframe
+        week (int, optional): Maximum week to include. Defaults to None.
+    """
     if week is None:
         week = filter_df(df, year=df.year.max()).week.max()
 
