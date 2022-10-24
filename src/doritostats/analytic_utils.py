@@ -110,12 +110,17 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
     This function returns an index quantifying how 'lucky' a team was in a given week 
 
     Luck index:
-        50% probability of playing a team with a lower record
-        25% your play compared to previous weeks
-        25% opp's play compared to previous weeks
+        70% probability of playing a team with a lower total
+        20% your play compared to previous weeks
+        10% opp's play compared to previous weeks
     '''
     opp = team.schedule[week-1]
     num_teams = len(league.teams)
+
+    # Set weights
+    w_sched = 7
+    w_team = 2
+    w_opp = 1
 
     # Luck Index based on where the team and its opponent finished compared to the rest of the league
     rank = get_weekly_finish(league, team, week)
@@ -123,18 +128,18 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
 
     if rank < opp_rank:                                # If the team won...
         # Odds of this team playing a team with a higher score than it
-        luck_index = 5 * (rank - 1) / (num_teams - 2)
+        luck_index = w_sched * (rank - 1) / (num_teams - 1)
     elif rank > opp_rank:                              # If the team lost or tied...
         # Odds of this team playing a team with a lower score than it
-        luck_index = -5 * (num_teams - rank) / (num_teams - 2)
+        luck_index = -w_sched * (num_teams - rank) / (num_teams - 1)
 
     # If the team tied...
     elif rank < (num_teams / 2):
         # They are only half as unlucky, because tying is not as bad as losing
-        luck_index = -2.5 * (num_teams - rank - 1) / (num_teams - 2)
+        luck_index = -w_sched/2 * (num_teams - rank - 1) / (num_teams - 1)
     else:
         # They are only half as lucky, because tying is not as good as winning
-        luck_index = 2.5 * (rank - 1) / (num_teams - 2)
+        luck_index = w_sched/2 * (rank - 1) / (num_teams - 1)
 
     # Update luck index based on how team played compared to normal
     team_score = team.scores[week - 1]
@@ -144,8 +149,8 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
         # Get z-score of the team's performance
         z = (team_score - team_avg) / team_std
 
-        # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
-        z_norm = z / (3*team_std) * 2.5
+        # Noramlize the z-score so that a performance 2 std dev's away from the mean has an effect of 20% on the luck index
+        z_norm = z / 2 * w_team
         luck_index += z_norm
 
     # Update luck index based on how opponent played compared to normal
@@ -156,11 +161,11 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
         # Get z-score of the team's performance
         z = (opp_score - opp_avg) / opp_std
 
-        # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
-        z_norm = z / (3*opp_std) * 2.5
+        # Noramlize the z-score so that a performance 2 std dev's away from the mean has an effect of 10% on the luck index
+        z_norm = z / 2 * w_opp
         luck_index -= z_norm
 
-    return luck_index / 10
+    return luck_index / np.sum([w_sched, w_team, w_opp])
 
 
 def get_season_luck_indices(league: League, week: int):
@@ -170,6 +175,7 @@ def get_season_luck_indices(league: League, week: int):
         # Update luck_index for each team
         for team in league.teams:
             luck_indices[team] += get_weekly_luck_index(league, team, week)
+
     return luck_indices
 
 
@@ -348,6 +354,23 @@ def get_losses_leaderboard(df: pd.DataFrame):
 def leaderboard_change(
     df: pd.DataFrame, leaderboard_func: Callable = get_wins_leaderboard
 ):
+    """This function takes a leaderboard function and calculates 
+    the change of that leaderboard from the previous week to the current week.
+
+    I.e.: If the get_wins_leaderboard() function is passed in,
+
+    The function will rank teams 1 - n from the previous week.
+    Then the leaderboard will be updated with the outcomes of the current week.
+    The function will return the change of each team.
+    If Team A went from being the winningest team to the 2nd-most winningest team, they would have a change of -1.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+        leaderboard_func (Callable, optional): A leaderboard function. Defaults to get_wins_leaderboard.
+
+    Returns:
+        pd.DataFrame: A dataframe containing the current leaderboard, previousl eaderboard, and the difference
+    """
 
     # Get current leaderboard
     current_leaderboard = leaderboard_func(df).reset_index()
