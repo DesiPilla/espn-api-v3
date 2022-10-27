@@ -78,17 +78,17 @@ def exclude_df(
     """
     conditions = [True] * len(df)
     if team_owner is not None:
-        conditions *= df.team_owner == team_owner
+        conditions &= df.team_owner == team_owner
     if year is not None:
-        conditions *= df.year == year
+        conditions &= df.year == year
     if week is not None:
-        conditions *= df.week == week
+        conditions &= df.week == week
     if division is not None:
-        conditions *= df.division == division
+        conditions &= df.division == division
     if meaningful is not None:
-        conditions *= df.meaningful == meaningful
+        conditions &= df.meaningful == meaningful
     if outcome is not None:
-        conditions *= df.outcome == outcome
+        conditions &= df.outcome == outcome
     return df[~conditions]
 
 
