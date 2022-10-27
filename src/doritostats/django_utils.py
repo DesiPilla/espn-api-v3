@@ -10,9 +10,10 @@ from .analytic_utils import (
 )
 
 ''' DJANGO WEB FUNCTIONS '''
-def django_weekly_stats(league: League):
+
+
+def django_weekly_stats(league: League, week: int):
     # Load box scores for specified week
-    week = league.current_week - 1
     box_scores = league.box_scores(week)
 
     best_table = [
@@ -79,9 +80,9 @@ def django_weekly_stats(league: League):
     return weekly_stats
 
 
-def django_power_rankings(league: League):
+def django_power_rankings(league: League, week: int):
     # Get power rankings for the current week
-    league_power_rankings = league.power_rankings(league.current_week-1)
+    league_power_rankings = league.power_rankings(week)
 
     # Add the power rankings for each team
     power_rankings = []
@@ -95,16 +96,16 @@ def django_power_rankings(league: League):
     return power_rankings
 
 
-def django_luck_index(league: League):
+def django_luck_index(league: League, week: int):
     # Get luck index for the current week
-    league_luck_index = get_season_luck_indices(league, league.current_week-1)
+    league_luck_index = get_season_luck_indices(league, week)
 
     # Add the luck index for each team
     luck_index = []
     for (team, luck) in sorted(league_luck_index.items(), key=lambda x: x[1], reverse=True):
         luck_index.append({
             'team': team.team_name,
-            'value': '{:.1f}'.format(luck),
+            'value': '{:.1f}'.format(luck*100),
             'owner': team.owner
         })
 

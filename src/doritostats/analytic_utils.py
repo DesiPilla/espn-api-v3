@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 from copy import copy
+from typing import Callable
 from espn_api.football import League, Team
 from src.doritostats.filter_utils import (
     filter_df,
-    get_any_records
+    get_any_records,
+    exclude_most_recent_week
 )
 
 ''' ANALYTIC FUNCTIONS '''
@@ -108,12 +110,17 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
     This function returns an index quantifying how 'lucky' a team was in a given week 
 
     Luck index:
-        50% probability of playing a team with a lower record
-        25% your play compared to previous weeks
-        25% opp's play compared to previous weeks
+        70% probability of playing a team with a lower total
+        20% your play compared to previous weeks
+        10% opp's play compared to previous weeks
     '''
     opp = team.schedule[week-1]
     num_teams = len(league.teams)
+
+    # Set weights
+    w_sched = 7
+    w_team = 2
+    w_opp = 1
 
     # Luck Index based on where the team and its opponent finished compared to the rest of the league
     rank = get_weekly_finish(league, team, week)
@@ -121,18 +128,18 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
 
     if rank < opp_rank:                                # If the team won...
         # Odds of this team playing a team with a higher score than it
-        luck_index = 5 * (rank - 1) / (num_teams - 2)
+        luck_index = w_sched * (rank - 1) / (num_teams - 1)
     elif rank > opp_rank:                              # If the team lost or tied...
         # Odds of this team playing a team with a lower score than it
-        luck_index = -5 * (num_teams - rank) / (num_teams - 2)
+        luck_index = -w_sched * (num_teams - rank) / (num_teams - 1)
 
     # If the team tied...
     elif rank < (num_teams / 2):
         # They are only half as unlucky, because tying is not as bad as losing
-        luck_index = -2.5 * (num_teams - rank - 1) / (num_teams - 2)
+        luck_index = -w_sched/2 * (num_teams - rank - 1) / (num_teams - 1)
     else:
         # They are only half as lucky, because tying is not as good as winning
-        luck_index = 2.5 * (rank - 1) / (num_teams - 2)
+        luck_index = w_sched/2 * (rank - 1) / (num_teams - 1)
 
     # Update luck index based on how team played compared to normal
     team_score = team.scores[week - 1]
@@ -142,8 +149,8 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
         # Get z-score of the team's performance
         z = (team_score - team_avg) / team_std
 
-        # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
-        z_norm = z / (3*team_std) * 2.5
+        # Noramlize the z-score so that a performance 2 std dev's away from the mean has an effect of 20% on the luck index
+        z_norm = z / 2 * w_team
         luck_index += z_norm
 
     # Update luck index based on how opponent played compared to normal
@@ -154,11 +161,11 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
         # Get z-score of the team's performance
         z = (opp_score - opp_avg) / opp_std
 
-        # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
-        z_norm = z / (3*opp_std) * 2.5
+        # Noramlize the z-score so that a performance 2 std dev's away from the mean has an effect of 10% on the luck index
+        z_norm = z / 2 * w_opp
         luck_index -= z_norm
 
-    return luck_index / 10
+    return luck_index / np.sum([w_sched, w_team, w_opp])
 
 
 def get_season_luck_indices(league: League, week: int):
@@ -168,6 +175,7 @@ def get_season_luck_indices(league: League, week: int):
         # Update luck_index for each team
         for team in league.teams:
             luck_indices[team] += get_weekly_luck_index(league, team, week)
+
     return luck_indices
 
 
@@ -301,6 +309,193 @@ def print_franchise_records(
                     stat_units,
                 )
             )
+
+
+def get_wins_leaderboard(df: pd.DataFrame):
+    """Get the all time wins leaderboard for the league.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+
+    Returns:
+        pd.Series: Ordered leaderboard by career wins
+    """
+    df = filter_df(df, outcome="win", meaningful=True)
+    leaderboard_df = (
+        df.groupby("team_owner")
+        .count()["outcome"]
+        .sort_values(ascending=False)
+        .reset_index()
+    )
+    leaderboard_df.index += 1
+    return leaderboard_df
+
+
+def get_losses_leaderboard(df: pd.DataFrame):
+    """Get the all time losses leaderboard for the league.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+
+    Returns:
+        pd.Series: Ordered leaderboard by career wins
+    """
+    df = filter_df(df, outcome="lose", meaningful=True)
+    leaderboard_df = (
+        df.groupby("team_owner")
+        .count()["outcome"]
+        .sort_values(ascending=False)
+        .reset_index()
+    )
+    leaderboard_df.index += 1
+    return leaderboard_df
+
+
+def leaderboard_change(
+    df: pd.DataFrame, leaderboard_func: Callable = get_wins_leaderboard
+):
+    """This function takes a leaderboard function and calculates 
+    the change of that leaderboard from the previous week to the current week.
+
+    I.e.: If the get_wins_leaderboard() function is passed in,
+
+    The function will rank teams 1 - n from the previous week.
+    Then the leaderboard will be updated with the outcomes of the current week.
+    The function will return the change of each team.
+    If Team A went from being the winningest team to the 2nd-most winningest team, they would have a change of -1.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+        leaderboard_func (Callable, optional): A leaderboard function. Defaults to get_wins_leaderboard.
+
+    Returns:
+        pd.DataFrame: A dataframe containing the current leaderboard, previousl eaderboard, and the difference
+    """
+
+    # Get current leaderboard
+    current_leaderboard = leaderboard_func(df).reset_index()
+
+    # Get leaderboard from last week
+    last_week_df = exclude_most_recent_week(df)
+    last_week_leaderboard = leaderboard_func(last_week_df).reset_index()
+
+    # Merge the leaderboards on 'team_owner'
+    leaderboard_change = (
+        current_leaderboard.drop(columns=["outcome"])
+        .merge(
+            last_week_leaderboard.drop(columns=["outcome"]),
+            on="team_owner",
+            suffixes=("_current", "_last"),
+        )
+        .set_index("team_owner")
+    )
+
+    # Subtract the two weeks to find the change in leaderboard postioning
+    leaderboard_change["change"] = (
+        leaderboard_change.index_last - leaderboard_change.index_current
+    )
+
+    return leaderboard_change
+
+
+def get_team(league: League, team_owner: str):
+    """Get the Team object corresponding to the team_owner
+
+    Args:
+        league (League): League object containing the teams
+        team_owner (str): Team owner to get Team object of
+
+    Raises:
+        Exception: If the team owner does not have a Team object in the league
+
+    Returns:
+        Team: Team object
+    """
+    for team in league.teams:
+        if team.owner == team_owner:
+            return team
+
+    raise Exception(f"Owner {team_owner} not in league.")
+
+
+def get_division_standings(league: League):
+    standings = {}
+    for division in league.settings.division_map.values():
+        teams = [team for team in league.teams if team.division_name == division]
+        standings[division] = sorted(teams, key=lambda x: x.standing)
+    return standings
+
+
+def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2: str):
+    gow_df = filter_df(df, team_owner=owner1,
+                       opp_owner=owner2, meaningful=True)
+    gow_df.sort_values(["year", "week"], ascending=True, inplace=True)
+
+    print(
+        "{} has won {} / {} matchups.".format(
+            owner1, len(filter_df(gow_df, outcome="win")), len(gow_df)
+        )
+    )
+    print(
+        "{} has won {} / {} matchups.".format(
+            owner2, len(filter_df(gow_df, outcome="lose")), len(gow_df)
+        )
+    )
+    print("There have been {} ties".format(
+        len(filter_df(gow_df, outcome="tie"))))
+
+    last_matchup = gow_df.iloc[-1]
+    print(
+        "\nMost recent game: {:.0f} Week {:.0f}".format(
+            last_matchup.year, last_matchup.week
+        )
+    )
+    print(
+        "{} {:.2f} - {:.2f} {}".format(
+            last_matchup.team_owner,
+            last_matchup.team_score,
+            last_matchup.opp_score,
+            last_matchup.opp_owner,
+        )
+    )
+
+    team1 = get_team(league, owner1)
+    team2 = get_team(league, owner2)
+    division_standings = get_division_standings(league)
+    print("\nThis season:\n-----------------------")
+    print(f"{owner1} has a record of {team1.wins}-{team1.losses}-{team1.ties}")
+    print(
+        "They have averaged {:.2f} points per game.".format(
+            filter_df(
+                df, team_owner=owner1, year=league.year, meaningful=True
+            ).team_score.mean()
+        )
+    )
+    print(
+        "{} is currently {}/{} in the {} division.".format(
+            team1.team_name,
+            division_standings[team1.division_name].index(team1) + 1,
+            len(division_standings[team1.division_name]),
+            team1.division_name,
+        )
+    )
+    print()
+    print(f"{owner2} has a record of {team2.wins}-{team2.losses}-{team2.ties}")
+    print(
+        "They have averaged {:.2f} points per game.".format(
+            filter_df(
+                df, team_owner=owner2, year=league.year, meaningful=True
+            ).team_score.mean()
+        )
+    )
+    print(
+        "{} is currently {}/{} in the {} division.".format(
+            team2.team_name,
+            division_standings[team2.division_name].index(team2) + 1,
+            len(division_standings[team2.division_name]),
+            team2.division_name,
+        )
+    )
 
 
 def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
@@ -437,6 +632,13 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
 
 
 def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
+    """Display season-bests and -worsts.
+
+    Args:
+        league (League): League object
+        df (pd.DataFrame): Historical records dataframe
+        week (int, optional): Maximum week to include. Defaults to None.
+    """
     if week is None:
         week = filter_df(df, year=df.year.max()).week.max()
 

@@ -14,9 +14,9 @@ import os
 from pathlib import Path
 
 import django_on_heroku
-import dotenv
 
 # Initialise environment variables
+import dotenv
 dotenv.load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -36,7 +36,6 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 INSTALLED_APPS = [
     'fantasy_stats.apps.FantasyStatsConfig',
-    'twitter_sentiment.apps.TwitterSentimentConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
