@@ -157,19 +157,21 @@ Team(Harris Styles)
 
 ## View player information
 
+Here are some of the player details available:
+
 ```python
->>> player = team.rosters[1][0]
->>> player.name
-'Ezekiel Elliot'
->>> player.id
-3051392
+>>> player = team.roster[0]
+>>> (player.name, player.proTeam, player.playerId)
+('Najee Harris', 'PIT', 4241457)
 >>> player.eligibleSlots	# position slot ids that the player can be placed in
-[2, 3, 23, 7, 20, 21]
+['RB', 'RB/WR', 'RB/WR/TE', 'OP', 'BE', 'IR']
+>>> player.acquisitionType
+"DRAFT"
 >>> player.positionId		# position slot id that the user used him in
-2
->>> player.isStarting
-True
+'RB'
 ```
+
+There are many specific scoring stats that can be found under `player.stats` for each week.
 
 <a name="viewstatsforaspecificweek"></a>
 
