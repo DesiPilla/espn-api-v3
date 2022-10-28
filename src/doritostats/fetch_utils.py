@@ -12,11 +12,16 @@ from src.doritostats.analytic_utils import (
     get_weekly_finish,
 )
 
-""" FETCH LEAGUE """
-
 
 def set_league_endpoint(league: League) -> None:
-    # ESPN API v3
+    """Set the league's endpoint.
+
+    The endpoint looks different depending on if it is the current season or a previous season
+
+    Args:
+        league (League): _description_
+    """
+    # Current season
     if league.year >= (datetime.datetime.today() - datetime.timedelta(weeks=12)).year:
         league.endpoint = (
             "https://fantasy.espn.com/apis/v3/games/ffl/seasons/"
@@ -26,7 +31,8 @@ def set_league_endpoint(league: League) -> None:
             + "?"
         )
 
-    else:  # ESPN API v2
+    # Old season
+    else:
         league.endpoint = (
             "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/"
             + str(league.league_id)
@@ -39,9 +45,9 @@ def set_league_endpoint(league: League) -> None:
 def get_roster_settings(league: League) -> None:
     """This grabs the roster and starting lineup settings for the league
     - Grabs the dictionary containing the number of players of each position a roster contains
-    - Creates a dictionary rosterSlots{} that only inlcludes slotIds that have a non-zero number of players on the roster
-    - Creates a dictionary startingRosterSlots{} that is a subset of rosterSlots{} and only includes slotIds that are on the starting roster
-    - Add rosterSlots{} and startingRosterSlots{} to the League attribute League.rosterSettings
+    - Creates a dictionary roster_slots{} that only inlcludes slotIds that have a non-zero number of players on the roster
+    - Creates a dictionary starting_roster_slots{} that is a subset of roster_slots{} and only includes slotIds that are on the starting roster
+    - Add roster_slots{} and starting_roster_slots{} to the League attribute League.rosterSettings
     """
     print("[BUILDING LEAGUE] Gathering roster settings information...")
 
@@ -84,21 +90,21 @@ def get_roster_settings(league: League) -> None:
     # Grab the dictionary containing the number of players of each position a roster contains
     roster = settings["rosterSettings"]["lineupSlotCounts"]
     # Create an empty dictionary that will replace roster{}
-    rosterSlots = {}
-    # Create an empty dictionary that will be a subset of rosterSlots{} containing only starting players
-    startingRosterSlots = {}
+    roster_slots = {}
+    # Create an empty dictionary that will be a subset of roster_slots{} containing only starting players
+    starting_roster_slots = {}
     for positionId in roster:
         position = rosterMap[int(positionId)]
         # Only inlclude slotIds that have a non-zero number of players on the roster
         if roster[positionId] != 0:
-            rosterSlots[position] = roster[positionId]
-            # Include all slotIds in the startingRosterSlots{} unless they are bench, injured reserve, or ' '
+            roster_slots[position] = roster[positionId]
+            # Include all slotIds in the starting_roster_slots{} unless they are bench, injured reserve, or ' '
             if positionId not in ["20", "21", "24"]:
-                startingRosterSlots[position] = roster[positionId]
-    # Add rosterSlots{} and startingRosterSlots{} as a league attribute
+                starting_roster_slots[position] = roster[positionId]
+    # Add roster_slots{} and starting_roster_slots{} as a league attribute
     league.roster_settings = {
-        "roster_slots": rosterSlots,
-        "starting_roster_slots": startingRosterSlots,
+        "roster_slots": roster_slots,
+        "starting_roster_slots": starting_roster_slots,
     }
     return
 
@@ -106,6 +112,16 @@ def get_roster_settings(league: League) -> None:
 def fetch_league(
     league_id: int, year: int, swid: Optional[str] = None, espn_s2: Optional[str] = None
 ) -> League:
+    """
+    This function is a wrapper around the League object.
+    Given the same inputs, it will instantiate a League object and add other details such as:
+        - league.cookies
+        - league.endpoint
+        - league.settings.roster_slots
+        - league.settings.starting_roster_slots
+        - Set the roster for the current week
+    """
+
     print("[BUILDING LEAGUE] Fetching league data...")
     league = League(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)
 
@@ -173,7 +189,7 @@ def is_playoff_game(league: League, matchup: Matchup, week: int) -> bool:
 
 
 class PseudoMatchup:
-    """A skeleton of the"""
+    """A skeleton of the Matchup class"""
 
     def __init__(self, home_team, away_team):
         self.home_team = home_team
@@ -183,7 +199,27 @@ class PseudoMatchup:
         return f"Matchup({self.home_team}, {self.away_team})"
 
 
-def get_stats_by_week(league_id, year, swid, espn_s2) -> pd.DataFrame:
+def get_stats_by_week(
+    league_id: int, year: int, swid: str, espn_s2: str
+) -> pd.DataFrame:
+    """This function creates a historical dataframe for the league in a given year.
+
+    It generates this dataframe by:
+        - For each team in League.teams:
+            - For each week in league.settings.matchup_periods:
+                Manually grab each stat by looking at the Team and the Team's opponent.
+
+    This is used for years prior to 2019, when BoxScores are unavailable.
+
+    Args:
+        league_id (int): League ID
+        year (int): Year of the league
+        swid (str): User credential
+        espn_s2 (str): User credential
+
+    Returns:
+        pd.DataFrame: Historical stats dataframe
+    """
 
     # Fetch league for year
     league = fetch_league(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)
@@ -256,6 +292,24 @@ def get_stats_by_week(league_id, year, swid, espn_s2) -> pd.DataFrame:
 def get_stats_by_matchup(
     league_id: int, year: int, swid: str, espn_s2: str
 ) -> pd.DataFrame:
+    """This function creates a historical dataframe for the league in a given year.
+
+    It generates this dataframe by:
+        - For each week that has elapsed, get the BoxScores for that week:
+            - For each Matchup in the BoxScores:
+                Grab each stat by looking at the Matchup.home_team, Matchup.home_lineup, Matchup.away_team, and Matchup.away_lineup
+
+    This is used for years in 2019 or later, where the BoxScores are available.
+
+    Args:
+        league_id (int): League ID
+        year (int): Year of the league
+        swid (str): User credential
+        espn_s2 (str): User credential
+
+    Returns:
+        pd.DataFrame: Historical stats dataframe
+    """
     # Fetch league for year
     league = fetch_league(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)
 

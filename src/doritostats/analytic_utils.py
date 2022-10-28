@@ -10,8 +10,6 @@ from src.doritostats.filter_utils import (
     exclude_most_recent_week,
 )
 
-""" ANALYTIC FUNCTIONS """
-
 
 def get_lineup(
     league: League, team: Team, week: int, box_scores: Optional[List[BoxScore]] = None
@@ -74,6 +72,10 @@ def get_best_trio(league: League, lineup: List[Player]) -> float:
 
 
 def get_lineup_efficiency(league: League, lineup: List[Player]) -> float:
+    """
+    Returns the lineup efficiency of a team.
+    Lineup efficiency is defined as the team's actual score divided by it's best possible score.
+    """
     max_score = get_best_lineup(league, lineup)
     real_score = np.sum(
         [player.points for player in lineup if player.slot_position not in ("BE", "IR")]
@@ -533,6 +535,13 @@ def game_of_the_week_stats(
 
 
 def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
+    """Generate any league- or franchise-records for a given week.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+        year (int): Year
+        week (int): Week
+    """
 
     df = filter_df(df, meaningful=True)
 
