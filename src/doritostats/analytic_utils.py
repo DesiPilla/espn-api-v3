@@ -1,31 +1,39 @@
 import numpy as np
 import pandas as pd
 from copy import copy
-from typing import Callable
-from espn_api.football import League, Team
+from typing import Callable, Dict, List, Optional, Tuple
+from espn_api.football import League, Team, Player
+from espn_api.football.box_score import BoxScore
 from src.doritostats.filter_utils import (
     filter_df,
     get_any_records,
-    exclude_most_recent_week
+    exclude_most_recent_week,
 )
 
-''' ANALYTIC FUNCTIONS '''
+""" ANALYTIC FUNCTIONS """
 
 
-def get_lineup(league: League, team: Team, week: int, box_scores=None):
-    ''' Return the lineup of the given team during the given week '''
+def get_lineup(
+    league: League, team: Team, week: int, box_scores: Optional[List[BoxScore]] = None
+) -> List[Player]:
+    """Return the lineup of the given team during the given week"""
     # Get the lineup for the team during the specified week
     if box_scores is None:
         box_scores = league.box_scores(week)
+
+    assert box_scores is not None
+
+    lineup = []
     for box_score in box_scores:
         if team == box_score.home_team:
-            return box_score.home_lineup
+            lineup = box_score.home_lineup
         elif team == box_score.away_team:
-            return box_score.away_lineup
+            lineup = box_score.away_lineup
+    return lineup
 
 
-def get_top_players(lineup: list, slot: str, n: int):
-    ''' Takes a list of players and returns a list of the top n players based on points scored. '''
+def get_top_players(lineup: List[Player], slot: str, n: int) -> List[Player]:
+    """Takes a list of players and returns a list of the top n players based on points scored."""
     # Gather players of the desired position
     eligible_players = []
     for player in lineup:
@@ -35,16 +43,16 @@ def get_top_players(lineup: list, slot: str, n: int):
     return sorted(eligible_players, key=lambda x: x.points, reverse=True)[:n]
 
 
-def get_best_lineup(league: League, lineup: list):
-    ''' Returns the best possible lineup for team during the loaded week. '''
+def get_best_lineup(league: League, lineup: List[Player]) -> float:
+    """Returns the score of the best possible lineup for team during the loaded week."""
     # Save full roster
     saved_roster = copy(lineup)
 
     # Find Best Lineup
     best_lineup = []
     # Get best RB before best RB/WR/TE
-    for slot in sorted(league.roster_settings['starting_roster_slots'].keys(), key=len):
-        num_players = league.roster_settings['starting_roster_slots'][slot]
+    for slot in sorted(league.roster_settings["starting_roster_slots"].keys(), key=len):
+        num_players = league.roster_settings["starting_roster_slots"][slot]
         best_players = get_top_players(saved_roster, slot, num_players)
         best_lineup.extend(best_players)
 
@@ -55,66 +63,67 @@ def get_best_lineup(league: League, lineup: list):
     return np.sum([player.points for player in best_lineup])
 
 
-def get_best_trio(league: League, lineup: list):
-    ''' Returns the the sum of the top QB/RB/Reciever trio for a team during the loaded week. '''
-    qb = get_top_players(lineup, 'QB', 1)[0].points
-    rb = get_top_players(lineup, 'RB', 1)[0].points
-    wr = get_top_players(lineup, 'WR', 1)[0].points
-    te = get_top_players(lineup, 'TE', 1)[0].points
+def get_best_trio(league: League, lineup: List[Player]) -> float:
+    """Returns the the sum of the top QB/RB/Reciever trio for a team during the loaded week."""
+    qb = get_top_players(lineup, "QB", 1)[0].points
+    rb = get_top_players(lineup, "RB", 1)[0].points
+    wr = get_top_players(lineup, "WR", 1)[0].points
+    te = get_top_players(lineup, "TE", 1)[0].points
     best_trio = round(qb + rb + max(wr, te), 2)
     return best_trio
 
 
-def get_lineup_efficiency(league: League, lineup: list):
+def get_lineup_efficiency(league: League, lineup: List[Player]) -> float:
     max_score = get_best_lineup(league, lineup)
     real_score = np.sum(
-        [player.points for player in lineup if player.slot_position not in ('BE', 'IR')])
+        [player.points for player in lineup if player.slot_position not in ("BE", "IR")]
+    )
     return real_score / max_score
 
 
-def get_weekly_finish(league: League, team: Team, week: int):
-    ''' Returns the rank of a team compared to the rest of the league by points for (for the loaded week) '''
-    league_scores = [tm.scores[week-1] for tm in league.teams]
+def get_weekly_finish(league: League, team: Team, week: int) -> int:
+    """Returns the rank of a team compared to the rest of the league by points for (for the loaded week)"""
+    league_scores = [tm.scores[week - 1] for tm in league.teams]
     league_scores = sorted(league_scores, reverse=True)
-    return league_scores.index(team.scores[week-1]) + 1
+    return league_scores.index(team.scores[week - 1]) + 1
 
 
-def get_num_out(league: League, lineup: list):
-    ''' Returns the (esimated) number of players who did not play for a team for the loaded week (excluding IR slot players). '''
+def get_num_out(league: League, lineup: List[Player]) -> int:
+    """Returns the (esimated) number of players who did not play for a team for the loaded week (excluding IR slot players)."""
     num_out = 0
     # TODO: write new code based on if player was injured
     return num_out
 
 
-def avg_slot_score(league: League, lineup: list, slot: str):
-    ''' 
+def avg_slot_score(league: League, lineup: List[Player], slot: str) -> float:
+    """
     Returns the average score for starting players of a specified slot.
     `lineup` is either BoxScore().away_lineup or BoxScore().home_lineup (a list of BoxPlayers)
-    '''
-    return np.mean([player.points for player in lineup if player.slot_position == slot])
+    """
+    return np.mean([player.points for player in lineup if player.slot_position == slot])  # type: ignore
 
 
-def sum_bench_points(league: League, lineup: list):
-    ''' 
+def sum_bench_points(league: League, lineup: list) -> float:
+    """
     Returns the total score for bench players
     `lineup` is either BoxScore().away_lineup or BoxScore().home_lineup (a list of BoxPlayers)
-    '''
-    return np.sum([player.points for player in lineup if player.slot_position == 'BE'])
+    """
+    return np.sum([player.points for player in lineup if player.slot_position == "BE"])
 
 
-''' ADVANCED STATS '''
+""" ADVANCED STATS """
 
 
-def get_weekly_luck_index(league: League, team: Team, week: int):
-    ''' 
-    This function returns an index quantifying how 'lucky' a team was in a given week 
+def get_weekly_luck_index(league: League, team: Team, week: int) -> float:
+    """
+    This function returns an index quantifying how 'lucky' a team was in a given week
 
     Luck index:
         70% probability of playing a team with a lower total
         20% your play compared to previous weeks
         10% opp's play compared to previous weeks
-    '''
-    opp = team.schedule[week-1]
+    """
+    opp = team.schedule[week - 1]
     num_teams = len(league.teams)
 
     # Set weights
@@ -126,20 +135,20 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
     rank = get_weekly_finish(league, team, week)
     opp_rank = get_weekly_finish(league, opp, week)
 
-    if rank < opp_rank:                                # If the team won...
+    if rank < opp_rank:  # If the team won...
         # Odds of this team playing a team with a higher score than it
         luck_index = w_sched * (rank - 1) / (num_teams - 1)
-    elif rank > opp_rank:                              # If the team lost or tied...
+    elif rank > opp_rank:  # If the team lost or tied...
         # Odds of this team playing a team with a lower score than it
         luck_index = -w_sched * (num_teams - rank) / (num_teams - 1)
 
     # If the team tied...
     elif rank < (num_teams / 2):
         # They are only half as unlucky, because tying is not as bad as losing
-        luck_index = -w_sched/2 * (num_teams - rank - 1) / (num_teams - 1)
+        luck_index = -w_sched / 2 * (num_teams - rank - 1) / (num_teams - 1)
     else:
         # They are only half as lucky, because tying is not as good as winning
-        luck_index = w_sched/2 * (rank - 1) / (num_teams - 1)
+        luck_index = w_sched / 2 * (rank - 1) / (num_teams - 1)
 
     # Update luck index based on how team played compared to normal
     team_score = team.scores[week - 1]
@@ -168,9 +177,9 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
     return luck_index / np.sum([w_sched, w_team, w_opp])
 
 
-def get_season_luck_indices(league: League, week: int):
-    ''' This function returns an index quantifying how 'lucky' a team was all season long (up to a certain week) '''
-    luck_indices = {team: 0 for team in league.teams}
+def get_season_luck_indices(league: League, week: int) -> Dict[Team, float]:
+    """This function returns an index quantifying how 'lucky' a team was all season long (up to a certain week)"""
+    luck_indices = {team: 0.0 for team in league.teams}
     for wk in range(1, week + 1):
         # Update luck_index for each team
         for team in league.teams:
@@ -179,18 +188,23 @@ def get_season_luck_indices(league: League, week: int):
     return luck_indices
 
 
-def sort_lineups_by_func(league: League, week: int, func, box_scores=None, **kwargs):
-    ''' 
-    Sorts league teams according to function. 
-    Values are sorted ascending. 
+def sort_lineups_by_func(
+    league: League, week: int, func, box_scores=None, **kwargs
+) -> List[Team]:
+    """
+    Sorts league teams according to function.
+    Values are sorted ascending.
     DOES NOT ACCOUNT FOR TIES
-    '''
+    """
     if box_scores is None:
         box_scores = league.box_scores(week)
-    return sorted(league.teams, key=lambda x: func(league, get_lineup(league, x, week, box_scores), **kwargs))
+    return sorted(
+        league.teams,
+        key=lambda x: func(league, get_lineup(league, x, week, box_scores), **kwargs),
+    )
 
 
-def get_leader_str(stats_list: list, high_first: bool = True):
+def get_leader_str(stats_list: list, high_first: bool = True) -> Tuple[float, str]:
     """Return a list of team owners who have the best stat,
     given a list of teams and stat values.
 
@@ -204,8 +218,7 @@ def get_leader_str(stats_list: list, high_first: bool = True):
     """
 
     # Sort list
-    sorted_stats_list = sorted(
-        stats_list, key=lambda x: x[1], reverse=high_first)
+    sorted_stats_list = sorted(stats_list, key=lambda x: x[1], reverse=high_first)
 
     # Check if there is no tie
     if sorted_stats_list[0][1] != sorted_stats_list[1][1]:
@@ -215,13 +228,19 @@ def get_leader_str(stats_list: list, high_first: bool = True):
     else:
         leaders = [sorted_stats_list[0][0]]
         for i in range(1, len(sorted_stats_list)):
+            # If the stat value is the same, add the owner's name to leaders
             if sorted_stats_list[i][1] == sorted_stats_list[i - 1][1]:
                 leaders.append(sorted_stats_list[i][0])
+
+            # If not, end the loop
             else:
-                return sorted_stats_list[0][1], "{}".format(", ".join(leaders))
+                break
+
+        # Return the stat value and the leaders string
+        return sorted_stats_list[0][1], "{}".format(", ".join(leaders))
 
 
-def make_ordinal(n):
+def make_ordinal(n: int) -> str:
     """
     Convert an integer into its ordinal representation::
         make_ordinal(3)   => '3rd'
@@ -237,8 +256,14 @@ def make_ordinal(n):
 
 
 def print_records(
-    df: pd.DataFrame, year: int, week: int, stat: str, stat_units: str, high_first: bool = True, n: int = 5
-):
+    df: pd.DataFrame,
+    year: int,
+    week: int,
+    stat: str,
+    stat_units: str,
+    high_first: bool = True,
+    n: int = 5,
+) -> None:
     """Print out any records.
 
     Args:
@@ -251,7 +276,8 @@ def print_records(
         n (int): How far down the record list to check (defaults to 5)
     """
     records_df = get_any_records(
-        df=df, year=year, week=week, stat=stat, high_first=high_first, n=n)
+        df=df, year=year, week=week, stat=stat, high_first=high_first, n=n
+    )
 
     # Print out any records
     superlative = "highest" if high_first else "lowest"
@@ -269,8 +295,14 @@ def print_records(
 
 
 def print_franchise_records(
-    df: pd.DataFrame, year: int, week: int, stat: str, stat_units: str, high_first: bool = True, n: int = 1
-):
+    df: pd.DataFrame,
+    year: int,
+    week: int,
+    stat: str,
+    stat_units: str,
+    high_first: bool = True,
+    n: int = 1,
+) -> None:
     """Print out any franchise records.
 
     Args:
@@ -285,8 +317,9 @@ def print_franchise_records(
     # Get a list of all active teams that have been in the league for 2+ years
     current_teams = filter_df(df, year=df.year.max()).team_owner.unique()
     list_of_teams = df.groupby(["team_owner"]).nunique()
-    list_of_teams = list_of_teams[(list_of_teams.year > 1) &
-                                  list_of_teams.index.isin(current_teams)].index.tolist()
+    list_of_teams = list_of_teams[
+        (list_of_teams.year > 1) & list_of_teams.index.isin(current_teams)
+    ].index.tolist()
 
     for team_owner in list_of_teams:
         # Get all rows for the given team
@@ -294,7 +327,8 @@ def print_franchise_records(
 
         # Get any records for that team
         records_df = get_any_records(
-            df=team_df, year=year, week=week, stat=stat, high_first=high_first, n=n)
+            df=team_df, year=year, week=week, stat=stat, high_first=high_first, n=n
+        )
 
         # Print out any records
         superlative = "highest" if high_first else "lowest"
@@ -311,7 +345,7 @@ def print_franchise_records(
             )
 
 
-def get_wins_leaderboard(df: pd.DataFrame):
+def get_wins_leaderboard(df: pd.DataFrame) -> pd.DataFrame:
     """Get the all time wins leaderboard for the league.
 
     Args:
@@ -331,7 +365,7 @@ def get_wins_leaderboard(df: pd.DataFrame):
     return leaderboard_df
 
 
-def get_losses_leaderboard(df: pd.DataFrame):
+def get_losses_leaderboard(df: pd.DataFrame) -> pd.DataFrame:
     """Get the all time losses leaderboard for the league.
 
     Args:
@@ -353,8 +387,8 @@ def get_losses_leaderboard(df: pd.DataFrame):
 
 def leaderboard_change(
     df: pd.DataFrame, leaderboard_func: Callable = get_wins_leaderboard
-):
-    """This function takes a leaderboard function and calculates 
+) -> pd.DataFrame:
+    """This function takes a leaderboard function and calculates
     the change of that leaderboard from the previous week to the current week.
 
     I.e.: If the get_wins_leaderboard() function is passed in,
@@ -398,7 +432,7 @@ def leaderboard_change(
     return leaderboard_change
 
 
-def get_team(league: League, team_owner: str):
+def get_team(league: League, team_owner: str) -> Team:
     """Get the Team object corresponding to the team_owner
 
     Args:
@@ -418,7 +452,7 @@ def get_team(league: League, team_owner: str):
     raise Exception(f"Owner {team_owner} not in league.")
 
 
-def get_division_standings(league: League):
+def get_division_standings(league: League) -> Dict[str, List[Team]]:
     standings = {}
     for division in league.settings.division_map.values():
         teams = [team for team in league.teams if team.division_name == division]
@@ -426,9 +460,10 @@ def get_division_standings(league: League):
     return standings
 
 
-def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2: str):
-    gow_df = filter_df(df, team_owner=owner1,
-                       opp_owner=owner2, meaningful=True)
+def game_of_the_week_stats(
+    league: League, df: pd.DataFrame, owner1: str, owner2: str
+) -> None:
+    gow_df = filter_df(df, team_owner=owner1, opp_owner=owner2, meaningful=True)
     gow_df.sort_values(["year", "week"], ascending=True, inplace=True)
 
     print(
@@ -441,8 +476,7 @@ def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2
             owner2, len(filter_df(gow_df, outcome="lose")), len(gow_df)
         )
     )
-    print("There have been {} ties".format(
-        len(filter_df(gow_df, outcome="tie"))))
+    print("There have been {} ties".format(len(filter_df(gow_df, outcome="tie"))))
 
     last_matchup = gow_df.iloc[-1]
     print(
@@ -498,7 +532,7 @@ def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2
     )
 
 
-def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
+def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
 
     df = filter_df(df, meaningful=True)
 
@@ -512,126 +546,262 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
 
     # Good awards
     print("League-wide POSITIVE stats\n--------------------------")
-    print_records(df, year=year, week=week,
-                  stat='team_score', stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week,
-                  stat='team_score_adj', stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week, stat='score_dif',
-                  stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week,
-                  stat='lineup_efficiency', stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week, stat='best_trio',
-                  stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week, stat='QB_pts',
-                  stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week, stat='RB_pts',
-                  stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week, stat='WR_pts',
-                  stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week, stat='TE_pts',
-                  stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week,
-                  stat='RB_WR_TE_pts', stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week, stat='D_ST_pts',
-                  stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week, stat='K_pts',
-                  stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week,
-                  stat='bench_points', stat_units='pts', high_first=True)
-    print_records(df, year=year, week=week, stat='streak',
-                  stat_units='pts', high_first=True)
+    print_records(
+        df, year=year, week=week, stat="team_score", stat_units="pts", high_first=True
+    )
+    print_records(
+        df,
+        year=year,
+        week=week,
+        stat="team_score_adj",
+        stat_units="pts",
+        high_first=True,
+    )
+    print_records(
+        df, year=year, week=week, stat="score_dif", stat_units="pts", high_first=True
+    )
+    print_records(
+        df,
+        year=year,
+        week=week,
+        stat="lineup_efficiency",
+        stat_units="pts",
+        high_first=True,
+    )
+    print_records(
+        df, year=year, week=week, stat="best_trio", stat_units="pts", high_first=True
+    )
+    print_records(
+        df, year=year, week=week, stat="QB_pts", stat_units="pts", high_first=True
+    )
+    print_records(
+        df, year=year, week=week, stat="RB_pts", stat_units="pts", high_first=True
+    )
+    print_records(
+        df, year=year, week=week, stat="WR_pts", stat_units="pts", high_first=True
+    )
+    print_records(
+        df, year=year, week=week, stat="TE_pts", stat_units="pts", high_first=True
+    )
+    print_records(
+        df, year=year, week=week, stat="RB_WR_TE_pts", stat_units="pts", high_first=True
+    )
+    print_records(
+        df, year=year, week=week, stat="D_ST_pts", stat_units="pts", high_first=True
+    )
+    print_records(
+        df, year=year, week=week, stat="K_pts", stat_units="pts", high_first=True
+    )
+    print_records(
+        df, year=year, week=week, stat="bench_points", stat_units="pts", high_first=True
+    )
+    print_records(
+        df, year=year, week=week, stat="streak", stat_units="pts", high_first=True
+    )
 
     # Good franchise awards
     print("\n\nFranchise POSITIVE stats\n--------------------------")
-    print_franchise_records(df, year=year, week=week,
-                            stat='team_score', stat_units='pts', high_first=True, n=3)
-    print_franchise_records(df, year=year, week=week,
-                            stat='team_score_adj', stat_units='pts', high_first=True, n=3)
-    print_franchise_records(df, year=year, week=week, stat='score_dif',
-                            stat_units='pts', high_first=True, n=3)
-    print_franchise_records(df, year=year, week=week,
-                            stat='lineup_efficiency', stat_units='pts', high_first=True)
-    print_franchise_records(df, year=year, week=week, stat='best_trio',
-                            stat_units='pts', high_first=True)
-    print_franchise_records(df, year=year, week=week, stat='QB_pts',
-                            stat_units='pts', high_first=True)
-    print_franchise_records(df, year=year, week=week, stat='RB_pts',
-                            stat_units='pts', high_first=True)
-    print_franchise_records(df, year=year, week=week, stat='WR_pts',
-                            stat_units='pts', high_first=True)
-    print_franchise_records(df, year=year, week=week, stat='TE_pts',
-                            stat_units='pts', high_first=True)
-    print_franchise_records(df, year=year, week=week,
-                            stat='RB_WR_TE_pts', stat_units='pts', high_first=True)
-    print_franchise_records(df, year=year, week=week, stat='D_ST_pts',
-                            stat_units='pts', high_first=True)
-    print_franchise_records(df, year=year, week=week, stat='K_pts',
-                            stat_units='pts', high_first=True)
-    print_franchise_records(df, year=year, week=week,
-                            stat='bench_points', stat_units='pts', high_first=True)
-    print_franchise_records(df, year=year, week=week, stat='streak',
-                            stat_units='pts', high_first=True, n=3)
+    print_franchise_records(
+        df,
+        year=year,
+        week=week,
+        stat="team_score",
+        stat_units="pts",
+        high_first=True,
+        n=3,
+    )
+    print_franchise_records(
+        df,
+        year=year,
+        week=week,
+        stat="team_score_adj",
+        stat_units="pts",
+        high_first=True,
+        n=3,
+    )
+    print_franchise_records(
+        df,
+        year=year,
+        week=week,
+        stat="score_dif",
+        stat_units="pts",
+        high_first=True,
+        n=3,
+    )
+    print_franchise_records(
+        df,
+        year=year,
+        week=week,
+        stat="lineup_efficiency",
+        stat_units="pts",
+        high_first=True,
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="best_trio", stat_units="pts", high_first=True
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="QB_pts", stat_units="pts", high_first=True
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="RB_pts", stat_units="pts", high_first=True
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="WR_pts", stat_units="pts", high_first=True
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="TE_pts", stat_units="pts", high_first=True
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="RB_WR_TE_pts", stat_units="pts", high_first=True
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="D_ST_pts", stat_units="pts", high_first=True
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="K_pts", stat_units="pts", high_first=True
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="bench_points", stat_units="pts", high_first=True
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="streak", stat_units="pts", high_first=True, n=3
+    )
 
     # Bad awards
     print("\n\nLeague-wide NEGATIVE stats\n--------------------------")
-    print_records(df, year=year, week=week,
-                  stat='team_score', stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week,
-                  stat='team_score_adj', stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week,
-                  stat='lineup_efficiency', stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week, stat='best_trio',
-                  stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week, stat='QB_pts',
-                  stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week, stat='RB_pts',
-                  stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week, stat='WR_pts',
-                  stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week, stat='TE_pts',
-                  stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week,
-                  stat='RB_WR_TE_pts', stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week, stat='D_ST_pts',
-                  stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week, stat='K_pts',
-                  stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week,
-                  stat='bench_points', stat_units='pts', high_first=False)
-    print_records(df, year=year, week=week, stat='streak',
-                  stat_units='pts', high_first=False)
+    print_records(
+        df, year=year, week=week, stat="team_score", stat_units="pts", high_first=False
+    )
+    print_records(
+        df,
+        year=year,
+        week=week,
+        stat="team_score_adj",
+        stat_units="pts",
+        high_first=False,
+    )
+    print_records(
+        df,
+        year=year,
+        week=week,
+        stat="lineup_efficiency",
+        stat_units="pts",
+        high_first=False,
+    )
+    print_records(
+        df, year=year, week=week, stat="best_trio", stat_units="pts", high_first=False
+    )
+    print_records(
+        df, year=year, week=week, stat="QB_pts", stat_units="pts", high_first=False
+    )
+    print_records(
+        df, year=year, week=week, stat="RB_pts", stat_units="pts", high_first=False
+    )
+    print_records(
+        df, year=year, week=week, stat="WR_pts", stat_units="pts", high_first=False
+    )
+    print_records(
+        df, year=year, week=week, stat="TE_pts", stat_units="pts", high_first=False
+    )
+    print_records(
+        df,
+        year=year,
+        week=week,
+        stat="RB_WR_TE_pts",
+        stat_units="pts",
+        high_first=False,
+    )
+    print_records(
+        df, year=year, week=week, stat="D_ST_pts", stat_units="pts", high_first=False
+    )
+    print_records(
+        df, year=year, week=week, stat="K_pts", stat_units="pts", high_first=False
+    )
+    print_records(
+        df,
+        year=year,
+        week=week,
+        stat="bench_points",
+        stat_units="pts",
+        high_first=False,
+    )
+    print_records(
+        df, year=year, week=week, stat="streak", stat_units="pts", high_first=False
+    )
 
     # Bad franchise records
     print("\n\nFranchise NEGATIVE stats\n--------------------------")
-    print_franchise_records(df, year=year, week=week,
-                            stat='team_score', stat_units='pts', high_first=False, n=3)
-    print_franchise_records(df, year=year, week=week,
-                            stat='team_score_adj', stat_units='pts', high_first=False, n=3)
-    print_franchise_records(df, year=year, week=week,
-                            stat='lineup_efficiency', stat_units='pts', high_first=False)
-    print_franchise_records(df, year=year, week=week, stat='best_trio',
-                            stat_units='pts', high_first=False)
-    print_franchise_records(df, year=year, week=week, stat='QB_pts',
-                            stat_units='pts', high_first=False)
-    print_franchise_records(df, year=year, week=week, stat='RB_pts',
-                            stat_units='pts', high_first=False)
-    print_franchise_records(df, year=year, week=week, stat='WR_pts',
-                            stat_units='pts', high_first=False)
-    print_franchise_records(df, year=year, week=week, stat='TE_pts',
-                            stat_units='pts', high_first=False)
-    print_franchise_records(df, year=year, week=week,
-                            stat='RB_WR_TE_pts', stat_units='pts', high_first=False)
-    print_franchise_records(df, year=year, week=week, stat='D_ST_pts',
-                            stat_units='pts', high_first=False)
-    print_franchise_records(df, year=year, week=week, stat='K_pts',
-                            stat_units='pts', high_first=False)
-    print_franchise_records(df, year=year, week=week,
-                            stat='bench_points', stat_units='pts', high_first=False)
-    print_franchise_records(df, year=year, week=week, stat='streak',
-                            stat_units='pts', high_first=False, n=3)
+    print_franchise_records(
+        df,
+        year=year,
+        week=week,
+        stat="team_score",
+        stat_units="pts",
+        high_first=False,
+        n=3,
+    )
+    print_franchise_records(
+        df,
+        year=year,
+        week=week,
+        stat="team_score_adj",
+        stat_units="pts",
+        high_first=False,
+        n=3,
+    )
+    print_franchise_records(
+        df,
+        year=year,
+        week=week,
+        stat="lineup_efficiency",
+        stat_units="pts",
+        high_first=False,
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="best_trio", stat_units="pts", high_first=False
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="QB_pts", stat_units="pts", high_first=False
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="RB_pts", stat_units="pts", high_first=False
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="WR_pts", stat_units="pts", high_first=False
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="TE_pts", stat_units="pts", high_first=False
+    )
+    print_franchise_records(
+        df,
+        year=year,
+        week=week,
+        stat="RB_WR_TE_pts",
+        stat_units="pts",
+        high_first=False,
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="D_ST_pts", stat_units="pts", high_first=False
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="K_pts", stat_units="pts", high_first=False
+    )
+    print_franchise_records(
+        df,
+        year=year,
+        week=week,
+        stat="bench_points",
+        stat_units="pts",
+        high_first=False,
+    )
+    print_franchise_records(
+        df, year=year, week=week, stat="streak", stat_units="pts", high_first=False, n=3
+    )
 
 
-def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
+def season_stats_analysis(
+    league: League, df: pd.DataFrame, week: Optional[int] = None
+) -> None:
     """Display season-bests and -worsts.
 
     Args:
@@ -644,13 +814,12 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
 
     df = filter_df(df, meaningful=True)
     df_current_year = filter_df(df, year=league.year)
-    df_current_week = filter_df(
-        df, year=league.year, week=league.current_week - 1)
+    df_current_week = filter_df(df, year=league.year, week=league.current_week - 1)
 
     print("----------------------------------------------------------------")
     print(
         "|             Season {:2.0f} Analysis (through Week {:2.0f})           |".format(
-            league.year,  week
+            league.year, week
         )
     )
     print("----------------------------------------------------------------")
@@ -664,8 +833,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Highest single game score          - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year[["team_owner", "team_score"]
-                                ].values, high_first=True
+                df_current_year[["team_owner", "team_score"]].values, high_first=True
             )
         )
     )
@@ -682,16 +850,14 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Longest active win streak          - {:.0f} gms - {}".format(
             *get_leader_str(
-                df_current_week[["team_owner", "streak"]
-                                ].values, high_first=True
+                df_current_week[["team_owner", "streak"]].values, high_first=True
             )
         )
     )
     print(
         "Longest win streak this season     - {:.0f} gms - {}".format(
             *get_leader_str(
-                df_current_year[["team_owner", "streak"]
-                                ].values, high_first=True
+                df_current_year[["team_owner", "streak"]].values, high_first=True
             )
         )
     )
@@ -706,8 +872,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Lowest single game score          - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year[["team_owner", "team_score"]
-                                ].values, high_first=False
+                df_current_year[["team_owner", "team_score"]].values, high_first=False
             )
         )
     )
@@ -725,16 +890,14 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Longest active loss streak        - {:.0f} gms - {}".format(
             *get_leader_str(
-                df_current_week[["team_owner", "streak"]
-                                ].values, high_first=False
+                df_current_week[["team_owner", "streak"]].values, high_first=False
             )
         )
     )
     print(
         "Longest loss streak this season   - {:.0f} gms - {}".format(
             *get_leader_str(
-                df_current_year[["team_owner", "streak"]
-                                ].values, high_first=False
+                df_current_year[["team_owner", "streak"]].values, high_first=False
             )
         )
     )
@@ -743,8 +906,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Most QB pts this season           - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year.groupby("team_owner").sum()[
-                    "QB_pts"].to_dict().items(),
+                df_current_year.groupby("team_owner").sum()["QB_pts"].to_dict().items(),
                 high_first=True,
             )
         )
@@ -752,8 +914,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Most RB pts this season           - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year.groupby("team_owner").sum()[
-                    "RB_pts"].to_dict().items(),
+                df_current_year.groupby("team_owner").sum()["RB_pts"].to_dict().items(),
                 high_first=True,
             )
         )
@@ -761,8 +922,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Most WR pts this season           - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year.groupby("team_owner").sum()[
-                    "WR_pts"].to_dict().items(),
+                df_current_year.groupby("team_owner").sum()["WR_pts"].to_dict().items(),
                 high_first=True,
             )
         )
@@ -770,8 +930,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Most TE pts this season           - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year.groupby("team_owner").sum()[
-                    "TE_pts"].to_dict().items(),
+                df_current_year.groupby("team_owner").sum()["TE_pts"].to_dict().items(),
                 high_first=True,
             )
         )
@@ -801,8 +960,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Most K pts this season            - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year.groupby("team_owner").sum()[
-                    "K_pts"].to_dict().items(),
+                df_current_year.groupby("team_owner").sum()["K_pts"].to_dict().items(),
                 high_first=True,
             )
         )
@@ -812,8 +970,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Fewest QB pts this season         - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year.groupby("team_owner").sum()[
-                    "QB_pts"].to_dict().items(),
+                df_current_year.groupby("team_owner").sum()["QB_pts"].to_dict().items(),
                 high_first=False,
             )
         )
@@ -821,8 +978,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Fewest RB pts this season         - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year.groupby("team_owner").sum()[
-                    "RB_pts"].to_dict().items(),
+                df_current_year.groupby("team_owner").sum()["RB_pts"].to_dict().items(),
                 high_first=False,
             )
         )
@@ -830,8 +986,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Fewest WR pts this season         - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year.groupby("team_owner").sum()[
-                    "WR_pts"].to_dict().items(),
+                df_current_year.groupby("team_owner").sum()["WR_pts"].to_dict().items(),
                 high_first=False,
             )
         )
@@ -839,8 +994,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Fewest TE pts this season         - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year.groupby("team_owner").sum()[
-                    "TE_pts"].to_dict().items(),
+                df_current_year.groupby("team_owner").sum()["TE_pts"].to_dict().items(),
                 high_first=False,
             )
         )
@@ -870,8 +1024,7 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
     print(
         "Fewest K pts this season          - {:.0f} pts - {}".format(
             *get_leader_str(
-                df_current_year.groupby("team_owner").sum()[
-                    "K_pts"].to_dict().items(),
+                df_current_year.groupby("team_owner").sum()["K_pts"].to_dict().items(),
                 high_first=False,
             )
         )
