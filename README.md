@@ -5,15 +5,14 @@ Link to [Heroku website](https://doritostats.herokuapp.com/fantasy_stats/)
 This project aims to make ESPN Fantasy Football statistics easily available.
 With the introduction of version 3 of the ESPN's API, this structure creates leagues, teams, and player classes that allow for advanced data analytics and the potential for many new features to be added.
 
-I am new to the Git interface, but any recommendations and pull requests are welcome.
-
 This project was inspired and based off of [rbarton65/espnff](https://github.com/rbarton65/espnff)
 
 Additional help/ideas were received from [cwendt94/ff-espn-api](https://github.com/cwendt94/ff-espn-api)
 
 ## Table of Contents
 
-- Fetching league
+- [Dorito Stats Website](##doritoStatsWebsite)
+- Fetching leagues
   - [Fetch public leagues](##fetchpublicleagues)
   - [Fetch private leagues](##fetchprivateleagues)
 - Viewing league information
@@ -26,103 +25,78 @@ Additional help/ideas were received from [cwendt94/ff-espn-api](https://github.c
   - [Luck Index](##luckindex)
   - [Projected Standings](##projectedstandings)
 
+<a name="doritoStatsWebsite"></a>
+
+## Dorito Stats Website
+
+The main website for this project is [here](https://doritostats.herokuapp.com/fantasy_stats/). It is a django-based web application, hosted by Heroku, and open to the public to use. Go add your own league for the simplest access to stats!
+
 <a name="fetchpublicleagues"></a>
 
 ## Fetch public leagues
 
-In the main.py file, type:
+If your league is public, you don't need any credentials to pull data. The `fetch_league()` function will create a `League` object for your league that is populated with information about your league.
 
 ```python
+>>> from src.doritostats.fetch_utils import fetch_league
 >>> league_id = 1234
->>> year = 2019
->>> league = League(league_id, year)
-[BUILDING LEAGUE] Fetching league...
-[BUILDING LEAGUE] League authenticated!
-[BUILDING LEAGUE] Gathering team information...
-[BUILDING LEAGUE] Gathering matchup data...
+>>> year = 2022
+>>> league = fetch_league(league_id, year)
+[BUILDING LEAGUE] Fetching league data...
 [BUILDING LEAGUE] Gathering roster settings information...
-[BUILDING LEAGUE] Current Week: 12
-[BUILDING LEAGUE] Building teams...
-[BUILDING LEAGUE] Building schedule...
-[BUILDING LEAGUE] 	Building week 1/12...
-[BUILDING LEAGUE] 	Building week 2/12...
-[BUILDING LEAGUE] 	Building week 3/12...
-[BUILDING LEAGUE] 	Building week 4/12...
-[BUILDING LEAGUE] 	Building week 5/12...
-[BUILDING LEAGUE] 	Building week 6/12...
-[BUILDING LEAGUE] 	Building week 7/12...
-[BUILDING LEAGUE] 	Building week 8/12...
-[BUILDING LEAGUE] 	Building week 9/12...
-[BUILDING LEAGUE] 	Building week 10/12...
-[BUILDING LEAGUE] 	Building week 11/12...
-[BUILDING LEAGUE] 	Building week 12/12...
-[BUILDING LEAGUE] League successfully built!
-[BUILDING LEAGUE] League credentials saved.
+[BUILDING LEAGUE] Loading current league details...
 ```
 
 <a name="fetchprivateleagues"></a>
 
 ## Fetch private leagues
 
-By typing your script into the main.py file:
+If your league is private, you will need to get your `SWID` and `espn_s2` cookies from [espn.com](https://www.espn.com/fantasy/). The `fetch_league()` function will create a `League` object for your league that is populated with information about your league.
 
 ```python
 >>> league_id = 1234
->>> year = 2020
->>> league = League(league_id, year)
-[BUILDING LEAGUE] Fetching league...
-[BUILDING LEAGUE] League is PRIVATE. Attempting to fetch credentials...
-[BUILDING LEAGUE] Fetching league...
-[FETCHING CREDENTIALS] All users:  ['desid']
-[FETCHING CREDENTIALS] Using user: desid
-[FETCHING CREDENTIALS] Locating default Chrome profile...
-[FETCHING CREDENTIALS] Instantiating Chrome browser...
-[FETCHING CREDENTIALS] Login detected.
-[FETCHING CREDENTIALS] ESPN Credenitals:
-[FETCHING CREDENTIALS] ---------------------
-[FETCHING CREDENTIALS] swid: 55B***...
-[FETCHING CREDENTIALS] espn_s2: AECW***...
-[BUILDING LEAGUE] Fetching league...
-[BUILDING LEAGUE] League authenticated!
-[BUILDING LEAGUE] Gathering team information...
-[BUILDING LEAGUE] Gathering matchup data...
+>>> year      = 2020
+>>> swid      = "55B70875-3AS..."
+>>> espn_s2   = "AEApIq..."
+>>>
+>>> league = fetch_league(league_id, year, swid, espn_s2)
+[BUILDING LEAGUE] Fetching league data...
 [BUILDING LEAGUE] Gathering roster settings information...
-[BUILDING LEAGUE] Current Week: 12
-[BUILDING LEAGUE] Building teams...
-[BUILDING LEAGUE] Building schedule...
-[BUILDING LEAGUE] 	Building week 1/12...
-[BUILDING LEAGUE] 	Building week 2/12...
-[BUILDING LEAGUE] 	Building week 3/12...
-[BUILDING LEAGUE] 	Building week 4/12...
-[BUILDING LEAGUE] 	Building week 5/12...
-[BUILDING LEAGUE] 	Building week 6/12...
-[BUILDING LEAGUE] 	Building week 7/12...
-[BUILDING LEAGUE] 	Building week 8/12...
-[BUILDING LEAGUE] 	Building week 9/12...
-[BUILDING LEAGUE] 	Building week 10/12...
-[BUILDING LEAGUE] 	Building week 11/12...
-[BUILDING LEAGUE] 	Building week 12/12...
-[BUILDING LEAGUE] League successfully built!
-[BUILDING LEAGUE] League credentials saved.
+[BUILDING LEAGUE] Loading current league details...
 ```
 
 <a name="viewleagueinformation"></a>
 
 ## View league information
 
+You can view high level information about a league using the [`League`](https://github.com/cwendt94/espn-api/blob/3bffd8b5f2fee3360c1a039221f9f5fedc127ac5/espn_api/football/league.py#L17) object returned by `fetch_league`. Info that can be found includes:
+
 ```python
+>>> league.name
+'La Lega dei Cugini'
 >>> league.year
-2019
->>> league.currentWeek
-2
->>> league.regSeasonWeeks
-12
->>> self.numTeams
+2022
+>>> league.current_week
 8
->>> league.teamNames
-{1: ['John Smith', 'T.Y. Very Much'], 2: ['Jane Doe', 'Home Sweet Mahomes'], ... teamId: [owner name, team name]}
->>> league.teams
-{1: Team(T.Y. Very Much), 2: Team(Home Sweet Mahomes), ... teamId: Team(Team n Name)}
+```
+
+To get details about the league's settings, there is a [`Settings`](https://github.com/cwendt94/espn-api/blob/3bffd8b5f2fee3360c1a039221f9f5fedc127ac5/espn_api/base_settings.py#L1) object. Info that can be found includes:
+
+```python
+>>> league.settings
+Settings(La Lega dei Cugini)
+>>> league.settings.reg_season_count
+14
+>>> league.settings.team_count
+10
+>>> league.settings.playoff_team_count
+6
+>>> league.settings.team_count
+10
+>>> datetime.datetime.fromtimestamp(league.settings.trade_deadline / 1000).ctime()
+'Wed Nov 30 12:00:00 2022'
+>>> league.settings.division_map
+{0: 'East division', 1: 'West division'}
 ```
 
 <a name="viewteaminformation"></a>
@@ -130,29 +104,53 @@ By typing your script into the main.py file:
 ## View team information
 
 ```python
+>>> league.teams
+[Team(Harris Styles),
+ Team(Dakstreet Boys),
+ Team(Tuck Me Into Bed),
+ ...
+]
+
 >>> team = league.teams[1]
-Team(T.Y. Very Much')
+Team(Harris Styles)
 >>> team.owner
-'John Smith'
->>> team.teamName
-'T.Y. Very Much'
->>> team.abbrev
-'TYVM'
->>> team.wins
-2
->>> team.losses
-0
+'Desi Pilla'
+>>> (team.team_name, team.abbrev)
+('Harris Styles', 'HS')
+>>> (team.division_id, team.division_name)
+(0, 'East division)
+>>> (team.wins, team.losses, team.ties)
+(5, 2, 0)
 >>> team.schedule
-{1: Team(Home Sweet Mahomes), 2: Team(Can you Diggs this?), .... weekNum: Team(opponentName) }
+[Team(Herbert Hijinks),          # Week 1 opponent
+ Team(The Return of The Quads),  # Week 2 opponent
+ Team(Dakstreet Boys),           # Week 3 opponent
+ ...
+]
 >>> team.scores
-{1: 163.7, 2: 124.2, ... weekNum: score }
+[105.5, 118.86, 123.06, ... ]
+>>> team.outcomes
+['L', 'W', 'W', ... ]
+>>> (team.points_for, team.points_against)
+(804, 689)
+>>>( team.acquisitions, team.drops, team.trades)
+(15, 15, 3)
+>>> team.playoff_pct
+82.5
+>>> (team.streak_length, team.streak_type)
+(3, 'WIN')
 ```
 
-Under team.rosters, each value in the dictionary contains a list of player objects that relate to the team's roster for the given week.
+`team.roster` contains a list of [`Player`](https://github.com/cwendt94/espn-api/blob/3bffd8b5f2fee3360c1a039221f9f5fedc127ac5/espn_api/football/player.py#L4) objects for each player on the team's roster for the current week.
 
 ```python
->>> team.rosters
-{1: [Player(Ezekiel Elliot), Player(Kyler Murray), .....], 2: [Player(Todd Gurley), Player(Kyler Murray) .... ]
+>>> team.roster
+[Player(Najee Harris),
+ Player(Travis Kelce),
+ Player(Keenan Allen),
+ Player(Travis Etienne Jr.),
+ ...
+]
 ```
 
 <a name="viewplayerinformation"></a>
