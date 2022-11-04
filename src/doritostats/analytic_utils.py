@@ -3,8 +3,7 @@ import pandas as pd
 from copy import copy
 from typing import Callable
 from espn_api.football import League, Team
-from src.doritostats.filter_utils import (
-    filter_df,
+from doritostats.filter_utils import (
     get_any_records,
     exclude_most_recent_week
 )
@@ -283,14 +282,14 @@ def print_franchise_records(
         n (int): How far down the record list to check (defaults to 5)
     """
     # Get a list of all active teams that have been in the league for 2+ years
-    current_teams = filter_df(df, year=df.year.max()).team_owner.unique()
+    current_teams = df.query(f"year == {df.year.max()}").team_owner.unique()
     list_of_teams = df.groupby(["team_owner"]).nunique()
     list_of_teams = list_of_teams[(list_of_teams.year > 1) &
                                   list_of_teams.index.isin(current_teams)].index.tolist()
 
     for team_owner in list_of_teams:
         # Get all rows for the given team
-        team_df = filter_df(df, team_owner=team_owner)
+        team_df = df.query(f"team_owner == {team_owner}")
 
         # Get any records for that team
         records_df = get_any_records(
@@ -320,7 +319,7 @@ def get_wins_leaderboard(df: pd.DataFrame):
     Returns:
         pd.Series: Ordered leaderboard by career wins
     """
-    df = filter_df(df, outcome="win", meaningful=True)
+    df = df.query(f"outcome == 'win' & is_meaningful_game == True")
     leaderboard_df = (
         df.groupby("team_owner")
         .count()["outcome"]
@@ -340,7 +339,7 @@ def get_losses_leaderboard(df: pd.DataFrame):
     Returns:
         pd.Series: Ordered leaderboard by career wins
     """
-    df = filter_df(df, outcome="lose", meaningful=True)
+    df = df.query(f"outcome == 'lose' & is_meaningful_game == True")
     leaderboard_df = (
         df.groupby("team_owner")
         .count()["outcome"]
@@ -427,22 +426,22 @@ def get_division_standings(league: League):
 
 
 def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2: str):
-    gow_df = filter_df(df, team_owner=owner1,
-                       opp_owner=owner2, meaningful=True)
+    gow_df = df.query(
+        f"team_owner == {owner1} & opp_owner == {owner2} & is_meaningful_game == True")
     gow_df.sort_values(["year", "week"], ascending=True, inplace=True)
 
     print(
         "{} has won {} / {} matchups.".format(
-            owner1, len(filter_df(gow_df, outcome="win")), len(gow_df)
+            owner1, len(gow_df.query(f"outcome == 'win'")), len(gow_df)
         )
     )
     print(
         "{} has won {} / {} matchups.".format(
-            owner2, len(filter_df(gow_df, outcome="lose")), len(gow_df)
+            owner2, len(gow_df.query(f"outcome == 'lose'")), len(gow_df)
         )
     )
     print("There have been {} ties".format(
-        len(filter_df(gow_df, outcome="tie"))))
+        len(gow_df.query(f"outcome == 'win'"))))
 
     last_matchup = gow_df.iloc[-1]
     print(
@@ -466,9 +465,9 @@ def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2
     print(f"{owner1} has a record of {team1.wins}-{team1.losses}-{team1.ties}")
     print(
         "They have averaged {:.2f} points per game.".format(
-            filter_df(
-                df, team_owner=owner1, year=league.year, meaningful=True
-            ).team_score.mean()
+            df.query(
+                f"team_owner == {owner1} & year == {league.year} & is_meaningful_game == True").team_score.mean()
+
         )
     )
     print(
@@ -483,9 +482,8 @@ def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2
     print(f"{owner2} has a record of {team2.wins}-{team2.losses}-{team2.ties}")
     print(
         "They have averaged {:.2f} points per game.".format(
-            filter_df(
-                df, team_owner=owner2, year=league.year, meaningful=True
-            ).team_score.mean()
+            df.query(
+                f"team_owner == {owner2} & year == {league.year} & is_meaningful_game == True").team_score.mean()
         )
     )
     print(
@@ -500,7 +498,7 @@ def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2
 
 def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
 
-    df = filter_df(df, meaningful=True)
+    df = df.query("is_meaningful_game == True")
 
     print("----------------------------------------------------------------")
     print(
@@ -640,12 +638,12 @@ def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
         week (int, optional): Maximum week to include. Defaults to None.
     """
     if week is None:
-        week = filter_df(df, year=df.year.max()).week.max()
+        week = df.query(f"year == {df.year.max()}").week.max()
 
-    df = filter_df(df, meaningful=True)
-    df_current_year = filter_df(df, year=league.year)
-    df_current_week = filter_df(
-        df, year=league.year, week=league.current_week - 1)
+    df = df.query("is_meaningful_game == True")
+    df_current_year = df.query(f"year == {league.year}")
+    df_current_week = df_current_year.query(
+        f"week == {league.current_week - 1}")
 
     print("----------------------------------------------------------------")
     print(

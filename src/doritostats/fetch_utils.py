@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 import datetime
 from espn_api.football import League, Team, Matchup
-from src.doritostats.analytic_utils import (
+from doritostats.analytic_utils import (
     get_best_trio,
     get_lineup_efficiency,
     avg_slot_score,
