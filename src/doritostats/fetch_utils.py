@@ -215,6 +215,19 @@ def get_stats_by_week(league_id, year, swid, espn_s2):
     df['outcome'] = df.apply(calculate_outcome, axis=1)
     df['is_meaningful_game'] = df.is_regular_season | df.is_playoff
 
+    # More calculated fields
+    df.sort_values(['team_owner', 'week'], inplace=True)
+    df['win'] = (df.outcome == 'win')
+    df['tie'] = (df.outcome == 'tie')
+    df['lose'] = (df.outcome == 'lose')
+    df['season_wins'] = df.groupby(['team_owner']).win.cumsum()
+    df['season_ties'] = df.groupby(['team_owner']).tie.cumsum()
+    df['season_losses'] = df.groupby(['team_owner']).lose.cumsum()
+    df['win_pct'] = df.season_wins / \
+        df[['season_wins', 'season_ties', 'season_losses']].sum(axis=1)
+    df['win_pct_entering_matchup'] = df.groupby(
+        ['team_owner'])['win_pct'].apply(lambda x: x.shift(1)).values
+
     return df
 
 
@@ -327,6 +340,19 @@ def get_stats_by_matchup(league_id: int, year: int, swid: str, espn_s2: str):
 
     df['outcome'] = df.apply(calculate_outcome, axis=1)
     df['is_meaningful_game'] = df.is_regular_season | df.is_playoff
+
+    # More calculated fields
+    df.sort_values(['team_owner', 'week'], inplace=True)
+    df['win'] = (df.outcome == 'win')
+    df['tie'] = (df.outcome == 'tie')
+    df['lose'] = (df.outcome == 'lose')
+    df['season_wins'] = df.groupby(['team_owner']).win.cumsum()
+    df['season_ties'] = df.groupby(['team_owner']).tie.cumsum()
+    df['season_losses'] = df.groupby(['team_owner']).lose.cumsum()
+    df['win_pct'] = df.season_wins / \
+        df[['season_wins', 'season_ties', 'season_losses']].sum(axis=1)
+    df['win_pct_entering_matchup'] = df.groupby(
+        ['team_owner'])['win_pct'].apply(lambda x: x.shift(1)).values
 
     return df
 
