@@ -103,55 +103,6 @@ def simulate_single_season(
     return standings
 
 
-def simulate_season(league: League, n: int = 1000) -> pd.DataFrame:
-    playoff_count = {
-        team.team_id: {"wins": 0, "ties": 0, "losses": 0, "playoff_odds": 0}
-        for team in league.teams
-    }
-
-    for i in range(n):
-        # Simulate a single season
-        final_standings = simulate_single_season(league)
-
-        # Record those who made the playoffs in the simulated season
-        for (team_id, stats) in final_standings.iterrows():
-            playoff_count[team_id]["wins"] += stats["wins"]
-            playoff_count[team_id]["ties"] += stats["ties"]
-            playoff_count[team_id]["losses"] += stats["losses"]
-            playoff_count[team_id]["playoff_odds"] += stats["made_playoffs"]
-
-    # Aggregate playoff odds
-    playoff_odds = (
-        pd.DataFrame.from_dict(
-            data=playoff_count,
-        )
-        .T.reset_index()
-        .rename(columns={"index": "team_id"})
-    )
-    playoff_odds["playoff_odds"] *= 100 / n
-    playoff_odds["playoff_odds"] = playoff_odds["playoff_odds"].clip(
-        lower=0.01, upper=99.99
-    )
-
-    # Get average wins and losses
-    playoff_odds["wins"] /= n
-    playoff_odds["ties"] /= n
-    playoff_odds["losses"] /= n
-
-    # Add team details to the dataframe
-    def get_team_info(s):
-        team = league.teams[int(s.team_id - 1)]
-        s["team_owner"] = team.owner
-        s["team_name"] = team.team_name
-        return s
-
-    playoff_odds = playoff_odds.apply(get_team_info, axis=1)
-
-    return playoff_odds[
-        ["team_owner", "team_name", "wins", "ties", "losses", "playoff_odds"]
-    ].sort_values(by="playoff_odds", ascending=False)
-
-
 def input_outcomes(league: League, standings: pd.DataFrame, week: int) -> pd.DataFrame:
     box_scores = league.box_scores(week)
     for matchup in box_scores:
@@ -175,21 +126,23 @@ def input_outcomes(league: League, standings: pd.DataFrame, week: int) -> pd.Dat
     return standings
 
 
-def simulate_season_what_if(league: League, n: int = 1000) -> pd.DataFrame:
+def simulate_season(
+    league: League, n: int = 1000, what_if: Optional[bool] = False
+) -> pd.DataFrame:
     playoff_count = {
         team.team_id: {"wins": 0, "ties": 0, "losses": 0, "playoff_odds": 0}
         for team in league.teams
     }
 
-    # Simulate a single season
+    # Get current standings
     standings = build_standings(league)
-    standings = input_outcomes(league, standings, league.current_week)
 
-    first_week_to_simulate = (
-        standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1
-    )
+    # Manually enter the outcome of the next week
+    if what_if:
+        standings = input_outcomes(league, standings, league.current_week)
+
     print(
-        f"Simulating from week {first_week_to_simulate} to {league.settings.reg_season_count}"
+        f"""Simulating from week {standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1} to {league.settings.reg_season_count}"""
     )
 
     for i in range(n):
