@@ -8,7 +8,17 @@ from src.doritostats.fetch_utils import PseudoMatchup
 def sort_standings(
     standings: pd.DataFrame, tie_breaker_rule: Optional[str] = None
 ) -> pd.DataFrame:
+    """This function sorts a standings dataframe according to a leagues tiebreaker rules.
+    The standings dataframe will be sorted such that the first n teams are those the qualify for the playoffs
+    and the bottom teams are those that do not qualify.
 
+    Args:
+        standings (pd.DataFrame): Standings dataframe from build_standings()
+        tie_breaker_rule (Optional[str], optional): league.settings.playoff_seed_tie_rule. Defaults to None.
+
+    Returns:
+        pd.DataFrame: Standings dataframe sorted
+    """
     # ASSUME Playoff Seeding Tie Breaker is "Total Points For"
     # since API doesn't seem to get this data correctly
     standings = standings.sort_values(by=["wins", "points_for"], ascending=False)
@@ -17,6 +27,14 @@ def sort_standings(
 
 
 def build_standings(league: League) -> pd.DataFrame:
+    """This function builds the current leaderboard for a league
+
+    Args:
+        league (League): League object
+
+    Returns:
+        pd.DataFrame: standings dataframe
+    """
     standings = pd.DataFrame()
     standings["team_id"] = [team.team_id for team in league.teams]
     standings["team_name"] = [team.team_name for team in league.teams]
@@ -29,7 +47,18 @@ def build_standings(league: League) -> pd.DataFrame:
     return sort_standings(standings)
 
 
-def get_score_prediction(team: Team) -> float:
+def simulate_score(team: Team) -> float:
+    """Generate a team score.
+    The score is randomly selected from a normal distribution defined by:
+        mean = average score over the last 6 weeks
+        std = standard deviation over the entire season * 2
+
+    Args:
+        team (Team): Team to gennerate score for
+
+    Returns:
+        float: predicted score
+    """
     scores = np.array(team.scores)
     scores = scores[scores > 0]
     return np.random.normal(
@@ -40,9 +69,21 @@ def get_score_prediction(team: Team) -> float:
 def simulate_matchup(
     matchup: Matchup,
 ) -> tuple[tuple[int, int, int, float], tuple[int, int, int, float]]:
+    """Simulate a matchup between two teams by randomly generating scores based on preivous team performance.
 
-    home_score = get_score_prediction(matchup.home_team)
-    away_score = get_score_prediction(matchup.away_team)
+    Args:
+        matchup (Matchup): the mathcup to simulate the outcome of
+
+    Returns:
+        tuple[tuple[int, int, int, float], tuple[int, int, int, float]]:
+            * (home_outcome, away_outcome) where:
+                outcome = (win?, tie?, loss?, score)
+            * if the home team won 100 - 90, the result would be:
+                ((1, 0, 0, 100), (0, 0, 1, 90))
+
+    """
+    home_score = simulate_score(matchup.home_team)
+    away_score = simulate_score(matchup.away_team)
     if home_score > away_score:
         return ((1, 0, 0, home_score), (0, 0, 1, away_score))
     elif away_score > home_score:
@@ -54,6 +95,16 @@ def simulate_matchup(
 def simulate_week(
     matchups: List[PseudoMatchup], standings: pd.DataFrame
 ) -> pd.DataFrame:
+    """Simulate all matchups in a week.
+    The standings dataframe is then updated to reflect the outcome of the simulated matchups.
+
+    Args:
+        matchups (List[PseudoMatchup]): List of matchups to simulate
+        standings (pd.DataFrame): Standings dataframe
+
+    Returns:
+        pd.DataFrame: Updated standings dataframe
+    """
 
     # Predict each matchup and update the standings
     for matchup in matchups:
@@ -74,6 +125,24 @@ def simulate_week(
 def simulate_single_season(
     league: League, standings: Optional[pd.DataFrame] = None
 ) -> pd.DataFrame:
+    """This function simulates a season.
+    If no standings dataframe is passed in, one will be generated based on the current state of the league.
+    If an initialized standings dataframe is passed in, it will be used.
+
+    The simulation will begin for all matchups AFTER the state of the standings.
+    I.e., if the standings dataframe reflects the league standings through Week 9, then this function
+    will simulate the remaining weeks (Week 10 through the end of the regular season).
+
+    A column `made_playoffs` will be appended to the standings dataframe at the end
+    of the simulation that indicates whether or not the team qualified for the playoffs.
+
+    Args:
+        league (League): League
+        standings (Optional[pd.DataFrame]): Initialized standings dataframe. Defaults to None.
+
+    Returns:
+        pd.DataFrame: Simulated standings dataframe
+    """
 
     if standings is None:
         # Get current standings
@@ -104,6 +173,25 @@ def simulate_single_season(
 
 
 def input_outcomes(league: League, standings: pd.DataFrame, week: int) -> pd.DataFrame:
+    """
+    This function will fetch the matchups for a given week and prompt the user to choose a winner.
+
+    The 'wins', 'ties', and 'losses' fields of the standings dataframe will then be updated to reflect
+    the user's selections.
+
+    The 'points_for' field, however, will NOT be updated.
+
+    Args:
+        league (League): League
+        standings (pd.DataFrame): Standings dataframe
+        week (int): Week to select matchup outcomes for
+
+    Raises:
+        Exception: Incorrect user input
+
+    Returns:
+        pd.DataFrame: Updated standings dataframe
+    """
     box_scores = league.box_scores(week)
     for matchup in box_scores:
         winner = int(
@@ -129,6 +217,19 @@ def input_outcomes(league: League, standings: pd.DataFrame, week: int) -> pd.Dat
 def simulate_season(
     league: League, n: int = 1000, what_if: Optional[bool] = False
 ) -> pd.DataFrame:
+    """
+    This function simulates the rest of a season by running n Monte-Carlo simulations.
+    The `what_if` parameter allows the user to specify the outcomes of the current week (but not the scores) if desired
+    (this can be done to see the effect of an outcome on a team's playoff odds.)
+
+    Args:
+        league (League): League
+        n (int): Number of simulations to run
+        what_if (Optional[bool]): Manually specify the outcomes of the current week? Defaults to False
+
+    Returns:
+        pd.DataFrame: Dataframe containing results of the simulation
+    """
     playoff_count = {
         team.team_id: {"wins": 0, "ties": 0, "losses": 0, "playoff_odds": 0}
         for team in league.teams
