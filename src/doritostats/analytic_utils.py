@@ -176,6 +176,46 @@ def get_season_luck_indices(league: League, week: int):
     return luck_indices
 
 
+def get_remaining_schedule_difficulty(
+    team: Team, week: int, strength: str = "points_for"
+):
+    """
+    This function returns the average score of a team's remaining opponents.
+
+    The `strength` parameter defines how an opponent's "strength" is defined.
+        - "points_for" means that difficulty is defined by the average points for scored by each of their remaining opponents.
+        - "win_pct" means that the difficult is defined by the average winning percentage of each of their remaining opponents.
+
+    """
+    remaining_schedule = team.schedule[week - 1 :]
+
+    if strength == "points_for":
+        # Get all scores from remaining opponenets through specified week
+        remaining_strength = np.array(
+            [opp.scores[: week - 1] for opp in remaining_schedule]
+        ).flatten()
+
+        # Exclude weeks that haven't occurred yet (not always applicable)
+        remaining_strength = remaining_strength[remaining_strength > 0]
+
+        # Return average score
+        return remaining_strength.mean()
+
+    elif strength == "win_pct":
+        # Get all scores from remaining opponenets through specified week
+        remaining_strength = np.array(
+            [opp.outcomes[: week - 1] for opp in remaining_schedule]
+        ).flatten()
+
+        # Divide # of wins by (# of wins + # of losses) -- this excludes matches that tied or have not occurred yet
+        return sum(remaining_strength == "W") / sum(
+            (remaining_strength == "W") | (remaining_strength == "L")
+        )
+
+    else:
+        raise Exception("Unrecognized parameter passed for `strength`")
+
+
 def sort_lineups_by_func(league: League, week: int, func, box_scores=None, **kwargs):
     """
     Sorts league teams according to function.
