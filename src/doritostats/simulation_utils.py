@@ -113,6 +113,9 @@ def simulate_season(league: League, n: int = 1000):
         playoff_count.items(), columns=["team_id", "playoff_odds"]
     )
     playoff_odds["playoff_odds"] *= 100 / n
+    playoff_odds["playoff_odds"] = playoff_odds["playoff_odds"].playoff_odds.clip(
+        lower=0.01, upper=99.99
+    )
 
     # Add team details to the dataframe
     def get_team_info(s):
@@ -126,3 +129,13 @@ def simulate_season(league: League, n: int = 1000):
     return playoff_odds[["team_owner", "team_name", "playoff_odds"]].sort_values(
         by="playoff_odds", ascending=False
     )
+#         (home_outcome, away_outcome) = [(1, 0, 0), (0, 0, 1)]
+#     elif winner == 2:
+#         (home_outcome, away_outcome) = [(1, 0, 0), (0, 0, 1)]
+#     else:
+#         raise Exception("Incorrect input type. Please enter `1` or `2`.")
+
+#     standings.loc[matchup.home_team.team_id, "wins"] += home_outcome[0]  # type: ignore
+#     standings.loc[matchup.home_team.team_id, "losses"] += home_outcome[2]  # type: ignore
+#     standings.loc[matchup.away_team.team_id, "wins"] += away_outcome[0]  # type: ignore
+#     standings.loc[matchup.away_team.team_id, "losses"] += away_outcome[2]  # type: ignore
