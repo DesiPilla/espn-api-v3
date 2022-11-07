@@ -255,9 +255,7 @@ def get_stats_by_week(league_id, year, swid, espn_s2):
     df["season_wins"] = df.groupby(["team_owner"]).win.cumsum()
     df["season_ties"] = df.groupby(["team_owner"]).tie.cumsum()
     df["season_losses"] = df.groupby(["team_owner"]).lose.cumsum()
-    df["win_pct"] = df.season_wins / df[
-        ["season_wins", "season_ties", "season_losses"]
-    ].sum(axis=1)
+    df["win_pct"] = df.season_wins / df[["season_wins", "season_losses"]].sum(axis=1)
     df["win_pct_entering_matchup"] = (
         df.groupby(["team_owner"])["win_pct"].apply(lambda x: x.shift(1)).values
     )
@@ -392,9 +390,7 @@ def get_stats_by_matchup(league_id: int, year: int, swid: str, espn_s2: str):
     df["season_wins"] = df.groupby(["team_owner"]).win.cumsum()
     df["season_ties"] = df.groupby(["team_owner"]).tie.cumsum()
     df["season_losses"] = df.groupby(["team_owner"]).lose.cumsum()
-    df["win_pct"] = df.season_wins / df[
-        ["season_wins", "season_ties", "season_losses"]
-    ].sum(axis=1)
+    df["win_pct"] = df.season_wins / df[["season_wins", "season_losses"]].sum(axis=1)
     df["win_pct_entering_matchup"] = (
         df.groupby(["team_owner"])["win_pct"].apply(lambda x: x.shift(1)).values
     )
