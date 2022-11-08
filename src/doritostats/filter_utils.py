@@ -1,7 +1,8 @@
 import pandas as pd
+from typing import Optional
 
 
-def exclude_most_recent_week(df: pd.DataFrame):
+def exclude_most_recent_week(df: pd.DataFrame) -> pd.DataFrame:
     """Filter out the most recent week of matchups from the historical stats dataframe.
 
     Args:
@@ -16,8 +17,13 @@ def exclude_most_recent_week(df: pd.DataFrame):
 
 
 def get_any_records(
-    df: pd.DataFrame, year: int, week: int, stat: str, high_first: bool = True, n: int = 5
-):
+    df: pd.DataFrame,
+    year: int,
+    week: int,
+    stat: str,
+    high_first: bool = True,
+    n: int = 5,
+) -> pd.DataFrame:
     """Check if a team recorded a top-5 (or n) statistic was posted during the most recent week.
 
     Args:
@@ -31,11 +37,10 @@ def get_any_records(
     """
     # Rank each row by the stat of note
     sub_df = df.dropna(subset=stat)
-    sub_df['rank'] = sub_df[stat].rank(
-        ascending=(not high_first), method='min')
+    sub_df["rank"] = sub_df[stat].rank(ascending=(not high_first), method="min")
 
     # Keep only the top n records, in the year-week of note
     sub_df = sub_df[sub_df['rank'] <= n]
     sub_df = sub_df.query(f"year == {year} & week == {week}")
 
-    return sub_df[['year', 'week', 'team_owner', stat, 'rank']]
+    return sub_df[["year", "week", "team_owner", stat, "rank"]]

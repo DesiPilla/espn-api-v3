@@ -1,26 +1,31 @@
 import numpy as np
 import pandas as pd
 from copy import copy
-from typing import Callable
-from espn_api.football import League, Team
+from typing import Callable, Dict, List, Optional, Tuple
+from espn_api.football import League, Team, Player
+from espn_api.football.box_score import BoxScore
 from src.doritostats.filter_utils import get_any_records, exclude_most_recent_week
 
-""" ANALYTIC FUNCTIONS """
-
-
-def get_lineup(league: League, team: Team, week: int, box_scores=None):
+def get_lineup(
+    league: League, team: Team, week: int, box_scores: Optional[List[BoxScore]] = None
+) -> List[Player]:
     """Return the lineup of the given team during the given week"""
     # Get the lineup for the team during the specified week
     if box_scores is None:
         box_scores = league.box_scores(week)
+
+    assert box_scores is not None
+
+    lineup = []
     for box_score in box_scores:
         if team == box_score.home_team:
-            return box_score.home_lineup
+            lineup = box_score.home_lineup
         elif team == box_score.away_team:
-            return box_score.away_lineup
+            lineup = box_score.away_lineup
+    return lineup
 
 
-def get_top_players(lineup: list, slot: str, n: int):
+def get_top_players(lineup: List[Player], slot: str, n: int) -> List[Player]:
     """Takes a list of players and returns a list of the top n players based on points scored."""
     # Gather players of the desired position
     eligible_players = []
@@ -31,8 +36,8 @@ def get_top_players(lineup: list, slot: str, n: int):
     return sorted(eligible_players, key=lambda x: x.points, reverse=True)[:n]
 
 
-def get_best_lineup(league: League, lineup: list):
-    """Returns the best possible lineup for team during the loaded week."""
+def get_best_lineup(league: League, lineup: List[Player]) -> float:
+    """Returns the score of the best possible lineup for team during the loaded week."""
     # Save full roster
     saved_roster = copy(lineup)
 
@@ -51,7 +56,7 @@ def get_best_lineup(league: League, lineup: list):
     return np.sum([player.points for player in best_lineup])
 
 
-def get_best_trio(league: League, lineup: list):
+def get_best_trio(league: League, lineup: List[Player]) -> float:
     """Returns the the sum of the top QB/RB/Reciever trio for a team during the loaded week."""
     qb = get_top_players(lineup, "QB", 1)[0].points
     rb = get_top_players(lineup, "RB", 1)[0].points
@@ -61,7 +66,11 @@ def get_best_trio(league: League, lineup: list):
     return best_trio
 
 
-def get_lineup_efficiency(league: League, lineup: list):
+def get_lineup_efficiency(league: League, lineup: List[Player]) -> float:
+    """
+    Returns the lineup efficiency of a team.
+    Lineup efficiency is defined as the team's actual score divided by it's best possible score.
+    """
     max_score = get_best_lineup(league, lineup)
     real_score = np.sum(
         [player.points for player in lineup if player.slot_position not in ("BE", "IR")]
@@ -69,29 +78,29 @@ def get_lineup_efficiency(league: League, lineup: list):
     return real_score / max_score
 
 
-def get_weekly_finish(league: League, team: Team, week: int):
+def get_weekly_finish(league: League, team: Team, week: int) -> int:
     """Returns the rank of a team compared to the rest of the league by points for (for the loaded week)"""
     league_scores = [tm.scores[week - 1] for tm in league.teams]
     league_scores = sorted(league_scores, reverse=True)
     return league_scores.index(team.scores[week - 1]) + 1
 
 
-def get_num_out(league: League, lineup: list):
+def get_num_out(league: League, lineup: List[Player]) -> int:
     """Returns the (esimated) number of players who did not play for a team for the loaded week (excluding IR slot players)."""
     num_out = 0
     # TODO: write new code based on if player was injured
     return num_out
 
 
-def avg_slot_score(league: League, lineup: list, slot: str):
+def avg_slot_score(league: League, lineup: List[Player], slot: str) -> float:
     """
     Returns the average score for starting players of a specified slot.
     `lineup` is either BoxScore().away_lineup or BoxScore().home_lineup (a list of BoxPlayers)
     """
-    return np.mean([player.points for player in lineup if player.slot_position == slot])
+    return np.mean([player.points for player in lineup if player.slot_position == slot])  # type: ignore
 
 
-def sum_bench_points(league: League, lineup: list):
+def sum_bench_points(league: League, lineup: list) -> float:
     """
     Returns the total score for bench players
     `lineup` is either BoxScore().away_lineup or BoxScore().home_lineup (a list of BoxPlayers)
@@ -102,7 +111,7 @@ def sum_bench_points(league: League, lineup: list):
 """ ADVANCED STATS """
 
 
-def get_weekly_luck_index(league: League, team: Team, week: int):
+def get_weekly_luck_index(league: League, team: Team, week: int) -> float:
     """
     This function returns an index quantifying how 'lucky' a team was in a given week
 
@@ -165,9 +174,9 @@ def get_weekly_luck_index(league: League, team: Team, week: int):
     return luck_index / np.sum([w_sched, w_team, w_opp])
 
 
-def get_season_luck_indices(league: League, week: int):
+def get_season_luck_indices(league: League, week: int) -> Dict[Team, float]:
     """This function returns an index quantifying how 'lucky' a team was all season long (up to a certain week)"""
-    luck_indices = {team: 0 for team in league.teams}
+    luck_indices = {team: 0.0 for team in league.teams}
     for wk in range(1, week + 1):
         # Update luck_index for each team
         for team in league.teams:
@@ -216,7 +225,9 @@ def get_remaining_schedule_difficulty(
         raise Exception("Unrecognized parameter passed for `strength`")
 
 
-def sort_lineups_by_func(league: League, week: int, func, box_scores=None, **kwargs):
+def sort_lineups_by_func(
+    league: League, week: int, func, box_scores=None, **kwargs
+) -> List[Team]:
     """
     Sorts league teams according to function.
     Values are sorted ascending.
@@ -230,7 +241,7 @@ def sort_lineups_by_func(league: League, week: int, func, box_scores=None, **kwa
     )
 
 
-def get_leader_str(stats_list: list, high_first: bool = True):
+def get_leader_str(stats_list: list, high_first: bool = True) -> Tuple[float, str]:
     """Return a list of team owners who have the best stat,
     given a list of teams and stat values.
 
@@ -254,13 +265,19 @@ def get_leader_str(stats_list: list, high_first: bool = True):
     else:
         leaders = [sorted_stats_list[0][0]]
         for i in range(1, len(sorted_stats_list)):
+            # If the stat value is the same, add the owner's name to leaders
             if sorted_stats_list[i][1] == sorted_stats_list[i - 1][1]:
                 leaders.append(sorted_stats_list[i][0])
+
+            # If not, end the loop
             else:
-                return sorted_stats_list[0][1], "{}".format(", ".join(leaders))
+                break
+
+        # Return the stat value and the leaders string
+        return sorted_stats_list[0][1], "{}".format(", ".join(leaders))
 
 
-def make_ordinal(n):
+def make_ordinal(n: int) -> str:
     """
     Convert an integer into its ordinal representation::
         make_ordinal(3)   => '3rd'
@@ -283,7 +300,7 @@ def print_records(
     stat_units: str,
     high_first: bool = True,
     n: int = 5,
-):
+) -> None:
     """Print out any records.
 
     Args:
@@ -322,7 +339,7 @@ def print_franchise_records(
     stat_units: str,
     high_first: bool = True,
     n: int = 1,
-):
+) -> None:
     """Print out any franchise records.
 
     Args:
@@ -365,7 +382,7 @@ def print_franchise_records(
             )
 
 
-def get_wins_leaderboard(df: pd.DataFrame):
+def get_wins_leaderboard(df: pd.DataFrame) -> pd.DataFrame:
     """Get the all time wins leaderboard for the league.
 
     Args:
@@ -385,7 +402,7 @@ def get_wins_leaderboard(df: pd.DataFrame):
     return leaderboard_df
 
 
-def get_losses_leaderboard(df: pd.DataFrame):
+def get_losses_leaderboard(df: pd.DataFrame) -> pd.DataFrame:
     """Get the all time losses leaderboard for the league.
 
     Args:
@@ -407,7 +424,7 @@ def get_losses_leaderboard(df: pd.DataFrame):
 
 def leaderboard_change(
     df: pd.DataFrame, leaderboard_func: Callable = get_wins_leaderboard
-):
+) -> pd.DataFrame:
     """This function takes a leaderboard function and calculates
     the change of that leaderboard from the previous week to the current week.
 
@@ -452,7 +469,7 @@ def leaderboard_change(
     return leaderboard_change
 
 
-def get_team(league: League, team_owner: str):
+def get_team(league: League, team_owner: str) -> Team:
     """Get the Team object corresponding to the team_owner
 
     Args:
@@ -472,7 +489,7 @@ def get_team(league: League, team_owner: str):
     raise Exception(f"Owner {team_owner} not in league.")
 
 
-def get_division_standings(league: League):
+def get_division_standings(league: League) -> Dict[str, List[Team]]:
     standings = {}
     for division in league.settings.division_map.values():
         teams = [team for team in league.teams if team.division_name == division]
@@ -480,7 +497,9 @@ def get_division_standings(league: League):
     return standings
 
 
-def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2: str):
+def game_of_the_week_stats(
+    league: League, df: pd.DataFrame, owner1: str, owner2: str
+) -> None:
     gow_df = df.query(
         f"team_owner == {owner1} & opp_owner == {owner2} & is_meaningful_game == True"
     )
@@ -496,7 +515,7 @@ def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2
             owner2, len(gow_df.query(f"outcome == 'lose'")), len(gow_df)
         )
     )
-    print("There have been {} ties".format(len(gow_df.query(f"outcome == 'win'"))))
+    print("There have been {} ties".format(len(gow_df.query(f"outcome == 'tie'"))))
 
     last_matchup = gow_df.iloc[-1]
     print(
@@ -552,7 +571,14 @@ def game_of_the_week_stats(league: League, df: pd.DataFrame, owner1: str, owner2
     )
 
 
-def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
+def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
+    """Generate any league- or franchise-records for a given week.
+
+    Args:
+        df (pd.DataFrame): Historical stats dataframe
+        year (int): Year
+        week (int): Week
+    """
 
     df = df.query("is_meaningful_game == True")
 
@@ -819,7 +845,9 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int):
     )
 
 
-def season_stats_analysis(league: League, df: pd.DataFrame, week: int = None):
+def season_stats_analysis(
+    league: League, df: pd.DataFrame, week: Optional[int] = None
+) -> None:
     """Display season-bests and -worsts.
 
     Args:
