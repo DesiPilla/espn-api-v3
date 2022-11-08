@@ -14,13 +14,8 @@ from src.doritostats.analytic_utils import (
 
 
 def set_league_endpoint(league: League) -> None:
-    """Set the league's endpoint.
-
-    The endpoint looks different depending on if it is the current season or a previous season
-
-    Args:
-        league (League): _description_
-    """
+    """Set the league's endpoint."""
+    
     # Current season
     if league.year >= (datetime.datetime.today() - datetime.timedelta(weeks=12)).year:
         league.endpoint = (
@@ -286,6 +281,19 @@ def get_stats_by_week(
     df["outcome"] = df.apply(calculate_outcome, axis=1)
     df["is_meaningful_game"] = df.is_regular_season | df.is_playoff
 
+    # More calculated fields
+    df.sort_values(["team_owner", "week"], inplace=True)
+    df["win"] = df.outcome == "win"
+    df["tie"] = df.outcome == "tie"
+    df["lose"] = df.outcome == "lose"
+    df["season_wins"] = df.groupby(["team_owner"]).win.cumsum()
+    df["season_ties"] = df.groupby(["team_owner"]).tie.cumsum()
+    df["season_losses"] = df.groupby(["team_owner"]).lose.cumsum()
+    df["win_pct"] = df.season_wins / df[["season_wins", "season_losses"]].sum(axis=1)
+    df["win_pct_entering_matchup"] = (
+        df.groupby(["team_owner"])["win_pct"].apply(lambda x: x.shift(1)).values
+    )
+
     return df
 
 
@@ -427,6 +435,19 @@ def get_stats_by_matchup(
 
     df["outcome"] = df.apply(calculate_outcome, axis=1)
     df["is_meaningful_game"] = df.is_regular_season | df.is_playoff
+
+    # More calculated fields
+    df.sort_values(["team_owner", "week"], inplace=True)
+    df["win"] = df.outcome == "win"
+    df["tie"] = df.outcome == "tie"
+    df["lose"] = df.outcome == "lose"
+    df["season_wins"] = df.groupby(["team_owner"]).win.cumsum()
+    df["season_ties"] = df.groupby(["team_owner"]).tie.cumsum()
+    df["season_losses"] = df.groupby(["team_owner"]).lose.cumsum()
+    df["win_pct"] = df.season_wins / df[["season_wins", "season_losses"]].sum(axis=1)
+    df["win_pct_entering_matchup"] = (
+        df.groupby(["team_owner"])["win_pct"].apply(lambda x: x.shift(1)).values
+    )
 
     return df
 

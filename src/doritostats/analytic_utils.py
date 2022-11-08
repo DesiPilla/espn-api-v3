@@ -4,12 +4,7 @@ from copy import copy
 from typing import Callable, Dict, List, Optional, Tuple
 from espn_api.football import League, Team, Player
 from espn_api.football.box_score import BoxScore
-from src.doritostats.filter_utils import (
-    filter_df,
-    get_any_records,
-    exclude_most_recent_week,
-)
-
+from src.doritostats.filter_utils import get_any_records, exclude_most_recent_week
 
 def get_lineup(
     league: League, team: Team, week: int, box_scores: Optional[List[BoxScore]] = None
@@ -190,6 +185,46 @@ def get_season_luck_indices(league: League, week: int) -> Dict[Team, float]:
     return luck_indices
 
 
+def get_remaining_schedule_difficulty(
+    team: Team, week: int, strength: str = "points_for"
+):
+    """
+    This function returns the average score of a team's remaining opponents.
+
+    The `strength` parameter defines how an opponent's "strength" is defined.
+        - "points_for" means that difficulty is defined by the average points for scored by each of their remaining opponents.
+        - "win_pct" means that the difficult is defined by the average winning percentage of each of their remaining opponents.
+
+    """
+    remaining_schedule = team.schedule[week - 1 :]
+
+    if strength == "points_for":
+        # Get all scores from remaining opponenets through specified week
+        remaining_strength = np.array(
+            [opp.scores[: week - 1] for opp in remaining_schedule]
+        ).flatten()
+
+        # Exclude weeks that haven't occurred yet (not always applicable)
+        remaining_strength = remaining_strength[remaining_strength > 0]
+
+        # Return average score
+        return remaining_strength.mean()
+
+    elif strength == "win_pct":
+        # Get all scores from remaining opponenets through specified week
+        remaining_strength = np.array(
+            [opp.outcomes[: week - 1] for opp in remaining_schedule]
+        ).flatten()
+
+        # Divide # of wins by (# of wins + # of losses) -- this excludes matches that tied or have not occurred yet
+        return sum(remaining_strength == "W") / sum(
+            (remaining_strength == "W") | (remaining_strength == "L")
+        )
+
+    else:
+        raise Exception("Unrecognized parameter passed for `strength`")
+
+
 def sort_lineups_by_func(
     league: League, week: int, func, box_scores=None, **kwargs
 ) -> List[Team]:
@@ -317,7 +352,7 @@ def print_franchise_records(
         n (int): How far down the record list to check (defaults to 5)
     """
     # Get a list of all active teams that have been in the league for 2+ years
-    current_teams = filter_df(df, year=df.year.max()).team_owner.unique()
+    current_teams = df.query(f"year == {df.year.max()}").team_owner.unique()
     list_of_teams = df.groupby(["team_owner"]).nunique()
     list_of_teams = list_of_teams[
         (list_of_teams.year > 1) & list_of_teams.index.isin(current_teams)
@@ -325,7 +360,7 @@ def print_franchise_records(
 
     for team_owner in list_of_teams:
         # Get all rows for the given team
-        team_df = filter_df(df, team_owner=team_owner)
+        team_df = df.query(f"team_owner == {team_owner}")
 
         # Get any records for that team
         records_df = get_any_records(
@@ -356,7 +391,7 @@ def get_wins_leaderboard(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.Series: Ordered leaderboard by career wins
     """
-    df = filter_df(df, outcome="win", meaningful=True)
+    df = df.query(f"outcome == 'win' & is_meaningful_game == True")
     leaderboard_df = (
         df.groupby("team_owner")
         .count()["outcome"]
@@ -376,7 +411,7 @@ def get_losses_leaderboard(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.Series: Ordered leaderboard by career wins
     """
-    df = filter_df(df, outcome="lose", meaningful=True)
+    df = df.query(f"outcome == 'lose' & is_meaningful_game == True")
     leaderboard_df = (
         df.groupby("team_owner")
         .count()["outcome"]
@@ -465,20 +500,22 @@ def get_division_standings(league: League) -> Dict[str, List[Team]]:
 def game_of_the_week_stats(
     league: League, df: pd.DataFrame, owner1: str, owner2: str
 ) -> None:
-    gow_df = filter_df(df, team_owner=owner1, opp_owner=owner2, meaningful=True)
+    gow_df = df.query(
+        f"team_owner == {owner1} & opp_owner == {owner2} & is_meaningful_game == True"
+    )
     gow_df.sort_values(["year", "week"], ascending=True, inplace=True)
 
     print(
         "{} has won {} / {} matchups.".format(
-            owner1, len(filter_df(gow_df, outcome="win")), len(gow_df)
+            owner1, len(gow_df.query(f"outcome == 'win'")), len(gow_df)
         )
     )
     print(
         "{} has won {} / {} matchups.".format(
-            owner2, len(filter_df(gow_df, outcome="lose")), len(gow_df)
+            owner2, len(gow_df.query(f"outcome == 'lose'")), len(gow_df)
         )
     )
-    print("There have been {} ties".format(len(filter_df(gow_df, outcome="tie"))))
+    print("There have been {} ties".format(len(gow_df.query(f"outcome == 'tie'"))))
 
     last_matchup = gow_df.iloc[-1]
     print(
@@ -502,8 +539,8 @@ def game_of_the_week_stats(
     print(f"{owner1} has a record of {team1.wins}-{team1.losses}-{team1.ties}")
     print(
         "They have averaged {:.2f} points per game.".format(
-            filter_df(
-                df, team_owner=owner1, year=league.year, meaningful=True
+            df.query(
+                f"team_owner == {owner1} & year == {league.year} & is_meaningful_game == True"
             ).team_score.mean()
         )
     )
@@ -519,8 +556,8 @@ def game_of_the_week_stats(
     print(f"{owner2} has a record of {team2.wins}-{team2.losses}-{team2.ties}")
     print(
         "They have averaged {:.2f} points per game.".format(
-            filter_df(
-                df, team_owner=owner2, year=league.year, meaningful=True
+            df.query(
+                f"team_owner == {owner2} & year == {league.year} & is_meaningful_game == True"
             ).team_score.mean()
         )
     )
@@ -543,7 +580,7 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
         week (int): Week
     """
 
-    df = filter_df(df, meaningful=True)
+    df = df.query("is_meaningful_game == True")
 
     print("----------------------------------------------------------------")
     print(
@@ -819,11 +856,11 @@ def season_stats_analysis(
         week (int, optional): Maximum week to include. Defaults to None.
     """
     if week is None:
-        week = filter_df(df, year=df.year.max()).week.max()
+        week = df.query(f"year == {df.year.max()}").week.max()
 
-    df = filter_df(df, meaningful=True)
-    df_current_year = filter_df(df, year=league.year)
-    df_current_week = filter_df(df, year=league.year, week=league.current_week - 1)
+    df = df.query("is_meaningful_game == True")
+    df_current_year = df.query(f"year == {league.year}")
+    df_current_week = df_current_year.query(f"week == {league.current_week - 1}")
 
     print("----------------------------------------------------------------")
     print(
