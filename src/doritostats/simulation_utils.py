@@ -285,6 +285,12 @@ def simulate_season(
     playoff_odds["losses"] /= n
     playoff_odds["points_for"] /= n
 
+    # Round estimates
+    playoff_odds["wins"] = playoff_odds["wins"].round(decimals=1)
+    playoff_odds["ties"] = playoff_odds["ties"].round(decimals=1)
+    playoff_odds["losses"] = playoff_odds["losses"].round(decimals=1)
+    playoff_odds["points_for"] = playoff_odds["points_for"].round(decimals=2)
+
     # Add team details to the dataframe
     def get_team_info(s):
         team = league.teams[int(s.team_id - 1)]
