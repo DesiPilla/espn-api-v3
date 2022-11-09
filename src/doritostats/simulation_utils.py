@@ -226,12 +226,19 @@ def simulate_season(
         league (League): League
         n (int): Number of simulations to run
         what_if (Optional[bool]): Manually specify the outcomes of the current week? Defaults to False
+        random_state (Optional[int]): Random seed. Defaults to 42.
 
     Returns:
         pd.DataFrame: Dataframe containing results of the simulation
     """
     playoff_count = {
-        team.team_id: {"wins": 0, "ties": 0, "losses": 0, "playoff_odds": 0}
+        team.team_id: {
+            "wins": 0,
+            "ties": 0,
+            "losses": 0,
+            "points_for": 0,
+            "playoff_odds": 0,
+        }
         for team in league.teams
     }
 
@@ -256,6 +263,7 @@ def simulate_season(
             playoff_count[team_id]["wins"] += stats["wins"]
             playoff_count[team_id]["ties"] += stats["ties"]
             playoff_count[team_id]["losses"] += stats["losses"]
+            playoff_count[team_id]["points_for"] += stats["points_for"]
             playoff_count[team_id]["playoff_odds"] += stats["made_playoffs"]
 
     # Aggregate playoff odds
@@ -275,6 +283,7 @@ def simulate_season(
     playoff_odds["wins"] /= n
     playoff_odds["ties"] /= n
     playoff_odds["losses"] /= n
+    playoff_odds["points_for"] /= n
 
     # Add team details to the dataframe
     def get_team_info(s):
@@ -286,5 +295,13 @@ def simulate_season(
     playoff_odds = playoff_odds.apply(get_team_info, axis=1)
 
     return playoff_odds[
-        ["team_owner", "team_name", "wins", "ties", "losses", "playoff_odds"]
+        [
+            "team_owner",
+            "team_name",
+            "wins",
+            "ties",
+            "losses",
+            "points_for",
+            "playoff_odds",
+        ]
     ].sort_values(by="playoff_odds", ascending=False)
