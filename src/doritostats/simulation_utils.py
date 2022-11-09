@@ -215,7 +215,10 @@ def input_outcomes(league: League, standings: pd.DataFrame, week: int) -> pd.Dat
 
 
 def simulate_season(
-    league: League, n: int = 1000, what_if: Optional[bool] = False
+    league: League,
+    n: int = 1000,
+    what_if: Optional[bool] = False,
+    random_state: Optional[int] = 42,
 ) -> pd.DataFrame:
     """
     This function simulates the rest of a season by running n Monte-Carlo simulations.
@@ -231,6 +234,8 @@ def simulate_season(
     Returns:
         pd.DataFrame: Dataframe containing results of the simulation
     """
+    np.random.seed(random_state)
+
     playoff_count = {
         team.team_id: {
             "wins": 0,
