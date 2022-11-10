@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from espn_api.football import League, Team, Matchup
@@ -92,7 +92,7 @@ def simulate_matchup(
         return ((0, 1, 0, home_score), (0, 1, 0, away_score))
 
 
-def simulate_week(
+def simulate_matchups(
     matchups: List[PseudoMatchup], standings: pd.DataFrame
 ) -> pd.DataFrame:
     """Simulate all matchups in a week.
@@ -123,7 +123,10 @@ def simulate_week(
 
 
 def simulate_single_season(
-    league: League, standings: Optional[pd.DataFrame] = None
+    league: League,
+    standings: Optional[pd.DataFrame] = None,
+    first_week_to_simulate: Optional[int] = None,
+    matchups_to_exclude: Dict[int, List[PseudoMatchup]] = {},
 ) -> pd.DataFrame:
     """This function simulates a season.
     If no standings dataframe is passed in, one will be generated based on the current state of the league.
@@ -139,6 +142,9 @@ def simulate_single_season(
     Args:
         league (League): League
         standings (Optional[pd.DataFrame]): Initialized standings dataframe. Defaults to None.
+        first_week_to_simulate (Optional[int]): First week to include in the simulation. Defaults to None.
+            - If first_week_to_simulate = 10, the function will simulate all matchups from Weeks 10 -> end of season.
+            - If None, the function will use `standings` to imply how many weeks have finished already and simulate the rest.ß
 
     Returns:
         pd.DataFrame: Simulated standings dataframe
@@ -148,21 +154,34 @@ def simulate_single_season(
         # Get current standings
         standings = build_standings(league)
 
-    first_week_to_simulate = (
-        standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1
-    )
-    for week in range(first_week_to_simulate, league.settings.reg_season_count + 1):
+    if first_week_to_simulate is None:
+        first_week_to_simulate = (
+            standings[["wins", "ties", "losses"]].sum(axis=1).min() + 1
+        )
+
+    matchups = []  # type: List
+    for week in range(first_week_to_simulate, league.settings.reg_season_count + 1):  # type: ignore
+
         # Get matchups for the given week
-        matchups_dict = {}
+        week_matchups = []
         for team in league.teams:
             (home_team, away_team) = sorted(
                 [team, team.schedule[week - 1]], key=lambda x: x.team_id
             )
-            matchups_dict[home_team.team_id] = PseudoMatchup(home_team, away_team)
-        matchups = list(matchups_dict.values())
 
-        # Predict each matchup and update the standings
-        standings = simulate_week(matchups, standings)
+            # Only add matchup if it the team doesn't already have an outcome for it
+            if (
+                week in matchups_to_exclude.keys()
+                and PseudoMatchup(home_team, away_team) in matchups_to_exclude[week]
+            ):
+                continue
+            else:
+                week_matchups.append(PseudoMatchup(home_team, away_team))
+
+        matchups.extend(set(week_matchups))
+
+    # Predict each matchup and update the standings
+    standings = simulate_matchups(matchups, standings)
 
     standings = sort_standings(standings)
     made_playoffs = [1] * league.settings.playoff_team_count + [0] * (
@@ -172,7 +191,9 @@ def simulate_single_season(
     return standings
 
 
-def input_outcomes(league: League, standings: pd.DataFrame, week: int) -> pd.DataFrame:
+def input_outcomes(
+    league: League, standings: pd.DataFrame, week: int
+) -> Tuple[pd.DataFrame, Dict[int, List[PseudoMatchup]]]:
     """
     This function will fetch the matchups for a given week and prompt the user to choose a winner.
 
@@ -192,26 +213,42 @@ def input_outcomes(league: League, standings: pd.DataFrame, week: int) -> pd.Dat
     Returns:
         pd.DataFrame: Updated standings dataframe
     """
+    standings = standings.copy()
+    matchups_to_exclude = {week: []}  # type: dict
     box_scores = league.box_scores(week)
     for matchup in box_scores:
         winner = int(
             input(
-                f"Who will win this matchup?\n (1) {matchup.home_team.owner}\n (2) {matchup.away_team.owner}\n"
+                f"Who will win this matchup?\n (1) {matchup.home_team.owner}\n (2) {matchup.away_team.owner}\n (3) Leave blank"
             )
         )
-        if winner == 1:
-            (home_outcome, away_outcome) = [(1, 0, 0), (0, 0, 1)]
-        elif winner == 2:
-            (home_outcome, away_outcome) = [(0, 0, 1), (1, 0, 0)]
+        if winner == 3:
+            # No winner assigned
+            continue
+
         else:
-            raise Exception("Incorrect input type. Please enter `1` or `2`.")
 
-        standings.loc[matchup.home_team.team_id, "wins"] += home_outcome[0]  # type: ignore
-        standings.loc[matchup.home_team.team_id, "losses"] += home_outcome[2]  # type: ignore
-        standings.loc[matchup.away_team.team_id, "wins"] += away_outcome[0]  # type: ignore
-        standings.loc[matchup.away_team.team_id, "losses"] += away_outcome[2]  # type: ignore
+            if winner == 1:
+                (home_outcome, away_outcome) = [(1, 0, 0), (0, 0, 1)]
+            elif winner == 2:
+                (home_outcome, away_outcome) = [(0, 0, 1), (1, 0, 0)]
+            else:
+                raise Exception("Incorrect input type. Please enter `1` or `2`.")
 
-    return standings
+            # Update standings
+            standings.loc[matchup.home_team.team_id, "wins"] += home_outcome[0]  # type: ignore
+            standings.loc[matchup.home_team.team_id, "losses"] += home_outcome[2]  # type: ignore
+            standings.loc[matchup.away_team.team_id, "wins"] += away_outcome[0]  # type: ignore
+            standings.loc[matchup.away_team.team_id, "losses"] += away_outcome[2]  # type: ignore
+
+            # Assign the team with the smaller team_id as the "home team"
+            (home_team, away_team) = sorted(
+                [matchup.home_team, matchup.away_team], key=lambda x: x.team_id
+            )
+            # Add matchup to list of excluded matchups
+            matchups_to_exclude[week].append(PseudoMatchup(home_team, away_team))
+
+    return standings, matchups_to_exclude
 
 
 def simulate_season(
@@ -252,16 +289,29 @@ def simulate_season(
 
     # Manually enter the outcome of the next week
     if what_if:
-        standings = input_outcomes(league, standings, league.current_week)
+        first_week_to_simulate = (
+            standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1
+        )
+        standings, matchups_to_exclude = input_outcomes(
+            league, standings, league.current_week
+        )
+    else:
+        first_week_to_simulate = None
+        matchups_to_exclude = {}
 
     print(
-        f"""Simulating from week {standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1} to {league.settings.reg_season_count}"""
+        f"""Simulating from week {first_week_to_simulate} to {league.settings.reg_season_count}"""
     )
 
     for i in range(n):
 
         # Simulate a single season
-        final_standings = simulate_single_season(league, standings.copy())
+        final_standings = simulate_single_season(
+            league=league,
+            standings=standings.copy(),
+            first_week_to_simulate=first_week_to_simulate,
+            matchups_to_exclude=matchups_to_exclude,
+        )
 
         # Record those who made the playoffs in the simulated season
         for (team_id, stats) in final_standings.iterrows():
