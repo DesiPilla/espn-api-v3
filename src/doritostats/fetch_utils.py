@@ -15,7 +15,7 @@ from src.doritostats.analytic_utils import (
 
 def set_league_endpoint(league: League) -> None:
     """Set the league's endpoint."""
-    
+
     # Current season
     if league.year >= (datetime.datetime.today() - datetime.timedelta(weeks=12)).year:
         league.endpoint = (
@@ -192,6 +192,17 @@ class PseudoMatchup:
 
     def __repr__(self):
         return f"Matchup({self.home_team}, {self.away_team})"
+
+    def __hash__(self):
+        return hash((self.home_team, self.away_team))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return (self.home_team.team_id, self.away_team.team_id) == (
+            other.home_team.team_id,
+            other.away_team.team_id,
+        )
 
 
 def get_stats_by_week(
