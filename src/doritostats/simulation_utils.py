@@ -215,7 +215,10 @@ def input_outcomes(league: League, standings: pd.DataFrame, week: int) -> pd.Dat
 
 
 def simulate_season(
-    league: League, n: int = 1000, what_if: Optional[bool] = False
+    league: League,
+    n: int = 1000,
+    what_if: Optional[bool] = False,
+    random_state: Optional[int] = 42,
 ) -> pd.DataFrame:
     """
     This function simulates the rest of a season by running n Monte-Carlo simulations.
@@ -226,12 +229,21 @@ def simulate_season(
         league (League): League
         n (int): Number of simulations to run
         what_if (Optional[bool]): Manually specify the outcomes of the current week? Defaults to False
+        random_state (Optional[int]): Random seed. Defaults to 42.
 
     Returns:
         pd.DataFrame: Dataframe containing results of the simulation
     """
+    np.random.seed(random_state)
+
     playoff_count = {
-        team.team_id: {"wins": 0, "ties": 0, "losses": 0, "playoff_odds": 0}
+        team.team_id: {
+            "wins": 0,
+            "ties": 0,
+            "losses": 0,
+            "points_for": 0,
+            "playoff_odds": 0,
+        }
         for team in league.teams
     }
 
@@ -256,6 +268,7 @@ def simulate_season(
             playoff_count[team_id]["wins"] += stats["wins"]
             playoff_count[team_id]["ties"] += stats["ties"]
             playoff_count[team_id]["losses"] += stats["losses"]
+            playoff_count[team_id]["points_for"] += stats["points_for"]
             playoff_count[team_id]["playoff_odds"] += stats["made_playoffs"]
 
     # Aggregate playoff odds
@@ -275,6 +288,13 @@ def simulate_season(
     playoff_odds["wins"] /= n
     playoff_odds["ties"] /= n
     playoff_odds["losses"] /= n
+    playoff_odds["points_for"] /= n
+
+    # Round estimates
+    playoff_odds["wins"] = playoff_odds["wins"].round(decimals=1)
+    playoff_odds["ties"] = playoff_odds["ties"].round(decimals=1)
+    playoff_odds["losses"] = playoff_odds["losses"].round(decimals=1)
+    playoff_odds["points_for"] = playoff_odds["points_for"].round(decimals=2)
 
     # Add team details to the dataframe
     def get_team_info(s):
@@ -286,5 +306,13 @@ def simulate_season(
     playoff_odds = playoff_odds.apply(get_team_info, axis=1)
 
     return playoff_odds[
-        ["team_owner", "team_name", "wins", "ties", "losses", "playoff_odds"]
+        [
+            "team_owner",
+            "team_name",
+            "wins",
+            "ties",
+            "losses",
+            "points_for",
+            "playoff_odds",
+        ]
     ].sort_values(by="playoff_odds", ascending=False)
