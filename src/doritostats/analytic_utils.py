@@ -6,6 +6,7 @@ from espn_api.football import League, Team, Player
 from espn_api.football.box_score import BoxScore
 from src.doritostats.filter_utils import get_any_records, exclude_most_recent_week
 
+
 def get_lineup(
     league: League, team: Team, week: int, box_scores: Optional[List[BoxScore]] = None
 ) -> List[Player]:
@@ -187,7 +188,7 @@ def get_season_luck_indices(league: League, week: int) -> Dict[Team, float]:
 
 def get_remaining_schedule_difficulty(
     team: Team, week: int, strength: str = "points_for"
-):
+) -> float:
     """
     This function returns the average score of a team's remaining opponents.
 
@@ -223,6 +224,54 @@ def get_remaining_schedule_difficulty(
 
     else:
         raise Exception("Unrecognized parameter passed for `strength`")
+
+
+def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFrame:
+    """
+    This function creates a dataframe containing each team's remaining strength of schedule. Strength of schedule is determined by two factors:
+        - "opp_points_for" is the average points for scored by each of a team's remaining opponents.
+        - "opp_win_pct" is the average winning percentage of each of a team's remaining opponents.
+
+    Args:
+        league (League): League
+        week (int): First week to include as "remaining". I.e., week = 10 will calculate the remaining SOS for Weeks 10 -> end of season.
+
+    Returns:
+        pd.DataFrame
+    """
+    remaining_difficulty_dict = {}  # type: ignore
+
+    # Get the remaining SOS for each team
+    for team in league.teams:
+        remaining_difficulty_dict[team.owner] = {}
+
+        # SOS by points for
+        remaining_difficulty_dict[team.owner][
+            "points_for"
+        ] = get_remaining_schedule_difficulty(team, 10, strength="points_for")
+
+        # SOS by win pct
+        remaining_difficulty_dict[team.owner][
+            "win_pct"
+        ] = get_remaining_schedule_difficulty(team, 10, strength="win_pct")
+
+    # Organize into a dataframe and convert SOS values into a rank order
+    remaining_difficulty = pd.DataFrame(remaining_difficulty_dict).T
+    remaining_difficulty["opp_points_for"] = remaining_difficulty.points_for.rank(
+        method="min"
+    )
+    remaining_difficulty["opp_win_pct"] = remaining_difficulty.win_pct.rank(
+        method="min"
+    )
+
+    # Blend the two values
+    remaining_difficulty["overall_difficulty"] = remaining_difficulty[
+        ["opp_points_for", "opp_win_pct"]
+    ].mean(axis=1)
+
+    return remaining_difficulty[
+        ["opp_points_for", "opp_win_pct", "overall_difficulty"]
+    ].sort_values(by="overall_difficulty")
 
 
 def sort_lineups_by_func(
