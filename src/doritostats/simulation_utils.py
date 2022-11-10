@@ -144,7 +144,7 @@ def simulate_single_season(
         standings (Optional[pd.DataFrame]): Initialized standings dataframe. Defaults to None.
         first_week_to_simulate (Optional[int]): First week to include in the simulation. Defaults to None.
             - If first_week_to_simulate = 10, the function will simulate all matchups from Weeks 10 -> end of season.
-            - If None, the function will use `standings` to imply how many weeks have finished already and simulate the rest.ß
+            - If None, the function will use `standings` to imply how many weeks have finished already and simulate the rest.
 
     Returns:
         pd.DataFrame: Simulated standings dataframe
@@ -192,10 +192,14 @@ def simulate_single_season(
 
 
 def input_outcomes(
-    league: League, standings: pd.DataFrame, week: int
+    league: League,
+    standings: pd.DataFrame,
+    week: int,
+    outcomes: Optional[List[int]] = None,
 ) -> Tuple[pd.DataFrame, Dict[int, List[PseudoMatchup]]]:
     """
     This function will fetch the matchups for a given week and prompt the user to choose a winner.
+    (The `outcomes` parameter can hold information instead of requiring user input)
 
     The 'wins', 'ties', and 'losses' fields of the standings dataframe will then be updated to reflect
     the user's selections.
@@ -206,6 +210,7 @@ def input_outcomes(
         league (League): League
         standings (pd.DataFrame): Standings dataframe
         week (int): Week to select matchup outcomes for
+        outcomes (List[int]): Outcomes passed in as an argument instead of user input. Defaults to None
 
     Raises:
         Exception: Incorrect user input
@@ -216,12 +221,15 @@ def input_outcomes(
     standings = standings.copy()
     matchups_to_exclude = {week: []}  # type: dict
     box_scores = league.box_scores(week)
-    for matchup in box_scores:
-        winner = int(
-            input(
-                f"Who will win this matchup?\n (1) {matchup.home_team.owner}\n (2) {matchup.away_team.owner}\n (3) Leave blank"
+    for i, matchup in enumerate(box_scores):
+        if outcomes is None:
+            winner = int(
+                input(
+                    f"Who will win this matchup?\n (1) {matchup.home_team.owner}\n (2) {matchup.away_team.owner}\n (3) Leave blank"
+                )
             )
-        )
+        else:
+            winner = outcomes[i]
         if winner == 3:
             # No winner assigned
             continue
@@ -255,6 +263,7 @@ def simulate_season(
     league: League,
     n: int = 1000,
     what_if: Optional[bool] = False,
+    outcomes: Optional[List[int]] = None,
     random_state: Optional[int] = 42,
 ) -> pd.DataFrame:
     """
@@ -264,8 +273,9 @@ def simulate_season(
 
     Args:
         league (League): League
-        n (int): Number of simulations to run
+        n (int): Number of Monte Carlo simulations to run
         what_if (Optional[bool]): Manually specify the outcomes of the current week? Defaults to False
+        outcomes (List[int]): Outcomes passed in as an argument instead of user input. Defaults to None
         random_state (Optional[int]): Random seed. Defaults to 42.
 
     Returns:
@@ -293,7 +303,10 @@ def simulate_season(
             standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1
         )
         standings, matchups_to_exclude = input_outcomes(
-            league, standings, league.current_week
+            league=league,
+            standings=standings,
+            week=league.current_week,
+            outcomes=outcomes,
         )
     else:
         first_week_to_simulate = None
@@ -366,3 +379,88 @@ def simulate_season(
             "playoff_odds",
         ]
     ].sort_values(by="playoff_odds", ascending=False)
+
+
+def get_outcomes_if_team_wins(
+    team: Team, week: int, matchups: List[Matchup]
+) -> List[int]:
+    """
+    This function returns an `outcomes` list that indicates the input team won its matchup, and all other matchups are left blank.
+
+    Args:
+        team (Team): Team that won
+        week (int): Week
+        matchups (List[Matchup]): List of matchups for the week (from league.box_scores(week))
+
+    Returns:
+        List[int]: list of outcomes to be passed into input_outcomes().
+    """
+    outcomes = []
+    for matchup in matchups:
+        if team.team_id == matchup.home_team.team_id:
+            outcomes.append(1)
+        elif team.team_id == matchup.away_team.team_id:
+            outcomes.append(2)
+        else:
+            outcomes.append(3)
+    return outcomes
+
+
+def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.Series:
+    """
+    This function determines how much a team's playoff odds will change based on if they win or lose their next matchup.
+
+    For each matchup, two simulations are run:
+        - one where the home team wins, and
+        - one where the away team wins
+
+        In each simulation, only the one matchup is pre-determined. All other matchups in that week are simulated.
+
+        The difference between the home and away teams' playoff odds in the two simulations is called the "swing".
+            - If the simulated playoff odds for a team is 75% if they win and 50% if they lose, then the "swing" is 25%
+
+    The playoff "swings" for each team is returned as a pandas Series where "team_owner" is the index.
+
+    Args:
+        league (League): League
+        week (int): First week to include in the simulation.
+            - If first_week_to_simulate = 10, the function will simulate all matchups from Weeks 10 -> end of season.
+        n (int): Number of Monte Carlo simulations to run
+
+    Returns:
+        pd.Series: Difference in playoff odds for each team if they win vs if they lose
+    """
+    # Get all matchups for the week.
+    matchups = league.box_scores(week)
+
+    # Instantiate the series
+    odds_diff = pd.Series(dtype=float)
+
+    # Simulate playoff odds based on outcome of each matchup
+    for matchup in matchups:
+
+        # Simulate season if home team wins
+        home_team = matchup.home_team
+        outcomes_home_win = get_outcomes_if_team_wins(home_team, week, matchups)
+        odds_home_win = simulate_season(
+            league, n, what_if=True, outcomes=outcomes_home_win
+        ).set_index("team_owner")
+
+        # Simulate season if away team wins
+        away_team = matchup.away_team
+        outcomes_away_win = get_outcomes_if_team_wins(away_team, week, matchups)
+        odds_away_win = simulate_season(
+            league, n, what_if=True, outcomes=outcomes_away_win
+        ).set_index("team_owner")
+
+        # Calculate difference in playoff odds
+        odds_diff = pd.concat(
+            [
+                odds_diff,
+                (odds_home_win.playoff_odds - odds_away_win.playoff_odds)
+                .abs()
+                .loc[[home_team.owner, away_team.owner]],
+            ]
+        )
+
+    return odds_diff
