@@ -45,8 +45,7 @@
     <select name="league-select" id="league-select" onchange="location = this.value">
       <option value="/fantasy_stats/"> - Select your league - </option>
       {% for league in all_leagues %}
-      <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_id }} - {{
-        league.league_name}} ({{ league.league_year}})</option>
+      <option value="{{ league.league_year }}/{{ league.league_id }}">{{ league.league_id }} - {{league.league_name}} ({{ league.league_year}})</option>
       {% endfor %}
     </select>
     <span class="focus"></span>
