@@ -9,3 +9,6 @@ services:
     env: python
     buildCommand: "./build.sh"
     startCommand: gunicorn doritostats.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.10.6"
