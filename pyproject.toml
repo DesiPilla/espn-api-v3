@@ -21,6 +21,13 @@ Django = "^4.1.2"
 django-on-heroku = "^1.1.2"
 joblib = "^1.2.0"
 gunicorn = "^20.1.0"
+whitenoise = {extras = ["brotli"], version = "^6.2.0"}
+
+# [[tool.poetry.source]]
+# name = "foo"
+# url = "https://pypi.example.org/simple/"
+# default = true
+# secondary = false
 
 [build-system]
 requires = ["poetry-core"]
