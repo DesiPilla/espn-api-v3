@@ -147,6 +147,7 @@ USE_TZ = True
 # This setting tells Django at which URL static files are going to be served to the user.
 # Here, they well be accessible at your-domain.onrender.com/static/...
 STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # Following settings only make sense on production and may break development environments.
 if not DEBUG:  # Tell Django to copy statics to the `staticfiles` directory
     # in your application directory on Render.
