@@ -1,76 +1,97 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/league.css' %}">
-    <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/favicon.png' %}" />
-    <title>Dorito Stats | ESPN Fantasy Football Stats</title>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-45P4BQ6XJR"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/league.css' %}">
+  <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/favicon.png' %}" />
+  <title>Dorito Stats</title>
 
-      gtag('config', 'G-45P4BQ6XJR');
-    </script>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-45P4BQ6XJR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
 
-  </head>
+    gtag('config', 'G-45P4BQ6XJR');
+  </script>
 
-  
-  <body>
-    <h1>Welcome to Dorito Stats!</h1>
-    <hr>
+</head>
 
-    {# Dropdown list containing all leagues in database #}
-    <h2>Select your leage</h2>
-    <div class="select">
-      <select name="league-select" id="league-select" onchange="location = this.value">   
+<body>
+  <div id="warning">
+    <h1>WE HAVE MOVED</h1>
+    <p class="warning">Our website has been hosted on Heroku since it launched in October 2021.</p>
+    <p class="warning">Unfortunately, Salesforce <a
+        href="https://www.techtarget.com/searchsoftwarequality/news/252524336/Heroku-to-end-free-tiers-creating-platform-void-for-devs">recently
+        announced</a> that it will be shutting down it's free-tier.</p>
+    <p class="warning">This means that we have to find a new place to host doritostats.</p>
+    <p class="warning">Beginning on Nov 28th, 2022, this site will NO LONGER EXIST.</p>
+    <!-- <br> -->
+    <h1>
+      Please visit the <a href="https://doritostats-72na.onrender.com/fantasy_stats/">NEW SITE</a>.
+    </h1>
+  </div>
+  <hr>
+
+  <h1>Welcome to Dorito Stats!</h1>
+  <hr>
+
+  {# Dropdown list containing all leagues in database #}
+  <h2>Select your leage</h2>
+  <div class="select">
+    <select name="league-select" id="league-select" onchange="location = this.value">
       <option value="/fantasy_stats/"> - Select your league - </option>
       {% for league in all_leagues %}
-        <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_id  }} - {{ league.league_name}} ({{ league.league_year}})</option>
+      <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_id }} - {{
+        league.league_name}} ({{ league.league_year}})</option>
       {% endfor %}
-      </select>
-      <span class="focus"></span>
-    </div>
-    <br>
+    </select>
+    <span class="focus"></span>
+  </div>
+  <br>
+  <hr>
+
+
+  {# Enter league details manually to add to the database #}
+  {% comment %} <h2>League Details</h2> {% endcomment %}
+  <h3>Don't see your league? Add it manually by entering your league's details below.</h3>
+  <div>
+    <form method="POST" action="{% url 'fantasy_stats:league_input' %}">
+      {% csrf_token %}
+      <label>League ID: </label><br>
+      <input type="text" name="league_id" , value=1086064><br>
+      <label>League year: </label><br>
+      <input type="number" min="2017" name="league_year" , value=2022><br>
+      <label>SWID: </label> <br>
+      <input type="password" name="swid"><br>
+      <label>ESPN s2: </label><br>
+      <input type="password" name="espn_s2"><br><br>
+      <button type="submit">Fetch league</button>
+    </form>
     <hr>
+    <h3><em>Don't know your SWID or espn_s2? (instructions for Mac / PC)</em></h3>
+    <p>
+    <ol>
+      <li>Log into your espn fantasy football account at <a
+          href='https://www.espn.com/fantasy/football/'>https://www.espn.com/fantasy/football/</a>.</li>
+      <li>Right click anywhere on the screen (Chrome browser only) and click <em>Inspect</em>.</li>
+      <li>In the window that appears on the right, click <em>Application</em> on the top bar (you may have to click the
+        dropdown arrow next to <em>Elements, Console, Sources...</em>).</li>
+      <li>On the left, navigate to </em>Storage > Cookies > http://fantasy.espn.com</em>.</li>
+      <li>Scroll down in the table to the right until you find <strong>SWID</strong>. Copy & paste the alphanumeric
+        string
+        in the the <em>Value</em> column (without the curly brackets).</li>
+      It should look something like: <em>43B70875-0C4B-428L-B608-759A4BB28FA1</em>
+      <li>Next, keep scrolling until you find <strong>espn_s2</strong>. Again, copy and paste the alphanumeric string in
+        the <em>Value</em> column. This code will be much longer and won't have curly brackets in it.</li>
+    </ol>
+    </p>
+  </div>
 
 
-    {# Enter league details manually to add to the database #}
-    {% comment %} <h2>League Details</h2> {% endcomment %}
-    <h3>Don't see your league? Add it manually by entering your league's details below.</h3>
-    <div>
-      <form method="POST" action="{% url 'fantasy_stats:league_input' %}">
-        {% csrf_token %}
-        <label>League ID: </label><br>
-        <input type="text" name="league_id", value=1086064><br>
-        <label>League year: </label><br>
-        <input type="number" min="2017" name="league_year", value=2022><br> 
-        <label>SWID: </label> <br>
-        <input type="password" name="swid", value='55B70875-0A4B-428F-B708-750A4BB28FA1'><br>
-        <label>ESPN s2: </label><br>
-        <input type="password" name="espn_s2", value='AEApIqrIV9DE%2F6ZyCAHsoG7FnThiXorn2ejnLGJol8qqRUDI6IVkY11AZLoYlNgj6uoA1M3aSYjcJ2%2F1NiBBzvyI4GzanP%2BCmvF0DhcYSDxaGFzBwYKhzXxkHGd2a9rAC%2Bz3A%2FT3EgEIg8%2FqiUEGDiUhtrRpwQBtDHzelXXBjyCbjH2kSNYBrhON5pZPcvNbJhwRZXr%2F%2Fd1tVQQ7U4FnltTB7VGFPcf7TwT4RYuylGyHixEQAdtzb4YAcbXJOJKNBJF0%2BJgLg2mAb4F4REaXbyX8'><br><br>
-        <button type="submit">Fetch league</button>
-      </form>
-      <hr>
-      <h3><em>Don't know your SWID or espn_s2? (instructions for Mac / PC)</em></h3>
-      <p>
-        <ol>
-          <li>Log into your espn fantasy football account at <a href='https://www.espn.com/fantasy/football/'>https://www.espn.com/fantasy/football/</a>.</li>
-          <li>Right click anywhere on the screen (Chrome browser only) and click <em>Inspect</em>.</li>
-          <li>In the window that appears on the right, click <em>Application</em> on the top bar (you may have to click the dropdown arrow next to <em>Elements, Console, Sources...</em>).</li>
-          <li>On the left, navigate to </em>Storage > Cookies > http://fantasy.espn.com</em>.</li>
-          <li>Scroll down in the table to the right until you find <strong>SWID</strong>. Copy & paste the alphanumeric string in the the <em>Value</em> column (without the curly brackets).</li>
-              It should look something like: <em>43B70875-0C4B-428L-B608-759A4BB28FA1</em>
-          <li>Next, keep scrolling until you find <strong>espn_s2</strong>. Again, copy and paste the alphanumeric string in the <em>Value</em> column. This code will be much longer and won't have curly brackets in it.</li>
-        </ol>
-      </p>
-    </div> 
-    
+</body>
 
-  </body>
 </html>
-
