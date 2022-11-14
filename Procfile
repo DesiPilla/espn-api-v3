@@ -1,1 +1,1 @@
-web gunicorn doritostats.wsgi:application --log-file -
+web gunicorn doritostats.wsgi:application --log-file
