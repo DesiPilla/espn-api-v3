@@ -46,13 +46,13 @@
       <form method="POST" action="{% url 'fantasy_stats:league_input' %}">
         {% csrf_token %}
         <label>League ID: </label><br>
-        <input type="text" name="league_id", value=1086064><br>
+        <input type="text" name="league_id"><br>
         <label>League year: </label><br>
         <input type="number" min="2017" name="league_year", value=2022><br> 
         <label>SWID: </label> <br>
-        <input type="password" name="swid", value='55B70875-0A4B-428F-B708-750A4BB28FA1'><br>
+        <input type="password" name="swid", value=''><br>
         <label>ESPN s2: </label><br>
-        <input type="password" name="espn_s2", value='AEApIqrIV9DE%2F6ZyCAHsoG7FnThiXorn2ejnLGJol8qqRUDI6IVkY11AZLoYlNgj6uoA1M3aSYjcJ2%2F1NiBBzvyI4GzanP%2BCmvF0DhcYSDxaGFzBwYKhzXxkHGd2a9rAC%2Bz3A%2FT3EgEIg8%2FqiUEGDiUhtrRpwQBtDHzelXXBjyCbjH2kSNYBrhON5pZPcvNbJhwRZXr%2F%2Fd1tVQQ7U4FnltTB7VGFPcf7TwT4RYuylGyHixEQAdtzb4YAcbXJOJKNBJF0%2BJgLg2mAb4F4REaXbyX8'><br><br>
+        <input type="password" name="espn_s2", value=''><br><br>
         <button type="submit">Fetch league</button>
       </form>
       <hr>
