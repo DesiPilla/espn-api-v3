@@ -6,7 +6,7 @@
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/league.css' %}">
     <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/favicon.png' %}" />
-    <title>Dorito Stats | League Stats</title>
+    <title>Dorito Stats | {{league_info.league_name}}</title>
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-45P4BQ6XJR"></script>
@@ -26,7 +26,6 @@
     <h2>{{league_info.league_name}}</h2>
     <p>League ID: {{league_info.league_id}}</p>
     <p>League year: {{league_info.league_year}}</p>
-    {% comment %} <p>Week: {{page_week}}</p> {% endcomment %}
 
     {% comment %} Select a different week {% endcomment %}
     <div class="select">
@@ -52,6 +51,8 @@
       </select>
       <span class="focus"></span>
     </div>
+    <br>
+    <a href="/fantasy_stats/">Return to home page</a>
     <hr>
 
 
@@ -195,4 +196,3 @@
 
   </body>
 </html>
-
