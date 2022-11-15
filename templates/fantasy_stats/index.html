@@ -24,18 +24,30 @@
     <h1>Welcome to Dorito Stats!</h1>
     <hr>
 
-    {# Dropdown list containing all leagues in database #}
+    {# Dropdown list containing all leagues in database from current year #}
     <h2>Select your leage</h2>
     <div class="select">
       <select name="league-select" id="league-select" onchange="location = this.value">   
       <option value="/fantasy_stats/"> - Select your league - </option>
-      {% for league in all_leagues %}
+      {% for league in leagues_current_year %}
         <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_id  }} - {{ league.league_name}} ({{ league.league_year}})</option>
       {% endfor %}
       </select>
       <span class="focus"></span>
     </div>
     <br>
+
+    {# Dropdown list containing all leagues in database from previous years #}
+    <div class="unselected-field" style="display: inline-block;" id="selectCountry">
+      <label>Looking for leagues from previous seasons?
+        <select name="league-select" id="league-select" onchange="location = this.value">   
+          <option value="/fantasy_stats/"> - Select your historical league - </option>
+          {% for league in leagues_previous_year %}
+            <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_id  }} - {{ league.league_name}} ({{ league.league_year}})</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
     <hr>
 
 
@@ -56,6 +68,7 @@
         <button type="submit">Fetch league</button>
       </form>
       <hr>
+
       <h3><em>Don't know your SWID or espn_s2? (instructions for Mac / PC)</em></h3>
       <p>
         <ol>
