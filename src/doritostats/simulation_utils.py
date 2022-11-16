@@ -406,7 +406,7 @@ def get_outcomes_if_team_wins(
     return outcomes
 
 
-def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.Series:
+def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
     """
     This function determines how much a team's playoff odds will change based on if they win or lose their next matchup.
 
@@ -428,13 +428,13 @@ def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.Series:
         n (int): Number of Monte Carlo simulations to run
 
     Returns:
-        pd.Series: Difference in playoff odds for each team if they win vs if they lose
+        pd.DataFrame: Difference in playoff odds for each team if they win vs if they lose
     """
     # Get all matchups for the week.
     matchups = league.box_scores(week)
 
     # Instantiate the series
-    odds_diff = pd.Series(dtype=float)
+    odds_diff = pd.DataFrame(dtype=float)
 
     # Simulate playoff odds based on outcome of each matchup
     for matchup in matchups:
@@ -453,11 +453,25 @@ def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.Series:
             league, n, what_if=True, outcomes=outcomes_away_win
         ).set_index("team_owner")
 
+        # Merge results
+        odds = pd.merge(
+            odds_home_win[["playoff_odds"]],
+            odds_away_win[["playoff_odds"]],
+            suffixes=("_if_home_win", "_if_away_lose"),
+            left_index=True,
+            right_index=True,
+        )
+        odds["playoff_odds_if_win"], odds["playoff_odds_if_lose"] = odds.max(
+            axis=1
+        ), odds.min(axis=1)
+
         # Calculate difference in playoff odds
+        odds["swing"] = odds["playoff_odds_if_win"] - odds["playoff_odds_if_lose"]
+
         odds_diff = pd.concat(
             [
                 odds_diff,
-                (odds_home_win.playoff_odds - odds_away_win.playoff_odds)
+                odds[["playoff_odds_if_win", "playoff_odds_if_lose", "swing"]]
                 .abs()
                 .loc[[home_team.owner, away_team.owner]],
             ]
