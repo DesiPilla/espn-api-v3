@@ -248,12 +248,12 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
         # SOS by points for
         remaining_difficulty_dict[team.owner][
             "points_for"
-        ] = get_remaining_schedule_difficulty(team, 10, strength="points_for")
+        ] = get_remaining_schedule_difficulty(team, week, strength="points_for")
 
         # SOS by win pct
         remaining_difficulty_dict[team.owner][
             "win_pct"
-        ] = get_remaining_schedule_difficulty(team, 10, strength="win_pct")
+        ] = get_remaining_schedule_difficulty(team, week, strength="win_pct")
 
     # Organize into a dataframe and convert SOS values into a rank order
     remaining_difficulty = pd.DataFrame(remaining_difficulty_dict).T
