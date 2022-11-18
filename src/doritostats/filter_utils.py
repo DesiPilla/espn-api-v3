@@ -40,7 +40,7 @@ def get_any_records(
     sub_df["rank"] = sub_df[stat].rank(ascending=(not high_first), method="min")
 
     # Keep only the top n records, in the year-week of note
-    sub_df = sub_df[sub_df['rank'] <= n]
+    sub_df = sub_df[sub_df["rank"] <= n]
     sub_df = sub_df.query(f"year == {year} & week == {week}")
 
     return sub_df[["year", "week", "team_owner", stat, "rank"]]

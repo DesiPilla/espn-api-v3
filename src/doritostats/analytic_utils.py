@@ -409,7 +409,7 @@ def print_franchise_records(
 
     for team_owner in list_of_teams:
         # Get all rows for the given team
-        team_df = df.query(f"team_owner == {team_owner}")
+        team_df = df.query(f"team_owner == '{team_owner}'")
 
         # Get any records for that team
         records_df = get_any_records(
