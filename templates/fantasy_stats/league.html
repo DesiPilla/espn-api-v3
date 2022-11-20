@@ -138,7 +138,7 @@
 
 
 
-  {% comment %} {# Luck Index #}
+  {# Luck Index #}
   <div class="wrapper">
   <h2>Luck Index</h2>
     <div class="table"> 
@@ -154,13 +154,13 @@
       {% for r in  luck_index%}
       <div class="row">
         <div class="cell" data-title="Team"> {{ r.team }} </div>
-        <div class="cell" data-title="Luck Index"> {{ r.value|floatformat:"0" }}%</div>
+        <div class="cell" data-title="Luck Index"> {{ r.value }}</div>
         <div class="cell" data-title="Owner"> {{ r.owner }} </div>
       </div>
       {% endfor %}
 
     </div>
-  </div> {% endcomment %}
+  </div>
 
 
 

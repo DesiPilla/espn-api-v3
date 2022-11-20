@@ -181,7 +181,7 @@ def get_season_luck_indices(league: League, week: int) -> Dict[Team, float]:
     for wk in range(1, week + 1):
         # Update luck_index for each team
         for team in league.teams:
-            luck_indices[team] += get_weekly_luck_index(league, team, week)
+            luck_indices[team] += get_weekly_luck_index(league, team, wk)
 
     return luck_indices
 

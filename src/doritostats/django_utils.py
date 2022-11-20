@@ -187,10 +187,14 @@ def django_luck_index(league: League, week: int):
     for (team, luck) in sorted(
         league_luck_index.items(), key=lambda x: x[1], reverse=True
     ):
+        if luck >= 0:
+            luck_val = "+{:.1f} net wins gained by luck".format(luck)
+        else:
+            luck_val = "{:.1f} net wins lost by unluckiness".format(luck)
         luck_index.append(
             {
                 "team": team.team_name,
-                "value": "{:.1f}".format(luck * 100),
+                "value": luck_val,
                 "owner": team.owner,
             }
         )

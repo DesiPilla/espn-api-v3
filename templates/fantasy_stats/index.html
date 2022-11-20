@@ -7,6 +7,10 @@
     <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/favicon.png' %}" />
     <title>Dorito Stats | ESPN Fantasy Football Stats</title>
 
+    <!-- load jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="{% static "fantasy_stats/js/league.js" %}"></script>
+
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-45P4BQ6XJR"></script>
     <script>
@@ -16,7 +20,6 @@
 
       gtag('config', 'G-45P4BQ6XJR');
     </script>
-
   </head>
 
   
@@ -24,32 +27,41 @@
     <h1>Welcome to Dorito Stats!</h1>
     <hr>
 
-    {# Dropdown list containing all leagues in database from current year #}
-    <h2>Select your leage</h2>
-    <div class="select">
-      <select name="league-select" id="league-select" onchange="location = this.value">   
-      <option value="/fantasy_stats/"> - Select your league - </option>
-      {% for league in leagues_current_year %}
-        <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_id  }} - {{ league.league_name}} ({{ league.league_year}})</option>
-      {% endfor %}
-      </select>
-      <span class="focus"></span>
-    </div>
-    <br>
+    <div>
+      <h2>Select your league</h2>
+      {# Choose if league is from the current season or a previous season #}
+      <div>
+        <label>Search for leagues in the 
+              <label><input type="radio" name="current-or-previous-season" value="select-from-current-year" checked>Current season</label>
+              <label><input type="radio" name="current-or-previous-season" value="select-from-previous-year">Previous season</label>
+        </label>
+      </div>
 
-    {# Dropdown list containing all leagues in database from previous years #}
-    <div class="unselected-field" style="display: inline-block;" id="selectCountry">
-      <label>Looking for leagues from previous seasons?
+      {# Dropdown list containing all leagues in database from current year #}
+      <div class="select" id="select-from-current-year">
+        <select name="league-select" id="league-select" onchange="location = this.value">   
+          <option value="/fantasy_stats/"> - Select your league - </option>
+          {% for league in leagues_current_year %}
+            <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_id  }} - {{ league.league_name}} ({{ league.league_year}})</option>
+          {% endfor %}
+        </select>
+        <span class="focus"></span>
+      </div>
+
+      {# Dropdown list containing all leagues in database from previous years #}
+      <div class="unselected-field" style="display: inline-block;" id="select-from-previous-year">
         <select name="league-select" id="league-select" onchange="location = this.value">   
           <option value="/fantasy_stats/"> - Select your historical league - </option>
           {% for league in leagues_previous_year %}
             <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_id  }} - {{ league.league_name}} ({{ league.league_year}})</option>
           {% endfor %}
         </select>
-      </label>
+        <span class="focus"></span>
+      </div>
     </div>
+    
+    <br>
     <hr>
-
 
     {# Enter league details manually to add to the database #}
     {% comment %} <h2>League Details</h2> {% endcomment %}
