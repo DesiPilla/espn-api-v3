@@ -29,12 +29,14 @@
 
     <div>
       <h2>Select your league</h2>
+      {# Choose if league is from the current season or a previous season #}
       <div>
         <label>Search for leagues in the 
               <label><input type="radio" name="current-or-previous-season" value="select-from-current-year" checked>Current season</label>
               <label><input type="radio" name="current-or-previous-season" value="select-from-previous-year">Previous season</label>
         </label>
       </div>
+
       {# Dropdown list containing all leagues in database from current year #}
       <div class="select" id="select-from-current-year">
         <select name="league-select" id="league-select" onchange="location = this.value">   
