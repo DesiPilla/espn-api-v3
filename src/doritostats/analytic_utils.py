@@ -109,6 +109,53 @@ def sum_bench_points(league: League, lineup: list) -> float:
     return np.sum([player.points for player in lineup if player.slot_position == "BE"])
 
 
+def get_score_surprise(league: League, lineup: List[Player]) -> float:
+    """
+    Returns the difference ("surprise") between a team's projected starting score and its actual score.
+    """
+    projected_score = np.sum(
+        [
+            player.projected_points
+            for player in lineup
+            if player.slot_position not in ("BE", "IR")
+        ]
+    )
+    real_score = np.sum(
+        [player.points for player in lineup if player.slot_position not in ("BE", "IR")]
+    )
+    return real_score - projected_score
+
+
+def get_total_tds(league: League, lineup: List[Player]) -> float:
+    """
+    Returns the total number of TDs scored by the starting roster.
+    """
+    total_tds = 0
+    for player in lineup:
+        if player.slot_position in ("BE", "IR"):
+            continue
+
+        player_tds = 0
+        for statId in [
+            "passingTouchdowns",
+            "rushingTouchdowns",
+            "receivingTouchdowns",
+            "defensiveBlockedKickForTouchdowns",
+            "defensiveTouchdowns",
+            "kickoffReturnTouchdowns",
+            "puntReturnTouchdowns",
+            "interceptionReturnTouchdowns",
+            "fumbleReturnTouchdowns",
+            "defensivePlusSpecialTeamsTouchdowns",
+        ]:
+            week = list(player.stats.keys())[0]
+            if statId in player.stats[week]["breakdown"].keys():
+                player_tds += player.stats[week]["breakdown"][statId]
+        total_tds += player_tds
+
+    return total_tds
+
+
 """ ADVANCED STATS """
 
 
