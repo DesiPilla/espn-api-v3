@@ -6,7 +6,9 @@ from .analytic_utils import (
     get_lineup_efficiency,
     avg_slot_score,
     sum_bench_points,
+    get_score_surprise,
     get_season_luck_indices,
+    get_total_tds,
 )
 
 
@@ -26,12 +28,22 @@ def django_weekly_stats(league: League, week: int):
             sort_lineups_by_func(league, week, get_best_lineup, box_scores)[-1].owner,
         ],
         [
+            "Most TDs: ",
+            sort_lineups_by_func(league, week, get_total_tds, box_scores)[-1].owner,
+        ],
+        [
             "Best Trio: ",
             sort_lineups_by_func(league, week, get_best_trio, box_scores)[-1].owner,
         ],
         [
             "Best Lineup Setter",
             sort_lineups_by_func(league, week, get_lineup_efficiency, box_scores)[
+                -1
+            ].owner,
+        ],
+        [
+            "Projection Outperformaner:",
+            sort_lineups_by_func(league, week, get_score_surprise, box_scores)[
                 -1
             ].owner,
         ],
@@ -89,6 +101,10 @@ def django_weekly_stats(league: League, week: int):
         ],
         ["---------------------", "----------------"],
         [
+            "Fewest TDs: ",
+            sort_lineups_by_func(league, week, get_total_tds, box_scores)[0].owner,
+        ],
+        [
             "Worst Trio: ",
             sort_lineups_by_func(league, week, get_best_trio, box_scores)[0].owner,
         ],
@@ -97,6 +113,10 @@ def django_weekly_stats(league: League, week: int):
             sort_lineups_by_func(league, week, get_lineup_efficiency, box_scores)[
                 0
             ].owner,
+        ],
+        [
+            "Projection Underperformance:",
+            sort_lineups_by_func(league, week, get_score_surprise, box_scores)[0].owner,
         ],
         [
             "Worst QBs: ",
