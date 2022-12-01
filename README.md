@@ -1,6 +1,6 @@
 # espn-api-v3
 
-Link to [Render website](https://doritostats-72na.onrender.com/fantasy_stats/)
+Link to [Railway website](https://doritostats.up.railway.app/)
 Link to [Heroku website](https://doritostats.herokuapp.com/fantasy_stats/) (WILL BE DEACTIVATED ON NOV 28TH, 2022)
 
 This project aims to make ESPN Fantasy Football statistics easily available.
