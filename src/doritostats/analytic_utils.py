@@ -149,8 +149,9 @@ def get_total_tds(league: League, lineup: List[Player]) -> float:
             "defensivePlusSpecialTeamsTouchdowns",
         ]:
             week = list(player.stats.keys())[0]
-            if statId in player.stats[week]["breakdown"].keys():
-                player_tds += player.stats[week]["breakdown"][statId]
+            if "breakdown" in player.stats[week].keys():
+                if statId in player.stats[week]["breakdown"].keys():
+                    player_tds += player.stats[week]["breakdown"][statId]
         total_tds += player_tds
 
     return total_tds
