@@ -2,7 +2,7 @@
 
 Link to [Railway website](https://doritostats.up.railway.app/)
 
-Link to [Postgres database](https://dashboard.render.com/d/dpg-cdn5jjaen0hm6jri0nng-a) on Render
+Link to [Postgres database](https://console.neon.tech/app/projects/spring-star-554438) on Neon
 
 Link to [Heroku website](https://doritostats.herokuapp.com/fantasy_stats/) (WILL BE DEACTIVATED ON NOV 28TH, 2022)
 
