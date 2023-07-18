@@ -237,13 +237,11 @@ def get_stats_by_week(
     for week in range(
         min(len(league.settings.matchup_periods), league.currentMatchupPeriod)
     ):
-
         # Instantiate week data frame
         df_week = pd.DataFrame()
 
         # Loop through every team
         for i, team in enumerate(league.teams):
-
             # Skip byes
             if team.schedule[i] == team:
                 continue
@@ -342,7 +340,6 @@ def get_stats_by_matchup(
         # Instantiate week data frame
         df_week = pd.DataFrame()
         for i, matchup in enumerate(box_scores):
-
             # Skip byes
             if (type(matchup.home_team) != Team) or (type(matchup.away_team) != Team):
                 continue
@@ -555,13 +552,17 @@ def get_historical_stats(
         .groupby("year")
         .median()
         .team_score
-        / df[(df.is_meaningful_game) & (df.year == 2022)].team_score.median()
+        / df[(df.is_meaningful_game) & (df.year == df.year.max())].team_score.median()
     ).to_dict()
 
     def get_adjusted_score(s):
         return s.team_score / year_multiplier_map[s.year]
 
+    def get_opp_adjusted_score(s):
+        return s.opp_score / year_multiplier_map[s.year]
+
     df["team_score_adj"] = df.apply(get_adjusted_score, axis=1)
+    df["opp_score_adj"] = df.apply(get_opp_adjusted_score, axis=1)
 
     # Correct capitalization of team owners
     df["team_owner"] = df.team_owner.str.title()
