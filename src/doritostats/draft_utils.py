@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from typing import Optional
 from .fetch_utils import fetch_league
@@ -26,7 +27,7 @@ def get_draft_details(league: League) -> pd.DataFrame:
 
     for i, player in enumerate(league.draft):
         draft.loc[i, "year"] = league.year
-        draft.loc[i, "team_owner"] = player.team.owner
+        draft.loc[i, "team_owner"] = player.team.owner.title()
         draft.loc[i, "team_id"] = player.team.team_id
         draft.loc[i, "player_name"] = player.playerName
         draft.loc[i, "player_id"] = player.playerId
@@ -51,6 +52,11 @@ def get_draft_details(league: League) -> pd.DataFrame:
             print(i, player, league.draft[i - 2 : i + 2])
             draft.loc[i, "position"] = player.eligibleSlots[0]
 
+    # Map owners of previous/co-owned teams to current owners to preserve "franchise"
+    owner_map = {"Katie Brooks": "Nikki  Pilla"}
+    draft.replace({"team_owner": owner_map, "opp_owner": owner_map}, inplace=True)
+
+    # Add some additional columns
     draft["first_letter"] = draft.player_name.str[0]
     draft["points_surprise"] = draft.total_points - draft.proj_points
     draft["positive_surprise"] = draft.points_surprise > 0
@@ -58,7 +64,8 @@ def get_draft_details(league: League) -> pd.DataFrame:
         draft.team_id.unique()
     ) + draft.round_pick
 
-    draft_pick_values = pd.read_csv("./doritostats/pick_value.csv")
+    # Add the value associated with each pick
+    draft_pick_values = pd.read_csv("./src/doritostats/pick_value.csv")
     draft = pd.merge(
         draft, draft_pick_values, left_on="pick_num", right_on="pick", how="left"
     ).drop(columns=["pick"])
@@ -77,7 +84,7 @@ def get_multiple_drafts(
     Args:
         league_id (int): League
         start_year (int, optional): First year to get draft stats for. Defaults to 2020.
-        end_year (int, optional): Final year to get draft stats for. Defaults to 2021.
+        end_year (int, optional): Final year to get draft stats for (inclusive). Defaults to 2021.
         swid (Optional[str], optional): User credential. Defaults to None.
         espn_s2 (Optional[str], optional): User credential. Defaults to None.
 
@@ -97,3 +104,30 @@ def get_multiple_drafts(
         draft = pd.concat([draft, get_draft_details(draft_league)])
 
     return draft
+
+
+def get_team_max(df: pd.DataFrame, col: str) -> pd.DataFrame:
+    """For each team in the draft history dataframe, return the value that occurs most for a given column.
+
+    Args:
+        df (pd.DataFrame): Draft history dataframe
+        col (str): Column name
+
+    Returns:
+        pd.DataFrame: values
+    """
+    df_mode = df.groupby(["team_owner"])[col].agg(pd.Series.mode)
+
+    # Ugly code that essentially joins back to the original df to get the count of the mode
+    max_vals = df_mode.values
+    df_mode = df_mode.to_frame()
+    df_mode[col] = [v[0] if type(v) == np.ndarray else v for v in max_vals]
+    value_counts = (
+        df.groupby(["team_owner"])[col]
+        .value_counts()
+        .reset_index(name="count")
+        .set_index(["team_owner", col])
+    )
+    df_mode = df_mode.reset_index().join(value_counts, on=["team_owner", col])
+    df_mode[col] = max_vals
+    return df_mode.sort_values(by="count", ascending=False)

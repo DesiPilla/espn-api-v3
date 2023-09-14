@@ -415,7 +415,7 @@ def print_records(
 
     # Print out any records
     superlative = "highest" if high_first else "lowest"
-    for (_, row) in records_df.iterrows():
+    for _, row in records_df.iterrows():
         print(
             "{} had the {} {} {} ({:.2f} {}) in league history".format(
                 row.team_owner,
@@ -466,7 +466,7 @@ def print_franchise_records(
 
         # Print out any records
         superlative = "highest" if high_first else "lowest"
-        for (_, row) in records_df.iterrows():
+        for _, row in records_df.iterrows():
             print(
                 "{} had the {} {} {} ({:.2f} {}) in franchise history".format(
                     row.team_owner,
@@ -598,7 +598,7 @@ def game_of_the_week_stats(
     league: League, df: pd.DataFrame, owner1: str, owner2: str
 ) -> None:
     gow_df = df.query(
-        f"team_owner == {owner1} & opp_owner == {owner2} & is_meaningful_game == True"
+        f"team_owner == '{owner1}' & opp_owner == '{owner2}' & is_meaningful_game == True"
     )
     gow_df.sort_values(["year", "week"], ascending=True, inplace=True)
 
@@ -637,7 +637,7 @@ def game_of_the_week_stats(
     print(
         "They have averaged {:.2f} points per game.".format(
             df.query(
-                f"team_owner == {owner1} & year == {league.year} & is_meaningful_game == True"
+                f"team_owner == '{owner1}' & year == {league.year} & is_meaningful_game == True"
             ).team_score.mean()
         )
     )
@@ -654,7 +654,7 @@ def game_of_the_week_stats(
     print(
         "They have averaged {:.2f} points per game.".format(
             df.query(
-                f"team_owner == {owner2} & year == {league.year} & is_meaningful_game == True"
+                f"team_owner == '{owner2}' & year == {league.year} & is_meaningful_game == True"
             ).team_score.mean()
         )
     )
