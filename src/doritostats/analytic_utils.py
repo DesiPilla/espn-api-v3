@@ -415,7 +415,7 @@ def print_records(
 
     # Print out any records
     superlative = "highest" if high_first else "lowest"
-    for (_, row) in records_df.iterrows():
+    for _, row in records_df.iterrows():
         print(
             "{} had the {} {} {} ({:.2f} {}) in league history".format(
                 row.team_owner,
@@ -466,7 +466,7 @@ def print_franchise_records(
 
         # Print out any records
         superlative = "highest" if high_first else "lowest"
-        for (_, row) in records_df.iterrows():
+        for _, row in records_df.iterrows():
             print(
                 "{} had the {} {} {} ({:.2f} {}) in franchise history".format(
                     row.team_owner,

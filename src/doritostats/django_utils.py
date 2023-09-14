@@ -42,7 +42,7 @@ def django_weekly_stats(league: League, week: int):
             ].owner,
         ],
         [
-            "Projection Outperformaner:",
+            "Projection Outperformer:",
             sort_lineups_by_func(league, week, get_score_surprise, box_scores)[
                 -1
             ].owner,
@@ -115,7 +115,7 @@ def django_weekly_stats(league: League, week: int):
             ].owner,
         ],
         [
-            "Projection Underperformance:",
+            "Projection Underperformer:",
             sort_lineups_by_func(league, week, get_score_surprise, box_scores)[0].owner,
         ],
         [
@@ -204,7 +204,7 @@ def django_luck_index(league: League, week: int):
 
     # Add the luck index for each team
     luck_index = []
-    for (team, luck) in sorted(
+    for team, luck in sorted(
         league_luck_index.items(), key=lambda x: x[1], reverse=True
     ):
         if luck >= 0:

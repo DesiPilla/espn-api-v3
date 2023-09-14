@@ -120,6 +120,10 @@ def fetch_league(
     print("[BUILDING LEAGUE] Fetching league data...")
     league = League(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)
 
+    # Clean up owner names
+    for team in league.teams:
+        team.owner = team.owner.title()
+
     # Set cookies
     league.cookies = {"swid": swid, "espn_s2": espn_s2}
 
@@ -510,7 +514,12 @@ def append_streaks(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_historical_stats(
-    league_id: int, start_year: int, end_year: int, swid: str, espn_s2: str
+    league_id: int,
+    start_year: int,
+    end_year: int,
+    swid: str,
+    espn_s2: str,
+    df_prev: Optional[pd.DataFrame] = None,
 ) -> pd.DataFrame:
     """Generate a table with weekly matchup statistics for every owner and every week over multiple years.
 
@@ -520,20 +529,26 @@ def get_historical_stats(
         end_year (int): Most recent year to get data from
         swid (str): ESPN SWID credential
         espn_s2 (str): ESPN_S2 credential
+        df_prev (pd.DataFrame, optional): Historical stats dataframe to append to. Defaults to None.
 
     Returns:
         pandas dataframe: Weekly historical stats for the given league
     """
-    df = pd.DataFrame()
+    if df_prev is None:
+        df = pd.DataFrame()
+    else:
+        df = df_prev
+
+    # Fetch data for each year and append it to the dataframe
     for year in range(start_year, end_year + 1):
-        print(year)
-        # Cannot use box score before 2019
+        print("\n[BUILDING LEAGUE] Fetching historical stats for {}...".format(year))
         if year < 2019:
-            # Get year's data
+            # BoxScore information is not available for years prior to 2019
+            # Build the data from Team information
             df_year = get_stats_by_week(league_id, year, swid, espn_s2)
             df_year["box_score_available"] = False
         else:
-            # Get year's data
+            # Build the data from BoxScore information
             df_year = get_stats_by_matchup(league_id, year, swid, espn_s2)
             df_year["box_score_available"] = True
 
@@ -547,12 +562,14 @@ def get_historical_stats(
         df = pd.concat([df, df_year])
 
     # Get adjusted score
+    # The score multiplier is defined as the median score of the league in a given year
+    # divided by the median score of the league in the most recent completed year.
     year_multiplier_map = (
         df[df.is_meaningful_game][["year", "team_score"]]
         .groupby("year")
         .median()
         .team_score
-        / df[(df.is_meaningful_game) & (df.year == df.year.max())].team_score.median()
+        / df[(df.is_meaningful_game) & (df.year == end_year - 1)].team_score.median()
     ).to_dict()
 
     def get_adjusted_score(s):
@@ -567,7 +584,114 @@ def get_historical_stats(
     # Correct capitalization of team owners
     df["team_owner"] = df.team_owner.str.title()
 
+    # Map owners of previous/co-owned teams to current owners to preserve "franchise"
+    owner_map = {"Katie Brooks": "Nikki  Pilla"}
+    df.replace({"team_owner": owner_map, "opp_owner": owner_map}, inplace=True)
+
     # Get win streak data for each owner
     df = append_streaks(df)
 
     return df
+
+
+def update_current_season_stats(
+    league_id: int,
+    df: Optional[pd.DataFrame] = None,
+    file_path: Optional[str] = None,
+    swid: Optional[str] = None,
+    espn_s2: Optional[str] = None,
+):
+    """Update the current season of the historical stats dataframe.
+    Note: the entire season must be overwritten because the adjusted stats will change for all weeks.
+
+    Args:
+        league_id (int): the league id
+        df (pd.Dataframe, optional): the historical stats dataframe to add to (if no file path is passed in)
+        file_path (str): the file path to the historical stats dataframe (if no df is passed in)
+        swid (str, optional): The SWID to access the league (for private leagues). Defaults to None.
+        espn_s2 (str, optional): The ESPN_S2 to access the league (for private leagues). Defaults to None.
+
+    Returns:
+        pd.DataFrame: The updated historical stats dataframe
+    """
+    # If no dataframe is passed in, read the dataframe from the file path
+    if df is None:
+        if file_path is None:
+            raise ValueError("Must pass in a dataframe or file path")
+        else:
+            df = pd.read_csv(file_path)
+
+    # Identify the current season
+    cur_season = df.year.max().astype(int)
+
+    # Keep data from previous seasons
+    df_prev_season = df[df.year != cur_season]
+
+    # Re-build the dataframe for the current season
+    return get_historical_stats(
+        league_id, cur_season, cur_season, swid, espn_s2, df_prev=df_prev_season
+    )
+
+
+def add_newest_season_to_stats(
+    league_id: int,
+    df: Optional[pd.DataFrame] = None,
+    file_path: Optional[str] = None,
+    swid: Optional[str] = None,
+    espn_s2: Optional[str] = None,
+):
+    """Add the newest year to the historical stats dataframe.
+
+    Args:
+        league_id (int): the league id
+        df (pd.Dataframe, optional): the historical stats dataframe to add to (if no file path is passed in)
+        file_path (str): the file path to the historical stats dataframe (if no df is passed in)
+        swid (str, optional): The SWID to access the league (for private leagues). Defaults to None.
+        espn_s2 (str, optional): The ESPN_S2 to access the league (for private leagues). Defaults to None.
+
+    Returns:
+        pd.DataFrame: The updated historical stats dataframe
+    """
+    # If no dataframe is passed in, read the dataframe from the file path
+    if df is None:
+        if file_path is None:
+            raise ValueError("Must pass in a dataframe or file path")
+        else:
+            df = pd.read_csv(file_path)
+
+    # Identify the current season
+    new_season = df.year.max().astype(int) + 1
+
+    # Keep data from previous seasons
+    max_week_in_last_season = df[df.year == new_season - 1].week.max()
+    if max_week_in_last_season < 14:
+        # Prompt the user if they want to update the historical stats
+        if (
+            input(
+                "The {} season only has data through Week {}. Are you sure you want to fetch data for {}? (y/N)".format(
+                    new_season - 1, max_week_in_last_season, new_season
+                )
+            )
+            != "y"
+        ):
+            if (
+                input(
+                    "Would you like to update the {} season instead? (y/N)".format(
+                        new_season - 1
+                    )
+                )
+                == "y"
+            ):
+                return update_current_season_stats(
+                    df=df,
+                    league_id=league_id,
+                    swid=swid,
+                    espn_s2=espn_s2,
+                )
+            else:
+                print("Exiting process without updating the dataframe.")
+
+    # Re-build the dataframe for the new season
+    return get_historical_stats(
+        league_id, new_season, new_season, swid, espn_s2, df_prev=df
+    )
