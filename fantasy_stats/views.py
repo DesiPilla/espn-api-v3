@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, Http404
+from django.template import RequestContext
 from .models import LeagueInfo
 import datetime
 from src.doritostats.fetch_utils import fetch_league
@@ -24,6 +25,16 @@ def index(request):
         .order_by("-league_id", "-league_year")
         .distinct("league_id", "league_year")
     )
+
+    leagues_in_current_year = [league.league_id for league in leagues_current_year]
+    distinct_leagues = (
+        LeagueInfo.objects.filter().order_by("-league_id").distinct("league_id")
+    )
+    distinct_old_leagues = [
+        league
+        for league in distinct_leagues
+        if league.league_id not in leagues_in_current_year
+    ]
     return HttpResponse(
         render(
             request,
@@ -31,6 +42,7 @@ def index(request):
             {
                 "leagues_current_year": leagues_current_year,
                 "leagues_previous_year": leagues_previous_year,
+                "distinct_old_leagues": distinct_old_leagues,
             },
         )
     )
@@ -73,6 +85,62 @@ def league_input(request):
 
     return redirect(
         "/fantasy_stats/league/{}/{}".format(league_year, league_id, week=None)
+    )
+
+
+def copy_old_league(request, league_id: int):
+    """This function takes the league_id of a league that exists for a previous year, and copies it to the current year.
+    It does so by fetching the league credentials from the database, and then calling the league_input function.
+
+    Args:
+        request (HttpRequest): Django request
+        league_id (int): ID of the league to copy
+
+    Returns:
+        HttpRequest: Rendered and redirected page
+    """
+
+    # Get the league info for the previous year
+    previous_league = LeagueInfo.objects.filter(league_id=league_id).order_by(
+        "-league_year"
+    )[0]
+    swid = previous_league.swid
+    espn_s2 = previous_league.espn_s2
+    swid = None
+    # Add the old league to the current year
+    current_year = (datetime.datetime.today() - datetime.timedelta(weeks=12)).year
+
+    try:
+        print(
+            "Checking for League {} ({}) in database...".format(league_id, current_year)
+        )
+        league_info = LeagueInfo.objects.get(
+            league_id=league_id, league_year=current_year
+        )
+        print("League found!")
+    except LeagueInfo.DoesNotExist:
+        print(
+            "League {} ({}) NOT FOUND! Fetching league from ESPN...".format(
+                league_id, current_year
+            )
+        )
+        league = fetch_league(league_id, current_year, swid, espn_s2)
+        league_info = LeagueInfo(
+            league_id=league_id,
+            league_year=current_year,
+            swid=swid,
+            espn_s2=espn_s2,
+            league_name=league.name,
+        )
+        league_info.save()
+        print(
+            "League {} ({}) fetched and saved to the databse.".format(
+                league_id, current_year
+            )
+        )
+
+    return redirect(
+        "/fantasy_stats/league/{}/{}".format(current_year, league_id, week=None)
     )
 
 
@@ -128,3 +196,13 @@ def standings(reqeust):
 def all_leagues(request):
     leagues = LeagueInfo.objects.order_by("-league_id", "-league_year")
     return render(request, "fantasy_stats/all_leagues.html", {"leagues": leagues})
+
+
+def test(request):
+    return render(request, "fantasy_stats/test.html")
+
+
+def handler404(request, *args, **argv):
+    response = render("errors/404.html", {}, context_instance=RequestContext(request))
+    response.status_code = 404
+    return response

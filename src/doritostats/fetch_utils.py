@@ -575,7 +575,11 @@ def get_historical_stats(
     def get_adjusted_score(s):
         return s.team_score / year_multiplier_map[s.year]
 
+    def get_opp_adjusted_score(s):
+        return s.opp_score / year_multiplier_map[s.year]
+
     df["team_score_adj"] = df.apply(get_adjusted_score, axis=1)
+    df["opp_score_adj"] = df.apply(get_opp_adjusted_score, axis=1)
 
     # Correct capitalization of team owners
     df["team_owner"] = df.team_owner.str.title()

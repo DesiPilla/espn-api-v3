@@ -4,7 +4,8 @@ from django.utils import timezone
 
 import os
 import sys
-sys.path.insert(0, os.path.join('..', 'code'))
+
+sys.path.insert(0, os.path.join("..", "code"))
 
 # from espn_api import League
 
