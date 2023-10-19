@@ -375,7 +375,6 @@ def simulate_season(
         s["team_name"] = team.team_name
         return s
 
-    breakpoint()
     playoff_odds = playoff_odds.apply(get_team_info, axis=1)
 
     return playoff_odds[
