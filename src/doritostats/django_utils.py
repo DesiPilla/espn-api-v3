@@ -1,3 +1,4 @@
+from src.doritostats.simulation_utils import simulate_season
 from espn_api.football import League
 from .analytic_utils import (
     sort_lineups_by_func,
@@ -241,3 +242,29 @@ def django_standings(league: League):
         )
 
     return standings
+
+
+def django_simulation(league: League):
+    # Get power rankings for the current week
+    playoff_odds = simulate_season(league, n=250)
+
+    # Add the power rankings for each team
+    django_playoff_odds = []
+    for i in range(len(playoff_odds)):
+        django_playoff_odds.append(
+            {
+                "team": playoff_odds.iloc[i].team_name,
+                "owner": playoff_odds.iloc[i].team_owner,
+                "projected_wins": playoff_odds.iloc[i].wins,
+                "projected_losses": playoff_odds.iloc[i].losses,
+                "projected_ties": playoff_odds.iloc[i].ties,
+                "projected_points_for": "{:.1f}".format(
+                    playoff_odds.iloc[i].points_for
+                ),
+                "playoff_odds": "{:.1%}".format(
+                    playoff_odds.iloc[i].playoff_odds / 100
+                ),
+            }
+        )
+
+    return django_playoff_odds

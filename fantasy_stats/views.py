@@ -3,13 +3,23 @@ from django.http import HttpResponse, Http404
 from django.template import RequestContext
 from .models import LeagueInfo
 import datetime
-from src.doritostats.fetch_utils import fetch_league
+from espn_api.football import League
 from src.doritostats.django_utils import (
     django_luck_index,
     django_power_rankings,
+    django_simulation,
     django_standings,
     django_weekly_stats,
 )
+from src.doritostats.fetch_utils import fetch_league
+from src.doritostats.simulation_utils import simulate_season
+
+
+def get_default_week(league: League):
+    if datetime.datetime.now().strftime("%A") in ["Tuesday", "Wednesday"]:
+        return league.current_week - 1
+    else:
+        return league.current_week
 
 
 # Create your views here.
@@ -155,10 +165,7 @@ def league(request, league_id, league_year, week=None):
 
     # Set default week to display on page
     if week is None:
-        if datetime.datetime.now().strftime("%A") in ["Tuesday", "Wednesday"]:
-            week = league.current_week - 1
-        else:
-            week = league.current_week
+        week = get_default_week(league)
 
     if week == 0:
         box_scores, weekly_awards, power_rankings, luck_index, standings = (
@@ -198,8 +205,67 @@ def all_leagues(request):
     return render(request, "fantasy_stats/all_leagues.html", {"leagues": leagues})
 
 
+def simulation(request, league_id, league_year, week=None):
+    # Only run simulations after Week 4 has completed
+    MIN_WEEK_TO_DISPLAY = 4
+
+    # If the week is known, check if it is too early to display
+    # If so, display the "too soon" page immediately
+    if week is not None and week < MIN_WEEK_TO_DISPLAY:
+        return HttpResponse(
+            render(
+                request,
+                "fantasy_stats/uh_oh_too_soon.html",
+                context={"league_id": league_id, "league_year": league_year},
+            )
+        )
+
+    # Fetch the league
+    league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
+    league = fetch_league(
+        league_info.league_id,
+        league_info.league_year,
+        league_info.swid,
+        league_info.espn_s2,
+    )
+
+    # Set default week to display on page
+    if week is None:
+        week = get_default_week(league)
+
+    # If the week is less than the minimum week to display, display the "too soon" page
+    if week < MIN_WEEK_TO_DISPLAY:
+        return HttpResponse(
+            render(
+                request,
+                "fantasy_stats/uh_oh_too_soon.html",
+                context={"league_id": league_id, "league_year": league_year},
+            )
+        )
+
+    else:
+        playoff_odds = django_simulation(league)
+
+    context = {
+        "league_info": league_info,
+        "league": league,
+        "page_week": week,
+        "playoff_odds": playoff_odds,
+    }
+    return HttpResponse(render(request, "fantasy_stats/simulation.html", context))
+
+
+#############################################################
+## VIEWS THAT DO NOT WORK YET AND ARE IN THE TESTING PHASE ##
+#############################################################
+
+
 def test(request):
     return render(request, "fantasy_stats/test.html")
+
+
+def index_gpt(request):
+    return render(request, "fantasy_stats/index_gpt.html")
 
 
 def handler404(request, *args, **argv):
