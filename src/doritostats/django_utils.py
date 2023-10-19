@@ -246,7 +246,7 @@ def django_standings(league: League):
 
 def django_simulation(league: League):
     # Get power rankings for the current week
-    playoff_odds = simulate_season(league, n=250)
+    playoff_odds = simulate_season(league, n=500)
 
     # Add the power rankings for each team
     django_playoff_odds = []

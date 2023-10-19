@@ -1,6 +1,7 @@
-from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
+from typing import Dict, List, Optional, Tuple
 from espn_api.football import League, Team, Matchup
 from src.doritostats.fetch_utils import PseudoMatchup
 
@@ -316,25 +317,30 @@ def simulate_season(
         )
     else:
         print(
-            f"""Simulating from week {standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0]} to {league.settings.reg_season_count}"""
+            f"""Simulating from week {standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1} to {league.settings.reg_season_count}"""
         )
 
-    for i in range(n):
-        # Simulate a single season
-        final_standings = simulate_single_season(
+    def simulate_single_season_parallel():
+        return simulate_single_season(
             league=league,
             standings=standings.copy(),
             first_week_to_simulate=first_week_to_simulate,
             matchups_to_exclude=matchups_to_exclude,
         )
 
-        # Record those who made the playoffs in the simulated season
-        for team_id, stats in final_standings.iterrows():
-            playoff_count[team_id]["wins"] += stats["wins"]
-            playoff_count[team_id]["ties"] += stats["ties"]
-            playoff_count[team_id]["losses"] += stats["losses"]
-            playoff_count[team_id]["points_for"] += stats["points_for"]
-            playoff_count[team_id]["playoff_odds"] += stats["made_playoffs"]
+    final_standings = pd.concat(
+        Parallel(n_jobs=-1, verbose=1)(
+            delayed(simulate_single_season_parallel)() for i in range(n)
+        )
+    )
+
+    # Record those who made the playoffs in the simulated season
+    for team_id, stats in final_standings.iterrows():
+        playoff_count[team_id]["wins"] += stats["wins"]
+        playoff_count[team_id]["ties"] += stats["ties"]
+        playoff_count[team_id]["losses"] += stats["losses"]
+        playoff_count[team_id]["points_for"] += stats["points_for"]
+        playoff_count[team_id]["playoff_odds"] += stats["made_playoffs"]
 
     # Aggregate playoff odds
     playoff_odds = (
