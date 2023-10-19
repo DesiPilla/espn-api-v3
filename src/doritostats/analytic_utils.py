@@ -132,9 +132,13 @@ def get_total_tds(league: League, lineup: List[Player]) -> float:
     """
     total_tds = 0
     for player in lineup:
+        # Skip non-starting players
         if player.slot_position in ("BE", "IR"):
             continue
 
+        # Skip players with no stats (players on Bye)
+        if not list(player.stats.keys()):
+            continue
         player_tds = 0
         for statId in [
             "passingTouchdowns",
