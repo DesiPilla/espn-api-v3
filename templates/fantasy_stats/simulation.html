@@ -1,0 +1,87 @@
+{% load static %}
+{% load filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/league.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/logo.css' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/favicon.png' %}">
+    <title>Playoff simulation | {{ league_info.league_name }}</title>
+    <style>
+      
+        .hero {
+            background-color: transparent;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-container {
+            text-align: center;
+        }
+
+        .btn {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            margin: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img class="logo" src="{% static 'fantasy_stats/img/logo2.png' %}" alt="Dorito Stats Logo">
+    </div>
+
+    <div class="btn-container">
+      <a href="/fantasy_stats/" class="btn">Return to Homepage</a>
+      <a href="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}" class="btn">Return to Your League</a>
+    </div>
+    
+    <div class="select">
+      <select name="league-select" id="league-select" disabled>
+        {% for week in 1|range:league.current_week %}
+        <option value="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}/week={{ week }}" {% if week == page_week %}selected{% endif %}>Week {{ week }}</option>
+        {% endfor %}
+        <option value="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}/" {% if page_week == league.current_week %}selected{% endif %}>Week {{ league.current_week }}</option>
+      </select>
+      <span class="focus"></span>
+    </div>
+    
+    <div class="wrapper-wide">
+    <h2>Playoff simulation</h1>
+    <table class="table">
+
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Owner</div>
+          <div class="cell">Projected Wins </div>
+          <div class="cell">Projected Losses</div>
+          <div class="cell">Projected Ties</div>
+          <div class="cell">Projected Points For</div>
+          <div class="cell">Playoff Odds</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in playoff_odds %}
+        <div class="row">
+          <div class="cell" data-title="team"> {{ r.team }}</div>
+          <div class="cell" data-title="owner"> {{ r.owner }}</div>
+          <div class="cell" data-title="projected_wins"> {{ r.projected_wins }}</div>
+          <div class="cell" data-title="projected_losses"> {{ r.projected_losses }}</div>
+          <div class="cell" data-title="projected_ties"> {{ r.projected_ties }}</div>
+          <div class="cell" data-title="projected_points_for"> {{ r.projected_points_for }}</div>
+          <div class="cell" data-title="playoff_odds"> {{ r.playoff_odds }}</div>
+        </div>
+        {% endfor %}
+      <em>Playoff odds are calculated by generating 100 Monte Carlo simulations and comparing the results.</em>
+    </table>
+    </div>
+</body>
+</html>

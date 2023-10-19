@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/league.css' %}">
     <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/favicon.png' %}" />
+    <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/logo.png' %}" />
     <title>Dorito Stats | {{league_info.league_name}}</title>
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -21,7 +22,9 @@
   </head>
 
   <body>
-    <h1>Welcome to Dorito Stats!</h1>
+    {% comment %} <div class="logo-container">
+        <img class="logo" src="{% static 'fantasy_stats/img/logo2.png' %}" alt="Dorito Stats Logo">
+    </div> {% endcomment %}
     
     <h2>{{league_info.league_name}}</h2>
     <p>League ID: {{league_info.league_id}}</p>
@@ -54,6 +57,9 @@
     <br>
     <a href="/fantasy_stats/">Return to home page</a>
     <hr>
+
+  {% comment %} Playoff simulations {% endcomment %}
+  <a href="/fantasy_stats/simulation/{{ league_info.league_year }}/{{ league_info.league_id }}" class="simulation-button">Simulate Playoff Odds</a>
 
 
   {% comment %} Current week scores {% endcomment %}

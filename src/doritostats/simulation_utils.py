@@ -161,7 +161,6 @@ def simulate_single_season(
 
     matchups = []  # type: List
     for week in range(first_week_to_simulate, league.settings.reg_season_count + 1):  # type: ignore
-
         # Get matchups for the given week
         week_matchups = []
         for team in league.teams:
@@ -235,7 +234,6 @@ def input_outcomes(
             continue
 
         else:
-
             if winner == 1:
                 (home_outcome, away_outcome) = [(1, 0, 0), (0, 0, 1)]
             elif winner == 2:
@@ -312,12 +310,16 @@ def simulate_season(
         first_week_to_simulate = None
         matchups_to_exclude = {}
 
-    print(
-        f"""Simulating from week {first_week_to_simulate} to {league.settings.reg_season_count}"""
-    )
+    if first_week_to_simulate is not None:
+        print(
+            f"""Simulating from week {first_week_to_simulate} to {league.settings.reg_season_count}"""
+        )
+    else:
+        print(
+            f"""Simulating from week {standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0]} to {league.settings.reg_season_count}"""
+        )
 
     for i in range(n):
-
         # Simulate a single season
         final_standings = simulate_single_season(
             league=league,
@@ -327,7 +329,7 @@ def simulate_season(
         )
 
         # Record those who made the playoffs in the simulated season
-        for (team_id, stats) in final_standings.iterrows():
+        for team_id, stats in final_standings.iterrows():
             playoff_count[team_id]["wins"] += stats["wins"]
             playoff_count[team_id]["ties"] += stats["ties"]
             playoff_count[team_id]["losses"] += stats["losses"]
@@ -438,7 +440,6 @@ def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
 
     # Simulate playoff odds based on outcome of each matchup
     for matchup in matchups:
-
         # Simulate season if home team wins
         home_team = matchup.home_team
         outcomes_home_win = get_outcomes_if_team_wins(home_team, week, matchups)
