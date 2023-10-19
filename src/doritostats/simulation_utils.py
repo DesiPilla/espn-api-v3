@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from typing import Dict, List, Optional, Tuple
+from src.doritostats.analytic_utils import get_team
 from espn_api.football import League, Team, Matchup
 from src.doritostats.fetch_utils import PseudoMatchup
 
@@ -369,7 +370,7 @@ def simulate_season(
 
     # Add team details to the dataframe
     def get_team_info(s):
-        team = league.teams[int(s.team_id - 1)]
+        team = get_team(league, team_id=s.team_id)
         s["team_owner"] = team.owner
         s["team_name"] = team.team_name
         return s
