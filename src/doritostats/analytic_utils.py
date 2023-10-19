@@ -570,7 +570,9 @@ def leaderboard_change(
     return leaderboard_change
 
 
-def get_team(league: League, team_owner: str) -> Team:
+def get_team(
+    league: League, team_owner: Optional[str] = None, team_id: Optional[int] = None
+) -> Team:
     """Get the Team object corresponding to the team_owner
 
     Args:
@@ -583,11 +585,19 @@ def get_team(league: League, team_owner: str) -> Team:
     Returns:
         Team: Team object
     """
-    for team in league.teams:
-        if team.owner == team_owner:
-            return team
+    assert (team_owner is not None) or (team_id is not None)
+    if team_owner is not None:
+        for team in league.teams:
+            if team.owner == team_owner:
+                return team
 
-    raise Exception(f"Owner {team_owner} not in league.")
+        raise Exception(f"Owner {team_owner} not in league.")
+    else:
+        for team in league.teams:
+            if team.team_id == team_id:
+                return team
+
+        raise Exception(f"Team ID {team_id} not in league.")
 
 
 def get_division_standings(league: League) -> Dict[str, List[Team]]:
@@ -633,8 +643,8 @@ def game_of_the_week_stats(
         )
     )
 
-    team1 = get_team(league, owner1)
-    team2 = get_team(league, owner2)
+    team1 = get_team(league, team_owner=owner1)
+    team2 = get_team(league, team_owner=owner2)
     division_standings = get_division_standings(league)
     print("\nThis season:\n-----------------------")
     print(f"{owner1} has a record of {team1.wins}-{team1.losses}-{team1.ties}")
