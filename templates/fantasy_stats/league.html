@@ -29,6 +29,7 @@
     <h2>{{league_info.league_name}}</h2>
     <div>League ID: {{league_info.league_id}}</div>
     <div>League year: {{league_info.league_year}}</div>
+    <br>
 
     {% comment %} Select a different week {% endcomment %}
     <div class="select">
@@ -59,7 +60,7 @@
     <hr>
 
   {% comment %} Playoff simulations {% endcomment %}
-  <a href="/fantasy_stats/simulation/{{ league_info.league_year }}/{{ league_info.league_id }}//n_simulations=250" class="simulation-button">Simulate Playoff Odds</a>
+  <a href="/fantasy_stats/simulation/{{ league_info.league_year }}/{{ league_info.league_id }}/n_simulations=250" class="simulation-button">Simulate Playoff Odds</a>
 
 
   {% comment %} Current week scores {% endcomment %}
