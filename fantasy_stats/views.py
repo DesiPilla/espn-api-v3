@@ -10,9 +10,13 @@ from src.doritostats.django_utils import (
     django_simulation,
     django_standings,
     django_weekly_stats,
+    ordinal,
 )
 from src.doritostats.fetch_utils import fetch_league
 from src.doritostats.simulation_utils import simulate_season
+
+MIN_WEEK_TO_DISPLAY = 4  # Only run simulations after Week 4 has completed
+N_SIMULATIONS = 500
 
 
 def get_default_week(league: League):
@@ -205,9 +209,9 @@ def all_leagues(request):
     return render(request, "fantasy_stats/all_leagues.html", {"leagues": leagues})
 
 
-def simulation(request, league_id, league_year, week=None):
-    # Only run simulations after Week 4 has completed
-    MIN_WEEK_TO_DISPLAY = 4
+def simulation(request, league_id, league_year, week=None, n_simulations=None):
+    if n_simulations is None:
+        n_simulations = N_SIMULATIONS
 
     # If the week is known, check if it is too early to display
     # If so, display the "too soon" page immediately
@@ -244,13 +248,21 @@ def simulation(request, league_id, league_year, week=None):
         )
 
     else:
-        playoff_odds = django_simulation(league)
+        playoff_odds, rank_dist = django_simulation(league, n_simulations)
 
     context = {
         "league_info": league_info,
         "league": league,
         "page_week": week,
         "playoff_odds": playoff_odds,
+        "rank_dist": rank_dist,
+        "n_positions": len(league.teams),
+        "positions": [
+            "{} place".format(ordinal(i)) for i in range(1, len(league.teams) + 1)
+        ],
+        "n_playoff_spots": league.settings.playoff_team_count,
+        "n_simulations": n_simulations,
+        "simulation_presets": [100, 500, 1000],
     }
     return HttpResponse(render(request, "fantasy_stats/simulation.html", context))
 

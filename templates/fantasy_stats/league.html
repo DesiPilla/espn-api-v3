@@ -27,8 +27,8 @@
     </div> {% endcomment %}
     
     <h2>{{league_info.league_name}}</h2>
-    <p>League ID: {{league_info.league_id}}</p>
-    <p>League year: {{league_info.league_year}}</p>
+    <div>League ID: {{league_info.league_id}}</div>
+    <div>League year: {{league_info.league_year}}</div>
 
     {% comment %} Select a different week {% endcomment %}
     <div class="select">
@@ -43,14 +43,14 @@
               <option value="/fantasy_stats/league/{{ league_info.league_year}}/{{ league_info.league_id }}/week={{ week }}">Week {{ week }}</option>
           {% endif %}
       {% endfor %}
-          {% comment %} Add option for current week {% endcomment %}
-          {% if page_week == league.current_week %}
-              {% comment %} If the current week is the one currently displayed, have it auto-selected {% endcomment %}
-              <option value="/fantasy_stats/league/{{ league_info.league_year}}/{{ league_info.league_id }}/" selected> Week {{ league.current_week }}</option>
-          {% else %}
-              {% comment %} Otherwise, have it not auto-selected {% endcomment %}
-              <option value="/fantasy_stats/league/{{ league_info.league_year}}/{{ league_info.league_id }}/"> Week {{ league.current_week }}</option>
-          {% endif %}
+      {% comment %} Add option for current week {% endcomment %}
+      {% if page_week == league.current_week %}
+          {% comment %} If the current week is the one currently displayed, have it auto-selected {% endcomment %}
+          <option value="/fantasy_stats/league/{{ league_info.league_year}}/{{ league_info.league_id }}/" selected> Week {{ league.current_week }}</option>
+      {% else %}
+          {% comment %} Otherwise, have it not auto-selected {% endcomment %}
+          <option value="/fantasy_stats/league/{{ league_info.league_year}}/{{ league_info.league_id }}/"> Week {{ league.current_week }}</option>
+      {% endif %}
       </select>
       <span class="focus"></span>
     </div>
@@ -59,7 +59,7 @@
     <hr>
 
   {% comment %} Playoff simulations {% endcomment %}
-  <a href="/fantasy_stats/simulation/{{ league_info.league_year }}/{{ league_info.league_id }}" class="simulation-button">Simulate Playoff Odds</a>
+  <a href="/fantasy_stats/simulation/{{ league_info.league_year }}/{{ league_info.league_id }}//n_simulations=250" class="simulation-button">Simulate Playoff Odds</a>
 
 
   {% comment %} Current week scores {% endcomment %}

@@ -38,7 +38,12 @@ urlpatterns = [
     path(
         "simulation/<int:league_year>/<int:league_id>/",
         views.simulation,
-        {"week": None},
+        {"n_simulations": None},
+        name="simulation",
+    ),
+    path(
+        "simulation/<int:league_year>/<int:league_id>/n_simulations=<int:n_simulations>",
+        views.simulation,
         name="simulation",
     ),
     #
