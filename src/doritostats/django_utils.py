@@ -13,6 +13,24 @@ from .analytic_utils import (
 )
 
 
+def ordinal(n: int) -> str:
+    """This function returns the ordinal of a number.
+
+    Ex: 1 -> 1st, 2 -> 2nd, 3 -> 3rd, 4 -> 4th, 5 -> 5th, etc.
+
+    Args:
+        n (int): The number to get the ordinal of.
+
+    Returns:
+        str: The ordinal of the number.
+    """
+    if 11 <= (n % 100) <= 13:
+        suffix = "th"
+    else:
+        suffix = ["th", "st", "nd", "rd", "th"][min(n % 10, 4)]
+    return str(n) + suffix
+
+
 def django_weekly_stats(league: League, week: int):
     # Load box scores for specified week
     box_scores = league.box_scores(week)
@@ -244,12 +262,16 @@ def django_standings(league: League):
     return standings
 
 
-def django_simulation(league: League):
+def django_simulation(league: League, n_simulations: int):
     # Get power rankings for the current week
-    playoff_odds = simulate_season(league, n=500)
+    playoff_odds, rank_dist = simulate_season(league, n=n_simulations)
 
-    # Add the power rankings for each team
+    # Infer how many teams are in the league
+    n_teams = len(rank_dist)
+
+    # Add the playoff offs and final rank distribution for each team
     django_playoff_odds = []
+    django_rank_dist = []
     for i in range(len(playoff_odds)):
         django_playoff_odds.append(
             {
@@ -267,4 +289,17 @@ def django_simulation(league: League):
             }
         )
 
-    return django_playoff_odds
+        # Add the odds of finishing in each position this team
+        rank_cols = [c for c in rank_dist.columns if type(c) == int]
+        django_rank_dist.append(
+            {
+                "team": rank_dist.iloc[i].team_name,
+                "owner": rank_dist.iloc[i].team_owner,
+                "position_odds": [
+                    "{:.1%}".format(rank_dist.iloc[i][c] / 100) for c in rank_cols
+                ],
+                "playoff_odds": "{:.1%}".format(rank_dist.iloc[i].playoff_odds / 100),
+            }
+        )
+
+    return django_playoff_odds, django_rank_dist

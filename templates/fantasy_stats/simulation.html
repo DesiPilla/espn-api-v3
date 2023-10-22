@@ -42,6 +42,12 @@
       <a href="/fantasy_stats/" class="btn">Return to Homepage</a>
       <a href="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}" class="btn">Return to Your League</a>
     </div>
+
+    {% comment %} 
+    <h2>{{league_info.league_name}}</h2>
+    <p>League ID: {{league_info.league_id}}</p>
+    <p>League year: {{league_info.league_year}}</p>
+    {% endcomment %}
     
     <div class="select">
       <select name="league-select" id="league-select" disabled>
@@ -51,6 +57,27 @@
         <option value="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}/" {% if page_week == league.current_week %}selected{% endif %}>Week {{ league.current_week }}</option>
       </select>
       <span class="focus"></span>
+    </div>
+    <br>
+
+    <div class="wrapper-wide">
+      Playoff odds are calculated by generating {{ n_simulations }} Monte Carlo simulations and comparing the results.<br>
+      You can choose a different <em>n</em> by selecting one of these options:
+
+      <select name="league-select" id="league-select" onchange="location = this.value">
+          <option value="/fantasy_stats/simulation/{{ league_info.league_year}}/{{ league_info.league_id }}/" selected> -- </option>
+          {% for n in simulation_presets %}   
+              {% if n == n_simulations %}
+                  <option value="/fantasy_stats/simulation/{{ league_info.league_year}}/{{ league_info.league_id }}/n_simulations={{ n }}" selected> {{ n }} </option>
+              {% else %}
+                  <option value="/fantasy_stats/simulation/{{ league_info.league_year}}/{{ league_info.league_id }}/n_simulations={{ n }}"> {{ n }} </option>
+              {% endif %}
+          {% endfor %}
+      </select>
+      <br>
+
+      You can also edit the <em>n_simulations=</em> value in the URL. 
+      However, the more simulations that are run, the longer the page will take to load.
     </div>
     
     <div class="wrapper-wide">
@@ -80,7 +107,34 @@
           <div class="cell" data-title="playoff_odds"> {{ r.playoff_odds }}</div>
         </div>
         {% endfor %}
-      <em>Playoff odds are calculated by generating 500 Monte Carlo simulations and comparing the results.</em>
+      <b>Note that for this league, {{ n_playoff_spots }} teams make the playoffs.</b>
+    </table>
+
+    <h2>Final position distribution</h1>
+    <table class="table">
+
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Owner</div>
+          {% for position in positions %}
+               <div class="cell"> {{ position }} </div>
+          {% endfor %}
+          <div class="cell">Playoff Odds</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in rank_dist %}
+        <div class="row">
+          <div class="cell" data-title="team"> {{ r.team }}</div>
+          <div class="cell" data-title="owner"> {{ r.owner }}</div>
+          {% for odds in r.position_odds %}
+               <div class="cell"> {{ odds }} </div>
+          {% endfor %}
+          <div class="cell" data-title="playoff_odds"> {{ r.playoff_odds }}</div>
+        </div>
+        {% endfor %}
+      <b>Note that for this league, {{ n_playoff_spots }} teams make the playoffs.</b>
     </table>
     </div>
 </body>
