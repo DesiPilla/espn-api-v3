@@ -257,9 +257,7 @@ def simulation(request, league_id, league_year, week=None, n_simulations=None):
         "playoff_odds": playoff_odds,
         "rank_dist": rank_dist,
         "n_positions": len(league.teams),
-        "positions": [
-            "{} place".format(ordinal(i)) for i in range(1, len(league.teams) + 1)
-        ],
+        "positions": [ordinal(i) for i in range(1, len(league.teams) + 1)],
         "n_playoff_spots": league.settings.playoff_team_count,
         "n_simulations": n_simulations,
         "simulation_presets": [100, 500, 1000],
