@@ -302,9 +302,6 @@ def get_playoff_odds_df(final_standings: pd.DataFrame) -> pd.DataFrame:
         .rename(columns={"index": "team_id"})
     )
     playoff_odds["playoff_odds"] *= 100 / n
-    playoff_odds["playoff_odds"] = playoff_odds["playoff_odds"].clip(
-        lower=0.1, upper=99.9
-    )
 
     # Get average wins and losses
     playoff_odds["wins"] /= n
@@ -354,9 +351,9 @@ def get_rank_distribution_df(final_standings: pd.DataFrame) -> pd.DataFrame:
         .mean()["made_playoffs"]
         .rename("playoff_odds")
         * 100
-    ).sort_values("playoff_odds", ascending=False)
+    )
 
-    return rank_dist_df
+    return rank_dist_df.sort_values(["playoff_odds", 1], ascending=False)
 
 
 def get_seeding_outcomes_df(final_standings: pd.DataFrame) -> pd.DataFrame:
@@ -413,6 +410,7 @@ def get_seeding_outcomes_df(final_standings: pd.DataFrame) -> pd.DataFrame:
         / n
         * 100
     )
+
     return final_standings_agg.sort_values(
         by=["first_in_league", "first_in_division"], ascending=False
     )
