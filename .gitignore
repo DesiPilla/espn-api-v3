@@ -9,3 +9,5 @@ dist/*
 *historical_stats.csv
 *new espn.ipynb
 src/new espn.ipynb
+draft_history.csv
+src/.DS_Store

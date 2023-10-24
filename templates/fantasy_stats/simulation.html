@@ -137,6 +137,35 @@
         {% endfor %}
       <b>Note that for this league, {{ n_playoff_spots }} teams make the playoffs.</b>
     </table>
+
+    <h2>Seeding outcomes</h1>
+    <table class="table">
+
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Owner</div>
+          <div class="cell">1st overall</div>
+          <div class="cell">1st in division</div>
+          <div class="cell">Make playoffs</div>
+          <div class="cell">Last in division</div>
+          <div class="cell">Last overall</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in seeding_outcomes %}
+        <div class="row">
+          <div class="cell" data-title="team"> {{ r.team }}</div>
+          <div class="cell" data-title="owner"> {{ r.owner }}</div>
+          <div class="cell" data-title="first_in_league"> {{ r.first_in_league }}</div>
+          <div class="cell" data-title="first_in_division"> {{ r.first_in_division }}</div>
+          <div class="cell" data-title="make_playoffs"> {{ r.make_playoffs }}</div>
+          <div class="cell" data-title="last_in_division"> {{ r.last_in_division }}</div>
+          <div class="cell" data-title="last_in_league"> {{ r.last_in_league }}</div>
+        </div>
+        {% endfor %}
+      <b>Note that for this league, {{ n_playoff_spots }} teams make the playoffs.</b>
+    </table>
     </div>
     
     <footer>

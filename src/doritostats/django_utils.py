@@ -264,7 +264,7 @@ def django_standings(league: League):
 
 def django_simulation(league: League, n_simulations: int):
     # Get power rankings for the current week
-    playoff_odds, rank_dist = simulate_season(league, n=n_simulations)
+    playoff_odds, rank_dist, seeding_outcomes = simulate_season(league, n=n_simulations)
 
     # Infer how many teams are in the league
     n_teams = len(rank_dist)
@@ -272,7 +272,9 @@ def django_simulation(league: League, n_simulations: int):
     # Add the playoff offs and final rank distribution for each team
     django_playoff_odds = []
     django_rank_dist = []
+    django_seeding_outcomes = []
     for i in range(len(playoff_odds)):
+        # Add the odds of making the playoffs for this team
         django_playoff_odds.append(
             {
                 "team": playoff_odds.iloc[i].team_name,
@@ -302,4 +304,27 @@ def django_simulation(league: League, n_simulations: int):
             }
         )
 
-    return django_playoff_odds, django_rank_dist
+        # Add the odds of each seeding outcome for this team
+        django_seeding_outcomes.append(
+            {
+                "team": seeding_outcomes.iloc[i].team_name,
+                "owner": seeding_outcomes.iloc[i].team_owner,
+                "first_in_league": "{:.1%}".format(
+                    seeding_outcomes.iloc[i].first_in_league / 100
+                ),
+                "first_in_division": "{:.1%}".format(
+                    seeding_outcomes.iloc[i].first_in_division / 100
+                ),
+                "make_playoffs": "{:.1%}".format(
+                    seeding_outcomes.iloc[i].make_playoffs / 100
+                ),
+                "last_in_division": "{:.1%}".format(
+                    seeding_outcomes.iloc[i].last_in_division / 100
+                ),
+                "last_in_league": "{:.1%}".format(
+                    seeding_outcomes.iloc[i].last_in_league / 100
+                ),
+            }
+        )
+
+    return django_playoff_odds, django_rank_dist, django_seeding_outcomes
