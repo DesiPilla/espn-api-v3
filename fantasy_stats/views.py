@@ -158,7 +158,8 @@ def copy_old_league(request, league_id: int):
     )
 
 
-def league(request, league_id, league_year, week=None):
+def league(request, league_id: int, league_year: int, week: int = None):
+    # Fetch the league
     league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
     league = fetch_league(
         league_info.league_id,
@@ -209,7 +210,13 @@ def all_leagues(request):
     return render(request, "fantasy_stats/all_leagues.html", {"leagues": leagues})
 
 
-def simulation(request, league_id, league_year, week=None, n_simulations=None):
+def simulation(
+    request,
+    league_id: int,
+    league_year: int,
+    week: int = None,
+    n_simulations: int = None,
+):
     if n_simulations is None:
         n_simulations = N_SIMULATIONS
 
@@ -248,7 +255,9 @@ def simulation(request, league_id, league_year, week=None, n_simulations=None):
         )
 
     else:
-        playoff_odds, rank_dist = django_simulation(league, n_simulations)
+        playoff_odds, rank_dist, seeding_outcomes = django_simulation(
+            league, n_simulations
+        )
 
     context = {
         "league_info": league_info,
@@ -256,6 +265,7 @@ def simulation(request, league_id, league_year, week=None, n_simulations=None):
         "page_week": week,
         "playoff_odds": playoff_odds,
         "rank_dist": rank_dist,
+        "seeding_outcomes": seeding_outcomes,
         "n_positions": len(league.teams),
         "positions": [ordinal(i) for i in range(1, len(league.teams) + 1)],
         "n_playoff_spots": league.settings.playoff_team_count,
