@@ -3,6 +3,7 @@
 <html>
 <head>
     <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/test.css' %}">
+    <link rel="stylesheet" href="{% static 'fantasy_stats/css/footer.css' %}">
     <!-- load jquery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="{% static "fantasy_stats/js/league.js" %}"></script>
@@ -183,5 +184,23 @@
   </table>
   </div>
 
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <p>For suggestions or feature requests, please connect with us on GitHub or LinkedIn.</p>
+                </div>
+                <div class="footer-icons">
+                    <a href="https://github.com/DesiPilla/espn-api-v3" target="_blank">
+                        <img src="{% static 'fantasy_stats/img/github-icon.svg' %}" alt="GitHub">
+                    </a>
+                    <a href="https://www.linkedin.com/in/desipilla/" target="_blank">
+                        <img src="{% static 'fantasy_stats/img/linkedin-icon.svg' %}" alt="LinkedIn">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

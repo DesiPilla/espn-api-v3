@@ -1,51 +1,74 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/league.css' %}">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/league.css' %}" />
+    <link rel="stylesheet" href="{% static 'fantasy_stats/css/footer.css' %}" />
     <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/favicon.png' %}" />
     <title>Dorito Stats | ESPN Fantasy Football Stats</title>
     <!-- Add your style and font imports here -->
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <div class="logo">
-            <img src="{% static 'fantasy_stats/img/logo.png' %}" alt="Dorito Stats Logo">
-        </div>
-        <nav>
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">Leagues</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Contact</a></li>
-            </ul>
-        </nav>
+      <div class="logo">
+        <img src="{% static 'fantasy_stats/img/logo.png' %}" alt="Dorito Stats Logo" />
+      </div>
+      <nav>
+        <ul>
+          <li>
+            <a href="#">Home</a>
+          </li>
+          <li>
+            <a href="#">Leagues</a>
+          </li>
+          <li>
+            <a href="#">About</a>
+          </li>
+          <li>
+            <a href="#">Contact</a>
+          </li>
+        </ul>
+      </nav>
     </header>
 
     <section class="hero">
-        <h1>Welcome to Dorito Stats!</h1>
-        <hr>
+      <h1>Welcome to Dorito Stats!</h1>
+      <hr />
     </section>
 
     <section class="league-selection">
-        <h2>Select your league</h2>
-        <!-- Add league selection options here -->
+      <h2>Select your league</h2>
+      <!-- Add league selection options here -->
     </section>
 
     <section class="returning-owners">
-        <h3>Returning owner? Find your league and add the current season.</h3>
-        <!-- Add returning owner options here -->
+      <h3>Returning owner? Find your league and add the current season.</h3>
+      <!-- Add returning owner options here -->
     </section>
 
     <section class="manual-league-entry">
-        <h3>Don't see your league? Add it manually by entering your league's details below.</h3>
-        <!-- Add league input form here -->
+      <h3>Don't see your league? Add it manually by entering your league's details below.</h3>
+      <!-- Add league input form here -->
     </section>
 
     <section class="instructions">
-        <h3><em>Don't know your SWID or espn_s2? (instructions for Mac / PC)</em></h3>
-        <!-- Add instructions here -->
+      <h3><em>Don't know your SWID or espn_s2? (instructions for Mac / PC)</em></h3>
+      <!-- Add instructions here -->
     </section>
-</body>
+
+    <footer>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-text">
+            <p>For suggestions or feature requests, please connect with us on GitHub or LinkedIn.</p>
+          </div>
+          <div class="footer-icons">
+            <a href="https://github.com/DesiPilla/espn-api-v3" target="_blank"><img src="{% static 'fantasy_stats/img/github-icon.svg' %}" alt="GitHub" /></a>
+            <a href="https://www.linkedin.com/in/desipilla/" target="_blank"><img src="{% static 'fantasy_stats/img/linkedin-icon.svg' %}" alt="LinkedIn" /></a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
 </html>

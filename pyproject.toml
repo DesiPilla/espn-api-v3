@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "espn-api-v3"
-version = "3.0.5"
+version = "3.0.6"
 description = "This project aims to make ESPN Fantasy Football statistics easily available. With the introduction of version 3 of the ESPN's API, this structure creates leagues, teams, and player classes that allow for advanced data analytics and the potential for many new features to be added."
 authors = ["Desi Pilla <desi.m.pilla@gmail.com>"]
 license = "https://github.com/DesiPilla/espn-api-v3/blob/master/LICENSE"
@@ -29,6 +29,7 @@ whitenoise = { extras = ["brotli"], version = "^6.2.0" }
 # default = true
 # secondary = false
 setuptools = "^65.6.0"
+urllib3 = "2.0.6"
 
 [build-system]
 requires = ["poetry-core"]
