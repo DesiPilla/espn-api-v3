@@ -285,9 +285,7 @@ def django_simulation(league: League, n_simulations: int):
                 "projected_points_for": "{:.1f}".format(
                     playoff_odds.iloc[i].points_for
                 ),
-                "playoff_odds": "{:.1f}%".format(
-                    playoff_odds.iloc[i].playoff_odds / 100
-                ),
+                "playoff_odds": "{:.1f}%".format(playoff_odds.iloc[i].playoff_odds),
             }
         )
 
@@ -300,7 +298,7 @@ def django_simulation(league: League, n_simulations: int):
                 "position_odds": [
                     "{:.1%}".format(rank_dist.iloc[i][c] / 100) for c in rank_cols
                 ],
-                "playoff_odds": "{:.1f}%".format(rank_dist.iloc[i].playoff_odds / 100),
+                "playoff_odds": "{:.1f}%".format(rank_dist.iloc[i].playoff_odds),
             }
         )
 
@@ -316,7 +314,7 @@ def django_simulation(league: League, n_simulations: int):
                     seeding_outcomes.iloc[i].first_in_division / 100
                 ),
                 "make_playoffs": "{:.1f}%".format(
-                    seeding_outcomes.iloc[i].make_playoffs / 100
+                    seeding_outcomes.iloc[i].make_playoffs
                 ),
                 "last_in_division": "{:.1%}".format(
                     seeding_outcomes.iloc[i].last_in_division / 100
