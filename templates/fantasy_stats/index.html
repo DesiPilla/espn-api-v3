@@ -64,19 +64,6 @@
     <br>
     <hr>
 
-    <h3>Returning owner? Find your league and add the current season.</h3>
-    {# Dropdown list containing all leagues in database from previous years that do not exist in this year's db #}
-    <div class="unselected-field" style="display: inline-block;" id="add-from-previous-year">
-      <select name="league-select" id="league-select" onchange="location = this.value">   
-        <option value="/fantasy_stats/"> - Select your historical league - </option>
-        {% for league in distinct_old_leagues %}
-          <option value="/fantasy_stats/copy_old_league/{{ league.league_id }}">{{ league.league_name}} (League ID {{ league.league_id  }})</option>
-        {% endfor %}
-      </select>
-      <span class="focus"></span>
-
-    </div>
-
     {# Enter league details manually to add to the database #}
     {% comment %} <h2>League Details</h2> {% endcomment %}
     <h3>Don't see your league? Add it manually by entering your league's details below.</h3>
