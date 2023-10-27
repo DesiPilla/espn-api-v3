@@ -25,7 +25,7 @@
     <ul>
       {% for league in leagues %}
         <li>
-          <a href="/fantasy_stats/league/{{ league.league_year }}/{{ league.league_id }}/">{{ league.league_name }}</a> ({{ league.league_year }}, id={{ league.league_id }})
+          {{ league.league_year }} - {{ league.league_name }} - League ID = <a href="/fantasy_stats/league/{{ league.league_year }}/{{ league.league_id }}/">{{ league.league_id }}</a>)
         </li>
       {% endfor %}
     </ul>

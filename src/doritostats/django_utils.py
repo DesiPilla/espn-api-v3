@@ -1,6 +1,6 @@
 from src.doritostats.simulation_utils import simulate_season
 from espn_api.football import League
-from .analytic_utils import (
+from src.doritostats.analytic_utils import (
     sort_lineups_by_func,
     get_best_lineup,
     get_best_trio,
