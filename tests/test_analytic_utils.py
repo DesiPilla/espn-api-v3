@@ -1,15 +1,12 @@
-import pytest
 import inspect
+import pytest
+import os
 from typing import Callable
 from espn_api.football import League, Team
 
 from src.doritostats.fetch_utils import fetch_league
 import src.doritostats.analytic_utils as utils  # The code to test
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv("../.env", override=True)
 
 league_id = os.getenv("LEAGUE_ID")
 swid = os.getenv("SWID")

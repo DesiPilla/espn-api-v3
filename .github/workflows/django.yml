@@ -1,4 +1,4 @@
-name: Django CI
+name: Testing
 
 on:
   push:
@@ -30,5 +30,14 @@ jobs:
     #   run: |
     #     python manage.py test
     - name: Pytest
+      env:
+        DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
+        DATABASE_USERNAME : ${{secrets.DATABASE_USERNAME}}
+        DATABASE_PASSWORD : ${{secrets.DATABASE_PASSWORD}}
+        DATABASE_URL : ${{secrets.DATABASE_URL}}
+        SECRET_KEY : ${{secrets.SECRET_KEY}}
+        LEAGUE_ID : ${{secrets.LEAGUE_ID}}
+        SWID : ${{secrets.SWID}}
+        ESPN_S2 : ${{secrets.ESPN_S2}}
       run: |
         poetry run pytest

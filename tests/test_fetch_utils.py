@@ -1,12 +1,9 @@
 import datetime
+import os
 import pytest
 from espn_api.football import League, Matchup
 import src.doritostats.fetch_utils as fetch  # The code to test
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv("../.env", override=True)
 
 league_id = os.getenv("LEAGUE_ID")
 swid = os.getenv("SWID")
