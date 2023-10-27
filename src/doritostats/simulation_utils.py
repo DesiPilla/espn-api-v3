@@ -438,6 +438,7 @@ def simulate_season(
         pd.DataFrame: Dataframe containing distribution of final ranks for each team
         pd.DataFrame: Dataframe containing distribution of seeding outcomes for each team
     """
+    n = min(n, 2000)
     np.random.seed(random_state)
 
     # Get current standings
