@@ -9,9 +9,9 @@ Link to [Heroku website](https://doritostats.herokuapp.com/fantasy_stats/) (WILL
 This project aims to make ESPN Fantasy Football statistics easily available.
 With the introduction of version 3 of the ESPN's API, this structure creates leagues, teams, and player classes that allow for advanced data analytics and the potential for many new features to be added.
 
-This project was inspired and based off of [rbarton65/espnff](https://github.com/rbarton65/espnff)
+This project was initially inspired by[rbarton65/espnff](https://github.com/rbarton65/espnff)
 
-Additional help/ideas were received from [cwendt94/ff-espn-api](https://github.com/cwendt94/ff-espn-api)
+This project would not be possible without all the amazing work by [cwendt94/ff-espn-api](https://github.com/cwendt94/ff-espn-api)
 
 ## Table of Contents
 
@@ -33,7 +33,7 @@ Additional help/ideas were received from [cwendt94/ff-espn-api](https://github.c
 
 ## Dorito Stats Website
 
-The main website for this project is [here](https://doritostats.herokuapp.com/fantasy_stats/). It is a django-based web application, hosted by Heroku, and open to the public to use. Go add your own league for the simplest access to stats!
+The main website for this project is [here](https://doritostats.up.railway.app/fantasy_stats/). It is a django-based web application, hosted by [Railway](https://railway.app/), and open to the public to use. Go add your own league for the simplest access to stats!
 
 <a name="fetchpublicleagues"></a>
 
@@ -182,77 +182,44 @@ There are many specific scoring stats that can be found under `player.stats` for
 ## View stats for a specific week
 
 The two main purposes for this package is to be able to quickly and seamlessly view stats for a team or league that ESPN doesn't readily compute.
-Using the 'printWeeklyStats' method, you can view a weekly report for a certain week.
 
 ```python
->>> team.printWeeklyStats(1)
-----------------------------
-John Smith Week 1
-----------------------------
-Week Score: 149.9
-Best Possible Lineup: 156.42
-Opponent Score: 116.5
-Weekly Finish: 3
-Best Trio: 74.32
-Number of Injuries: 0
-Starting QB pts: 30.72
-Avg. Starting RB pts: 23.6
-Avg. Starting WR pts: 9.85
-Starting TE pts: 5.7
-Starting Flex pts: 19.6
-Starting DST pts: 10.0
-Starting K pts: 17.0
-Total Bench pts: 71.12
-----------------------------
->>> league.printWeeklyStats(1)
- Week 1
----------------------  ----------------
-Most Points Scored:    Marco
-Least Points Scored:   Ellie
-Best Possible Lineup:  Desi
-Best Trio:             Desi
-Worst Trio:            Vincent
----------------------  ----------------
-Best QBs:              Nikki
-Best RBs:              Desi
-Best WRs:              Nikki
-Best TEs:              Isabella
-Best Flex:             Julia
-Best DST:              Marc
-Best K:                Ellie
-Best Bench:            Ellie
----------------------  ----------------
-Worst QBs:             Desi
-Worst RBs:             Ellie
-Worst WRs:             Julia
-Worst TEs:             Vincent
-Worst Flex:            Nikki
-Worst DST:             Vincent
-Worst K:               Marc
-Worst Bench:           Gabriel
+week = 4
+team_lineup = get_lineup(league, team, week=week)
+
+# Get a team's best possible lineup
+get_best_lineup(league, team_lineup)
+
+# Get the total number of TDs scored by a team's starting lineup
+get_total_tds(league, team_lineup)
+
+# Get a team's best trio (QB pts + RB pts + WR pts)
+get_best_trio(league, team_lineup)
+
+# Get a team's lineup efficiency
+get_lineup_efficiency(league, team_lineup)
+
+# Get a team's projection beat
+get_score_surprise(league, team_lineup)
 ```
 
 <a name="powerrankings"></a>
 
 ## Power Rankings
 
-This package has its own formula for calculating power rankings each week.
-The computation takes in a team's performance over the entire season (with more weight on the recent weeks), while also accounting for luck.
-The power rankings for a given week can be viewed using the `printPowerRankings` method.
 
 ```python
->>> league.printPowerRankings(1)
- Week  1
- Power Index                      Team  Owner
------------------------------  ------  ----------------
-The Adams Family               101.52  Marc Chirico
-T.Y. Very Much                 101.24  Desi Pilla
-Sony with a Chance              93.02  Isabella Chirico
-Good Ole   Christian Boys       79.57  Gabriel S
-Home Sweet Mahomes              76.30  Nikki  Pilla
-Any Tom, Dick,  Harry Will Do   70.96  Vincent Chirico
-The Kamara adds 10 pounds       65.41  Julia Selleck
-Can you Diggs this?             64.38  Ellie Knecht
+>>> league.power_rankings(week)
+[('40.15', Team(Buffalo Soldierin')),
+ ('38.95', Team(Prendi Un)),
+ ('29.50', Team(Tuck Me Into Bed)),
+ ('26.55', Team(The  Terrors)),
+ ('26.15', Team(Open To Suggestions)),
+ ('25.30', Team(Harris Styles)),
+ ('24.90', Team(McCaffré: Wins are Brewin)),
+ ('24.85', Team(Herbert Hijinks)),
+ ('23.05', Team(My Fave Cousin (2 Play Aginst))),
+ ('22.40', Team(Zio Cam's Steelers))]
 ```
 
 <a name="luckindex"></a>
@@ -264,45 +231,20 @@ based on how they did relative to the rest of the league and the result of their
 a higher score, while teams that did well but still lost are assigned lower scores. The other determinant in a team's weekly luck score is how well they performed
 relative to their average performance, as well as how their opponent performed relative to their average score. Team's who scored exceptionally higher than they
 normally do will have a higher luck score, and vice versa. Likewise, team's who face opponents that over-acheive relative to their typical performance will have
-a lower (or more 'unlucky') score. Over the course of the season, the luck scores are totaled and the luck index is compiled. The luck index can be viewed using
-the `printLuckIndex` method.
+a lower (or more 'unlucky') score. Over the course of the season, the luck scores are totaled and the luck index is compiled. 
 
 ```python
->>> league.printLuckIndex(2)
-Through Week 2
- Team                         Luck Index  Owner
--------------------------  ------------  ----------------
-Can you Diggs this?                4.29  Ellie Knecht
-Sony with a Chance                 2.14  Isabella Chirico
-T.Y. Very Much                     0.71  Desi Pilla
-The Adams Family                   0     Marc Chirico
-Good Ole   Christian Boys          0     Gabriel S
-Home Sweet Mahomes                -1.43  Nikki  Pilla
-The Kamara adds 10 pounds         -2.14  Julia Selleck
-All Tom No Jerry                  -3.57  Vincent Chirico
-```
-
-## Projected Standings
-
-Using the power rankings calculated by this package, projections for the final standings can be calculated. The `printExpectedStandings` method can be called to
-view the expected standings based on the power rankings through a certain week. The current standings are found, and results of the following matchups are predicted.
-For example, if week 2 has just concluded, the most up-to-date projections can be viewed as follows:
-
-```python
->>> league.printExpectedStandings(2)
-Week 2
- Team                         Wins    Losses    Ties  Owner
--------------------------  ------  --------  ------  ----------------
-T.Y. Very Much                 12         0       0  Desi Pilla
-Sony with a Chance             11         1       0  Isabella Chirico
-Home Sweet Mahomes              8         4       0  Nikki  Pilla
-The Adams Family                6         6       0  Marc Chirico
-Good Ole   Christian Boys       5         7       0  Gabriel S
-All Tom No Jerry                3         9       0  Vincent Chirico
-Can you Diggs this?             3         9       0  Ellie Knecht
-The Kamara adds 10 pounds       0        12       0  Julia Selleck
-
-*These standings do not account for tiesbreakers
+>>> get_season_luck_indices(league, week)
+{Team(Harris Styles): 0.3564328519179781,
+ Team(Prendi Un): 1.087036995149442,
+ Team(Open To Suggestions): -0.8927507568918904,
+ Team(McCaffré: Wins are Brewin): -0.37798381972324224,
+ Team(My Fave Cousin (2 Play Aginst)): -0.9647671155447507,
+ Team(Tuck Me Into Bed): 0.5335406616193096,
+ Team(Buffalo Soldierin'): 0.587489019366005,
+ Team(The  Terrors): 0.21217262172352616,
+ Team(Zio Cam's Steelers): -0.9233120448553755,
+ Team(Herbert Hijinks): -0.1452755616732036}
 ```
 
 ## Historical stats
@@ -331,13 +273,20 @@ The list of fields available for each record includes:
 - `is_regular_season`
 - `is_playoff`
 - `score_dif`
+- `team_projection`
 - `outcome`
 - `is_meaningful_game`
+- `season_wins`
+- `season_ties`
+- `season_losses`
+- `win_pct`
+- `win_pct_entering_matchup`
 - `box_score_available`
 - `weekly_finish`
 - `lineup_efficiency`
 - `best_trio`
 - `bench_points`
+- `team_projection_beat`
 - `QB_pts`
 - `best_QB`
 - `RB_pts`
@@ -353,6 +302,7 @@ The list of fields available for each record includes:
 - `K_pts`
 - `best_K`
 - `team_score_adj`
+- `opp_score_adj`
 - `streak`
 
 ## Weekly stats analysis
@@ -365,10 +315,31 @@ To see if any records were broken during a given week
 >>> weekly_stats_analysis(records_df, year=2022, week=1)
 
 ----------------------------------------------------------------
-|                        Week  1 Analysis                      |
+|                        Week  7 Analysis                      |
 ----------------------------------------------------------------
-Carmine Pilla had the 5th highest D_ST_pts (25.0 pts) in league history
-Marc Chirico had the 1st lowest TE_pts (0.0 pts) in league history
+League-wide POSITIVE stats
+--------------------------
+James Selleck had the 3rd highest lineup_efficiency (1.00 pts) in league history
+
+
+Franchise POSITIVE stats
+--------------------------
+Carmine Pilla had the 3rd highest score_dif (45.06 pts) in franchise history
+Ben Caro had the 1st highest streak (5.00 pts) in franchise history
+Carmine Pilla had the 3rd highest streak (1.00 pts) in franchise history
+
+
+League-wide NEGATIVE stats
+--------------------------
+Julia Selleck had the 1st lowest QB_pts (-1.80 pts) in league history
+James Selleck had the 1st lowest bench_points (0.80 pts) in league history
+
+
+Franchise NEGATIVE stats
+--------------------------
+Julia Selleck had the 1st lowest best_trio (37.60 pts) in franchise history
+Julia Selleck had the 1st lowest QB_pts (-1.80 pts) in franchise history
+Gianna Selleck had the 1st lowest TE_pts (0.00 pts) in franchise history
 ```
 
 ## Season stats analysis
