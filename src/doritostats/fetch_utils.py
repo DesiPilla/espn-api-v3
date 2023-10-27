@@ -1,4 +1,5 @@
 import requests
+import numpy as np
 import pandas as pd
 import datetime
 from typing import Optional
@@ -7,6 +8,7 @@ from src.doritostats.analytic_utils import (
     get_best_trio,
     get_lineup_efficiency,
     avg_slot_score,
+    get_score_surprise,
     sum_bench_points,
     get_top_players,
     get_weekly_finish,
@@ -122,7 +124,7 @@ def fetch_league(
 
     # Clean up owner names
     for team in league.teams:
-        team.owner = team.owner.title()
+        team.owner = ",".join([owner.title() for owner in team.owners])
 
     # Set cookies
     league.cookies = {"swid": swid, "espn_s2": espn_s2}
@@ -376,6 +378,10 @@ def get_stats_by_matchup(
             )
             df_week.loc[i * 2, "best_trio"] = get_best_trio(league, home_lineup)
             df_week.loc[i * 2, "bench_points"] = sum_bench_points(league, home_lineup)
+            df_week.loc[i * 2, "team_projection_beat"] = get_score_surprise(
+                league, home_lineup
+            )
+
             for slot in ["QB", "RB", "WR", "TE", "RB/WR/TE", "D/ST", "K"]:
                 df_week.loc[
                     i * 2, "{}_pts".format(slot.replace("/", "_"))
@@ -383,7 +389,18 @@ def get_stats_by_matchup(
                 df_week.loc[
                     i * 2, "best_{}".format(slot.replace("/", "_"))
                 ] = get_top_players(home_lineup, slot, 1)[0].points
-            #                 df_week.loc[i*2, 'worst_{}'.format(slot.replace('/', '_'))] = np.min([player.points for player in get_top_players(home_lineup, slot, 10) if player.slot_position not in ('BE', 'IR')])
+                try:
+                    df_week.loc[
+                        i * 2, "worst_{}".format(slot.replace("/", "_"))
+                    ] = np.min(
+                        [
+                            player.points
+                            for player in get_top_players(home_lineup, slot, 10)
+                            if player.slot_position not in ("BE", "IR")
+                        ]
+                    )
+                except:
+                    df_week.loc[i * 2, "worst_{}".format(slot.replace("/", "_"))] = 0
 
             # Add observation for away team
             df_week.loc[i * 2 + 1, "year"] = year
@@ -415,6 +432,9 @@ def get_stats_by_matchup(
             df_week.loc[i * 2 + 1, "bench_points"] = sum_bench_points(
                 league, away_lineup
             )
+            df_week.loc[i * 2 + 1, "team_projection_beat"] = get_score_surprise(
+                league, away_lineup
+            )
             for slot in ["QB", "RB", "WR", "TE", "RB/WR/TE", "D/ST", "K"]:
                 df_week.loc[
                     i * 2 + 1, "{}_pts".format(slot.replace("/", "_"))
@@ -422,19 +442,20 @@ def get_stats_by_matchup(
                 df_week.loc[
                     i * 2 + 1, "best_{}".format(slot.replace("/", "_"))
                 ] = get_top_players(away_lineup, slot, 1)[0].points
-        #                 df_week.loc[i*2+1, 'worst_{}'.format(slot.replace('/', '_'))] = np.min([player.points for player in get_top_players(home_lineup, slot, 10) if player.slot_position not in ('BE', 'IR')])
+            #                 df_week.loc[i*2+1, 'worst_{}'.format(slot.replace('/', '_'))] = np.min([player.points for player in get_top_players(home_lineup, slot, 10) if player.slot_position not in ('BE', 'IR')])
 
-        #         df_week.loc[i*2, 'team_record'] = "{}-{}-{}".format(matchup.home_team.wins, matchup.home_team.losses, matchup.home_team.ties)
-        #         df_week.loc[i*2, 'team_season_points_for'] = matchup.home_team.points_for
-        #         df_week.loc[i*2, 'team_season_standing'] = matchup.home_team.standing
-        #         df_week.loc[i*2, 'team_season_streak'] = "{}-{}".format(matchup.home_team.streak_type, matchup.home_team.streak_length)
-        #         df_week.loc[i*2, 'team_projected'] = matchup.home_projected
+            #         df_week.loc[i*2, 'team_record'] = "{}-{}-{}".format(matchup.home_team.wins, matchup.home_team.losses, matchup.home_team.ties)
+            #         df_week.loc[i*2, 'team_season_points_for'] = matchup.home_team.points_for
+            #         df_week.loc[i*2, 'team_season_standing'] = matchup.home_team.standing
+            #         df_week.loc[i*2, 'team_season_streak'] = "{}-{}".format(matchup.home_team.streak_type, matchup.home_team.streak_length)
+            #         df_week.loc[i*2, 'team_projected'] = matchup.home_projected
 
         # Concatenate week's data
         df = pd.concat([df, df_week])
 
     # Calculated fields
     df["score_dif"] = df["team_score"] - df["opp_score"]
+    df["team_projection"] = df["team_score"] + df["team_projection_beat"]
 
     # Calculated fields
     def calculate_outcome(s):
