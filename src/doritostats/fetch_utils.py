@@ -1,3 +1,4 @@
+import re
 import requests
 import numpy as np
 import pandas as pd
@@ -106,6 +107,30 @@ def get_roster_settings(league: League) -> None:
     return
 
 
+def set_owner_names(league: League):
+    """This function sets the owner names for each team in the league.
+    The team.owners attribute only contains the SWIDs of each owner, not their real name.
+
+    Args:
+        league (League): ESPN League object
+    """
+    endpoint = "{}view=mTeam".format(league.endpoint)
+    r = requests.get(endpoint, cookies=league.cookies).json()
+    if type(r) == list:
+        r = r[0]
+
+    # For each member in the data, create a map from SWID to their full name
+    swid_to_name = {}
+    for member in r["members"]:
+        swid_to_name[member["id"]] = re.sub(
+            " +", " ", member["firstName"] + " " + member["lastName"]
+        ).title()
+
+    # Set the owner name for each team
+    for team in league.teams:
+        team.owner = swid_to_name[team.owners[0]]
+
+
 def fetch_league(
     league_id: int, year: int, swid: Optional[str] = None, espn_s2: Optional[str] = None
 ) -> League:
@@ -122,10 +147,6 @@ def fetch_league(
     print("[BUILDING LEAGUE] Fetching league data...")
     league = League(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)
 
-    # Clean up owner names
-    for team in league.teams:
-        team.owner = ",".join([owner.title() for owner in team.owners])
-
     # Set cookies
     league.cookies = {"swid": swid, "espn_s2": espn_s2}
 
@@ -134,6 +155,9 @@ def fetch_league(
 
     # Get roster information
     get_roster_settings(league)
+
+    # Set the owners for each team
+    set_owner_names(league)
 
     # Load current league data
     print("[BUILDING LEAGUE] Loading current league details...")
