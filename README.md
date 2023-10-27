@@ -310,7 +310,7 @@ The Kamara adds 10 pounds       0        12       0  Julia Selleck
 If a league has been around for more than one season, historical records can be easily fetched. A row will exist for each team's matchup.
 
 ```python
-from doritostats.fetch_utils import get_historical_stats
+from src.doritostats.fetch_utils import get_historical_stats
 
 historical_df = get_historical_stats(league_id, start_year, end_year, swid, espn_s2)
 ```
@@ -360,7 +360,7 @@ The list of fields available for each record includes:
 To see if any records were broken during a given week
 
 ```python
->>> from doritostats.analytic_utils import weekly_stats_analysis
+>>> from src.doritostats.analytic_utils import weekly_stats_analysis
 
 >>> weekly_stats_analysis(records_df, year=2022, week=1)
 
@@ -376,7 +376,7 @@ Marc Chirico had the 1st lowest TE_pts (0.0 pts) in league history
 To see the records for a given season
 
 ```python
->>> from doritostats.analytic_utils import season_stats_analysis
+>>> from src.doritostats.analytic_utils import season_stats_analysis
 
 >>> season_stats_analysis(league, records_df)
 

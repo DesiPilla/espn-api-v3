@@ -43,7 +43,7 @@
         <select name="league-select" id="league-select" onchange="location = this.value">   
           <option value="/fantasy_stats/"> - Select your league - </option>
           {% for league in leagues_current_year %}
-            <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_id  }} - {{ league.league_name}} ({{ league.league_year}})</option>
+            <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_name  }} ({{ league.league_id}})</option>
           {% endfor %}
         </select>
         <span class="focus"></span>
@@ -54,7 +54,7 @@
         <select name="league-select" id="league-select" onchange="location = this.value">   
           <option value="/fantasy_stats/"> - Select your historical league - </option>
           {% for league in leagues_previous_year %}
-            <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_id  }} - {{ league.league_name}} ({{ league.league_year}})</option>
+            <option value="/fantasy_stats/league/{{ league.league_year}}/{{ league.league_id }}">{{ league.league_year }} - {{ league.league_name  }} ({{ league.league_id}})</option>
           {% endfor %}
         </select>
         <span class="focus"></span>

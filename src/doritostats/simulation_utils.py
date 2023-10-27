@@ -295,9 +295,7 @@ def get_playoff_odds_df(final_standings: pd.DataFrame) -> pd.DataFrame:
 
     # Aggregate playoff odds
     playoff_odds = (
-        pd.DataFrame.from_dict(
-            data=playoff_count,
-        )
+        pd.DataFrame.from_dict(data=playoff_count)
         .T.reset_index()
         .rename(columns={"index": "team_id"})
     )
@@ -615,9 +613,10 @@ def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
             left_index=True,
             right_index=True,
         )
-        odds["playoff_odds_if_win"], odds["playoff_odds_if_lose"] = odds.max(
-            axis=1
-        ), odds.min(axis=1)
+        odds["playoff_odds_if_win"], odds["playoff_odds_if_lose"] = (
+            odds.max(axis=1),
+            odds.min(axis=1),
+        )
 
         # Calculate difference in playoff odds
         odds["swing"] = odds["playoff_odds_if_win"] - odds["playoff_odds_if_lose"]

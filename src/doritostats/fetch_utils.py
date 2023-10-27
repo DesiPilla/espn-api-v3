@@ -399,7 +399,7 @@ def get_stats_by_matchup(
                             if player.slot_position not in ("BE", "IR")
                         ]
                     )
-                except:
+                except Exception:
                     df_week.loc[i * 2, "worst_{}".format(slot.replace("/", "_"))] = 0
 
             # Add observation for away team
@@ -660,7 +660,7 @@ def add_newest_season_to_stats(
     file_path: Optional[str] = None,
     swid: Optional[str] = None,
     espn_s2: Optional[str] = None,
-):
+) -> Optional[pd.DataFrame]:
     """Add the newest year to the historical stats dataframe.
 
     Args:

@@ -1,6 +1,6 @@
 from src.doritostats.simulation_utils import simulate_season
 from espn_api.football import League
-from .analytic_utils import (
+from src.doritostats.analytic_utils import (
     sort_lineups_by_func,
     get_best_lineup,
     get_best_trio,
@@ -231,11 +231,7 @@ def django_luck_index(league: League, week: int):
         else:
             luck_val = "{:.1f} net wins lost by unluckiness".format(luck)
         luck_index.append(
-            {
-                "team": team.team_name,
-                "value": luck_val,
-                "owner": team.owner,
-            }
+            {"team": team.team_name, "value": luck_val, "owner": team.owner}
         )
 
     return luck_index
@@ -265,9 +261,6 @@ def django_standings(league: League):
 def django_simulation(league: League, n_simulations: int):
     # Get power rankings for the current week
     playoff_odds, rank_dist, seeding_outcomes = simulate_season(league, n=n_simulations)
-
-    # Infer how many teams are in the league
-    n_teams = len(rank_dist)
 
     # Add the playoff offs and final rank distribution for each team
     django_playoff_odds = []

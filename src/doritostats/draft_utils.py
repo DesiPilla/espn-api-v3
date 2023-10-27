@@ -48,7 +48,7 @@ def get_draft_details(league: League) -> pd.DataFrame:
             draft.loc[i, "player_id"] = ""
             draft.loc[i, "round_num"] = 99
             draft.loc[i, "round_pick"] = 99
-        except:
+        except Exception:
             print(i, player, league.draft[i - 2 : i + 2])
             draft.loc[i, "position"] = player.eligibleSlots[0]
 
@@ -98,7 +98,7 @@ def get_multiple_drafts(
             draft_league = fetch_league(
                 league_id=league_id, year=year, swid=swid, espn_s2=espn_s2
             )
-        except:
+        except Exception:
             continue
 
         draft = pd.concat([draft, get_draft_details(draft_league)])
