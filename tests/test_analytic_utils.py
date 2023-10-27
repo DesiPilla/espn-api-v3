@@ -3,11 +3,6 @@ import inspect
 from typing import Callable
 from espn_api.football import League, Team
 
-import sys
-
-sys.path.append("../")
-
-
 from src.doritostats.fetch_utils import fetch_league
 import src.doritostats.analytic_utils as utils  # The code to test
 

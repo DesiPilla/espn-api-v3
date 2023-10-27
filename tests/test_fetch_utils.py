@@ -3,10 +3,6 @@ import pytest
 from espn_api.football import League, Matchup
 import src.doritostats.fetch_utils as fetch  # The code to test
 
-import sys
-
-sys.path.append("../")
-
 import os
 from dotenv import load_dotenv
 
