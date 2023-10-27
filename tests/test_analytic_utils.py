@@ -11,6 +11,9 @@ import src.doritostats.analytic_utils as utils  # The code to test
 league_id = os.getenv("LEAGUE_ID")
 swid = os.getenv("SWID")
 espn_s2 = os.getenv("ESPN_S2")
+print("LEAGUE_ID: {}".format(league_id))
+print("SWID: {}".format(swid))
+print("ESPN_S2: {}".format(espn_s2))
 
 league_2018 = fetch_league(league_id=league_id, year=2018, swid=swid, espn_s2=espn_s2)
 league_2022 = fetch_league(league_id=league_id, year=2022, swid=swid, espn_s2=espn_s2)
