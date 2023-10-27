@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "doritostats"
-version = "3.0.12"
+version = "3.0.13"
 description = "This project aims to make ESPN Fantasy Football statistics easily available. With the introduction of version 3 of the ESPN's API, this structure creates leagues, teams, and player classes that allow for advanced data analytics and the potential for many new features to be added."
 authors = ["Desi Pilla <desi.m.pilla@gmail.com>"]
 license = "https://github.com/DesiPilla/espn-api-v3/blob/master/LICENSE"
@@ -24,6 +24,8 @@ whitenoise = { extras = ["brotli"], version = "^6.2.0" }
 setuptools = "^65.6.0"
 urllib3 = "2.0.7"
 black = "^23.10.1"
+dj-database-url = "^2.1.0"
+psycopg2-binary = "^2.9.9"
 
 [build-system]
 requires = ["poetry-core"]

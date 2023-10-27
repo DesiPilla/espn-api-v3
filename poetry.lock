@@ -108,20 +108,6 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
-name = "django-on-heroku"
-version = "1.1.2"
-description = "This package simplifies running a Django app on Heroku platform."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-dj-database-url = ">=0.5.0"
-django = "*"
-psycopg2-binary = "*"
-whitenoise = "*"
-
-[[package]]
 name = "espn-api"
 version = "0.33.0"
 description = "ESPN API"
@@ -434,7 +420,7 @@ brotli = ["Brotli"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "e3250921b5b1919f2f7400c72ebc9a216877681a3f2fbd84039f342d709b2da4"
+content-hash = "75dbeb6b2cfeba633618bd4b7b0e539f294b19f3012d7480b5ff73a9b0fee9e9"
 
 [metadata.files]
 asgiref = [
@@ -657,10 +643,6 @@ dj-database-url = [
 django = [
     {file = "Django-4.2.6-py3-none-any.whl", hash = "sha256:a64d2487cdb00ad7461434320ccc38e60af9c404773a2f95ab0093b4453a3215"},
     {file = "Django-4.2.6.tar.gz", hash = "sha256:08f41f468b63335aea0d904c5729e0250300f6a1907bf293a65499496cdbc68f"},
-]
-django-on-heroku = [
-    {file = "django-on-heroku-1.1.2.tar.gz", hash = "sha256:a41fe83ef7ecb022ca92b2950a61f79fef156e58f4f35fc7fc4ecacdc5225fb8"},
-    {file = "django_on_heroku-1.1.2-py2.py3-none-any.whl", hash = "sha256:4a72ade056335112cba22eea332552d840b718dd8140d43c2d70bb739875955b"},
 ]
 espn-api = [
     {file = "espn_api-0.33.0-py3-none-any.whl", hash = "sha256:9ca06652423606dd9b12c27c37de56cd9ad008feb4a813197cc821d0e92da24a"},

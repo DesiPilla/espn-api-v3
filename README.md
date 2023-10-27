@@ -1,10 +1,8 @@
 # espn-api-v3
 
-Link to [Railway website](https://doritostats.up.railway.app/)
+Link to [website](https://doritostats.up.railway.app/)
 
 Link to [Postgres database](https://console.neon.tech/app/projects/spring-star-554438) on Neon
-
-Link to [Heroku website](https://doritostats.herokuapp.com/fantasy_stats/) (WILL BE DEACTIVATED ON NOV 28TH, 2022)
 
 This project aims to make ESPN Fantasy Football statistics easily available.
 With the introduction of version 3 of the ESPN's API, this structure creates leagues, teams, and player classes that allow for advanced data analytics and the potential for many new features to be added.
