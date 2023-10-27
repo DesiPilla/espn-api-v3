@@ -1,5 +1,4 @@
 import pandas as pd
-from typing import Optional
 
 
 def exclude_most_recent_week(df: pd.DataFrame) -> pd.DataFrame:

@@ -131,7 +131,7 @@ lineup_2022_t5_w4 = utils.get_lineup(league_2022, team_2022_5, 4)
 )
 def test_get_lineup(league: League, team: Team, week: int, box_scores, results: dict):
     if league.year < 2019:
-        with pytest.raises(Exception) as e_info:
+        with pytest.raises(Exception):
             assert utils.get_lineup(league, team, week, box_scores), Exception(
                 "Cant use box score before 2019"
             )
