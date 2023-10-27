@@ -31,13 +31,13 @@ def index(request):
     current_year = (datetime.datetime.today() - datetime.timedelta(weeks=12)).year
     leagues_current_year = (
         LeagueInfo.objects.filter(league_year=current_year)
-        .order_by("-league_id", "-league_year")
-        .distinct("league_id", "league_year")
+        .order_by("league_name", "-league_year", "league_id")
+        .distinct("league_name", "league_year", "league_id")
     )
     leagues_previous_year = (
         LeagueInfo.objects.filter(league_year__lt=current_year)
-        .order_by("-league_id", "-league_year")
-        .distinct("league_id", "league_year")
+        .order_by("league_name", "-league_year", "league_id")
+        .distinct("league_name", "league_year", "league_id")
     )
 
     leagues_in_current_year = [league.league_id for league in leagues_current_year]
@@ -206,7 +206,7 @@ def standings(reqeust):
 
 
 def all_leagues(request):
-    leagues = LeagueInfo.objects.order_by("-league_id", "-league_year")
+    leagues = LeagueInfo.objects.order_by("league_name", "-league_year", "league_id")
     return render(request, "fantasy_stats/all_leagues.html", {"leagues": leagues})
 
 
