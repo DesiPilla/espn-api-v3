@@ -4,21 +4,31 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('fantasy_stats', '0001_initial'),
+        ("fantasy_stats", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LeagueInfo',
+            name="LeagueInfo",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('league_id', models.IntegerField()),
-                ('league_year', models.IntegerField()),
-                ('swid', models.CharField(max_length=50)),
-                ('espn_s2', models.CharField(max_length=300)),
-                ('league_name', models.CharField(default='<Name Missing>', max_length=50)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("league_id", models.IntegerField()),
+                ("league_year", models.IntegerField()),
+                ("swid", models.CharField(max_length=50)),
+                ("espn_s2", models.CharField(max_length=300)),
+                (
+                    "league_name",
+                    models.CharField(default="<Name Missing>", max_length=50),
+                ),
             ],
         ),
     ]

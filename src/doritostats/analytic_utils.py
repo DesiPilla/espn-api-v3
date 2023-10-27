@@ -492,7 +492,7 @@ def get_wins_leaderboard(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.Series: Ordered leaderboard by career wins
     """
-    df = df.query(f"outcome == 'win' & is_meaningful_game == True")
+    df = df.query("outcome == 'win' & is_meaningful_game == True")
     leaderboard_df = (
         df.groupby("team_owner")
         .count()["outcome"]
@@ -512,7 +512,7 @@ def get_losses_leaderboard(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.Series: Ordered leaderboard by career wins
     """
-    df = df.query(f"outcome == 'lose' & is_meaningful_game == True")
+    df = df.query("outcome == 'lose' & is_meaningful_game == True")
     leaderboard_df = (
         df.groupby("team_owner")
         .count()["outcome"]
@@ -618,15 +618,15 @@ def game_of_the_week_stats(
 
     print(
         "{} has won {} / {} matchups.".format(
-            owner1, len(gow_df.query(f"outcome == 'win'")), len(gow_df)
+            owner1, len(gow_df.query("outcome == 'win'")), len(gow_df)
         )
     )
     print(
         "{} has won {} / {} matchups.".format(
-            owner2, len(gow_df.query(f"outcome == 'lose'")), len(gow_df)
+            owner2, len(gow_df.query("outcome == 'lose'")), len(gow_df)
         )
     )
-    print("There have been {} ties".format(len(gow_df.query(f"outcome == 'tie'"))))
+    print("There have been {} ties".format(len(gow_df.query("outcome == 'tie'"))))
 
     last_matchup = gow_df.iloc[-1]
     print(
