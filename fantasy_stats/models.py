@@ -1,13 +1,4 @@
-import datetime
 from django.db import models
-from django.utils import timezone
-
-import os
-import sys
-
-sys.path.insert(0, os.path.join("..", "code"))
-
-# from espn_api import League
 
 
 # Create your models here.
@@ -20,3 +11,6 @@ class LeagueInfo(models.Model):
 
     def __str__(self):
         return "{} ({})".format(self.league_id, self.league_year)
+
+    def get_absolute_url(self):
+        return f"/fantasy_stats/league/{self.league_year}/{self.league_id}/"

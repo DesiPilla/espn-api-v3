@@ -16,8 +16,22 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from django.contrib.sitemaps.views import sitemap
+from fantasy_stats.sitemaps import (
+    LeagueHomeSitemap,
+    LeagueSimulationsSitemap,
+    StaticViewSitemap,
+)
+
+sitemaps = {
+    "static": StaticViewSitemap,
+    "league_pages": LeagueHomeSitemap,
+    "league_simulations": LeagueSimulationsSitemap,
+}
+
 urlpatterns = [
-    path("", include("fantasy_stats.urls")),
-    path("fantasy_stats/", include("fantasy_stats.urls")),
+    path("", include("fantasy_stats.urls"), name="index"),
+    path("fantasy_stats/", include("fantasy_stats.urls", namespace="fantasy_stats")),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}),
     path("admin/", admin.site.urls),
 ]
