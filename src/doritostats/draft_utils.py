@@ -53,7 +53,7 @@ def get_draft_details(league: League) -> pd.DataFrame:
             draft.loc[i, "position"] = player.eligibleSlots[0]
 
     # Map owners of previous/co-owned teams to current owners to preserve "franchise"
-    owner_map = {"Katie Brooks": "Nikki  Pilla"}
+    owner_map = {"Katie Brooks": "Nikki Pilla"}
     draft.replace({"team_owner": owner_map, "opp_owner": owner_map}, inplace=True)
 
     # Add some additional columns

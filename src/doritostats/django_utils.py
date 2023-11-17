@@ -1,6 +1,7 @@
 from src.doritostats.simulation_utils import simulate_season
 from espn_api.football import League
 from src.doritostats.analytic_utils import (
+    get_remaining_schedule_difficulty_df,
     sort_lineups_by_func,
     get_best_lineup,
     get_best_trio,
@@ -256,6 +257,40 @@ def django_standings(league: League):
         )
 
     return standings
+
+
+def django_strength_of_schedule(league: League, week: int):
+    """This is a helper function to get the remaining strength of schedule for each team in the league.
+    The results are returned as a list of dictionaries, which is the most conveneint format
+    for django to render.
+
+    Args:
+        league (League): A formatted ESPN league object.
+        week (int): The week to get the remaining strength of schedule for.
+
+    Returns:
+        _type_: _description_
+    """
+    # Get strength of schedule for the current week
+    sos_df = get_remaining_schedule_difficulty_df(league, week)
+
+    # Add the strength of schedule for each team
+    django_sos = []
+    for i in range(len(sos_df)):
+        django_sos.append(
+            {
+                "team": sos_df.iloc[i].name.team_name,
+                "opp_points_for": "{:.1f}".format(sos_df.iloc[i].opp_points_for),
+                "opp_win_pct": "{:.3f}".format(sos_df.iloc[i].opp_win_pct),
+                "opp_power_rank": "{:.1f}".format(sos_df.iloc[i].opp_power_rank),
+                "overall_difficulty": "{:.1f}".format(
+                    sos_df.iloc[i].overall_difficulty
+                ),
+                "owner": sos_df.iloc[i].name.owner,
+            }
+        )
+
+    return django_sos
 
 
 def django_simulation(league: League, n_simulations: int):

@@ -239,7 +239,10 @@ def get_season_luck_indices(league: League, week: int) -> Dict[Team, float]:
 
 
 def get_remaining_schedule_difficulty(
-    team: Team, week: int, strength: str = "points_for"
+    team: Team,
+    week: int,
+    strength: str = "points_for",
+    league: Optional[League] = None,
 ) -> float:
     """
     This function returns the average score of a team's remaining opponents.
@@ -247,6 +250,7 @@ def get_remaining_schedule_difficulty(
     The `strength` parameter defines how an opponent's "strength" is defined.
         - "points_for" means that difficulty is defined by the average points for scored by each of their remaining opponents.
         - "win_pct" means that the difficult is defined by the average winning percentage of each of their remaining opponents.
+        - "power_rank" means that the difficult is defined by the average power rank of each of their remaining opponents.
 
     """
     remaining_schedule = team.schedule[week - 1 :]
@@ -264,7 +268,7 @@ def get_remaining_schedule_difficulty(
         return remaining_strength.mean()
 
     elif strength == "win_pct":
-        # Get all scores from remaining opponenets through specified week
+        # Get win pct of remaining opponenets through specified week
         remaining_strength = np.array(
             [opp.outcomes[: week - 1] for opp in remaining_schedule]
         ).flatten()
@@ -273,6 +277,17 @@ def get_remaining_schedule_difficulty(
         return sum(remaining_strength == "W") / sum(
             (remaining_strength == "W") | (remaining_strength == "L")
         )
+
+    elif strength == "power_rank":
+        power_rankings = {t: float(r) for r, t in league.power_rankings(week=week)}
+
+        # Get all scores from remaining opponenets through specified week
+        remaining_strength = np.array(
+            [power_rankings[opp] for opp in remaining_schedule]
+        ).flatten()
+
+        # Return average power rank
+        return remaining_strength.mean()
 
     else:
         raise Exception("Unrecognized parameter passed for `strength`")
@@ -283,6 +298,9 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
     This function creates a dataframe containing each team's remaining strength of schedule. Strength of schedule is determined by two factors:
         - "opp_points_for" is the average points for scored by each of a team's remaining opponents.
         - "opp_win_pct" is the average winning percentage of each of a team's remaining opponents.
+        - "opp_power_rank" is the average power rank of each of a team's remaining opponents.
+
+    Higher SOS values indicate a more difficult remaining schedule.
 
     Args:
         league (League): League
@@ -295,35 +313,45 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
 
     # Get the remaining SOS for each team
     for team in league.teams:
-        remaining_difficulty_dict[team.owner] = {}
+        remaining_difficulty_dict[team] = {}
 
         # SOS by points for
-        remaining_difficulty_dict[team.owner][
-            "points_for"
+        remaining_difficulty_dict[team][
+            "opp_points_for"
         ] = get_remaining_schedule_difficulty(team, week, strength="points_for")
 
         # SOS by win pct
-        remaining_difficulty_dict[team.owner][
-            "win_pct"
+        remaining_difficulty_dict[team][
+            "opp_win_pct"
         ] = get_remaining_schedule_difficulty(team, week, strength="win_pct")
+
+        # SOS by win pct
+        remaining_difficulty_dict[team][
+            "opp_power_rank"
+        ] = get_remaining_schedule_difficulty(
+            team, week, strength="power_rank", league=league
+        )
 
     # Organize into a dataframe and convert SOS values into a rank order
     remaining_difficulty = pd.DataFrame(remaining_difficulty_dict).T
-    remaining_difficulty["opp_points_for"] = remaining_difficulty.points_for.rank(
+    remaining_difficulty[
+        "opp_points_for_rank"
+    ] = remaining_difficulty.opp_points_for.rank(method="min")
+    remaining_difficulty["opp_win_pct_rank"] = remaining_difficulty.opp_win_pct.rank(
         method="min"
     )
-    remaining_difficulty["opp_win_pct"] = remaining_difficulty.win_pct.rank(
-        method="min"
-    )
+    remaining_difficulty[
+        "opp_power_rank_rank"
+    ] = remaining_difficulty.opp_power_rank.rank(method="min")
 
-    # Blend the two values
+    # Blend the three values (based on ranking, not actual value)
     remaining_difficulty["overall_difficulty"] = remaining_difficulty[
-        ["opp_points_for", "opp_win_pct"]
+        ["opp_points_for_rank", "opp_win_pct_rank", "opp_power_rank_rank"]
     ].mean(axis=1)
 
     return remaining_difficulty[
-        ["opp_points_for", "opp_win_pct", "overall_difficulty"]
-    ].sort_values(by="overall_difficulty")
+        ["opp_points_for", "opp_win_pct", "opp_power_rank", "overall_difficulty"]
+    ].sort_values(by="overall_difficulty", ascending=False)
 
 
 def sort_lineups_by_func(

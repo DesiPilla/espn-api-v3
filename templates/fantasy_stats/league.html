@@ -186,6 +186,35 @@
       </div>
     </div>
 
+    {# Remaining strength of schedule #}
+    <div class="wrapper-wide">
+      <h2>Remaining strength of schedule</h2>
+      <table class="table">
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Owner</div>
+          <div class="cell">Blended difficulty</div>
+          <div class="cell">Opponent's Points For</div>
+          <div class="cell">Opponent's Win %</div>
+          <div class="cell">Opponent's Power Ranking</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in strength_of_schedule %}
+          <div class="row">
+            <div class="cell" data-title="team">{{ r.team }}</div>
+            <div class="cell" data-title="owner">{{ r.owner }}</div>
+            <div class="cell" data-title="blended_difficulty">{{ r.overall_difficulty }}</div>
+            <div class="cell" data-title="opponent_points_for">{{ r.opp_points_for }}</div>
+            <div class="cell" data-title="opponent_win_pct">{{ r.opp_win_pct }}</div>
+            <div class="cell" data-title="opponent_power_ranking">{{ r.opp_power_rank }}</div>
+          </div>
+        {% endfor %}
+        <em>Blended difficulty</em> accounts for the <em>points for</em>, <em>winning %</em>, and <em>power ranking</em> of each team's remaining opponents.
+      </table>
+    </div>
+
     <footer>
       <div class="container">
         <div class="footer-content">

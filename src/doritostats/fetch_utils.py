@@ -630,7 +630,7 @@ def get_historical_stats(
     df["team_owner"] = df.team_owner.str.title()
 
     # Map owners of previous/co-owned teams to current owners to preserve "franchise"
-    owner_map = {"Katie Brooks": "Nikki  Pilla"}
+    owner_map = {"Katie Brooks": "Nikki Pilla"}
     df.replace({"team_owner": owner_map, "opp_owner": owner_map}, inplace=True)
 
     # Get win streak data for each owner
