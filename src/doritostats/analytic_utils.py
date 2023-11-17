@@ -272,7 +272,7 @@ def get_remaining_schedule_difficulty(
     if strength == "points_for":
         # Get all scores from remaining opponenets through specified week
         remaining_strength = np.array(
-            [opp.scores[: week - 1] for opp in remaining_schedule]
+            [opp.scores[: week - 1][:n_completed_weeks] for opp in remaining_schedule]
         ).flatten()
 
         # Exclude weeks that haven't occurred yet (not always applicable)
