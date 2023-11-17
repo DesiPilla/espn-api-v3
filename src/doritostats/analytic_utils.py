@@ -267,6 +267,7 @@ def get_remaining_schedule_difficulty(
 
     """
     remaining_schedule = team.schedule[week - 1 :]
+    n_completed_weeks = len([o for o in team.outcomes if o != "U"])
 
     if strength == "points_for":
         # Get all scores from remaining opponenets through specified week
@@ -275,7 +276,7 @@ def get_remaining_schedule_difficulty(
         ).flatten()
 
         # Exclude weeks that haven't occurred yet (not always applicable)
-        remaining_strength = remaining_strength[remaining_strength > 0]
+        remaining_strength = remaining_strength[:n_completed_weeks]
 
         # Return average score
         return remaining_strength.mean()
