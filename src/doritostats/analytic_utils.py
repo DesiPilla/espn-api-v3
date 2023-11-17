@@ -238,6 +238,7 @@ def get_season_luck_indices(league: League, week: int) -> Dict[Team, float]:
 
     return luck_indices
 
+
 def calculate_win_pct(outcomes: np.array) -> float:
     """This function returns the win percentage of a team (excluding ties).
 
@@ -247,7 +248,8 @@ def calculate_win_pct(outcomes: np.array) -> float:
     Returns:
         float: Win percentage
     """
-    return sum(outcomes == "W") / sum((outcomes == "W")| (outcomes == "L"))
+    return sum(outcomes == "W") / sum((outcomes == "W") | (outcomes == "L"))
+
 
 def get_remaining_schedule_difficulty(
     team: Team,
@@ -343,28 +345,34 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
 
     # Identify the min and max values for each SOS metric
     team_avg_score = [t.points_for / (week - 1) for t in league.teams]
-    team_win_pct = [calculate_win_pct(np.array(t.outcomes))   for t in league.teams]
+    team_win_pct = [calculate_win_pct(np.array(t.outcomes)) for t in league.teams]
     power_ranks = [float(p) for p, _ in league.power_rankings(week)]
 
     # Organize into a dataframe and convert SOS values into a rank order
     remaining_difficulty = pd.DataFrame(remaining_difficulty_dict).T
-    remaining_difficulty["opp_points_for_index"] = preprocessing.MinMaxScaler(
-        (min(team_avg_score), max(team_avg_score))
-    ).fit_transform(remaining_difficulty.opp_points_for.values.reshape(-1, 1)).flatten()
-    
-    remaining_difficulty["opp_win_pct_index"] = preprocessing.MinMaxScaler(
-        (min(team_win_pct), max(team_win_pct))
-    ).fit_transform(remaining_difficulty.opp_win_pct.values.reshape(-1, 1)).flatten()
-    
-    remaining_difficulty["opp_power_rank_index"] = preprocessing.MinMaxScaler(
-        (min(power_ranks), max(power_ranks))
-    ).fit_transform(remaining_difficulty.opp_power_rank.values.reshape(-1, 1)).flatten()
+    remaining_difficulty["opp_points_for_index"] = (
+        preprocessing.MinMaxScaler((min(team_avg_score), max(team_avg_score)))
+        .fit_transform(remaining_difficulty.opp_points_for.values.reshape(-1, 1))
+        .flatten()
+    )
+
+    remaining_difficulty["opp_win_pct_index"] = (
+        preprocessing.MinMaxScaler((min(team_win_pct), max(team_win_pct)))
+        .fit_transform(remaining_difficulty.opp_win_pct.values.reshape(-1, 1))
+        .flatten()
+    )
+
+    remaining_difficulty["opp_power_rank_index"] = (
+        preprocessing.MinMaxScaler((min(power_ranks), max(power_ranks)))
+        .fit_transform(remaining_difficulty.opp_power_rank.values.reshape(-1, 1))
+        .flatten()
+    )
 
     # Blend the three values (based on ranking, not actual value)
     remaining_difficulty["overall_difficulty"] = remaining_difficulty[
         ["opp_points_for_index", "opp_win_pct_index", "opp_power_rank_index"]
     ].mean(axis=1)
-    
+
     return remaining_difficulty[
         ["opp_points_for", "opp_win_pct", "opp_power_rank", "overall_difficulty"]
     ].sort_values(by="overall_difficulty", ascending=False)
