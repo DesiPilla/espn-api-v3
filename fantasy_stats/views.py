@@ -9,6 +9,7 @@ from src.doritostats.django_utils import (
     django_power_rankings,
     django_simulation,
     django_standings,
+    django_strength_of_schedule,
     django_weekly_stats,
     ordinal,
 )
@@ -186,6 +187,7 @@ def league(request, league_id: int, league_year: int, week: int = None):
         weekly_awards = django_weekly_stats(league, week)
         power_rankings = django_power_rankings(league, week)
         luck_index = django_luck_index(league, week)
+        strength_of_schedule = django_strength_of_schedule(league, week)
         standings = django_standings(league)
 
     context = {
@@ -196,6 +198,7 @@ def league(request, league_id: int, league_year: int, week: int = None):
         "weekly_awards": weekly_awards,
         "power_rankings": power_rankings,
         "luck_index": luck_index,
+        "strength_of_schedule": strength_of_schedule,
         "standings": standings,
     }
     return HttpResponse(render(request, "fantasy_stats/league.html", context))
@@ -266,6 +269,7 @@ def simulation(
         "playoff_odds": playoff_odds,
         "rank_dist": rank_dist,
         "seeding_outcomes": seeding_outcomes,
+        "strength_of_schedule": django_strength_of_schedule(league, week),
         "n_positions": len(league.teams),
         "positions": [ordinal(i) for i in range(1, len(league.teams) + 1)],
         "n_playoff_spots": league.settings.playoff_team_count,

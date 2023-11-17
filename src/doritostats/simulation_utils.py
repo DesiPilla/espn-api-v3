@@ -529,9 +529,24 @@ def simulate_season(
                 "points_for",
                 "playoff_odds",
             ]
-        ].sort_values(by="playoff_odds", ascending=False),
-        rank_dist,
-        seeding_outcomes,
+        ].sort_values(
+            by=["playoff_odds", "wins", "points_for", "team_owner"],
+            ascending=[False, False, False, True],
+        ),
+        rank_dist.sort_values(
+            by=["playoff_odds"] + [i + 1 for i in range(len(rank_dist) - 1)],
+            ascending=False,
+        ),
+        seeding_outcomes.sort_values(
+            by=[
+                "make_playoffs",
+                "first_in_league",
+                "first_in_division",
+                "last_in_league",
+                "last_in_division",
+            ],
+            ascending=[False, False, False, True, True],
+        ),
     )
 
 
@@ -595,16 +610,16 @@ def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
         # Simulate season if home team wins
         home_team = matchup.home_team
         outcomes_home_win = get_outcomes_if_team_wins(home_team, week, matchups)
-        odds_home_win, _, _ = simulate_season(
+        odds_home_win = simulate_season(
             league, n, what_if=True, outcomes=outcomes_home_win
-        ).set_index("team_owner")
+        )[0].set_index("team_owner")
 
         # Simulate season if away team wins
         away_team = matchup.away_team
         outcomes_away_win = get_outcomes_if_team_wins(away_team, week, matchups)
-        odds_away_win, _, _ = simulate_season(
+        odds_away_win = simulate_season(
             league, n, what_if=True, outcomes=outcomes_away_win
-        ).set_index("team_owner")
+        )[0].set_index("team_owner")
 
         # Merge results
         odds = pd.merge(
