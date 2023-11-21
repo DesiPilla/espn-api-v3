@@ -1,6 +1,7 @@
 from src.doritostats.simulation_utils import simulate_season
 from espn_api.football import League
 from src.doritostats.analytic_utils import (
+    get_num_active,
     get_remaining_schedule_difficulty_df,
     sort_lineups_by_func,
     get_best_lineup,
@@ -113,6 +114,10 @@ def django_weekly_stats(league: League, week: int):
             "Best Bench:",
             sort_lineups_by_func(league, week, sum_bench_points, box_scores)[-1].owner,
         ],
+        [
+            "Fewest inactive players:",
+            sort_lineups_by_func(league, week, get_num_active, box_scores)[-1].owner,
+        ],
     ]
     worst_table = [
         [
@@ -183,6 +188,10 @@ def django_weekly_stats(league: League, week: int):
         [
             "Worst Bench:",
             sort_lineups_by_func(league, week, sum_bench_points, box_scores)[0].owner,
+        ],
+        [
+            "Most inactive players:",
+            sort_lineups_by_func(league, week, get_num_active, box_scores)[0].owner,
         ],
     ]
 

@@ -110,7 +110,7 @@ def get_num_inactive(league: League, lineup: List[Player]) -> int:
 
 
 def get_num_bye(league: League, lineup: List[Player]) -> int:
-    """Returns the number of players who were active for a team for the loaded week (excluding IR slot players)."""
+    """Returns the number of players who were on a bye for the loaded week (excluding IR slot players)."""
     return len(
         [
             player
