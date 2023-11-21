@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import datetime
 from typing import Optional
-from espn_api.football import League, Team, Matchup
+from espn_api.football import League, Team, Matchup, Player
 from src.doritostats.analytic_utils import (
     get_best_trio,
     get_lineup_efficiency,
@@ -162,6 +162,7 @@ def fetch_league(
     # Load current league data
     print("[BUILDING LEAGUE] Loading current league details...")
     league.load_roster_week(league.current_week)
+
     return league
 
 

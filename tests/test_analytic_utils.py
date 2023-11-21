@@ -193,9 +193,58 @@ def test_get_weekly_finish(league: League, team: Team, week: int, result: int):
     assert utils.get_weekly_finish(league, team, week) == result
 
 
-# @pytest.mark.parametrize(", result", [()])
-# def test_get_num_out(result: int):
-#     assert utils.get_num_out() == result
+@pytest.mark.parametrize(
+    "lineup, result",
+    [
+        (lineup_2020_t0_w15, 10),
+        (lineup_2023_t0_w2, 17),
+        (lineup_2023_t0_w5, 17),
+        (lineup_2023_t0_w8, 18),
+        (lineup_2023_t0_w10, 14),
+        (lineup_2023_t7_w7, 10),
+    ],
+)
+def test_get_num_active(
+    lineup: List[Player],
+    result: int,
+):
+    assert utils.get_num_active(None, lineup) == result
+
+
+@pytest.mark.parametrize(
+    "lineup, result",
+    [
+        (lineup_2020_t0_w15, 0),
+        (lineup_2023_t0_w2, 1),
+        (lineup_2023_t0_w5, 1),
+        (lineup_2023_t0_w8, 0),
+        (lineup_2023_t0_w10, 1),
+        (lineup_2023_t7_w7, 2),
+    ],
+)
+def test_get_num_inactive(
+    lineup: List[Player],
+    result: int,
+):
+    assert utils.get_num_inactive(None, lineup) == result
+
+
+@pytest.mark.parametrize(
+    "lineup, result",
+    [
+        (lineup_2020_t0_w15, 0),
+        (lineup_2023_t0_w2, 0),
+        (lineup_2023_t0_w5, 0),
+        (lineup_2023_t0_w8, 0),
+        (lineup_2023_t0_w10, 3),
+        (lineup_2023_t7_w7, 6),
+    ],
+)
+def test_get_num_bye(
+    lineup: List[Player],
+    result: int,
+):
+    assert utils.get_num_bye(None, lineup) == result
 
 
 @pytest.mark.parametrize(
