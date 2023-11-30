@@ -232,23 +232,36 @@ def input_outcomes(
             )
         else:
             winner = outcomes[i]
+
         if winner == 3:
             # No winner assigned
             continue
 
         else:
+            # Regardless of the winner, assign each team their average ppg over the last 4 weeks
+            home_ppg = np.average(matchup.home_team.scores[: week - 1][:-4])
+            away_ppg = np.average(matchup.home_team.scores[: week - 1][:-4])
+
             if winner == 1:
-                (home_outcome, away_outcome) = [(1, 0, 0), (0, 0, 1)]
+                (home_outcome, away_outcome) = [
+                    (1, 0, 0, home_ppg),
+                    (0, 0, 1, away_ppg),
+                ]
             elif winner == 2:
-                (home_outcome, away_outcome) = [(0, 0, 1), (1, 0, 0)]
+                (home_outcome, away_outcome) = [
+                    (0, 0, 1, home_ppg),
+                    (1, 0, 0, away_ppg),
+                ]
             else:
                 raise Exception("Incorrect input type. Please enter `1` or `2`.")
 
             # Update standings
             standings.loc[matchup.home_team.team_id, "wins"] += home_outcome[0]  # type: ignore
             standings.loc[matchup.home_team.team_id, "losses"] += home_outcome[2]  # type: ignore
+            standings.loc[matchup.home_team.team_id, "points_for"] += home_outcome[3]  # type: ignore
             standings.loc[matchup.away_team.team_id, "wins"] += away_outcome[0]  # type: ignore
             standings.loc[matchup.away_team.team_id, "losses"] += away_outcome[2]  # type: ignore
+            standings.loc[matchup.away_team.team_id, "points_for"] += away_outcome[3]  # type: ignore
 
             # Assign the team with the smaller team_id as the "home team"
             (home_team, away_team) = sorted(
@@ -438,7 +451,7 @@ def simulate_season(
         pd.DataFrame: Dataframe containing distribution of final ranks for each team
         pd.DataFrame: Dataframe containing distribution of seeding outcomes for each team
     """
-    n = min(n, 2000)
+    # n = min(n, 2000)
     np.random.seed(random_state)
 
     # Get current standings
@@ -529,24 +542,9 @@ def simulate_season(
                 "points_for",
                 "playoff_odds",
             ]
-        ].sort_values(
-            by=["playoff_odds", "wins", "points_for", "team_owner"],
-            ascending=[False, False, False, True],
-        ),
-        rank_dist.sort_values(
-            by=["playoff_odds"] + [i + 1 for i in range(len(rank_dist) - 1)],
-            ascending=False,
-        ),
-        seeding_outcomes.sort_values(
-            by=[
-                "make_playoffs",
-                "first_in_league",
-                "first_in_division",
-                "last_in_league",
-                "last_in_division",
-            ],
-            ascending=[False, False, False, True, True],
-        ),
+        ].sort_values(by="playoff_odds", ascending=False),
+        rank_dist,
+        seeding_outcomes,
     )
 
 
