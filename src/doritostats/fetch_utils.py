@@ -84,6 +84,9 @@ def get_roster_settings(league: League) -> None:
         r = r[0]
     settings = r["settings"]
     league.name = settings["name"]
+    league.previous_seasons = [
+        year for year in r["status"]["previousSeasons"] if year < league.year
+    ]
 
     # Grab the dictionary containing the number of players of each position a roster contains
     roster = settings["rosterSettings"]["lineupSlotCounts"]
@@ -107,7 +110,7 @@ def get_roster_settings(league: League) -> None:
     return
 
 
-def set_owner_names(league: League):
+def set_owner_names(league: League) -> None:
     """This function sets the owner names for each team in the league.
     The team.owners attribute only contains the SWIDs of each owner, not their real name.
 
@@ -128,7 +131,10 @@ def set_owner_names(league: League):
 
     # Set the owner name for each team
     for team in league.teams:
-        team.owner = swid_to_name[team.owners[0]]
+        if team.owners and team.owners[0] in swid_to_name:
+            team.owner = swid_to_name[team.owners[0]]
+        else:
+            team.owner = "Unknown Owner"
 
 
 def fetch_league(

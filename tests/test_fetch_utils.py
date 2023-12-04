@@ -124,6 +124,7 @@ def test_get_roster_settings(league: League, swid: str, espn_s2: str, results: d
             {
                 "league_name": "Make Football Great Again",
                 "cookies": {"swid": swid, "espn_s2": espn_s2},
+                "previous_seasons": [2017],
             },
         ),
         (
@@ -134,6 +135,7 @@ def test_get_roster_settings(league: League, swid: str, espn_s2: str, results: d
             {
                 "league_name": "La Lega dei Cugini",
                 "cookies": {"swid": swid, "espn_s2": espn_s2},
+                "previous_seasons": [2017, 2018, 2019, 2020, 2021],
             },
         ),
     ],
@@ -144,6 +146,7 @@ def test_fetch_league(
     league = fetch.fetch_league(league_id, year, swid, espn_s2)
     assert type(league)
     assert league.cookies == results["cookies"]
+    assert league.previous_seasons == results["previous_seasons"]
 
 
 @pytest.mark.parametrize(

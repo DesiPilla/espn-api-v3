@@ -1,8 +1,8 @@
 import inspect
-import pytest
 import os
-from typing import Callable
-from espn_api.football import League, Team
+from typing import Callable, List
+import pytest
+from espn_api.football import League, Team, Player
 
 from src.doritostats.fetch_utils import fetch_league
 import src.doritostats.analytic_utils as utils  # The code to test
@@ -13,14 +13,24 @@ swid = os.getenv("SWID")
 espn_s2 = os.getenv("ESPN_S2")
 
 league_2018 = fetch_league(league_id=league_id, year=2018, swid=swid, espn_s2=espn_s2)
+league_2020 = fetch_league(league_id=league_id, year=2020, swid=swid, espn_s2=espn_s2)
 league_2022 = fetch_league(league_id=league_id, year=2022, swid=swid, espn_s2=espn_s2)
+league_2023 = fetch_league(league_id=league_id, year=2023, swid=swid, espn_s2=espn_s2)
 
 team_2018_2 = league_2018.teams[2]
+team_2020_0 = league_2020.teams[0]
 team_2022_0 = league_2022.teams[0]
 team_2022_5 = league_2022.teams[5]
+team_2023_0 = league_2022.teams[5]
 box_scores_2022_4 = league_2022.box_scores(4)
+lineup_2020_t0_w15 = utils.get_lineup(league_2020, team_2020_0, 15)
 lineup_2022_t0_w1 = utils.get_lineup(league_2022, team_2022_0, 1)
 lineup_2022_t5_w4 = utils.get_lineup(league_2022, team_2022_5, 4)
+lineup_2023_t0_w2 = utils.get_lineup(league_2023, league_2023.teams[0], 2)
+lineup_2023_t0_w5 = utils.get_lineup(league_2023, league_2023.teams[0], 5)
+lineup_2023_t0_w8 = utils.get_lineup(league_2023, league_2023.teams[0], 8)
+lineup_2023_t0_w10 = utils.get_lineup(league_2023, league_2023.teams[0], 10)
+lineup_2023_t7_w7 = utils.get_lineup(league_2023, league_2023.teams[7], 7)
 
 
 @pytest.mark.parametrize(
@@ -152,7 +162,7 @@ def test_get_lineup(league: League, team: Team, week: int, box_scores, results: 
         (lineup_2022_t5_w4, "K", 2, ["Justin Tucker"]),
     ],
 )
-def test_get_top_players(lineup: list, slot: str, n: int, results: list):
+def test_get_top_players(lineup: List[Player], slot: str, n: int, results: list):
     top_players = utils.get_top_players(lineup, slot, n)
     player_names = [player.name for player in top_players]
     assert player_names == results
@@ -162,7 +172,7 @@ def test_get_top_players(lineup: list, slot: str, n: int, results: list):
     "league, lineup, result",
     [(league_2022, lineup_2022_t0_w1, 128.0), (league_2022, lineup_2022_t5_w4, 196.52)],
 )
-def test_get_best_lineup(league: League, lineup: list, result: float):
+def test_get_best_lineup(league: League, lineup: List[Player], result: float):
     assert utils.get_best_lineup(league, lineup) == result
 
 
@@ -170,7 +180,7 @@ def test_get_best_lineup(league: League, lineup: list, result: float):
     "league, lineup, result",
     [(league_2022, lineup_2022_t0_w1, 61.0), (league_2022, lineup_2022_t5_w4, 85.92)],
 )
-def test_get_best_trio(league: League, lineup: list, result: float):
+def test_get_best_trio(league: League, lineup: List[Player], result: float):
     assert utils.get_best_trio(league, lineup) == result
 
 
@@ -181,7 +191,7 @@ def test_get_best_trio(league: League, lineup: list, result: float):
         (league_2022, lineup_2022_t5_w4, 0.5734),
     ],
 )
-def test_get_lineup_efficiency(league: League, lineup: list, result: float):
+def test_get_lineup_efficiency(league: League, lineup: List[Player], result: float):
     assert pytest.approx(utils.get_lineup_efficiency(league, lineup), 0.0001) == result
 
 
@@ -210,7 +220,7 @@ def test_get_weekly_finish(league: League, team: Team, week: int, result: int):
         (league_2022, lineup_2022_t5_w4, "K", 11.0),
     ],
 )
-def test_avg_slot_score(league: League, lineup: list, slot: str, result: float):
+def test_avg_slot_score(league: League, lineup: List[Player], slot: str, result: float):
     assert pytest.approx(utils.avg_slot_score(league, lineup, slot), 0.01) == result
 
 
@@ -218,7 +228,7 @@ def test_avg_slot_score(league: League, lineup: list, slot: str, result: float):
     "league, lineup, result",
     [(league_2022, lineup_2022_t0_w1, 55.7), (league_2022, lineup_2022_t5_w4, 124.62)],
 )
-def test_sum_bench_points(league: League, lineup: list, result: float):
+def test_sum_bench_points(league: League, lineup: List[Player], result: float):
     assert utils.sum_bench_points(league, lineup) == result
 
 
