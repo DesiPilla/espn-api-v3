@@ -119,7 +119,10 @@ def django_weekly_stats(league: League, week: int):
             "Least Points Scored: ",
             sorted(league.teams, key=lambda x: x.scores[week - 1])[0].owner,
         ],
-        ["---------------------", "----------------"],
+        [
+            "Worst Optimal Lineup: ",
+            sort_lineups_by_func(league, week, get_best_lineup, box_scores)[0].owner,
+        ],
         [
             "Fewest TDs: ",
             sort_lineups_by_func(league, week, get_total_tds, box_scores)[0].owner,
