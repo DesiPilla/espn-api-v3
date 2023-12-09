@@ -364,7 +364,8 @@ def get_rank_distribution_df(final_standings: pd.DataFrame) -> pd.DataFrame:
         * 100
     )
 
-    return rank_dist_df.sort_values(["playoff_odds", 1], ascending=False)
+    ranks = list(final_standings["final_rank"].unique())
+    return rank_dist_df.sort_values(ranks + ["playoff_odds"], ascending=False)
 
 
 def get_seeding_outcomes_df(final_standings: pd.DataFrame) -> pd.DataFrame:
@@ -423,7 +424,14 @@ def get_seeding_outcomes_df(final_standings: pd.DataFrame) -> pd.DataFrame:
     )
 
     return final_standings_agg.sort_values(
-        by=["first_in_league", "first_in_division"], ascending=False
+        by=[
+            "first_in_league",
+            "make_playoffs",
+            "first_in_division",
+            "last_in_division",
+            "last_in_league",
+        ],
+        ascending=[False, False, False, True, True],
     )
 
 
@@ -522,9 +530,11 @@ def simulate_season(
 
     # Append team info to the dataframes
     playoff_odds = playoff_odds.apply(get_team_info, axis=1).drop(columns="division_id")
+
     rank_dist = (
         rank_dist.reset_index().apply(get_team_info, axis=1).drop(columns="division_id")
     )
+
     seeding_outcomes = (
         seeding_outcomes.reset_index()
         .apply(get_team_info, axis=1)
@@ -542,7 +552,7 @@ def simulate_season(
                 "points_for",
                 "playoff_odds",
             ]
-        ].sort_values(by="playoff_odds", ascending=False),
+        ],
         rank_dist,
         seeding_outcomes,
     )
