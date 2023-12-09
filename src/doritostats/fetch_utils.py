@@ -84,9 +84,6 @@ def get_roster_settings(league: League) -> None:
         r = r[0]
     settings = r["settings"]
     league.name = settings["name"]
-    league.previous_seasons = [
-        year for year in r["status"]["previousSeasons"] if year < league.year
-    ]
 
     # Grab the dictionary containing the number of players of each position a roster contains
     roster = settings["rosterSettings"]["lineupSlotCounts"]
