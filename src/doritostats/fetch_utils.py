@@ -112,27 +112,21 @@ def get_roster_settings(league: League) -> None:
 
 def set_owner_names(league: League) -> None:
     """This function sets the owner names for each team in the league.
-    The team.owners attribute only contains the SWIDs of each owner, not their real name.
+    The team.owners attribute contains a dictionary of information with owner details, not a simple name.
 
     Args:
         league (League): ESPN League object
     """
-    endpoint = "{}view=mTeam".format(league.endpoint)
-    r = requests.get(endpoint, cookies=league.cookies).json()
-    if type(r) == list:
-        r = r[0]
-
-    # For each member in the data, create a map from SWID to their full name
-    swid_to_name = {}
-    for member in r["members"]:
-        swid_to_name[member["id"]] = re.sub(
-            " +", " ", member["firstName"] + " " + member["lastName"]
-        ).title()
-
     # Set the owner name for each team
     for team in league.teams:
-        if team.owners and team.owners[0] in swid_to_name:
-            team.owner = swid_to_name[team.owners[0]]
+        if team.owners and all(
+            [key in team.owners[0].keys() for key in ["firstName", "lastName"]]
+        ):
+            team.owner = re.sub(
+                " +",
+                " ",
+                team.owners[0]["firstName"] + " " + team.owners[0]["lastName"],
+            ).title()
         else:
             team.owner = "Unknown Owner"
 
