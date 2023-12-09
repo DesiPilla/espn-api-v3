@@ -87,11 +87,37 @@ def get_weekly_finish(league: League, team: Team, week: int) -> int:
     return league_scores.index(team.scores[week - 1]) + 1
 
 
-def get_num_out(league: League, lineup: List[Player]) -> int:
-    """Returns the (esimated) number of players who did not play for a team for the loaded week (excluding IR slot players)."""
-    num_out = 0
-    # TODO: write new code based on if player was injured
-    return num_out
+def get_num_active(league: League, lineup: List[Player]) -> int:
+    """Returns the number of players who were active for a team for the loaded week (excluding IR slot players)."""
+    return len(
+        [
+            player
+            for player in lineup
+            if player.active_status == "active" and player.slot_position != "IR"
+        ]
+    )
+
+
+def get_num_inactive(league: League, lineup: List[Player]) -> int:
+    """Returns the number of players who did not play for a team for the loaded week (excluding IR slot players)."""
+    return len(
+        [
+            player
+            for player in lineup
+            if player.active_status == "inactive" and player.slot_position != "IR"
+        ]
+    )
+
+
+def get_num_bye(league: League, lineup: List[Player]) -> int:
+    """Returns the number of players who were on a bye for the loaded week (excluding IR slot players)."""
+    return len(
+        [
+            player
+            for player in lineup
+            if player.active_status == "bye" and player.slot_position != "IR"
+        ]
+    )
 
 
 def avg_slot_score(league: League, lineup: List[Player], slot: str) -> float:
