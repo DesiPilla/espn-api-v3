@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import datetime
 from typing import Optional
-from espn_api.football import League, Team, Matchup
+from espn_api.football import League, Team, Matchup, Player
 from src.doritostats.analytic_utils import (
     get_best_trio,
     get_lineup_efficiency,
@@ -84,9 +84,6 @@ def get_roster_settings(league: League) -> None:
         r = r[0]
     settings = r["settings"]
     league.name = settings["name"]
-    league.previous_seasons = [
-        year for year in r["status"]["previousSeasons"] if year < league.year
-    ]
 
     # Grab the dictionary containing the number of players of each position a roster contains
     roster = settings["rosterSettings"]["lineupSlotCounts"]
@@ -112,27 +109,21 @@ def get_roster_settings(league: League) -> None:
 
 def set_owner_names(league: League) -> None:
     """This function sets the owner names for each team in the league.
-    The team.owners attribute only contains the SWIDs of each owner, not their real name.
+    The team.owners attribute contains a dictionary of information with owner details, not a simple name.
 
     Args:
         league (League): ESPN League object
     """
-    endpoint = "{}view=mTeam".format(league.endpoint)
-    r = requests.get(endpoint, cookies=league.cookies).json()
-    if type(r) == list:
-        r = r[0]
-
-    # For each member in the data, create a map from SWID to their full name
-    swid_to_name = {}
-    for member in r["members"]:
-        swid_to_name[member["id"]] = re.sub(
-            " +", " ", member["firstName"] + " " + member["lastName"]
-        ).title()
-
     # Set the owner name for each team
     for team in league.teams:
-        if team.owners and team.owners[0] in swid_to_name:
-            team.owner = swid_to_name[team.owners[0]]
+        if team.owners and all(
+            [key in team.owners[0].keys() for key in ["firstName", "lastName"]]
+        ):
+            team.owner = re.sub(
+                " +",
+                " ",
+                team.owners[0]["firstName"] + " " + team.owners[0]["lastName"],
+            ).title()
         else:
             team.owner = "Unknown Owner"
 
@@ -168,6 +159,7 @@ def fetch_league(
     # Load current league data
     print("[BUILDING LEAGUE] Loading current league details...")
     league.load_roster_week(league.current_week)
+
     return league
 
 
