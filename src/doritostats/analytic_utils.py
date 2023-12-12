@@ -1048,9 +1048,10 @@ def season_stats_analysis(
     if week is None:
         week = df.query(f"year == {df.year.max()}").week.max()
 
+    current_matchup_period = league.settings.week_to_matchup_period[league.current_week]
     df = df.query("is_meaningful_game == True")
     df_current_year = df.query(f"year == {league.year}")
-    df_current_week = df_current_year.query(f"week == {league.current_week - 1}")
+    df_current_week = df_current_year.query(f"week == {current_matchup_period - 1}")
 
     print("----------------------------------------------------------------")
     print(

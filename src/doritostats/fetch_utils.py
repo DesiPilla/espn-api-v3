@@ -128,6 +128,20 @@ def set_owner_names(league: League) -> None:
             team.owner = "Unknown Owner"
 
 
+def set_additional_settings(league: League) -> None:
+    """This function adds additional league settings to the League object.
+
+    Args:
+        league (League): ESPN League object
+    """
+    # Create a dictionary that maps each week to the matchup period it is in
+    # This is necessary because some matchup periods span multiple weeks
+    league.settings.week_to_matchup_period = {}
+    for matchup_period, weeks in league.settings.matchup_periods.items():
+        for week in weeks:
+            league.settings.week_to_matchup_period[week] = int(matchup_period)
+
+
 def fetch_league(
     league_id: int, year: int, swid: Optional[str] = None, espn_s2: Optional[str] = None
 ) -> League:
@@ -153,12 +167,16 @@ def fetch_league(
     # Get roster information
     get_roster_settings(league)
 
+    # Set additinoal settings
+    set_additional_settings(league)
+
     # Set the owners for each team
     set_owner_names(league)
 
     # Load current league data
     print("[BUILDING LEAGUE] Loading current league details...")
-    league.load_roster_week(league.current_week)
+    current_matchup_period = league.settings.week_to_matchup_period[league.current_week]
+    league.load_roster_week(current_matchup_period)
 
     return league
 
@@ -362,7 +380,8 @@ def get_stats_by_matchup(
     df = pd.DataFrame()
 
     # Loop through each week that has happened
-    for week in range(league.current_week):
+    current_matchup_period = league.settings.week_to_matchup_period[league.current_week]
+    for week in range(current_matchup_period):
         box_scores = league.box_scores(week + 1)
 
         # Instantiate week data frame

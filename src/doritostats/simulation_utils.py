@@ -470,10 +470,13 @@ def simulate_season(
         first_week_to_simulate = (
             standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1
         )
+        current_matchup_period = league.settings.week_to_matchup_period[
+            league.current_week
+        ]
         standings, matchups_to_exclude = input_outcomes(
             league=league,
             standings=standings,
-            week=league.current_week,
+            week=current_matchup_period,
             outcomes=outcomes,
         )
     else:
