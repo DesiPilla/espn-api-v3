@@ -21,10 +21,11 @@ N_SIMULATIONS = 500
 
 
 def get_default_week(league: League):
+    current_matchup_period = league.settings.week_to_matchup_period[league.current_week]
     if datetime.datetime.now().strftime("%A") in ["Tuesday", "Wednesday"]:
-        return league.current_week - 1
+        return current_matchup_period - 1
     else:
-        return league.current_week
+        return current_matchup_period
 
 
 # Create your views here.
