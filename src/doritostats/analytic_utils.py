@@ -772,6 +772,80 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
 
     df = df.query("is_meaningful_game == True")
 
+    league_positive_stats_to_check = [
+        {"stat": "team_score", "units": "pts", "high_first": True, "n": 3},
+        {"stat": "team_score_adj", "units": "pts", "high_first": True, "n": 3},
+        {"stat": "score_dif", "units": "pts", "high_first": True, "n": 3},
+        {"stat": "lineup_efficiency", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "best_trio", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "QB_pts", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "RB_pts", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "WR_pts", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "TE_pts", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "RB_WR_TE_pts", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "RB_WR_TE_pts", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "RB_WR_TE_pts", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "D_ST_pts", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "K_pts", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "bench_points", "units": "pts", "high_first": True, "n": 5},
+        {"stat": "streak", "units": "pts", "high_first": True, "n": 3},
+        {"stat": "season_wins", "units": "wins", "high_first": True, "n": 3},
+        {"stat": "team_projection_beat", "units": "pts", "high_first": True, "n": 5},
+    ]
+
+    league_negative_stats_to_check = [
+        {"stat": "team_score", "units": "pts", "high_first": False, "n": 3},
+        {"stat": "team_score_adj", "units": "pts", "high_first": False, "n": 3},
+        {"stat": "score_dif", "units": "pts", "high_first": False, "n": 3},
+        {"stat": "lineup_efficiency", "units": "pts", "high_first": False, "n": 5},
+        {"stat": "best_trio", "units": "pts", "high_first": False, "n": 5},
+        {"stat": "QB_pts", "units": "pts", "high_first": False, "n": 5},
+        {"stat": "RB_pts", "units": "pts", "high_first": False, "n": 5},
+        {"stat": "WR_pts", "units": "pts", "high_first": False, "n": 5},
+        {"stat": "TE_pts", "units": "pts", "high_first": False, "n": 5},
+        {"stat": "RB_WR_TE_pts", "units": "pts", "high_first": False, "n": 5},
+        {"stat": "D_ST_pts", "units": "pts", "high_first": False, "n": 5},
+        {"stat": "K_pts", "units": "pts", "high_first": False, "n": 5},
+        {"stat": "bench_points", "units": "pts", "high_first": False, "n": 5},
+        {"stat": "streak", "units": "pts", "high_first": False, "n": 3},
+        {"stat": "team_projection_beat", "units": "pts", "high_first": False, "n": 5},
+    ]
+    franchise_positive_stats_to_check = [
+        {"stat": "team_score", "units": "pts", "high_first": True, "n": 3},
+        {"stat": "team_score_adj", "units": "pts", "high_first": True, "n": 3},
+        {"stat": "score_dif", "units": "pts", "high_first": True, "n": 3},
+        {"stat": "lineup_efficiency", "units": "pts", "high_first": True, "n": 1},
+        {"stat": "best_trio", "units": "pts", "high_first": True, "n": 1},
+        {"stat": "QB_pts", "units": "pts", "high_first": True, "n": 1},
+        {"stat": "RB_pts", "units": "pts", "high_first": True, "n": 1},
+        {"stat": "WR_pts", "units": "pts", "high_first": True, "n": 1},
+        {"stat": "TE_pts", "units": "pts", "high_first": True, "n": 1},
+        {"stat": "RB_WR_TE_pts", "units": "pts", "high_first": True, "n": 1},
+        {"stat": "D_ST_pts", "units": "pts", "high_first": True, "n": 1},
+        {"stat": "K_pts", "units": "pts", "high_first": True, "n": 1},
+        {"stat": "bench_points", "units": "pts", "high_first": True, "n": 1},
+        {"stat": "streak", "units": "pts", "high_first": True, "n": 3},
+        {"stat": "season_wins", "units": "wins", "high_first": True, "n": 1},
+        {"stat": "team_projection_beat", "units": "pts", "high_first": True, "n": 3},
+    ]
+    franchise_negative_stats_to_check = [
+        {"stat": "team_score", "units": "pts", "high_first": False, "n": 3},
+        {"stat": "team_score_adj", "units": "pts", "high_first": False, "n": 3},
+        {"stat": "score_dif", "units": "pts", "high_first": False, "n": 3},
+        {"stat": "lineup_efficiency", "units": "pts", "high_first": False, "n": 1},
+        {"stat": "best_trio", "units": "pts", "high_first": False, "n": 1},
+        {"stat": "QB_pts", "units": "pts", "high_first": False, "n": 1},
+        {"stat": "RB_pts", "units": "pts", "high_first": False, "n": 1},
+        {"stat": "WR_pts", "units": "pts", "high_first": False, "n": 1},
+        {"stat": "TE_pts", "units": "pts", "high_first": False, "n": 1},
+        {"stat": "RB_WR_TE_pts", "units": "pts", "high_first": False, "n": 1},
+        {"stat": "D_ST_pts", "units": "pts", "high_first": False, "n": 1},
+        {"stat": "K_pts", "units": "pts", "high_first": False, "n": 1},
+        {"stat": "bench_points", "units": "pts", "high_first": False, "n": 1},
+        {"stat": "streak", "units": "pts", "high_first": False, "n": 3},
+        {"stat": "team_projection_beat", "units": "pts", "high_first": False, "n": 3},
+    ]
+
     print("----------------------------------------------------------------")
     print(
         "|                        Week {:2.0f} Analysis                      |".format(
@@ -780,259 +854,55 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
     )
     print("----------------------------------------------------------------")
 
-    # Good awards
     print("League-wide POSITIVE stats\n--------------------------")
-    print_records(
-        df, year=year, week=week, stat="team_score", stat_units="pts", high_first=True
-    )
-    print_records(
-        df,
-        year=year,
-        week=week,
-        stat="team_score_adj",
-        stat_units="pts",
-        high_first=True,
-    )
-    print_records(
-        df, year=year, week=week, stat="score_dif", stat_units="pts", high_first=True
-    )
-    print_records(
-        df,
-        year=year,
-        week=week,
-        stat="lineup_efficiency",
-        stat_units="pts",
-        high_first=True,
-    )
-    print_records(
-        df, year=year, week=week, stat="best_trio", stat_units="pts", high_first=True
-    )
-    print_records(
-        df, year=year, week=week, stat="QB_pts", stat_units="pts", high_first=True
-    )
-    print_records(
-        df, year=year, week=week, stat="RB_pts", stat_units="pts", high_first=True
-    )
-    print_records(
-        df, year=year, week=week, stat="WR_pts", stat_units="pts", high_first=True
-    )
-    print_records(
-        df, year=year, week=week, stat="TE_pts", stat_units="pts", high_first=True
-    )
-    print_records(
-        df, year=year, week=week, stat="RB_WR_TE_pts", stat_units="pts", high_first=True
-    )
-    print_records(
-        df, year=year, week=week, stat="D_ST_pts", stat_units="pts", high_first=True
-    )
-    print_records(
-        df, year=year, week=week, stat="K_pts", stat_units="pts", high_first=True
-    )
-    print_records(
-        df, year=year, week=week, stat="bench_points", stat_units="pts", high_first=True
-    )
-    print_records(
-        df, year=year, week=week, stat="streak", stat_units="pts", high_first=True
-    )
+    for stat in league_positive_stats_to_check:
+        print_records(
+            df,
+            year=year,
+            week=week,
+            stat=stat["stat"],
+            stat_units=stat["units"],
+            high_first=stat["high_first"],
+            n=stat["n"],
+        )
 
     # Good franchise awards
     print("\n\nFranchise POSITIVE stats\n--------------------------")
-    print_franchise_records(
-        df,
-        year=year,
-        week=week,
-        stat="team_score",
-        stat_units="pts",
-        high_first=True,
-        n=3,
-    )
-    print_franchise_records(
-        df,
-        year=year,
-        week=week,
-        stat="team_score_adj",
-        stat_units="pts",
-        high_first=True,
-        n=3,
-    )
-    print_franchise_records(
-        df,
-        year=year,
-        week=week,
-        stat="score_dif",
-        stat_units="pts",
-        high_first=True,
-        n=3,
-    )
-    print_franchise_records(
-        df,
-        year=year,
-        week=week,
-        stat="lineup_efficiency",
-        stat_units="pts",
-        high_first=True,
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="best_trio", stat_units="pts", high_first=True
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="QB_pts", stat_units="pts", high_first=True
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="RB_pts", stat_units="pts", high_first=True
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="WR_pts", stat_units="pts", high_first=True
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="TE_pts", stat_units="pts", high_first=True
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="RB_WR_TE_pts", stat_units="pts", high_first=True
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="D_ST_pts", stat_units="pts", high_first=True
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="K_pts", stat_units="pts", high_first=True
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="bench_points", stat_units="pts", high_first=True
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="streak", stat_units="pts", high_first=True, n=3
-    )
+    for stat in franchise_positive_stats_to_check:
+        print_franchise_records(
+            df,
+            year=year,
+            week=week,
+            stat=stat["stat"],
+            stat_units=stat["units"],
+            high_first=stat["high_first"],
+            n=stat["n"],
+        )
 
-    # Bad awards
     print("\n\nLeague-wide NEGATIVE stats\n--------------------------")
-    print_records(
-        df, year=year, week=week, stat="team_score", stat_units="pts", high_first=False
-    )
-    print_records(
-        df,
-        year=year,
-        week=week,
-        stat="team_score_adj",
-        stat_units="pts",
-        high_first=False,
-    )
-    print_records(
-        df,
-        year=year,
-        week=week,
-        stat="lineup_efficiency",
-        stat_units="pts",
-        high_first=False,
-    )
-    print_records(
-        df, year=year, week=week, stat="best_trio", stat_units="pts", high_first=False
-    )
-    print_records(
-        df, year=year, week=week, stat="QB_pts", stat_units="pts", high_first=False
-    )
-    print_records(
-        df, year=year, week=week, stat="RB_pts", stat_units="pts", high_first=False
-    )
-    print_records(
-        df, year=year, week=week, stat="WR_pts", stat_units="pts", high_first=False
-    )
-    print_records(
-        df, year=year, week=week, stat="TE_pts", stat_units="pts", high_first=False
-    )
-    print_records(
-        df,
-        year=year,
-        week=week,
-        stat="RB_WR_TE_pts",
-        stat_units="pts",
-        high_first=False,
-    )
-    print_records(
-        df, year=year, week=week, stat="D_ST_pts", stat_units="pts", high_first=False
-    )
-    print_records(
-        df, year=year, week=week, stat="K_pts", stat_units="pts", high_first=False
-    )
-    print_records(
-        df,
-        year=year,
-        week=week,
-        stat="bench_points",
-        stat_units="pts",
-        high_first=False,
-    )
-    print_records(
-        df, year=year, week=week, stat="streak", stat_units="pts", high_first=False
-    )
+    for stat in league_negative_stats_to_check:
+        print_records(
+            df,
+            year=year,
+            week=week,
+            stat=stat["stat"],
+            stat_units=stat["units"],
+            high_first=stat["high_first"],
+            n=stat["n"],
+        )
 
     # Bad franchise records
     print("\n\nFranchise NEGATIVE stats\n--------------------------")
-    print_franchise_records(
-        df,
-        year=year,
-        week=week,
-        stat="team_score",
-        stat_units="pts",
-        high_first=False,
-        n=3,
-    )
-    print_franchise_records(
-        df,
-        year=year,
-        week=week,
-        stat="team_score_adj",
-        stat_units="pts",
-        high_first=False,
-        n=3,
-    )
-    print_franchise_records(
-        df,
-        year=year,
-        week=week,
-        stat="lineup_efficiency",
-        stat_units="pts",
-        high_first=False,
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="best_trio", stat_units="pts", high_first=False
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="QB_pts", stat_units="pts", high_first=False
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="RB_pts", stat_units="pts", high_first=False
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="WR_pts", stat_units="pts", high_first=False
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="TE_pts", stat_units="pts", high_first=False
-    )
-    print_franchise_records(
-        df,
-        year=year,
-        week=week,
-        stat="RB_WR_TE_pts",
-        stat_units="pts",
-        high_first=False,
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="D_ST_pts", stat_units="pts", high_first=False
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="K_pts", stat_units="pts", high_first=False
-    )
-    print_franchise_records(
-        df,
-        year=year,
-        week=week,
-        stat="bench_points",
-        stat_units="pts",
-        high_first=False,
-    )
-    print_franchise_records(
-        df, year=year, week=week, stat="streak", stat_units="pts", high_first=False, n=3
-    )
+    for stat in franchise_negative_stats_to_check:
+        print_franchise_records(
+            df,
+            year=year,
+            week=week,
+            stat=stat["stat"],
+            stat_units=stat["units"],
+            high_first=stat["high_first"],
+            n=stat["n"],
+        )
 
 
 def season_stats_analysis(
