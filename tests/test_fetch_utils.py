@@ -2,6 +2,7 @@ import datetime
 import os
 import pytest
 from espn_api.football import League, Matchup
+from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
 import src.doritostats.fetch_utils as fetch  # The code to test
 
 
@@ -22,15 +23,15 @@ league_curr = League(
     [
         (
             league_2018,
-            "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/1086064?seasonId=2018&",
+            f"{FANTASY_BASE_ENDPOINT}ffl/leagueHistory/1086064?seasonId=2018&",
         ),
         (
             league_2021,
-            "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/1086064?seasonId=2021&",
+            f"{FANTASY_BASE_ENDPOINT}ffl/leagueHistory/1086064?seasonId=2021&",
         ),
         (
             league_curr,
-            "https://fantasy.espn.com/apis/v3/games/ffl/seasons/{}/segments/0/leagues/1086064?".format(
+            f"{FANTASY_BASE_ENDPOINT}ffl/seasons/{}/segments/0/leagues/1086064?".format(
                 league_curr.year
             ),
         ),
