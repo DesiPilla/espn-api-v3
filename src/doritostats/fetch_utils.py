@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 import datetime
 from typing import Optional
-from espn_api.football import League, Team, Matchup, Player
+from espn_api.football import League, Team, Matchup
+from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
 from src.doritostats.analytic_utils import (
     get_best_trio,
     get_lineup_efficiency,
@@ -19,10 +20,18 @@ from src.doritostats.analytic_utils import (
 def set_league_endpoint(league: League) -> None:
     """Set the league's endpoint."""
 
+    # "This" year is considered anything after June
+    now = datetime.datetime.today()
+    if now.month > 6:
+        current_year = now.year
+    else:
+        current_year = now.year - 1
+
     # Current season
-    if league.year >= (datetime.datetime.today() - datetime.timedelta(weeks=12)).year:
+    if league.year >= current_year:
         league.endpoint = (
-            "https://fantasy.espn.com/apis/v3/games/ffl/seasons/"
+            FANTASY_BASE_ENDPOINT
+            + "ffl/seasons/"
             + str(league.year)
             + "/segments/0/leagues/"
             + str(league.league_id)
@@ -32,12 +41,13 @@ def set_league_endpoint(league: League) -> None:
     # Old season
     else:
         league.endpoint = (
-            "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/"
+            "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/leagueHistory/"
             + str(league.league_id)
             + "?seasonId="
             + str(league.year)
             + "&"
         )
+    print("[BUILDING LEAGUE] League endpoint set to: {}".format(league.endpoint))
 
 
 def get_roster_settings(league: League) -> None:
@@ -424,21 +434,21 @@ def get_stats_by_matchup(
             )
 
             for slot in ["QB", "RB", "WR", "TE", "RB/WR/TE", "D/ST", "K"]:
-                df_week.loc[
-                    i * 2, "{}_pts".format(slot.replace("/", "_"))
-                ] = avg_slot_score(league, home_lineup, slot=slot)
-                df_week.loc[
-                    i * 2, "best_{}".format(slot.replace("/", "_"))
-                ] = get_top_players(home_lineup, slot, 1)[0].points
+                df_week.loc[i * 2, "{}_pts".format(slot.replace("/", "_"))] = (
+                    avg_slot_score(league, home_lineup, slot=slot)
+                )
+                df_week.loc[i * 2, "best_{}".format(slot.replace("/", "_"))] = (
+                    get_top_players(home_lineup, slot, 1)[0].points
+                )
                 try:
-                    df_week.loc[
-                        i * 2, "worst_{}".format(slot.replace("/", "_"))
-                    ] = np.min(
-                        [
-                            player.points
-                            for player in get_top_players(home_lineup, slot, 10)
-                            if player.slot_position not in ("BE", "IR")
-                        ]
+                    df_week.loc[i * 2, "worst_{}".format(slot.replace("/", "_"))] = (
+                        np.min(
+                            [
+                                player.points
+                                for player in get_top_players(home_lineup, slot, 10)
+                                if player.slot_position not in ("BE", "IR")
+                            ]
+                        )
                     )
                 except Exception:
                     df_week.loc[i * 2, "worst_{}".format(slot.replace("/", "_"))] = 0
@@ -477,12 +487,12 @@ def get_stats_by_matchup(
                 league, away_lineup
             )
             for slot in ["QB", "RB", "WR", "TE", "RB/WR/TE", "D/ST", "K"]:
-                df_week.loc[
-                    i * 2 + 1, "{}_pts".format(slot.replace("/", "_"))
-                ] = avg_slot_score(league, away_lineup, slot=slot)
-                df_week.loc[
-                    i * 2 + 1, "best_{}".format(slot.replace("/", "_"))
-                ] = get_top_players(away_lineup, slot, 1)[0].points
+                df_week.loc[i * 2 + 1, "{}_pts".format(slot.replace("/", "_"))] = (
+                    avg_slot_score(league, away_lineup, slot=slot)
+                )
+                df_week.loc[i * 2 + 1, "best_{}".format(slot.replace("/", "_"))] = (
+                    get_top_players(away_lineup, slot, 1)[0].points
+                )
             #                 df_week.loc[i*2+1, 'worst_{}'.format(slot.replace('/', '_'))] = np.min([player.points for player in get_top_players(home_lineup, slot, 10) if player.slot_position not in ('BE', 'IR')])
 
             #         df_week.loc[i*2, 'team_record'] = "{}-{}-{}".format(matchup.home_team.wins, matchup.home_team.losses, matchup.home_team.ties)
