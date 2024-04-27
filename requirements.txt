@@ -234,7 +234,7 @@ joblib==1.4.0 ; python_version >= "3.10" and python_version < "3.12" \
 mypy-extensions==1.0.0 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d \
     --hash=sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782
-numpy==1.26.4 ; python_version < "3.12" and python_version >= "3.10" \
+numpy==1.26.4 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:03a8c78d01d9781b28a6989f6fa1bb2c4f2d51201cf99d3dd875df6fbd96b23b \
     --hash=sha256:08beddf13648eb95f8d867350f6a018a4be2e5ad54c8d8caed89ebca558b2818 \
     --hash=sha256:1af303d6b2210eb850fcf03064d364652b7120803a0b872f5211f5234b399f20 \
