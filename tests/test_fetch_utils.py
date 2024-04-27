@@ -31,9 +31,7 @@ league_curr = League(
         ),
         (
             league_curr,
-            f"{FANTASY_BASE_ENDPOINT}ffl/seasons/{}/segments/0/leagues/1086064?".format(
-                league_curr.year
-            ),
+            f"{FANTASY_BASE_ENDPOINT}ffl/seasons/{league_curr.year}/segments/0/leagues/1086064?",
         ),
     ],
 )
