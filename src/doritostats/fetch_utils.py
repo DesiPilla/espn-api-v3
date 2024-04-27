@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 import datetime
 from typing import Optional
-from espn_api.football import League, Team, Matchup, Player
+from espn_api.football import League, Team, Matchup
+from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
 from src.doritostats.analytic_utils import (
     get_best_trio,
     get_lineup_efficiency,
@@ -19,25 +20,21 @@ from src.doritostats.analytic_utils import (
 def set_league_endpoint(league: League) -> None:
     """Set the league's endpoint."""
 
+    # "This" year is considered anything after June
+    now = datetime.datetime.today()
+    if now.month > 6:
+        current_year = now.year
+    else:
+        current_year = now.year - 1
+
     # Current season
-    if league.year >= (datetime.datetime.today() - datetime.timedelta(weeks=12)).year:
-        league.endpoint = (
-            "https://fantasy.espn.com/apis/v3/games/ffl/seasons/"
-            + str(league.year)
-            + "/segments/0/leagues/"
-            + str(league.league_id)
-            + "?"
-        )
+    if league.year >= current_year:
+        league.endpoint = f"{FANTASY_BASE_ENDPOINT}ffl/seasons/{league.year}/segments/0/leagues/{league.league_id}?"
 
     # Old season
     else:
-        league.endpoint = (
-            "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/"
-            + str(league.league_id)
-            + "?seasonId="
-            + str(league.year)
-            + "&"
-        )
+        league.endpoint = f"{FANTASY_BASE_ENDPOINT}ffl/leagueHistory/{league.league_id}?seasonId={league.year}&"
+    print("[BUILDING LEAGUE] League endpoint set to: {}".format(league.endpoint))
 
 
 def get_roster_settings(league: League) -> None:
