@@ -4,13 +4,15 @@ import pytest
 from espn_api.football import League, Matchup
 from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
 import src.doritostats.fetch_utils as fetch  # The code to test
+from src.doritostats.PseudoMatchup import PseudoMatchup
 
 
 league_id = os.getenv("LEAGUE_ID")
 swid = os.getenv("SWID")
 espn_s2 = os.getenv("ESPN_S2")
 
-current_league_year = (datetime.datetime.now() - datetime.timedelta(days=60)).year
+now = datetime.datetime.now()
+current_league_year = now.year if now.month >= 5 else now.year - 1
 league_2018 = League(league_id=league_id, year=2018, swid=swid, espn_s2=espn_s2)
 league_2021 = League(league_id=league_id, year=2021, swid=swid, espn_s2=espn_s2)
 league_curr = League(
@@ -153,23 +155,19 @@ def test_fetch_league(
     [
         (
             league_2018,
-            fetch.PseudoMatchup(league_2018.teams[0], league_2018.teams[0].schedule[0]),
+            PseudoMatchup(league_2018.teams[0], league_2018.teams[0].schedule[0]),
             1,
             False,
         ),  # Regular season
         (
             league_2018,
-            fetch.PseudoMatchup(
-                league_2018.teams[0], league_2018.teams[0].schedule[12]
-            ),
+            PseudoMatchup(league_2018.teams[0], league_2018.teams[0].schedule[12]),
             13,
             True,
         ),  # Known playoff game
         (
             league_2018,
-            fetch.PseudoMatchup(
-                league_2018.teams[5], league_2018.teams[5].schedule[12]
-            ),
+            PseudoMatchup(league_2018.teams[5], league_2018.teams[5].schedule[12]),
             13,
             False,
         ),  # Known consolation game

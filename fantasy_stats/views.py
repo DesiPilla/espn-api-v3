@@ -30,7 +30,8 @@ def get_default_week(league: League):
 
 # Create your views here.
 def index(request):
-    current_year = (datetime.datetime.today() - datetime.timedelta(weeks=12)).year
+    now = datetime.datetime.now()
+    current_year = now.year if now.month >= 5 else now.year - 1
     leagues_current_year = (
         LeagueInfo.objects.filter(league_year=current_year)
         .order_by("league_name", "-league_year", "league_id")
@@ -122,7 +123,7 @@ def copy_old_league(request, league_id: int):
     )[0]
     swid = previous_league.swid
     espn_s2 = previous_league.espn_s2
-    swid = None
+
     # Add the old league to the current year
     current_year = (datetime.datetime.today() - datetime.timedelta(weeks=12)).year
 
@@ -175,7 +176,15 @@ def league(request, league_id: int, league_year: int, week: int = None):
         week = get_default_week(league)
 
     if week == 0:
-        box_scores, weekly_awards, power_rankings, luck_index, standings = (
+        (
+            box_scores,
+            weekly_awards,
+            power_rankings,
+            luck_index,
+            strength_of_schedule,
+            standings,
+        ) = (
+            [],
             [],
             [],
             [],
