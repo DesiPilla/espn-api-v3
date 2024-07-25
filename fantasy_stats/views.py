@@ -25,7 +25,7 @@ def get_default_week(league_obj: League):
         league_obj.current_week
     ]
     if datetime.datetime.now().strftime("%A") in ["Tuesday", "Wednesday"]:
-        return current_matchup_period - 1
+        return max(current_matchup_period - 1, 1)
     else:
         return current_matchup_period
 
