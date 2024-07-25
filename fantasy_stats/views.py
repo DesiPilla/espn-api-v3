@@ -25,7 +25,7 @@ def get_default_week(league_obj: League):
         league_obj.current_week
     ]
     if datetime.datetime.now().strftime("%A") in ["Tuesday", "Wednesday"]:
-        return max(current_matchup_period - 1, 1)
+        return current_matchup_period - 1
     else:
         return current_matchup_period
 
@@ -208,43 +208,7 @@ def league(request, league_id: int, league_year: int, week: int = None):
     if week is None:
         week = get_default_week(league_obj)
 
-    if week == 0:
-        (
-            box_scores,
-            weekly_awards,
-            power_rankings,
-            luck_index,
-            strength_of_schedule,
-            standings,
-        ) = (
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-        )
-
-    else:
-        box_scores = league_obj.box_scores(week)
-        weekly_awards = django_weekly_stats(league_obj, week)
-        power_rankings = django_power_rankings(league_obj, week)
-        luck_index = django_luck_index(league_obj, week)
-        strength_of_schedule = django_strength_of_schedule(league_obj, week)
-        standings = django_standings(league_obj)
-
-    context = {
-        "league_info": league_info,
-        "league": league_obj,
-        "page_week": week,
-        "box_scores": box_scores,
-        "weekly_awards": weekly_awards,
-        "power_rankings": power_rankings,
-        "luck_index": luck_index,
-        "strength_of_schedule": strength_of_schedule,
-        "standings": standings,
-    }
-    if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
+    if week == 0 or not league_obj.draft:
         # If the league hasn't started yet, display the "too soon" page
         return HttpResponse(
             render(
@@ -257,7 +221,27 @@ def league(request, league_id: int, league_year: int, week: int = None):
                 },
             )
         )
+
     else:
+        box_scores = league_obj.box_scores(week)
+        weekly_awards = django_weekly_stats(league_obj, week)
+        power_rankings = django_power_rankings(league_obj, week)
+        luck_index = django_luck_index(league_obj, week)
+        strength_of_schedule = django_strength_of_schedule(league_obj, week)
+        standings = django_standings(league_obj)
+
+        context = {
+            "league_info": league_info,
+            "league": league_obj,
+            "page_week": week,
+            "box_scores": box_scores,
+            "weekly_awards": weekly_awards,
+            "power_rankings": power_rankings,
+            "luck_index": luck_index,
+            "strength_of_schedule": strength_of_schedule,
+            "standings": standings,
+        }
+
         return HttpResponse(render(request, "fantasy_stats/league.html", context))
 
 
