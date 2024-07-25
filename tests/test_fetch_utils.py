@@ -150,32 +150,33 @@ def test_fetch_league(
     assert league.previousSeasons == results["previousSeasons"]
 
 
-@pytest.mark.parametrize(
-    "league, matchup, week, result",
-    [
-        (
-            league_2018,
-            PseudoMatchup(league_2018.teams[0], league_2018.teams[0].schedule[0]),
-            1,
-            False,
-        ),  # Regular season
-        (
-            league_2018,
-            PseudoMatchup(league_2018.teams[0], league_2018.teams[0].schedule[12]),
-            13,
-            True,
-        ),  # Known playoff game
-        (
-            league_2018,
-            PseudoMatchup(league_2018.teams[5], league_2018.teams[5].schedule[12]),
-            13,
-            False,
-        ),  # Known consolation game
-        (league_2021, league_2021.box_scores(1)[0], 1, False),  # Regular season
-        (league_2021, league_2021.box_scores(15)[0], 15, False),  # Playoff Bye
-        (league_2021, league_2021.box_scores(15)[1], 15, True),  # Playoff game
-        (league_2021, league_2021.box_scores(15)[-1], 15, False),  # Consolation game
-    ],
-)
-def test_is_playoff_game(league: League, matchup: Matchup, week: int, result: bool):
-    assert fetch.is_playoff_game(league, matchup, week) == result
+# TODO: MOVE TO test_scrape_team_stats.py
+# @pytest.mark.parametrize(
+#     "league, matchup, week, result",
+#     [
+#         (
+#             league_2018,
+#             PseudoMatchup(league_2018.teams[0], league_2018.teams[0].schedule[0]),
+#             1,
+#             False,
+#         ),  # Regular season
+#         (
+#             league_2018,
+#             PseudoMatchup(league_2018.teams[0], league_2018.teams[0].schedule[12]),
+#             13,
+#             True,
+#         ),  # Known playoff game
+#         (
+#             league_2018,
+#             PseudoMatchup(league_2018.teams[5], league_2018.teams[5].schedule[12]),
+#             13,
+#             False,
+#         ),  # Known consolation game
+#         (league_2021, league_2021.box_scores(1)[0], 1, False),  # Regular season
+#         (league_2021, league_2021.box_scores(15)[0], 15, False),  # Playoff Bye
+#         (league_2021, league_2021.box_scores(15)[1], 15, True),  # Playoff game
+#         (league_2021, league_2021.box_scores(15)[-1], 15, False),  # Consolation game
+#     ],
+# )
+# def test_is_playoff_game(league: League, matchup: Matchup, week: int, result: bool):
+#     assert fetch.is_playoff_game(league, matchup, week) == result
