@@ -53,11 +53,13 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-45P4BQ6XJR"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-45P4BQ6XJR');
+      window.dataLayer = window.dataLayer || []
+      function gtag() {
+        dataLayer.push(arguments)
+      }
+      gtag('js', new Date())
+      
+      gtag('config', 'G-45P4BQ6XJR')
     </script>
   </head>
   <body>
@@ -66,16 +68,22 @@
     </div>
 
     <div class="hero">
-      <h1>Page Not Available Yet</h1>
+      <h1>You're a bit early! ⏱️</h1>
       <hr />
     </div>
 
     <div class="message-box">
-      <p>We're sorry, but playoff simulations are not accessible until Week 4 has completed. Please check back later for the information you're looking for.</p>
+      {% if page == 'league_homepage' %}
+        <p>We're sorry, but league homepages are not accessible until Week 1 has begun. Please check back later for the information you're looking for.</p>
+      {% elif page == 'playoff_simulations' %}
+        <p>We're sorry, but playoff simulations are not accessible until Week 4 has completed. Please check back later for the information you're looking for.</p>
+      {% endif %}
       <p>Thank you for your understanding.</p>
       <div class="buttons">
         <a href="/fantasy_stats/" class="btn">Return to Homepage</a>
-        <a href="/fantasy_stats/league/{{ league_year }}/{{ league_id }}" class="btn">Return to Your League</a>
+        {% if page != 'league_homepage' %}
+          <a href="/fantasy_stats/league/{{ league_year }}/{{ league_id }}" class="btn">Return to Your League</a>
+        {% endif %}
       </div>
     </div>
 
