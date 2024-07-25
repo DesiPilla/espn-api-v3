@@ -66,6 +66,18 @@
 
     {# Enter league details manually to add to the database #}
     {% comment %} <h2>League Details</h2> {% endcomment %}
+    <h3>Returning for the new season? Select your old league and easily add it for the 2024-25 season.</h3>
+    {# Dropdown list containing all leagues in database from previous years #}
+    <div class="unselected-field" style="display: inline-block;">
+      <select name="league-select" id="league-select" onchange="location = this.value">   
+        <option value="/fantasy_stats/"> - Select your historical league - </option>
+        {% for league in leagues_previous_year %}
+        <option value="/fantasy_stats/copy_old_league/{{ league.league_id }}">{{ league.league_year }} - {{ league.league_name  }} ({{ league.league_id}})</option>
+        {% endfor %}
+      </select>
+      <span class="focus"></span>
+    </div>
+
     <h3>Don't see your league? Add it manually by entering your league's details below.</h3>
     <div>
       <form method="POST" action="{% url 'fantasy_stats:league_input' %}">
@@ -73,7 +85,7 @@
         <label>League ID: </label><br>
         <input type="text" name="league_id"><br>
         <label>League year: </label><br>
-        <input type="number" min="2017" name="league_year", value=2023><br> 
+        <input type="number" min="2017" name="league_year", value=2024><br> 
         <label>SWID: </label> <br>
         <input type="password" name="swid", value=''><br>
         <label>ESPN s2: </label><br>

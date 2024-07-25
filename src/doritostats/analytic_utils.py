@@ -147,10 +147,10 @@ def get_score_surprise(league: League, lineup: List[Player]) -> float:
             if player.slot_position not in ("BE", "IR")
         ]
     )
-    real_score = np.sum(
+    actual_score = np.sum(
         [player.points for player in lineup if player.slot_position not in ("BE", "IR")]
     )
-    return real_score - projected_score
+    return actual_score - projected_score
 
 
 def get_total_tds(league: League, lineup: List[Player]) -> float:

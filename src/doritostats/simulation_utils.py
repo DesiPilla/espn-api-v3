@@ -4,7 +4,7 @@ from joblib import Parallel, delayed
 from typing import Dict, List, Optional, Tuple
 from src.doritostats.analytic_utils import get_team
 from espn_api.football import League, Team, Matchup
-from src.doritostats.fetch_utils import PseudoMatchup
+from src.doritostats.PseudoMatchup import PseudoMatchup
 
 
 def sort_standings(
