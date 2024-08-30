@@ -658,7 +658,7 @@ print("---")
 print("title: Week " + str(week) + " 2021 Report")
 print("date: 2020-", datetime.now(month),"-",datetime.now(day))
 print("image: /images/2021week" + str(week) + ".jpeg")
-print("draft: false")
+print("draft: true")
 print("---")
 
 print("<!-- excerpt -->")
