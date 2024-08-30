@@ -51,27 +51,21 @@ print(league, "\n")
 
 # create for loop to add team names from team objects into list
 teams = league.teams
-# teams_list = list(teams.values())
-teams_list = teams.copy()
-team_names = teams.copy()
-# for team in teams_list:
-#     team_name = team.teamName
-#     team_names.append(team_name)
+
+# Extract team names using list comprehension
+team_names = [team.team_name for team in teams]
 
 # create list of the weekly scores for the season
 seasonScores = []
 
 for team in teams_list:
     weeklyScores = team.scores
-    print("\nTeam: ", team, "\n", "weeklyScores", weeklyScores, "\n")
     seasonScores.append(weeklyScores)
 
 # turn into dataframes
 seasonScores_df = pd.DataFrame(data=seasonScores)
 teams_names_df = pd.DataFrame(data=team_names,columns=['Team'])
 team_scores = teams_names_df.join(seasonScores_df)
-
-print("seasonScores: ", seasonScores)
 
 # get df headings for subsetting df
 team_scores_headings = list(team_scores)
@@ -131,7 +125,7 @@ team_scores['Season_avg'] = (team_scores[season].sum(axis=1)/week).round(2)
 team_scores_prt = team_scores['Power_Score'].round(2)
 team_scores_prt = team_scores_prt.reset_index()
 # team_scores_prt = team_scores.columns['team','Power Score']
-
+print(team_scores_prt)
 
 ### ALL PLAY POWER RANKINGS
 
@@ -146,10 +140,10 @@ allplay = allplay.set_index('team')
 
 # get headings of allplay table
 allplay_head = list(allplay)
-print("allplay_head:  ", allplay_head)
+
 # set the initial week for the for loop to 1
 compare_week = current_week_headings[0]
-print("compare_week: ", compare_week)
+
 # iterates over each item in the dataframe and compares to every team against one another, adding 1 for wins and losses
 while compare_week <= week: # run until getting to current week
     for first_row in scores.itertuples():
