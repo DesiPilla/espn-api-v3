@@ -90,49 +90,7 @@ team_scores[:] = team_scores[:] - team_scores.loc['League Average']
 team_scores = team_scores.drop("League Average") # leageue average no longer necessary
 team_scores_log = team_scores.copy()
 
-
-### LOG WEIGHTED RANKINGS
-
-
-# # new dataframe for the logged power score calculation
-# logged_ps = team_names.copy()
-# logged_ps = pd.DataFrame(logged_ps, columns=['team'])
-# logged_ps['lnPowerScore'] = 0
-# logged_ps = logged_ps.set_index('team')
-#
-# column = []
-# tables = []
-# tables_names = team_names.copy()
-# tables_names = pd.DataFrame(tables_names, columns=["team"])
-#
-# team_scores_log_col = list(team_scores_log[1:])
-# compute_week = 1 #
-#
-# for col in current_week_headings:
-#     for row in team_scores_log[col]:
-#         if col == 1:
-#             lnRow = row * 1
-#         else:
-#             lnRow = row * (math.log(col))
-#         column.append(round(lnRow, 2))
-#     tables.append(column)
-#     column = []
-#
-# tables_df = pd.DataFrame(tables)
-#
-#
-# tables_df = tables_df.T
-#
-# tables_df['PowerScore'] = tables_df.sum(numeric_only=True, axis=1)
-# tables_df = tables_df.reset_index(drop=True)
-#
-# logWeightedPS = tables_names.join(tables_df)
-# logWeightedPS = logWeightedPS.sort_values(by="PowerScore", ascending=False)
-# logWeightedPS = logWeightedPS.reset_index(drop=True)
-# logWeightedPS_prnt = logWeightedPS[['team', 'PowerScore']]
-
-
-### 3 WEEK ROLLING AVERAGE RANKINGS
+#### 3 WEEK ROLLING AVERAGE RANKINGS
 
 
 # get columns for calculating power score
@@ -685,7 +643,6 @@ allplay_ps.index = np.arange(1, len(allplay_ps) + 1)
 if week >5:
     projections.index = np.arange(1, len(projections) + 1)
 team_scores_prt.index = np.arange(1, len(team_scores_prt) + 1)
-logWeightedPS_prnt.index = np.arange(1, len(logWeightedPS_prnt) + 1)
 projectedStandings_prnt.index = np.arange(1, len(projectedStandings_prnt) + 1)
 Value_Power_Rankings_print.index = np.arange(1, len(Value_Power_Rankings) + 1)
 
@@ -731,10 +688,6 @@ league.printLuckIndex(week)
 
 # print("\n WEEK ", week, " POWER SCORE (CALC W/ LEAGUE AVERAGE SCORE)")
 # print(table(team_scores_prt, headers='keys', tablefmt='github', numalign='decimal'))
-
-# print("\n WEEK ", week, " LOG WEIGHTED")
-# print(table(logWeightedPS_prnt, headers='keys', tablefmt='github', numalign='decimal'))
-
 
 # close text file
 sys.stdout.close()
