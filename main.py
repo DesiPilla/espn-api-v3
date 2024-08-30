@@ -15,6 +15,7 @@ import sys
 import argparse
 import progressbar
 from espn_api.football import League
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument("week", help='Get week of the season')
@@ -655,7 +656,7 @@ sys.stdout = open(filepath, "w")
 # for the markdown files in blog
 print("---")
 print("title: Week " + str(week) + " 2021 Report")
-print("date: 2020-MONTH-DAY")
+print("date: 2020-", datetime.now(month),"-",datetime.now(day))
 print("image: /images/2021week" + str(week) + ".jpeg")
 print("draft: false")
 print("---")
