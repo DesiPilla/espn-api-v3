@@ -1,4 +1,3 @@
-from league import League
 from authorize import Authorize
 from team import Team
 from player import Player
@@ -12,11 +11,11 @@ import math
 from tabulate import tabulate as table
 import os
 import sys
-from fpdf import FPDF
 import argparse
 import progressbar
 import re
 import scrape_values
+from espn_api.football import League
 
 
 user_id = 'desi'
@@ -28,8 +27,8 @@ year = 2021
 username = 'cgeer98'
 password = 'Penguins1'
 league_id = 916709
-swid = '{75C7094F-C467-4145-8709-4FC467C1457E}'
-espn_s2 = 'AEAyUEeFyWRO%2B7dqz67xWSlgF49tdAj6czygxVfwSeIty8%2Byz3iVdVcOC9FcP8tiHHoL%2Bo4SycHPPS47hpmC5FeBA1FJqMCCs68sRBWu8716JAYXah5yJagXyafPB0FhFBUA9OS01Gi78EcAdNSmdS4NnJaggCVn8w9HPRgqpPuD52oWWVmRkTYfg%AEB4Tzt1PN9oqwmXbUlA6%2FaS0wvXcIkhqPekpynMVZq%2B85A5D%2FTfqsRPr7sjDpJrmXh470zXqzHCjACbl2Miord4wepaYFXf3EcyofIT4WaZ88Nde9MhpczGUWqWs44ehs3dE3DBgXEcNSU%2BcnMwqgG8c6YcV86pPfua0dzBkTfbmKO7fwi1R1tX3GS3eoNXRLVYsSuy0Gxm%2B8Ru8KRbsc0a7rOt29Xd4Z8U8MG3j58DLEKvSpxbtTAx00%2F3%2FMkgsK180I9d1wuBLGlflrP8sKql'
+swid = '75C7094F-C467-4145-8709-4FC467C1457E'
+espn_s2 = 'AEAldgr2G2n0JKOnYGii6ap3v4Yu03NjpuI2D0SSZDAMoUNm0y2DKP4GRofzL8sn%2Bzoc%2FAVwYxZ9Z9YvhFXPxZq9VE1d5KZIFOPQUWvx9mhdI0GJQUQU3OMid9SySbpzCI7K5hQ3LoxVAjqNT%2FvaIRy%2F7G8qm4l%2BL8fPBouCQI7k9W7c01T3J4RqFoQ3g%2B3ttyHKqhvg7DWDUkXNzJyxgFytKiRqah%2Fb77L67CD0bS7SFzFZPt%2BOrTohER9w8Lxoi0W0dAA%2BmqCfXzUTh9%2FEdxcf'
 root = '/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3'
 
 
@@ -38,13 +37,12 @@ cookies = {'swid' : swid, 'espn_s2' : espn_s2}
 url = getUrl(year, league_id)
 
 
-league = League(league_id, year, username, password, swid, espn_s2)
+league = League(league_id, year, espn_s2, swid)
 # print(league, "\n")
 
 # create list of team objects
 teams = league.teams
-teams = list(teams.values())
-
+# teams = list(teams.values())
 # week = 1
 
 #### TODO: Find a way to cleanly merge espn IDs with Dynasty Process ID chart

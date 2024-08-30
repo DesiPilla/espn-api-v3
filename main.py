@@ -1,4 +1,3 @@
-from league import League
 import playerID
 from authorize import Authorize
 from team import Team
@@ -13,9 +12,9 @@ import math
 from tabulate import tabulate as table
 import os
 import sys
-from fpdf import FPDF
 import argparse
 import progressbar
+from espn_api.football import League
 
 parser = argparse.ArgumentParser()
 parser.add_argument("week", help='Get week of the season')
@@ -24,7 +23,7 @@ week = int(args.week)
 
 # Define user and season year
 user_id = 'cgeer98'
-year = 2022
+year = 2024
 
 # Get login credentials for leagues
 # login = pd.read_csv('C:\\Users\\desid\\Documents\\Fantasy_Football\\espn-api-v3\\login.csv')
@@ -33,7 +32,7 @@ username = 'cgeer98'
 password = 'Penguins1!'
 league_id = 916709
 swid = '{75C7094F-C467-4145-8709-4FC467C1457E}'
-espn_s2 = 'AEB4Tzt1PN9oqwmXbUlA6%2FaS0wvXcIkhqPekpynMVZq%2B85A5D%2FTfqsRPr7sjDpJrmXh470zXqzHCjACbl2Miord4wepaYFXf3EcyofIT4WaZ88Nde9MhpczGUWqWs44ehs3dE3DBgXEcNSU%2BcnMwqgG8c6YcV86pPfua0dzBkTfbmKO7fwi1R1tX3GS3eoNXRLVYsSuy0Gxm%2B8Ru8KRbsc0a7rOt29Xd4Z8U8MG3j58DLEKvSpxbtTAx00%2F3%2FMkgsK180I9d1wuBLGlflrP8sKql'
+espn_s2 = 'AEAldgr2G2n0JKOnYGii6ap3v4Yu03NjpuI2D0SSZDAMoUNm0y2DKP4GRofzL8sn%2Bzoc%2FAVwYxZ9Z9YvhFXPxZq9VE1d5KZIFOPQUWvx9mhdI0GJQUQU3OMid9SySbpzCI7K5hQ3LoxVAjqNT%2FvaIRy%2F7G8qm4l%2BL8fPBouCQI7k9W7c01T3J4RqFoQ3g%2B3ttyHKqhvg7DWDUkXNzJyxgFytKiRqah%2Fb77L67CD0bS7SFzFZPt%2BOrTohER9w8Lxoi0W0dAA%2BmqCfXzUTh9%2FEdxcf'
 
 root = '/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/'
 
@@ -42,7 +41,7 @@ cookies = {'swid' : swid, 'espn_s2' : espn_s2}
 url = getUrl(year, league_id)
 
 
-league = League(league_id, year, username, password, swid, espn_s2)
+league = League(league_id, year, espn_s2, swid)
 print(league, "\n")
 # import dynasty process values
 # dynastyProcessValues = pd.read_csv("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/data/files/values-players.csv")
@@ -51,23 +50,27 @@ print(league, "\n")
 
 # create for loop to add team names from team objects into list
 teams = league.teams
-teams_list = list(teams.values())
-team_names = []
-for team in teams_list:
-    team_name = team.teamName
-    team_names.append(team_name)
+# teams_list = list(teams.values())
+teams_list = teams.copy()
+team_names = teams.copy()
+# for team in teams_list:
+#     team_name = team.teamName
+#     team_names.append(team_name)
 
 # create list of the weekly scores for the season
 seasonScores = []
 
 for team in teams_list:
     weeklyScores = team.scores
+    print("\nTeam: ", team, "\n", "weeklyScores", weeklyScores, "\n")
     seasonScores.append(weeklyScores)
 
 # turn into dataframes
 seasonScores_df = pd.DataFrame(data=seasonScores)
 teams_names_df = pd.DataFrame(data=team_names,columns=['Team'])
 team_scores = teams_names_df.join(seasonScores_df)
+
+print("seasonScores: ", seasonScores)
 
 # get df headings for subsetting df
 team_scores_headings = list(team_scores)
@@ -91,42 +94,42 @@ team_scores_log = team_scores.copy()
 ### LOG WEIGHTED RANKINGS
 
 
-# new dataframe for the logged power score calculation
-logged_ps = team_names.copy()
-logged_ps = pd.DataFrame(logged_ps, columns=['team'])
-logged_ps['lnPowerScore'] = 0
-logged_ps = logged_ps.set_index('team')
-
-column = []
-tables = []
-tables_names = team_names.copy()
-tables_names = pd.DataFrame(tables_names, columns=["team"])
-
-team_scores_log_col = list(team_scores_log[1:])
-compute_week = 1 #
-
-for col in current_week_headings:
-    for row in team_scores_log[col]:
-        if col == 1:
-            lnRow = row * 1
-        else:
-            lnRow = row * (math.log(col))
-        column.append(round(lnRow, 2))
-    tables.append(column)
-    column = []
-
-tables_df = pd.DataFrame(tables)
-
-
-tables_df = tables_df.T
-
-tables_df['PowerScore'] = tables_df.sum(numeric_only=True, axis=1)
-tables_df = tables_df.reset_index(drop=True)
-
-logWeightedPS = tables_names.join(tables_df)
-logWeightedPS = logWeightedPS.sort_values(by="PowerScore", ascending=False)
-logWeightedPS = logWeightedPS.reset_index(drop=True)
-logWeightedPS_prnt = logWeightedPS[['team', 'PowerScore']]
+# # new dataframe for the logged power score calculation
+# logged_ps = team_names.copy()
+# logged_ps = pd.DataFrame(logged_ps, columns=['team'])
+# logged_ps['lnPowerScore'] = 0
+# logged_ps = logged_ps.set_index('team')
+#
+# column = []
+# tables = []
+# tables_names = team_names.copy()
+# tables_names = pd.DataFrame(tables_names, columns=["team"])
+#
+# team_scores_log_col = list(team_scores_log[1:])
+# compute_week = 1 #
+#
+# for col in current_week_headings:
+#     for row in team_scores_log[col]:
+#         if col == 1:
+#             lnRow = row * 1
+#         else:
+#             lnRow = row * (math.log(col))
+#         column.append(round(lnRow, 2))
+#     tables.append(column)
+#     column = []
+#
+# tables_df = pd.DataFrame(tables)
+#
+#
+# tables_df = tables_df.T
+#
+# tables_df['PowerScore'] = tables_df.sum(numeric_only=True, axis=1)
+# tables_df = tables_df.reset_index(drop=True)
+#
+# logWeightedPS = tables_names.join(tables_df)
+# logWeightedPS = logWeightedPS.sort_values(by="PowerScore", ascending=False)
+# logWeightedPS = logWeightedPS.reset_index(drop=True)
+# logWeightedPS_prnt = logWeightedPS[['team', 'PowerScore']]
 
 
 ### 3 WEEK ROLLING AVERAGE RANKINGS
@@ -176,7 +179,6 @@ team_scores_prt = team_scores_prt.reset_index()
 
 allplay = team_names.copy()
 allplay = pd.DataFrame(allplay,columns=['team'])
-
 # add new columns to be filled by for loop
 allplay['allPlayWins'] = 0
 allplay['allPlayLosses'] = 0
@@ -185,11 +187,11 @@ allplay = allplay.set_index('team')
 
 # get headings of allplay table
 allplay_head = list(allplay)
-
-# set the initial week for the foor loop to 1
+print("allplay_head:  ", allplay_head)
+# set the initial week for the for loop to 1
 compare_week = current_week_headings[0]
-
-# iterates over each item in the dataframe and compares to every team against one another, addng 1 for wins and losses
+print("compare_week: ", compare_week)
+# iterates over each item in the dataframe and compares to every team against one another, adding 1 for wins and losses
 while compare_week <= week: # run until getting to current week
     for first_row in scores.itertuples():
         for second_row in scores.itertuples():
