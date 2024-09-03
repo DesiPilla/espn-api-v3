@@ -36,6 +36,8 @@ week = int(args.week)
 # Define user and season year
 user_id = 'cgeer98'
 year = datetime.now().year
+month =  datetime.now().month
+day = datetime.now().day
 
 # Get login credentials for leagues
 # login = pd.read_csv('C:\\Users\\desid\\Documents\\Fantasy_Football\\espn-api-v3\\login.csv')
@@ -64,6 +66,8 @@ power_rankings = pd.DataFrame(extracted_team_names, columns=['Power Score','Team
 
 # Switch Score and Team Name cols
 power_rankings = power_rankings.reindex(columns=['Team', 'Power Score'])
+
+# Print rankings to terminal
 print(power_rankings)
 # Generate Expected Standings
 
@@ -79,9 +83,9 @@ sys.stdout = open(filepath, "w")
 
 # for the markdown files in blog
 print("---")
-print("title: Week " + str(week) + " ", datetime.now().year, " Report")
-print("date: 2020-", datetime.now().month,"-",datetime.now().day)
-print("image: /images/",datetime.now().year, "week" + str(week) + ".jpeg")
+print("title: Week", str(week), year, "Report")
+print("date: ",datetime.now().date())
+print(f"image: /images/{year}week{week}.jpeg")
 print("draft: true")
 print("---")
 
