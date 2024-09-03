@@ -2,6 +2,8 @@
 TODO:
 1. Fix expected standings
 2. Clean up code (value rankings)
+3. Luck Index
+4. LLM Weekly reviews
 '''
 
 import playerID
@@ -30,7 +32,7 @@ week = int(args.week)
 
 # Define user and season year
 user_id = 'cgeer98'
-year = 2024
+year = datetime.now().year
 
 # Get login credentials for leagues
 # login = pd.read_csv('C:\\Users\\desid\\Documents\\Fantasy_Football\\espn-api-v3\\login.csv')
@@ -382,94 +384,6 @@ if week > 1:
 
     Value_Power_Rankings_print.insert(loc=1, column='Weekly Change', value=emojis) # insert the weekly change column
 
-# ### EXPECTED STANDINGS
-#
-# #### TODO: Update to use the new Value Informed Power Rankings instead of just AllPlayWin%
-#
-# allplay_es = allplay.copy() # creat copy of all play to be used for expected standings
-# allplay_es = allplay_es.set_index('team') # set the index to team for .loc
-#
-# # new dataframe for expected standings
-# # ValuePowerRankings_ES = allplay_ps_val[['team','Weighted Avg']]
-# # ValuePowerRankings_ES = ValuePowerRankings_ES.set_index('team')
-#
-# # move everything to positive
-# # ValuePowerRankings_ES['Weighted Avg'] = ValuePowerRankings_ES['Weighted Avg'] + abs(ValuePowerRankings_ES['Weighted Avg'].min())
-#
-#
-# allScheduleProb = [] # empty list to be filled with win probabilities for each teams schedule
-# sos = [] # strength of schedule list
-#
-# for team in teams:
-#     teamAP = allplay_es['AllPlayWin%'].loc[team.team_name] # Get each teams current All Play Win Percentage
-#     # teamPS = ValuePowerRankings_ES['Weighted Avg'].loc[team.teamName] # Get each teams current All Play Win Percentage
-#
-#     scheduleOBJ = team.schedule # get list of team objects
-#     scheduleProb = [] # tempory list to fill in inner for loop
-#     teamSOS = 0 # initialize to 0 for each team
-#     for opp in scheduleOBJ:
-#         # oppAP = allplay_es['AllPlayWin%'].loc[opp.teamName]
-#         # prob = teamAP / (oppAP + teamAP)
-#
-#         oppPS = allplay_es.loc[opp.team_name]
-#         prob = teamAP / (oppPS + teamAP)
-#
-#         teamSOS += oppPS
-#         scheduleProb.append(prob)
-#         # for values in key:
-#         #      schedule.append(item.teamName)
-#     allScheduleProb.append(scheduleProb) # append each team
-#     addToSOS = [team.team_name, teamSOS]
-#     sos.append(addToSOS) # append each team's SOS
-# print(allScheduleProb)
-#
-# # convert to pandas dataframes
-# allScheduleProb = pd.DataFrame(allScheduleProb)
-# sos = pd.DataFrame(sos).round(2)
-#
-# sos = sos.iloc[:,0:2] # remove empty end column
-# sos = sos.set_axis(['Team', 'SOS'], axis=1) # set column names
-#
-# probSched = pd.DataFrame(team_names, columns = ['Team'])
-# probSched = probSched.join(allScheduleProb)
-#
-# weeksLeft = week - 15
-# probSchedLeft = probSched[probSched.columns[weeksLeft:]] # create dataframe of the prob schedules for weeks left to play
-#
-# projectedStandings = pd.DataFrame(probSched['Team'].to_numpy(), columns=['Team']) # start projectedStandings with just team names
-#
-# currentWins = []
-# currentLosses = []
-# # add current wins and losses to empty lists to be added to projectedStandings
-# for team in teams:
-#     currentWins = np.append(currentWins, team.wins)
-#     currentLosses = np.append(currentLosses, team.losses)
-#
-# projectedStandings['CurrentWins'] = currentWins
-# projectedStandings['CurrentLosses'] = currentLosses
-#
-# # sum up the probabilties to get proj wins and losses
-# projectedStandings['ForcastedWins'] = probSched.iloc[:, weeksLeft-2:-2].sum(axis=1).round(2)
-# projectedStandings['ForcastedLosses'] = abs(weeksLeft) - projectedStandings['ForcastedWins'].round(2)
-#
-# # add projected and current wins to total projection
-# totalWinProj = projectedStandings['CurrentWins'] + projectedStandings['ForcastedWins']
-# totalLossProj = projectedStandings['CurrentLosses'] + projectedStandings['ForcastedLosses']
-#
-# # insert total win and loss projections
-# projectedStandings.insert(loc=1, column='TotalProjWins', value=totalWinProj)
-# projectedStandings.insert(loc=2, column='TotalProjLoss', value=totalLossProj)
-#
-# # sort and reset index
-# projectedStandings = projectedStandings.sort_values(by='TotalProjWins', ascending=False)
-# projectedStandings = projectedStandings.reset_index(drop=True)
-#
-# projectedStandings_prnt = projectedStandings[['Team','TotalProjWins','TotalProjLoss']]
-#
-# # if week >= 9:
-# #     # Merge in SOS
-# #     projectedStandings_prnt = projectedStandings_prnt.merge(sos, on='Team')
-
 ## MONTE CARLO PLAYOFF PROBABILIIES
 
 
@@ -501,10 +415,11 @@ away_teams = [7,1,2,3,8,6,4,5,8,5,4,6,8,1,7,5,5,3,7,6,4,7,2,5,2,3,1,7,8,6,4,5,3,
 # don't need to do below, taken care of in for loop
 # current_wins = [2.010742,3.011697,7.013179,2.010177,6.011863,1.010001,6.012642,5.011502]
 current_wins = []
-for team in teams_list:
+for team in teams:
     wins = team.wins
     scores = team.scores
-    PF = sum(scores.values())
+    print(scores)
+    PF = sum(scores)
     PF = round(PF, 2)
     PF = PF/100000
     current_wins.append(wins + PF)
@@ -643,8 +558,8 @@ allplay_ps.index = np.arange(1, len(allplay_ps) + 1)
 if week >5:
     projections.index = np.arange(1, len(projections) + 1)
 team_scores_prt.index = np.arange(1, len(team_scores_prt) + 1)
-projectedStandings_prnt.index = np.arange(1, len(projectedStandings_prnt) + 1)
-Value_Power_Rankings_print.index = np.arange(1, len(Value_Power_Rankings) + 1)
+# projectedStandings_prnt.index = np.arange(1, len(projectedStandings_prnt) + 1)
+# Value_Power_Rankings_print.index = np.arange(1, len(Value_Power_Rankings) + 1)
 
 
 # Print everything
@@ -654,9 +569,9 @@ sys.stdout = open(filepath, "w")
 
 # for the markdown files in blog
 print("---")
-print("title: Week " + str(week) + " 2021 Report")
-print("date: 2020-", datetime.now(month),"-",datetime.now(day))
-print("image: /images/2021week" + str(week) + ".jpeg")
+print("title: Week " + str(week) + " ", datetime.now().year, " Report")
+print("date: 2020-", datetime.now().month,"-",datetime.now().day)
+print("image: /images/",datetime.now().year, "week" + str(week) + ".jpeg")
 print("draft: true")
 print("---")
 
@@ -671,17 +586,17 @@ print(table(allplay_ps, headers='keys', tablefmt='pipe', numalign='center')) # h
 
 print('\n##Highlights:\n')
 
-print("\n# EXPECTED STANDINGS (as of week ", week, ")")
+# print("\n# EXPECTED STANDINGS (as of week ", week, ")")
 # league.printExpectedStandings(week)
-print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
+# print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
 
 if week >= 5:
     print("\n# PLAYOFF PROBABILITIES (as of week ", week, ")")
     print(table(projections, headers='keys', tablefmt='pipe', numalign='center'))
 
 
-print("\n# LUCK INDEX")
-league.printLuckIndex(week)
+# print("\n# LUCK INDEX")
+# league.printLuckIndex(week)
 
 # print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY WINS)")
 # print(table(allplay, headers='keys', tablefmt='github', numalign='decimal'))
