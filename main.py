@@ -54,37 +54,6 @@ teams = league.teams
 # Extract team names using list comprehension
 team_names = [team.team_name for team in teams]
 
-# create list of the weekly scores for the season
-seasonScores = []
-
-for team in teams:
-    weeklyScores = team.scores
-    seasonScores.append(weeklyScores)
-print(seasonScores)
-
-# turn into dataframes
-seasonScores_df = pd.DataFrame(data=seasonScores)
-teams_names_df = pd.DataFrame(data=team_names,columns=['Team'])
-team_scores = teams_names_df.join(seasonScores_df)
-
-# get df headings for subsetting df
-team_scores_headings = list(team_scores)
-
-# get headings for up to selected week
-current_week_headings = team_scores_headings[1:week+1]
-
-# set the index to the team column for better indexing (.iloc)
-team_scores = team_scores.set_index('Team')
-scores = team_scores.copy()
-
-# create a row for the league average for each week
-team_scores.loc['League Average'] = (team_scores.sum(numeric_only=True, axis=0)/8).round(2)
-
-# subract each teams score from the league average for that week
-team_scores[:] = team_scores[:] - team_scores.loc['League Average']
-team_scores = team_scores.drop("League Average") # leageue average no longer necessary
-team_scores_log = team_scores.copy()
-
 if week > 1:
 
     # create table for last week to compare for weekly change
@@ -159,9 +128,9 @@ print('\n##Highlights:\n')
 # league.printExpectedStandings(week)
 # print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
 
-if week >= 5:
-    print("\n# PLAYOFF PROBABILITIES (as of week ", week, ")")
-    print(table(projections, headers='keys', tablefmt='pipe', numalign='center'))
+# if week >= 5:
+#     print("\n# PLAYOFF PROBABILITIES (as of week ", week, ")")
+#     print(table(projections, headers='keys', tablefmt='pipe', numalign='center'))
 
 
 # print("\n# LUCK INDEX")
