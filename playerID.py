@@ -53,7 +53,7 @@ def get_player_values(week):
     rosters = []
 
     for team in teams:
-        rosters = team.rosters
+        rosters = team.roster
 
         thisWkRosters = rosters.get(week)
 
@@ -173,15 +173,15 @@ def get_player_values(week):
 
     return(starters)
 
-# def get_player_values_lw(week):
+def get_player_values_lw(week):
     # create list of player objects from list of team objects
     players = []
     rosters = []
 
     for team in teams:
-        rosters = team.rosters
+        rosters = team.roster
 
-        thisWkRosters = rosters.get(week)
+        thisWkRosters = rosters.fetchWeeklyRoster(week)
 
         for player in thisWkRosters:
             playerID = [team.teamName, player.name, player.positionId, player.id]

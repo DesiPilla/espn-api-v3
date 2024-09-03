@@ -1,3 +1,9 @@
+'''
+TODO:
+1. Fix expected standings
+2. Clean up code (value rankings)
+'''
+
 import playerID
 from authorize import Authorize
 from team import Team
@@ -49,7 +55,7 @@ print(league, "\n")
 # dynastyProcessValues = dynastyProcessValues[["player","value_1qb"]]
 
 
-# create for loop to add team names from team objects into list
+# Create list of team objects
 teams = league.teams
 
 # Extract team names using list comprehension
@@ -58,7 +64,7 @@ team_names = [team.team_name for team in teams]
 # create list of the weekly scores for the season
 seasonScores = []
 
-for team in teams_list:
+for team in teams:
     weeklyScores = team.scores
     seasonScores.append(weeklyScores)
 
@@ -150,7 +156,6 @@ while compare_week <= week: # run until getting to current week
         for second_row in scores.itertuples():
             if first_row[compare_week] > second_row[compare_week]:
                 allplay.loc[first_row[0],allplay_head[0]] += 1 # add 1 to allplay wins
-                allplay.loc[first_row[0],allplay_head[2]] += (1 + (math.log(compare_week))) # add log adjusted wins for power score
             elif first_row[compare_week] < second_row[compare_week]:
                 allplay.loc[first_row[0],allplay_head[1]] += 1 # add 1 to allplay losses
             else:
@@ -178,135 +183,135 @@ allplay_ps['AllPlayWin%'] = (allplay_ps['AllPlayWin%'] * 100).round(2)
 allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
 
 
-# PLAYER VALUE POWER RANKINGS
-
-# Load player values for last weeks starting lineup
-player_values = playerID.get_player_values(week)
-# print('player_values: \n', player_values)
-
-# Group by team and average the values to get average team value
-
-### TODO: Group by pos for analysis
-
-
-# covnert rating to a float from object
-player_values['rating'] = player_values['rating'].astype(str).astype(float)
-
-# missing PLAYERS
-
-
-# group by team and get the average rating of starters
-# team_values = player_values.groupby('team').value_1qb.mean().reset_index()
-team_values = player_values.groupby('team').rating.mean().reset_index()
-
-# print('Week ', week, ' Team Values: \n', team_values)
-
-# team_pos_values = team_pos_values[['team','position','salary','mean']].round(2)
-# print(team_pos_values)
-
-# Difference between team value and the top team value / team percent of total league value
-# team_values['Value Diff'] = team_values['value_1qb'] - team_values['value_1qb'].max()
-team_values['Value Diff'] = team_values['rating'] - team_values['rating'].max()
-# print('team_values: \n', team_values)
-
-# As a percent of the worst value (to get on same scale as Power Score)
-team_values['% Value Diff'] = abs(team_values['Value Diff']) / team_values['Value Diff'].min()
-
-# Calculate total value as a percent of the total league value
-# team_values['% Total Value'] = team_values['value_1qb']/team_values['value_1qb'].sum()
-team_values['% Total Value'] = team_values['rating']/team_values['rating'].sum()
-team_values = team_values.round(2)
-
-# team_values = team_values.sort_values(by = '% Total Value', ascending=False)
-# Merge with Power Rankings to get PowerScore
-allplay_ps_val = allplay_ps.merge(team_values, on='team')
-
-# Calculate power score as percent of highest score
-allplay_ps_val['% PowerScore'] = allplay_ps_val['PowerScore'] / allplay_ps_val['PowerScore'].max()
-# allplay_ps_val['ps w/ values'] = allplay_ps_val['% PowerScore'] + allplay_ps_val['% Total Value']
-
-# Unweighted rankings
-allplay_ps_val['Ranked'] = allplay_ps_val['% PowerScore'] + allplay_ps_val['% Value Diff']
-allplay_ps_val['Ranked clean'] = allplay_ps_val['Ranked'] + abs(allplay_ps_val['Ranked'].min())
-
-# Weighted rankings
-allplay_ps_val['Weighted Avg'] = (allplay_ps_val['% PowerScore']*.60) + (allplay_ps_val['% Value Diff']*.40)
-allplay_ps_val.reset_index()
-# allplay_ps_val['Weighted Avg'] = (allplay_ps_val['% PowerScore']*.60) + (allplay_ps_val['% Total Value']*.40)
-# allplay_ps_val['Weighted Avg'] = allplay_ps_val['Weighted Avg'] + abs(allplay_ps_val['Weighted Avg'].min())
-
-# Rank and print values for analysis
-Value_Power_Rankings = allplay_ps_val[['team','AllPlayWin%','% PowerScore','% Value Diff', '% Total Value','Weighted Avg']].sort_values(by='Weighted Avg', ascending=False).reset_index(drop=True)
-Value_Power_Rankings_rank = allplay_ps_val[['% PowerScore','% Value Diff','% Total Value', 'Weighted Avg']].rank(ascending=False, method='min')
-Value_Power_Rankings_rank.insert(loc=0, column='AllPlayWin%', value=allplay['allPlayWins'] / (allplay['allPlayWins'] + allplay['allPlayLosses']))
-Value_Power_Rankings_rank.insert(loc=0, column='Team',value=allplay_ps_val['team'])
-Value_Power_Rankings_rank['AllPlayWin%'] = Value_Power_Rankings_rank['AllPlayWin%'].rank(ascending=False, method='min')
-
-print("\nValue Power Rankings: \n", allplay_ps_val[['team','AllPlayWin%','% PowerScore','% Value Diff', '% Total Value','Weighted Avg']].sort_values(by='Weighted Avg', ascending=False).reset_index(drop=True))
-print("\nValue Power Rankings Ranks: \n", Value_Power_Rankings_rank.sort_values(by = 'Weighted Avg').reset_index(drop=True), "\n")
-
-Value_Power_Rankings_print = allplay_ps_val[['team','AllPlayWin%','Weighted Avg']].sort_values(by=['Weighted Avg','AllPlayWin%'], ascending=False)
-Value_Power_Rankings_print['Weighted Avg'] = (Value_Power_Rankings_print['Weighted Avg']*100).round(2)
-Value_Power_Rankings_print = Value_Power_Rankings_print.rename(columns={'Weighted Avg':'Value Power Score'})
-
-print('Week ', week, ' Rosters NaN: \n', player_values[player_values['rating'].isna()])
-
-# Value_Power_Rankings_print.index = np.arange(1, len(Value_Power_Rankings_print) + 1)
-Value_Power_Rankings_print.to_csv('/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/past_rankings/week' + str(week) + '.csv')
-
-# Create last week value informed power rankings
-if week > 1:
-    # Load player values for previous week starting lineup
-    lw_player_values = pd.read_csv('/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/values/week' + str(week-1) + '.csv')
-
-    # missingPlayer = ['Chuba Hubbard','5.09','+1.3']
-    lw_player_values.loc[(lw_player_values.player == 'Damien Williams'), 'rating'] = '8.18'
-
-    # missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
-    # lw_player_values = lw_player_values.append(missing, ignore_index=True)
-    #
-    # missing = pd.DataFrame([missingPlayer2],columns=['player','rating','change'])
-    # lw_player_values = lw_player_values.append(missing, ignore_index=True)
-
-    print('\nWeek ', week-1, ' Rosters NaN: \n', lw_player_values[lw_player_values['rating'].isna()])
-
-    # covnert rating to a float from object
-    lw_player_values['rating'] = lw_player_values['rating'].astype(str).astype(float)
-
-    # Group by team and average the values to get average team value
-    # lw_team_values = lw_player_values.groupby('team').value_1qb.mean().reset_index()
-    lw_team_values = lw_player_values.groupby('team').rating.mean().reset_index()
-
-    # Difference between team value and the top team value
-    # lw_team_values['Value Diff'] = lw_team_values['value_1qb'] - lw_team_values['value_1qb'].max()
-    lw_team_values['Value Diff'] = lw_team_values['rating'] - lw_team_values['rating'].max()
-    # print('lw_team_values: \n', lw_team_values)
-
-    # As a percent of the worst value (to get on same scale as Power Score) OR % of total league value
-    lw_team_values['% Value Diff'] = abs(lw_team_values['Value Diff']) / lw_team_values['Value Diff'].min()
-    # lw_team_values['% Total Value'] = lw_team_values['value_1qb'] / lw_team_values['value_1qb'].sum()
-    lw_team_values['% Total Value'] = lw_team_values['rating'] / lw_team_values['rating'].sum()
-
-    # Merge with Power Rankings to get PowerScore
-    lw_allplay.reset_index() #reset the index so we can merge on team
-    lw_allplay_ps_val = lw_allplay.merge(lw_team_values, on='team')
-
-    # Calculate power score as percent of highest score
-    lw_allplay_ps_val['% PowerScore'] = lw_allplay_ps_val['PowerScore'] / lw_allplay_ps_val['PowerScore'].max()
-
-    # Weighted rankings
-    lw_allplay_ps_val['Weighted Avg'] = (lw_allplay_ps_val['% PowerScore']*.60) + (lw_allplay_ps_val['% Value Diff']*.40)
-    # lw_allplay_ps_val['Weighted Avg'] = (lw_allplay_ps_val['% PowerScore']) + (lw_allplay_ps_val['% Total Value'])
-    # lw_allplay_ps_val['Weighted Avg'] = lw_allplay_ps_val['Weighted Avg'] + abs(lw_allplay_ps_val['Weighted Avg'].min())
-    lw_allplay_ps_val = lw_allplay_ps_val.sort_values(by='Weighted Avg', ascending=False).reset_index()
-
-    # print("lw_allplay_ps_val \n", lw_allplay_ps_val[['team','% Value Diff','% PowerScore','Weighted Avg']])
-
-# Print current and last week team values for evaluation
-print("\nThis Week Team Values:\n", team_values.sort_values(by='rating',ascending=False))
-print("\nLast Week Team Values:\n", lw_team_values.sort_values(by='rating',ascending=False).round(2))
-
-
+# # PLAYER VALUE POWER RANKINGS
+#
+# # Load player values for last weeks starting lineup
+# player_values = playerID.get_player_values_lw(week)
+# # print('player_values: \n', player_values)
+#
+# # Group by team and average the values to get average team value
+#
+# ### TODO: Group by pos for analysis
+#
+#
+# # covnert rating to a float from object
+# player_values['rating'] = player_values['rating'].astype(str).astype(float)
+#
+# # missing PLAYERS
+#
+#
+# # group by team and get the average rating of starters
+# # team_values = player_values.groupby('team').value_1qb.mean().reset_index()
+# team_values = player_values.groupby('team').rating.mean().reset_index()
+#
+# # print('Week ', week, ' Team Values: \n', team_values)
+#
+# # team_pos_values = team_pos_values[['team','position','salary','mean']].round(2)
+# # print(team_pos_values)
+#
+# # Difference between team value and the top team value / team percent of total league value
+# # team_values['Value Diff'] = team_values['value_1qb'] - team_values['value_1qb'].max()
+# team_values['Value Diff'] = team_values['rating'] - team_values['rating'].max()
+# # print('team_values: \n', team_values)
+#
+# # As a percent of the worst value (to get on same scale as Power Score)
+# team_values['% Value Diff'] = abs(team_values['Value Diff']) / team_values['Value Diff'].min()
+#
+# # Calculate total value as a percent of the total league value
+# # team_values['% Total Value'] = team_values['value_1qb']/team_values['value_1qb'].sum()
+# team_values['% Total Value'] = team_values['rating']/team_values['rating'].sum()
+# team_values = team_values.round(2)
+#
+# # team_values = team_values.sort_values(by = '% Total Value', ascending=False)
+# # Merge with Power Rankings to get PowerScore
+# allplay_ps_val = allplay_ps.merge(team_values, on='team')
+#
+# # Calculate power score as percent of highest score
+# allplay_ps_val['% PowerScore'] = allplay_ps_val['PowerScore'] / allplay_ps_val['PowerScore'].max()
+# # allplay_ps_val['ps w/ values'] = allplay_ps_val['% PowerScore'] + allplay_ps_val['% Total Value']
+#
+# # Unweighted rankings
+# allplay_ps_val['Ranked'] = allplay_ps_val['% PowerScore'] + allplay_ps_val['% Value Diff']
+# allplay_ps_val['Ranked clean'] = allplay_ps_val['Ranked'] + abs(allplay_ps_val['Ranked'].min())
+#
+# # Weighted rankings
+# allplay_ps_val['Weighted Avg'] = (allplay_ps_val['% PowerScore']*.60) + (allplay_ps_val['% Value Diff']*.40)
+# allplay_ps_val.reset_index()
+# # allplay_ps_val['Weighted Avg'] = (allplay_ps_val['% PowerScore']*.60) + (allplay_ps_val['% Total Value']*.40)
+# # allplay_ps_val['Weighted Avg'] = allplay_ps_val['Weighted Avg'] + abs(allplay_ps_val['Weighted Avg'].min())
+#
+# # Rank and print values for analysis
+# Value_Power_Rankings = allplay_ps_val[['team','AllPlayWin%','% PowerScore','% Value Diff', '% Total Value','Weighted Avg']].sort_values(by='Weighted Avg', ascending=False).reset_index(drop=True)
+# Value_Power_Rankings_rank = allplay_ps_val[['% PowerScore','% Value Diff','% Total Value', 'Weighted Avg']].rank(ascending=False, method='min')
+# Value_Power_Rankings_rank.insert(loc=0, column='AllPlayWin%', value=allplay['allPlayWins'] / (allplay['allPlayWins'] + allplay['allPlayLosses']))
+# Value_Power_Rankings_rank.insert(loc=0, column='Team',value=allplay_ps_val['team'])
+# Value_Power_Rankings_rank['AllPlayWin%'] = Value_Power_Rankings_rank['AllPlayWin%'].rank(ascending=False, method='min')
+#
+# print("\nValue Power Rankings: \n", allplay_ps_val[['team','AllPlayWin%','% PowerScore','% Value Diff', '% Total Value','Weighted Avg']].sort_values(by='Weighted Avg', ascending=False).reset_index(drop=True))
+# print("\nValue Power Rankings Ranks: \n", Value_Power_Rankings_rank.sort_values(by = 'Weighted Avg').reset_index(drop=True), "\n")
+#
+# Value_Power_Rankings_print = allplay_ps_val[['team','AllPlayWin%','Weighted Avg']].sort_values(by=['Weighted Avg','AllPlayWin%'], ascending=False)
+# Value_Power_Rankings_print['Weighted Avg'] = (Value_Power_Rankings_print['Weighted Avg']*100).round(2)
+# Value_Power_Rankings_print = Value_Power_Rankings_print.rename(columns={'Weighted Avg':'Value Power Score'})
+#
+# print('Week ', week, ' Rosters NaN: \n', player_values[player_values['rating'].isna()])
+#
+# # Value_Power_Rankings_print.index = np.arange(1, len(Value_Power_Rankings_print) + 1)
+# Value_Power_Rankings_print.to_csv('/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/past_rankings/week' + str(week) + '.csv')
+#
+# # Create last week value informed power rankings
+# if week > 1:
+#     # Load player values for previous week starting lineup
+#     lw_player_values = pd.read_csv('/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/values/week' + str(week-1) + '.csv')
+#
+#     # missingPlayer = ['Chuba Hubbard','5.09','+1.3']
+#     lw_player_values.loc[(lw_player_values.player == 'Damien Williams'), 'rating'] = '8.18'
+#
+#     # missing = pd.DataFrame([missingPlayer],columns=['player','rating','change'])
+#     # lw_player_values = lw_player_values.append(missing, ignore_index=True)
+#     #
+#     # missing = pd.DataFrame([missingPlayer2],columns=['player','rating','change'])
+#     # lw_player_values = lw_player_values.append(missing, ignore_index=True)
+#
+#     print('\nWeek ', week-1, ' Rosters NaN: \n', lw_player_values[lw_player_values['rating'].isna()])
+#
+#     # covnert rating to a float from object
+#     lw_player_values['rating'] = lw_player_values['rating'].astype(str).astype(float)
+#
+#     # Group by team and average the values to get average team value
+#     # lw_team_values = lw_player_values.groupby('team').value_1qb.mean().reset_index()
+#     lw_team_values = lw_player_values.groupby('team').rating.mean().reset_index()
+#
+#     # Difference between team value and the top team value
+#     # lw_team_values['Value Diff'] = lw_team_values['value_1qb'] - lw_team_values['value_1qb'].max()
+#     lw_team_values['Value Diff'] = lw_team_values['rating'] - lw_team_values['rating'].max()
+#     # print('lw_team_values: \n', lw_team_values)
+#
+#     # As a percent of the worst value (to get on same scale as Power Score) OR % of total league value
+#     lw_team_values['% Value Diff'] = abs(lw_team_values['Value Diff']) / lw_team_values['Value Diff'].min()
+#     # lw_team_values['% Total Value'] = lw_team_values['value_1qb'] / lw_team_values['value_1qb'].sum()
+#     lw_team_values['% Total Value'] = lw_team_values['rating'] / lw_team_values['rating'].sum()
+#
+#     # Merge with Power Rankings to get PowerScore
+#     lw_allplay.reset_index() #reset the index so we can merge on team
+#     lw_allplay_ps_val = lw_allplay.merge(lw_team_values, on='team')
+#
+#     # Calculate power score as percent of highest score
+#     lw_allplay_ps_val['% PowerScore'] = lw_allplay_ps_val['PowerScore'] / lw_allplay_ps_val['PowerScore'].max()
+#
+#     # Weighted rankings
+#     lw_allplay_ps_val['Weighted Avg'] = (lw_allplay_ps_val['% PowerScore']*.60) + (lw_allplay_ps_val['% Value Diff']*.40)
+#     # lw_allplay_ps_val['Weighted Avg'] = (lw_allplay_ps_val['% PowerScore']) + (lw_allplay_ps_val['% Total Value'])
+#     # lw_allplay_ps_val['Weighted Avg'] = lw_allplay_ps_val['Weighted Avg'] + abs(lw_allplay_ps_val['Weighted Avg'].min())
+#     lw_allplay_ps_val = lw_allplay_ps_val.sort_values(by='Weighted Avg', ascending=False).reset_index()
+#
+#     # print("lw_allplay_ps_val \n", lw_allplay_ps_val[['team','% Value Diff','% PowerScore','Weighted Avg']])
+#
+# # Print current and last week team values for evaluation
+# print("\nThis Week Team Values:\n", team_values.sort_values(by='rating',ascending=False))
+# print("\nLast Week Team Values:\n", lw_team_values.sort_values(by='rating',ascending=False).round(2))
+#
+#
 if week > 1:
 
     # # create table for last week to compare for weekly change
@@ -377,93 +382,93 @@ if week > 1:
 
     Value_Power_Rankings_print.insert(loc=1, column='Weekly Change', value=emojis) # insert the weekly change column
 
-### EXPCETED STANDINGS
-
-#### TODO: Update to use the new Value Informed Power Rankings instead of just AllPlayWin%
-
+# ### EXPECTED STANDINGS
+#
+# #### TODO: Update to use the new Value Informed Power Rankings instead of just AllPlayWin%
+#
 # allplay_es = allplay.copy() # creat copy of all play to be used for expected standings
 # allplay_es = allplay_es.set_index('team') # set the index to team for .loc
-
-# new dataframe for expected standings
-ValuePowerRankings_ES = allplay_ps_val[['team','Weighted Avg']]
-ValuePowerRankings_ES = ValuePowerRankings_ES.set_index('team')
-
-# move everything to positive
-ValuePowerRankings_ES['Weighted Avg'] = ValuePowerRankings_ES['Weighted Avg'] + abs(ValuePowerRankings_ES['Weighted Avg'].min())
-
-
-allScheduleProb = [] # empty list to be filled with win probabilties for each teams schedule
-sos = [] # strength of schedule list
-
-for team in teams_list:
-    # teamAP = allplay_es['AllPlayWin%'].loc[team.teamName] # Get each teams current All Play Win Percentage
-    teamPS = ValuePowerRankings_ES['Weighted Avg'].loc[team.teamName] # Get each teams current All Play Win Percentage
-
-    scheduleOBJ = list((team.schedule).values()) # get list of team objects
-    scheduleProb = [] # tempory list to fill in inner for loop
-    teamSOS = 0 # initialize to 0 for each team
-    for opp in scheduleOBJ:
-        # oppAP = allplay_es['AllPlayWin%'].loc[opp.teamName]
-        # prob = teamAP / (oppAP + teamAP)
-
-        oppPS = ValuePowerRankings_ES['Weighted Avg'].loc[opp.teamName]
-        prob = teamPS / (oppPS + teamPS)
-
-        teamSOS += oppPS
-        scheduleProb.append(prob)
-        # for values in key:
-        #      schedule.append(item.teamName)
-    allScheduleProb.append(scheduleProb) # append each team
-    addToSOS = [team.teamName, teamSOS]
-    sos.append(addToSOS) # append each team's SOS
-
-# convert to pandas dataframes
-allScheduleProb = pd.DataFrame(allScheduleProb)
-sos = pd.DataFrame(sos).round(2)
-
-sos = sos.iloc[:,0:2] # remove empty end column
-sos = sos.set_axis(['Team', 'SOS'], axis=1, inplace=False) # set column names
-
-probSched = pd.DataFrame(team_names, columns = ['Team'])
-
-probSched = probSched.join(allScheduleProb)
-
-weeksLeft = week - 15
-probSchedLeft = probSched[probSched.columns[weeksLeft:]] # create dataframe of the prob schedules for weeks left to play
-
-projectedStandings = pd.DataFrame(probSched['Team'].to_numpy(), columns=['Team']) # start projectedStandings with just team names
-
-currentWins = []
-currentLosses = []
-# add current wins and losses to empty lists to be added to projectedStandings
-for team in teams_list:
-    currentWins = np.append(currentWins, team.wins)
-    currentLosses = np.append(currentLosses, team.losses)
-
-projectedStandings['CurrentWins'] = currentWins
-projectedStandings['CurrentLosses'] = currentLosses
-
-# sum up the probabilties to get proj wins and losses
-projectedStandings['ForcastedWins'] = probSched.iloc[:, weeksLeft-2:-2].sum(axis=1).round(2)
-projectedStandings['ForcastedLosses'] = abs(weeksLeft) - projectedStandings['ForcastedWins'].round(2)
-
-# add projected and current wins to total projection
-totalWinProj = projectedStandings['CurrentWins'] + projectedStandings['ForcastedWins']
-totalLossProj = projectedStandings['CurrentLosses'] + projectedStandings['ForcastedLosses']
-
-# insert total win and loss projections
-projectedStandings.insert(loc=1, column='TotalProjWins', value=totalWinProj)
-projectedStandings.insert(loc=2, column='TotalProjLoss', value=totalLossProj)
-
-# sort and reset index
-projectedStandings = projectedStandings.sort_values(by='TotalProjWins', ascending=False)
-projectedStandings = projectedStandings.reset_index(drop=True)
-
-projectedStandings_prnt = projectedStandings[['Team','TotalProjWins','TotalProjLoss']]
-
-# if week >= 9:
-#     # Merge in SOS
-#     projectedStandings_prnt = projectedStandings_prnt.merge(sos, on='Team')
+#
+# # new dataframe for expected standings
+# # ValuePowerRankings_ES = allplay_ps_val[['team','Weighted Avg']]
+# # ValuePowerRankings_ES = ValuePowerRankings_ES.set_index('team')
+#
+# # move everything to positive
+# # ValuePowerRankings_ES['Weighted Avg'] = ValuePowerRankings_ES['Weighted Avg'] + abs(ValuePowerRankings_ES['Weighted Avg'].min())
+#
+#
+# allScheduleProb = [] # empty list to be filled with win probabilities for each teams schedule
+# sos = [] # strength of schedule list
+#
+# for team in teams:
+#     teamAP = allplay_es['AllPlayWin%'].loc[team.team_name] # Get each teams current All Play Win Percentage
+#     # teamPS = ValuePowerRankings_ES['Weighted Avg'].loc[team.teamName] # Get each teams current All Play Win Percentage
+#
+#     scheduleOBJ = team.schedule # get list of team objects
+#     scheduleProb = [] # tempory list to fill in inner for loop
+#     teamSOS = 0 # initialize to 0 for each team
+#     for opp in scheduleOBJ:
+#         # oppAP = allplay_es['AllPlayWin%'].loc[opp.teamName]
+#         # prob = teamAP / (oppAP + teamAP)
+#
+#         oppPS = allplay_es.loc[opp.team_name]
+#         prob = teamAP / (oppPS + teamAP)
+#
+#         teamSOS += oppPS
+#         scheduleProb.append(prob)
+#         # for values in key:
+#         #      schedule.append(item.teamName)
+#     allScheduleProb.append(scheduleProb) # append each team
+#     addToSOS = [team.team_name, teamSOS]
+#     sos.append(addToSOS) # append each team's SOS
+# print(allScheduleProb)
+#
+# # convert to pandas dataframes
+# allScheduleProb = pd.DataFrame(allScheduleProb)
+# sos = pd.DataFrame(sos).round(2)
+#
+# sos = sos.iloc[:,0:2] # remove empty end column
+# sos = sos.set_axis(['Team', 'SOS'], axis=1) # set column names
+#
+# probSched = pd.DataFrame(team_names, columns = ['Team'])
+# probSched = probSched.join(allScheduleProb)
+#
+# weeksLeft = week - 15
+# probSchedLeft = probSched[probSched.columns[weeksLeft:]] # create dataframe of the prob schedules for weeks left to play
+#
+# projectedStandings = pd.DataFrame(probSched['Team'].to_numpy(), columns=['Team']) # start projectedStandings with just team names
+#
+# currentWins = []
+# currentLosses = []
+# # add current wins and losses to empty lists to be added to projectedStandings
+# for team in teams:
+#     currentWins = np.append(currentWins, team.wins)
+#     currentLosses = np.append(currentLosses, team.losses)
+#
+# projectedStandings['CurrentWins'] = currentWins
+# projectedStandings['CurrentLosses'] = currentLosses
+#
+# # sum up the probabilties to get proj wins and losses
+# projectedStandings['ForcastedWins'] = probSched.iloc[:, weeksLeft-2:-2].sum(axis=1).round(2)
+# projectedStandings['ForcastedLosses'] = abs(weeksLeft) - projectedStandings['ForcastedWins'].round(2)
+#
+# # add projected and current wins to total projection
+# totalWinProj = projectedStandings['CurrentWins'] + projectedStandings['ForcastedWins']
+# totalLossProj = projectedStandings['CurrentLosses'] + projectedStandings['ForcastedLosses']
+#
+# # insert total win and loss projections
+# projectedStandings.insert(loc=1, column='TotalProjWins', value=totalWinProj)
+# projectedStandings.insert(loc=2, column='TotalProjLoss', value=totalLossProj)
+#
+# # sort and reset index
+# projectedStandings = projectedStandings.sort_values(by='TotalProjWins', ascending=False)
+# projectedStandings = projectedStandings.reset_index(drop=True)
+#
+# projectedStandings_prnt = projectedStandings[['Team','TotalProjWins','TotalProjLoss']]
+#
+# # if week >= 9:
+# #     # Merge in SOS
+# #     projectedStandings_prnt = projectedStandings_prnt.merge(sos, on='Team')
 
 ## MONTE CARLO PLAYOFF PROBABILIIES
 
@@ -659,10 +664,10 @@ print("<!-- excerpt -->")
 
 print("\n# POWER RANKINGS\n")
 # Value un-informed
-# print(table(allplay_ps, headers='keys', tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
+print(table(allplay_ps, headers='keys', tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
 
 # Value Informed
-print(table(Value_Power_Rankings_print, headers='keys',tablefmt='pipe', numalign='center')) # have to manually center all play % and weekly change because not an int
+# print(table(Value_Power_Rankings_print, headers='keys',tablefmt='pipe', numalign='center')) # have to manually center all play % and weekly change because not an int
 
 print('\n##Highlights:\n')
 
