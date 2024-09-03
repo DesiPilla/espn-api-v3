@@ -24,6 +24,9 @@ import argparse
 import progressbar
 from espn_api.football import League
 from datetime import datetime
+import re
+
+from utils.printing_utils import printPowerRankings
 
 parser = argparse.ArgumentParser()
 parser.add_argument("week", help='Get week of the NFL season to run rankings for')
@@ -48,56 +51,25 @@ root = '/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/
 league = League(league_id, year, espn_s2, swid)
 print(league, "\n")
 
-# Create list of team objects
-teams = league.teams
+# Generate Power Rankings
+power_rankings = league.power_rankings(week=week)
 
-# Extract team names using list comprehension
-team_names = [team.team_name for team in teams]
+# Extract team names
+extracted_team_names = [(record, re.sub(r'Team\((.*?)\)', r'\1', str(team))) #convert team object to string
+    for record, team in power_rankings]
 
-if week > 1:
+# Convert to Dataframe
+power_rankings = pd.DataFrame(extracted_team_names, columns=['Power Score','Team'])
 
-    # create table for last week to compare for weekly change
-    lw_allplay = lw_allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False)
-    lw_allplay['PowerScore'] = lw_allplay['PowerScore'].round(2)
-    lw_allplay = lw_allplay.reset_index()
 
-    # create empty lists to add to in the for loop (Value Informed Ranking)
-    diffs = []
-    emojis = []
-    emoji_names = teams.copy()
+# Switch Score and Team Name cols
+power_rankings = power_rankings.reindex(columns=['Team', 'Power Score'])
+print(power_rankings)
+# Generate Expected Standings
 
-    tw_rankings = allplay_ps
-    lw_rankings = pd.read_csv(root + 'past_rankings/week' + str(week-1) + '.csv')
+# Generate Playoff Probability (if week 5 or later) and append to expected standings
 
-    print('This week: \n', tw_rankings)
-    print('Last week: \n', lw_rankings)
-
-    for team in teams:
-        tw_index = tw_rankings[tw_rankings['team'] == team].index.values # get index values of this weeks power rankigns
-        lw_index = lw_rankings[lw_rankings['team'] == team].index.values  # get index values of last weeks power rankings
-        diff = lw_index-tw_index # find the difference between last week to this week
-        diff = int(diff.item()) # turn into list to iterate over
-        diffs.append(diff) # append to the list
-
-    # iterate over diffs list and edit values to include up/down arrow emoji and the number of spots the team moved
-    for item in diffs:
-        if item > 0:
-            emojis.append("**<span style=\"color: green;\">⬆️ " + str(abs(item)) + " </span>**" )
-        elif item < 0:
-            emojis.append("**<span style=\"color: red;\">⬇️ " + str(abs(item)) + " </span>**")
-        elif item == 0:
-            emojis.append("") # adds a index of nothing for teams that didn't move
-
-    Value_Power_Rankings_print.insert(loc=1, column='Weekly Change', value=emojis) # insert the weekly change column
-
-# Set index for printing tables to start at 1
-allplay.index = np.arange(1, len(allplay) + 1)
-allplay_ps.index = np.arange(1, len(allplay_ps) + 1)
-if week >5:
-    projections.index = np.arange(1, len(projections) + 1)
-team_scores_prt.index = np.arange(1, len(team_scores_prt) + 1)
-# projectedStandings_prnt.index = np.arange(1, len(projectedStandings_prnt) + 1)
-# Value_Power_Rankings_print.index = np.arange(1, len(Value_Power_Rankings) + 1)
+# Generate Luck Index
 
 
 # Print everything
@@ -117,9 +89,8 @@ print("<!-- excerpt -->")
 
 print("\n# POWER RANKINGS\n")
 # Value un-informed
-print(table(allplay_ps, headers='keys', tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
+print(table(power_rankings, headers='keys', tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
 
-# Value Informed
 # print(table(Value_Power_Rankings_print, headers='keys',tablefmt='pipe', numalign='center')) # have to manually center all play % and weekly change because not an int
 
 print('\n##Highlights:\n')
