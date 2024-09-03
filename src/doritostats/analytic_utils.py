@@ -136,17 +136,24 @@ def sum_bench_points(league: League, lineup: list) -> float:
     return np.sum([player.points for player in lineup if player.slot_position == "BE"])
 
 
-def get_score_surprise(league: League, lineup: List[Player]) -> float:
+def get_projected_score(league: League, lineup: List[Player]) -> float:
     """
-    Returns the difference ("surprise") between a team's projected starting score and its actual score.
+    Returns the projected score of a team's starting lineup.
     """
-    projected_score = np.sum(
+    return np.sum(
         [
             player.projected_points
             for player in lineup
             if player.slot_position not in ("BE", "IR")
         ]
     )
+
+
+def get_score_surprise(league: League, lineup: List[Player]) -> float:
+    """
+    Returns the difference ("surprise") between a team's projected starting score and its actual score.
+    """
+    projected_score = get_projected_score(league, lineup)
     actual_score = np.sum(
         [player.points for player in lineup if player.slot_position not in ("BE", "IR")]
     )
@@ -354,20 +361,20 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
         remaining_difficulty_dict[team] = {}
 
         # SOS by points for
-        remaining_difficulty_dict[team][
-            "opp_points_for"
-        ] = get_remaining_schedule_difficulty(team, week, strength="points_for")
+        remaining_difficulty_dict[team]["opp_points_for"] = (
+            get_remaining_schedule_difficulty(team, week, strength="points_for")
+        )
 
         # SOS by win pct
-        remaining_difficulty_dict[team][
-            "opp_win_pct"
-        ] = get_remaining_schedule_difficulty(team, week, strength="win_pct")
+        remaining_difficulty_dict[team]["opp_win_pct"] = (
+            get_remaining_schedule_difficulty(team, week, strength="win_pct")
+        )
 
         # SOS by win pct
-        remaining_difficulty_dict[team][
-            "opp_power_rank"
-        ] = get_remaining_schedule_difficulty(
-            team, week, strength="power_rank", league=league
+        remaining_difficulty_dict[team]["opp_power_rank"] = (
+            get_remaining_schedule_difficulty(
+                team, week, strength="power_rank", league=league
+            )
         )
 
     # Identify the min and max values for each SOS metric

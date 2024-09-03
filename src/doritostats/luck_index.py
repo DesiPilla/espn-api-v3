@@ -1,11 +1,13 @@
 import numpy as np
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 from espn_api.football import League, Team, Player
+from espn_api.football.box_score import BoxScore
 from src.doritostats.analytic_utils import (
     get_best_lineup,
     get_lineup,
     get_num_bye,
     get_num_inactive,
+    get_projected_score,
     get_score_surprise,
     get_weekly_finish,
 )
@@ -23,7 +25,7 @@ def calculate_scheduling_factor(league: League, team: Team, week: int) -> float:
     Args:
         league (League): An ESPN League object
         team (Team): An ESPN Team object
-        weel (int): The week to calculate the scheduling luck factor for
+        week (int): The week to calculate the scheduling luck factor for
 
     Returns:
         float: the luck factor for the given team in the given week
@@ -55,40 +57,29 @@ def calculate_scheduling_factor(league: League, team: Team, week: int) -> float:
 
 
 def calculate_performance_vs_historical_average(
-    league: League, team: Team, week: int
+    team_score: float,
+    team_scores: List[float],
 ) -> float:
     """Calculate the performance of a team in a given week vs their historical average
 
     The performance is calculated as the z-score of the team's score in the given week
     vs the average of their scores.
 
-    Future week's are considered in the calculation. This means that a team's weekly luck score
-    will change as the season progresses. This is intentional, as it is not known early in the
-    season if a team's performance is strong or weak relative to it's true strength. This also
-    allows for a more stable factor overall.
-
     The luck factor ranges from -1 to 1, where -1 is the most unlucky and 1 is the most lucky.
     Performances that are 2 standard deviations away from the mean have the maximum effect.
 
     Args:
-        league (League): An ESPN League object
-        team (Team): An ESPN Team object
-        weel (int): The week to calculate the scheduling luck factor for
+        team_score (float): The team's score in the given week
+        team_scores (List[float]): A list of the team's scores for each week
 
     Returns:
         float: the luck factor for the given team in the given week
     """
-    team_score = team.scores[week - 1]
+    # Only consider a team's score up to the current week
+    team_avg = np.mean(team_scores)
+    team_std = np.std(team_scores)
 
-    # # Only consider a team's score up to the current week
-    # team_avg = np.mean(team.scores[:week])
-    # team_std = np.std(team.scores[:week])
-
-    # Consider all of a team's scores, even those in future weeks
-    team_avg = np.mean(team.scores)
-    team_std = np.std(team.scores)
-
-    factor = 0
+    factor: float = 0.0
     if team_std != 0:
         # Get z-score of the team's performance
         z = (team_score - team_avg) / team_std
@@ -100,27 +91,19 @@ def calculate_performance_vs_historical_average(
     return factor
 
 
-def calculate_margin_of_victory_factor(league: League, team: Team, week: int) -> float:
+def calculate_margin_of_victory_factor(team_score: float, opp_score: float) -> float:
     """Calculate the margin of victory factor for a team in a given week.
 
     The luck factor ranges from -1 to 1, where -1 is the most unlucky and 1 is the most lucky.
-    MOVs that are 10% or more of the lower team's score have the maximum effect.
+    MOVs that are 20% (max_pct) or more of the lower team's score have the maximum effect.
 
     Args:
-        league (League): An ESPN League object
-        team (Team): An ESPN Team object
-        weel (int): The week to calculate the scheduling luck factor for
+        team_score (float): The team's score in the given week
+        opp_score (float): The opponent's score in the given week
 
     Returns:
         float: The luck factor for the team in the given week
     """
-    # Get the team's score and the opponent's score
-    team_score = team.scores[week - 1]
-    opp_score = team.schedule[week - 1].scores[week - 1]
-
-    team_score = 100
-    opp_score = 105
-
     # Calculate the margin of victory
     mov = team_score - opp_score
 
@@ -130,11 +113,11 @@ def calculate_margin_of_victory_factor(league: League, team: Team, week: int) ->
 
     # Normalize the MOV to a percentage of the minimum score
     # Clip the normalized MOV to +/- 10% (so that larger MOVs have zero impact on the factor)
-    max_pct = 0.1
+    max_pct = 0.2
     mov_norm = np.clip(mov / min(team_score, opp_score), -max_pct, max_pct) / max_pct
 
     # Invert the normalized MOV so that smaller MOVs are more impactful on the factor
-    factor = (1 * np.sign(mov_norm)) - mov_norm
+    factor = np.sign(mov_norm) - mov_norm
     return factor
 
 
@@ -150,19 +133,17 @@ def get_performance_vs_projection_factor(lineup: List[Player]) -> float:
     Returns:
         float: The performance vs projection factor for the given team in the given week
     """
+    projected_score = get_projected_score(None, lineup)
     score_surprise = get_score_surprise(None, lineup)
 
     # TODO: Incorporate total # of starting players that over/underperformed
-
     # TODO: Find a better way of scaling score surprise. The method below is crude and trash
-    # Normalize the MOV to a percentage of the minimum score
-    # Clip the normalized MOV to +/- 10% (so that larger score surprises have zero impact on the factor)
+    # Clip the normalized score suprise to +/- 25% (so that larger score surprises have higher impact on the factor)
     max_pct = 0.25
-    score_surprise_norm = np.clip(score_surprise, -max_pct, max_pct) / max_pct
-
-    # Invert the normalized MOV so that smaller MOVs are more impactful on the factor
-    factor = (1 * np.sign(score_surprise_norm)) - score_surprise_norm
-    return factor
+    score_surprise_norm = (
+        np.clip(score_surprise / projected_score, -max_pct, max_pct) / max_pct
+    )
+    return score_surprise_norm
 
 
 def get_injury_bye_factor(
@@ -182,8 +163,8 @@ def get_injury_bye_factor(
 
     # TODO: Incorporate the strength of a player who was injured or on bye
     # TODO: Account for players who were dropped due to injury
-    num_injured = get_num_inactive(lineup)
-    num_bye = get_num_bye(lineup)
+    num_injured = get_num_inactive(None, lineup)
+    num_bye = get_num_bye(None, lineup)
 
     # TODO: Find a better way of scaling injury/bye factor. The method below is crude and trash
     return -1 * (num_injured + num_bye) / max_roster_size
@@ -216,14 +197,7 @@ def get_optimal_vs_actual_factor(
     )
 
     # Get the optimal score of the team's lineup
-    optimal_lineup = get_best_lineup(league, team_lineup)
-    optimal_score = np.sum(
-        [
-            player.points
-            for player in optimal_lineup
-            if player.slot_position not in ("BE", "IR")
-        ]
-    )
+    optimal_score = get_best_lineup(league, team_lineup)
 
     optimal_factor = 0
     # For teams that lost...
@@ -242,34 +216,29 @@ def get_optimal_vs_actual_factor(
         if optimal_score > opp_actual_score:
             optimal_factor -= 0.5
 
-    # TODO: Find optimal lineup with 1 swap
-    optimal_lineup_1_swap = get_best_lineup(league, team_lineup)  # wrong
-    optimal_1_swap_score = np.sum(
-        [
-            player.points
-            for player in optimal_lineup_1_swap
-            if player.slot_position not in ("BE", "IR")
-        ]
-    )
+    return optimal_factor
 
-    optimal_1_swap_factor = 0
-    # For teams that lost...
-    if actual_outcome == "L":
-        # If the team would have won if they had played their optimal lineup, they are unlucky
-        if optimal_1_swap_score > opp_actual_score:
-            optimal_1_swap_factor -= 1
+    # # TODO: Find optimal lineup with 1 swap
+    # optimal_1_swap_score = get_best_lineup(league, team_lineup)  # wrong
 
-        # If the team would have tied if they had played their optimal lineup, they are neutral
-        if optimal_1_swap_score == opp_actual_score:
-            optimal_1_swap_factor -= 0.5
+    # optimal_1_swap_factor = 0
+    # # For teams that lost...
+    # if actual_outcome == "L":
+    #     # If the team would have won if they had played their optimal lineup, they are unlucky
+    #     if optimal_1_swap_score > opp_actual_score:
+    #         optimal_1_swap_factor -= 1
 
-    # For teams that tied...
-    if actual_outcome == "T":
-        # If the team would have won if they had played their optimal lineup, they are lucky
-        if optimal_1_swap_score > opp_actual_score:
-            optimal_1_swap_factor -= 0.5
+    #     # If the team would have tied if they had played their optimal lineup, they are neutral
+    #     if optimal_1_swap_score == opp_actual_score:
+    #         optimal_1_swap_factor -= 0.5
 
-    return (optimal_factor + optimal_1_swap_factor) / 2
+    # # For teams that tied...
+    # if actual_outcome == "T":
+    #     # If the team would have won if they had played their optimal lineup, they are lucky
+    #     if optimal_1_swap_score > opp_actual_score:
+    #         optimal_1_swap_factor -= 0.5
+
+    # return (optimal_factor + optimal_1_swap_factor) / 2
 
 
 def get_optimal_vs_optimal_factor(
@@ -290,46 +259,52 @@ def get_optimal_vs_optimal_factor(
         float: The performance vs optimal factor for the given team in the given week
     """
     # Get the optimal score of the team's lineup
-    optimal_lineup = get_best_lineup(league, team_lineup)
-    optimal_score = np.sum(
-        [
-            player.points
-            for player in optimal_lineup
-            if player.slot_position not in ("BE", "IR")
-        ]
-    )
+    optimal_score = get_best_lineup(league, team_lineup)
 
     # Get the optimal score of the team's opponent's lineup
-    opp_optimal_lineup = get_best_lineup(league, opp_lineup)
-    opp_optimal_score = np.sum(
-        [
-            player.points
-            for player in opp_optimal_lineup
-            if player.slot_position not in ("BE", "IR")
-        ]
-    )
+    opp_optimal_score = get_best_lineup(league, opp_lineup)
 
     factor = 0
+    # For teams that won...
+    if actual_outcome == "W":
+        # If the team would have lost if both teams had played their optimal lineup, they are lucky
+        if optimal_score < opp_optimal_score:
+            factor += 1
+
+        # If the team would have tied if both teams had played their optimal lineup, they are neutral
+        if optimal_score == opp_optimal_score:
+            factor += 0.5
+
     # For teams that lost...
     if actual_outcome == "L":
-        # If the team would have won if they had played their optimal lineup, they are unlucky
+        # If the team would have won if both teams had played their optimal lineup, they are unlucky
         if optimal_score > opp_optimal_score:
             factor -= 1
 
-        # If the team would have tied if they had played their optimal lineup, they are neutral
+        # If the team would have tied if both teams had played their optimal lineup, they are neutral
         if optimal_score == opp_optimal_score:
             factor -= 0.5
 
     # For teams that tied...
     if actual_outcome == "T":
-        # If the team would have won if they had played their optimal lineup, they are lucky
+        # If the team would have won if both teams had played their optimal lineup, they are unlucky
         if optimal_score > opp_optimal_score:
             factor -= 0.5
+
+        # If the team would have lost if both teams had played their optimal lineup, they are lucky
+        if optimal_score < opp_optimal_score:
+            factor += 0.5
 
     return factor
 
 
-def get_weekly_luck_index(league: League, team: Team, week: int) -> float:
+def get_weekly_luck_index(
+    league: League,
+    team: Team,
+    week: int,
+    box_scores: Optional[List[BoxScore]] = None,
+    return_factors: bool = False,
+) -> Union[float, Dict[str, float]]:
     """This function calculates the weekly luck index for a team in a given week.
     It does so by blending in many different factors.
 
@@ -337,9 +312,13 @@ def get_weekly_luck_index(league: League, team: Team, week: int) -> float:
         league (League): An ESPN League object
         team (Team): An ESPN Team object
         week (int): The week to calculate the luck index for
+        box_scores (Optional[List[BoxScore]]): A list of ESPN BoxScore objects for the given week. Defaults to None.
+        return_factors (bool): Whether to return the individual factors that make up the luck index. Defaults to False.
 
     Returns:
         float: The luck index for the given team in the given week
+        or
+        Dict[str, float]: A dictionary of the individual factors that make up the luck index
     """
     # Define the weights to apply to each factor
     factor_weights = {
@@ -363,18 +342,25 @@ def get_weekly_luck_index(league: League, team: Team, week: int) -> float:
 
     # Calculate the performance factors
     team_performance_factor = calculate_performance_vs_historical_average(
-        league, team, week
+        team.scores[week - 1],
+        team.scores,
     )
     opp_performance_factor = calculate_performance_vs_historical_average(
-        league, opp, week
+        opp.scores[week - 1],
+        opp.scores,
     )
 
     # Calculate the margin of victory factor
-    margin_of_victory_factor = calculate_margin_of_victory_factor(league, team, week)
+    margin_of_victory_factor = calculate_margin_of_victory_factor(
+        team_score=team.scores[week - 1],
+        opp_score=opp.scores[week - 1],
+    )
 
     # Get factors for metrics that require the team's lineup
-    team_lineup = get_lineup(league, team, week)
-    opp_lineup = get_lineup(league, opp, week)
+    if box_scores is None:
+        box_scores = league.box_scores(week)
+    team_lineup = get_lineup(league=league, team=team, week=week, box_scores=box_scores)
+    opp_lineup = get_lineup(league=league, team=opp, week=week, box_scores=box_scores)
 
     # Calculate the performance vs projection factor
     projection_factor = get_performance_vs_projection_factor(team_lineup)
@@ -409,5 +395,19 @@ def get_weekly_luck_index(league: League, team: Team, week: int) -> float:
         + factor_weights["optimal_vs_actual"] * 1 / 3 * opp_optimal_vs_actual_factor
         + factor_weights["optimal_vs_optimal"] * optimal_vs_optimal_factor
     )
+
+    if return_factors:
+        return {
+            "scheduling": scheduling_factor,
+            "performance_vs_historical": team_performance_factor,
+            "opp_performance_vs_historical": opp_performance_factor,
+            "margin_of_victory": margin_of_victory_factor,
+            "performance_vs_projection": projection_factor,
+            "injuries_byes": injury_bye_factor,
+            "optimal_vs_actual": optimal_vs_actual_factor,
+            "opp_optimal_vs_actual": opp_optimal_vs_actual_factor,
+            "optimal_vs_optimal": optimal_vs_optimal_factor,
+            "overall_luck_index": luck_index,
+        }
 
     return luck_index

@@ -1,4 +1,5 @@
 import datetime
+import functools
 import os
 import re
 import requests
@@ -210,6 +211,9 @@ def fetch_league(
 
     # Set the owners for each team
     set_owner_names(league)
+
+    # TODO: Cache this function while PR is open
+    league.box_scores = functools.cache(league.box_scores)
 
     # Load current league data
     print("[BUILDING LEAGUE] Loading current league details...")
