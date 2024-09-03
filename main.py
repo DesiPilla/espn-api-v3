@@ -53,32 +53,37 @@ root = '/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/
 league = League(league_id, year, espn_s2, swid)
 print(league, "\n")
 
+def gen_power_rankings():
+    power_rankings = league.power_rankings(week=week)
+
+    # Extract team names
+    extracted_team_names = [(record, re.sub(r'Team\((.*?)\)', r'\1', str(team))) #convert team object to string
+        for record, team in power_rankings]
+
+    # Convert to Dataframe
+    power_rankings = pd.DataFrame(extracted_team_names, columns=['Power Score','Team'])
+
+
+    # Switch Score and Team Name cols
+    power_rankings = power_rankings.reindex(columns=['Team', 'Power Score'])
+
+    return power_rankings
+
 # Generate Power Rankings
-power_rankings = league.power_rankings(week=week)
+power_rankings = gen_power_rankings()
 
-# Extract team names
-extracted_team_names = [(record, re.sub(r'Team\((.*?)\)', r'\1', str(team))) #convert team object to string
-    for record, team in power_rankings]
-
-# Convert to Dataframe
-power_rankings = pd.DataFrame(extracted_team_names, columns=['Power Score','Team'])
-
-
-# Switch Score and Team Name cols
-power_rankings = power_rankings.reindex(columns=['Team', 'Power Score'])
-
-# Print rankings to terminal
-print(power_rankings)
 # Generate Expected Standings
 
 # Generate Playoff Probability (if week 5 or later) and append to expected standings
 
 # Generate Luck Index
 
+# Generate AI Summary
+
 
 # Print everything
 # open text file
-filepath = "/Users/christiangeer/Fantasy_Sports/football/power_rankings/jtown-dynasty/content/blog/Week"+ str(week) + str(year) + "PowerRankings.md"
+filepath = f"/Users/christiangeer/Fantasy_Sports/football/power_rankings/jtown-dynasty/content/blog/Week{week}{year}PowerRankings.md"
 sys.stdout = open(filepath, "w")
 
 # for the markdown files in blog
