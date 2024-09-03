@@ -25,6 +25,7 @@ import progressbar
 from espn_api.football import League
 from datetime import datetime
 import re
+import json
 
 from utils.printing_utils import printPowerRankings
 
@@ -69,8 +70,50 @@ def gen_power_rankings():
 
     return power_rankings
 
+def gen_ai_summary():
+    # Retrieve all matchups for the given week
+    matchups = league.box_scores(week=week)
+
+    # Extract box score data
+    box_scores_data = []
+
+    for matchup in matchups:
+        matchup_data = {
+            "home_team": matchup.home_team.team_name,
+            "home_score": matchup.home_score,
+            "home_projected": matchup.home_projected,
+            "away_team": matchup.away_team.team_name,
+            "away_score": matchup.away_score,
+            "away_projected": matchup.away_projected,
+            "home_players": [
+                {
+                    "player_name": player.name,
+                    "slot_position": player.slot_position,
+                    "position": player.position,
+                    "points": player.points,
+                    "projected_points": player.projected_points
+                } for player in matchup.home_lineup
+            ],
+            "away_players": [
+                {
+                    "player_name": player.name,
+                    "position": player.position,
+                    "slot_position": player.slot_position,
+                    "points": player.points,
+                    "projected_points": player.projected_points
+                } for player in matchup.away_lineup
+            ]
+        }
+        box_scores_data.append(matchup_data)
+
+    # Convert to JSON format
+    box_scores_json = json.dumps(box_scores_data, indent=4)
+
+    print(box_scores_json)
+    return(box_scores_json)
+    
 # Generate Power Rankings
-power_rankings = gen_power_rankings()
+rankings = gen_power_rankings()
 
 # Generate Expected Standings
 
@@ -79,7 +122,8 @@ power_rankings = gen_power_rankings()
 # Generate Luck Index
 
 # Generate AI Summary
-
+summary = gen_ai_summary()
+print("\nFinal Summary:",summary)
 
 # Print everything
 # open text file
@@ -98,7 +142,7 @@ print("<!-- excerpt -->")
 
 print("\n# POWER RANKINGS\n")
 # Value un-informed
-print(table(power_rankings, headers='keys', tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
+print(table(rankings, headers='keys', tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
 
 # print(table(Value_Power_Rankings_print, headers='keys',tablefmt='pipe', numalign='center')) # have to manually center all play % and weekly change because not an int
 
