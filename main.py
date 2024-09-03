@@ -26,7 +26,7 @@ from espn_api.football import League
 from datetime import datetime
 
 parser = argparse.ArgumentParser()
-parser.add_argument("week", help='Get week of the season')
+parser.add_argument("week", help='Get week of the NFL season to run rankings for')
 args = parser.parse_args()
 week = int(args.week)
 
@@ -45,17 +45,8 @@ espn_s2 = 'AEAldgr2G2n0JKOnYGii6ap3v4Yu03NjpuI2D0SSZDAMoUNm0y2DKP4GRofzL8sn%2Bzo
 
 root = '/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/'
 
-# Generate cookies payload and API endpoint
-cookies = {'swid' : swid, 'espn_s2' : espn_s2}
-url = getUrl(year, league_id)
-
-
 league = League(league_id, year, espn_s2, swid)
 print(league, "\n")
-# import dynasty process values
-# dynastyProcessValues = pd.read_csv("/Users/christiangeer/Fantasy_Sports/Fantasy_FF/data/files/values-players.csv")
-# dynastyProcessValues = dynastyProcessValues[["player","value_1qb"]]
-
 
 # Create list of team objects
 teams = league.teams
@@ -69,6 +60,7 @@ seasonScores = []
 for team in teams:
     weeklyScores = team.scores
     seasonScores.append(weeklyScores)
+print(seasonScores)
 
 # turn into dataframes
 seasonScores_df = pd.DataFrame(data=seasonScores)
@@ -92,48 +84,6 @@ team_scores.loc['League Average'] = (team_scores.sum(numeric_only=True, axis=0)/
 team_scores[:] = team_scores[:] - team_scores.loc['League Average']
 team_scores = team_scores.drop("League Average") # leageue average no longer necessary
 team_scores_log = team_scores.copy()
-
-#### 3 WEEK ROLLING AVERAGE RANKINGS
-
-
-# get columns for calculating power score
-last = current_week_headings[-1]
-if len(current_week_headings) > 1:
-    _2last = current_week_headings[-2]
-
-if len(current_week_headings) > 2:
-    _3last = current_week_headings[-3]
-
-if len(current_week_headings) > 3:
-    rest = current_week_headings[0:-3]
-
-
-if len(current_week_headings) == 1: # for week 1, power score is just pf
-    team_scores['Power_Score'] = (team_scores[last])
-elif len(current_week_headings) == 2: # for week two avererage of first two weeks, week 2 a litter heavier wegiht
-    team_scores['Power_Score'] = ((team_scores[last]*.6) + (team_scores[_2last])*.4)/1
-elif len(current_week_headings) == 3: # for week 3 same wegihted average approach, but different wegihts
-    team_scores['Power_Score'] = ((team_scores[last]*.25) + (team_scores[_2last]*.15) + (team_scores[_3last]*.1))/.5
-else: # for the rest of the season
-    team_scores['Power_Score'] = ((team_scores[last]*.3) + (team_scores[_2last]*.15) + (team_scores[_3last]*.1) + (team_scores[rest].mean(axis=1)*.45))/1
-
-# sort by power socre
-team_scores = team_scores.sort_values(by='Power_Score', ascending=False)
-
-# 3 week rolling average
-last_3 = current_week_headings[-3:]
-team_scores['3_wk_roll_avg'] = (team_scores[last_3].sum(axis=1)/3).round(2)
-
-# creating season average points column
-season = list(team_scores)
-season = season[1:-1]
-team_scores['Season_avg'] = (team_scores[season].sum(axis=1)/week).round(2)
-
-# for printing
-team_scores_prt = team_scores['Power_Score'].round(2)
-team_scores_prt = team_scores_prt.reset_index()
-# team_scores_prt = team_scores.columns['team','Power Score']
-print(team_scores_prt)
 
 ### ALL PLAY POWER RANKINGS
 
@@ -187,57 +137,23 @@ allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
 
 if week > 1:
 
-    # # create table for last week to compare for weekly change
-    # lw_allplay = lw_allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False)
-    # lw_allplay['PowerScore'] = lw_allplay['PowerScore'].round(2)
-    # lw_allplay = lw_allplay.reset_index()
-
-    # DEPRACATED
-
-    # # create table for last week to compare for weekly change with Value Informed Rankings
-    # lw_allplay_compare = lw_allplay_ps_val[['team','Weighted Avg']].sort_values(by=['Weighted Avg'], ascending=False)
-    # lw_allplay_compare['Weighted Avg'] = lw_allplay_compare['Weighted Avg'].round(4)
-    # lw_allplay_compare = lw_allplay_compare.reset_index(drop=True)
-
-    # # create allplay table sorted by power score
-    # lw_allplay_ps = lw_allplay.sort_values(by='PowerScore', ascending=False)
-    # lw_allplay_ps = lw_allplay_ps.reset_index(drop=True)
-
-    # # create empty lists to add to in the for loop
-    # diffs = []
-    # emojis = []
-    # emoji_names = allplay_ps['team'].tolist()
-    #
-    # for team in emoji_names:
-    #     tw_index = allplay_ps[allplay_ps['team'] == team].index.values # get index values of this weeks power rankigns
-    #     lw_index = lw_allplay_ps[lw_allplay_ps['team'] == team].index.values  # get index values of last weeks power rankings
-    #     diff = lw_index-tw_index # find the difference between last week to this week
-    #     diff = int(diff.item()) # turn into list to iterate over
-    #     diffs.append(diff) # append to the list
-    #
-    # # iterate over diffs list and edit values to include up/down arrow emoji and the number of spots the team moved
-    # for item in diffs:
-    #     if item > 0:
-    #         emojis.append("**<span style=\"color: green;\">⬆️ " + str(abs(item)) + " </span>**" )
-    #     elif item < 0:
-    #         emojis.append("**<span style=\"color: red;\">⬇️ " + str(abs(item)) + " </span>**")
-    #     elif item == 0:
-    #         emojis.append("") # adds a index of nothing for teams that didn't move
-    #
-    # allplay_ps.insert(loc=1, column='Weekly Change', value=emojis) # insert the weekly change column
+    # create table for last week to compare for weekly change
+    lw_allplay = lw_allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False)
+    lw_allplay['PowerScore'] = lw_allplay['PowerScore'].round(2)
+    lw_allplay = lw_allplay.reset_index()
 
     # create empty lists to add to in the for loop (Value Informed Ranking)
     diffs = []
     emojis = []
-    emoji_names = Value_Power_Rankings['team'].tolist()
+    emoji_names = teams.copy()
 
-    tw_rankings = pd.read_csv(root + 'past_rankings/week' + str(week) + '.csv')
+    tw_rankings = allplay_ps
     lw_rankings = pd.read_csv(root + 'past_rankings/week' + str(week-1) + '.csv')
 
     print('This week: \n', tw_rankings)
     print('Last week: \n', lw_rankings)
 
-    for team in emoji_names:
+    for team in teams:
         tw_index = tw_rankings[tw_rankings['team'] == team].index.values # get index values of this weeks power rankigns
         lw_index = lw_rankings[lw_rankings['team'] == team].index.values  # get index values of last weeks power rankings
         diff = lw_index-tw_index # find the difference between last week to this week
