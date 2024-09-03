@@ -85,56 +85,6 @@ team_scores[:] = team_scores[:] - team_scores.loc['League Average']
 team_scores = team_scores.drop("League Average") # leageue average no longer necessary
 team_scores_log = team_scores.copy()
 
-### ALL PLAY POWER RANKINGS
-
-
-allplay = team_names.copy()
-allplay = pd.DataFrame(allplay,columns=['team'])
-# add new columns to be filled by for loop
-allplay['allPlayWins'] = 0
-allplay['allPlayLosses'] = 0
-allplay['PowerScore'] = 0
-allplay = allplay.set_index('team')
-
-# get headings of allplay table
-allplay_head = list(allplay)
-
-# set the initial week for the for loop to 1
-compare_week = current_week_headings[0]
-
-# iterates over each item in the dataframe and compares to every team against one another, adding 1 for wins and losses
-while compare_week <= week: # run until getting to current week
-    for first_row in scores.itertuples():
-        for second_row in scores.itertuples():
-            if first_row[compare_week] > second_row[compare_week]:
-                allplay.loc[first_row[0],allplay_head[0]] += 1 # add 1 to allplay wins
-            elif first_row[compare_week] < second_row[compare_week]:
-                allplay.loc[first_row[0],allplay_head[1]] += 1 # add 1 to allplay losses
-            else:
-                continue
-    if compare_week == week-1: # create copy of the last week for weekly change calculations
-        lw_allplay = allplay.copy()
-
-    compare_week += 1
-
-# create allplay win percentage
-allplay['AllPlayWin%'] = allplay['allPlayWins'] / (allplay['allPlayWins'] + allplay['allPlayLosses'])
-allplay['AllPlayWin%'] = allplay['AllPlayWin%'].round(3)
-
-
-allplay = allplay.sort_values(by=['allPlayWins','PowerScore'], ascending=False) # Sort allplay by allplay wins with a powerscore tiebreaker
-allplay['PowerScore'] = allplay['PowerScore'].round(1) # round powerscore to 1 decimal points
-allplay = allplay.reset_index()
-
-# create allplay table sorted by power score
-allplay_ps = allplay[['team', 'AllPlayWin%', 'PowerScore']]
-allplay_ps = allplay_ps.sort_values(by='PowerScore', ascending=False)
-allplay_ps = allplay_ps.reset_index(drop=True)
-
-allplay_ps['AllPlayWin%'] = (allplay_ps['AllPlayWin%'] * 100).round(2)
-allplay_ps['AllPlayWin%'] = allplay_ps['AllPlayWin%'].astype(str) + "%"
-
-
 if week > 1:
 
     # create table for last week to compare for weekly change
