@@ -148,7 +148,7 @@ def gen_ai_summary():
     result = llm_chain.invoke(input=json_data)
 
     # return the result
-    return result
+    return result.content
 
 # Generate Power Rankings
 rankings = gen_power_rankings()
