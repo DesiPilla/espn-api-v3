@@ -63,13 +63,18 @@ def gen_power_rankings():
     return power_rankings
 
 def gen_ai_summary():
+    print("\nRetrieving and processing matchups...")
+
     # Retrieve all matchups for the given week
     matchups = league.box_scores(week=week)
+
+    # Create AI summary progress bar
+    bar_matchups = progressbar.ProgressBar(max_value=len(matchups))
 
     # Extract box score data
     box_scores_data = []
 
-    for matchup in matchups:
+    for i, matchup in enumerate(matchups):
         matchup_data = {
             "home_team": matchup.home_team.team_name,
             "home_score": matchup.home_score,
@@ -98,8 +103,13 @@ def gen_ai_summary():
         }
         box_scores_data.append(matchup_data)
 
+        # Update progress bar for each matchup processed
+        bar_matchups.update(i + 1)
+
     # Convert to JSON format
     box_scores_json = json.dumps(box_scores_data, indent=4)
+
+    print("\nGenerating summary with LLM...")
 
 
     # Sample JSON data (replace with your actual JSON data)
@@ -131,11 +141,15 @@ def gen_ai_summary():
         prompt_template | llm
     )
 
-    # Sample JSON data (replace with your actual JSON data)
-    json_data = box_scores_json
+    # Simulate LLM progress with progress bar
+    bar_llm = progressbar.ProgressBar(max_value=1)
 
     # Generate the newspaper-like summary
-    result = llm_chain.invoke(input=json_data)
+    result = llm_chain.invoke(input=box_scores_json)
+
+    # Simulate LLM generation time
+    time.sleep(2)
+    bar_llm.update(1)
 
     # return the result
     return result.content
@@ -171,7 +185,7 @@ for i, team in enumerate(teams):
 season_luck_index = pd.DataFrame(season_luck_index, columns=['Team','Luck Index'])
 
 # Generate AI Summary
-print('\nGenerating AI Summary...')
+print('\n\nGenerating AI Summary...')
 summary = gen_ai_summary()
 
 # Print everything
