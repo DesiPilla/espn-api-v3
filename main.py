@@ -33,6 +33,7 @@ from langchain_openai import ChatOpenAI
 from utils.printing_utils import printPowerRankings
 import os
 from dotenv import load_dotenv
+import luck_index
 
 parser = argparse.ArgumentParser()
 parser.add_argument("week", help='Get week of the NFL season to run rankings for')
@@ -55,6 +56,9 @@ api_key= os.getenv('OPEN_AI_KEY')
 
 league = League(league_id, year, espn_s2, swid)
 print(league, "\n")
+
+# Create list of teams
+teams = league.teams
 
 def gen_power_rankings():
     power_rankings = league.power_rankings(week=week)
@@ -161,61 +165,6 @@ rankings = gen_power_rankings()
 
 # Generate AI Summary
 summary = gen_ai_summary()
-
-# Genrate Power Rankings
-
-# Generate Expected Standings
-
-# Generate Playoff Probability (if week 5 or later) and append to expected standings
-
-# Generate Luck Index
-def weeklyLuckIndex(self, teamId, week):
-    ''' This function returns an index quantifying how 'lucky' a team was in a given week '''
-    team = self.teams[teamId]
-    opp = team.schedule[week]
-
-    # Luck Index based on where the team and its opponent finished compared to the rest of the league
-    result = team.weeklyResult(week)
-    place = self.weeklyFinish(teamId, week)
-    if result == 1:  # If the team won...
-        odds = (place - 1) / (self.numTeams - 2)  # Odds of this team playing a team with a higher score than it
-        luckIndex = 5 * odds  # The worse the team ranked, the luckier they were to have won
-    else:  # if the team lost or tied...
-        odds = (self.numTeams - place) / (
-                    self.numTeams - 2)  # Odds of this team playing a team with a lower score than it
-        luckIndex = -5 * odds  # The better the team ranked, the unluckier they were to have lost or tied
-    if result == 0.5:  # If the team tied...
-        luckIndex /= 2  # They are only half as unlucky, because tying is not as bad as losing
-
-    # Luck Index based on how the team scored compared to its opponent
-    teamScore = team.scores[week]
-    avgScore = team.avgPointsFor(week)
-    stdevScore = team.stdevPointsFor(week)
-    if stdevScore != 0:
-        zTeam = (teamScore - avgScore) / stdevScore  # Get z-score of the team's performance
-        effect = zTeam / (
-                    3 * stdevScore) * 2  # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
-        luckIndex += (effect / abs(effect)) * min(abs(effect), 2)  # The maximum effect is +/- 2
-
-    oppScore = opp.scores[week]
-    avgOpp = opp.avgPointsAllowed(week)
-    stdevOpp = opp.stdevPointsAllowed(week)
-    if stdevOpp != 0:
-        zOpp = (oppScore - avgOpp) / stdevOpp  # Get z-score of the opponent's performance
-        effect = zOpp / (
-                    3 * stdevOpp) * 2  # Noramlize the z-score so that a performance 3 std dev's away from the mean has an effect of 2 points on the luck index
-        luckIndex -= (effect / abs(effect)) * min(abs(effect), 2)  # The maximum effect is +/- 2
-
-    return luckIndex
-
-
-def seasonLuckIndex(self, teamId, week):
-    ''' This function returns an index quantifying how 'lucky' a team was all season long (up to a certain week) '''
-    luckIndex = 0
-    for week in range(1, week + 1):
-        luckIndex += self.weeklyLuckIndex(teamId, week)
-    return luckIndex
-
 
 # Print everything
 # open text file
