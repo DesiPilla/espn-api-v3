@@ -1,39 +1,23 @@
 '''
 TODO:
-1. Fix expected standings
-2. Clean up code (value rankings)
-3. Luck Index
+1. Injury/bye factor within luck_index.py
+2. get_best_lineup() {analytic_utils.py)
 '''
 from langchain_core.runnables import RunnableSequence
 
-import playerID
-from authorize import Authorize
-from team import Team
-from player import Player
-from utils.building_utils import getUrl
-from itertools import chain
-
 import pandas as pd
-import numpy as np
-import requests
-import math
 from tabulate import tabulate as table
-import os
 import sys
 import argparse
-import progressbar
 from espn_api.football import League
 from datetime import datetime
 import re
 import json
-import openai
-from langchain.chains import LLMChain
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from utils.printing_utils import printPowerRankings
 import os
 from dotenv import load_dotenv
-import luck_index
+from doritostats import luck_index
 
 parser = argparse.ArgumentParser()
 parser.add_argument("week", help='Get week of the NFL season to run rankings for')
@@ -162,7 +146,10 @@ rankings = gen_power_rankings()
 # Generate Playoff Probability (if week 5 or later) and append to expected standings
 
 # Generate Luck Index
-
+team = league.teams[0]
+print(team)
+luck_index = luck_index.get_weekly_luck_index(league, team, week)
+print(luck_index)
 # Generate AI Summary
 summary = gen_ai_summary()
 

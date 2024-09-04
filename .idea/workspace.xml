@@ -5,8 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="187ec636-716f-4623-8c9b-b50a2d7c0e3f" name="Changes" comment="Set up LLM chain with prompt template">
-      <change afterPath="$PROJECT_DIR$/luck_index.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/doritostats/analytic_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/doritostats/filter_utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/luck_index.py" beforeDir="false" afterPath="$PROJECT_DIR$/doritostats/luck_index.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -40,6 +42,11 @@
     "last_opened_file_path": "/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/doritostats" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="espn-api-v3" />
