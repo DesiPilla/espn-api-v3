@@ -18,6 +18,8 @@ from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
 from doritostats import luck_index
+import time
+import progressbar
 
 parser = argparse.ArgumentParser()
 parser.add_argument("week", help='Get week of the NFL season to run rankings for')
@@ -146,14 +148,34 @@ rankings = gen_power_rankings()
 # Generate Playoff Probability (if week 5 or later) and append to expected standings
 
 # Generate Luck Index
-team = league.teams[0]
-print(team)
-luck_index = luck_index.get_weekly_luck_index(league, team, week)
-print(luck_index)
+print('Generating Luck Index...')
+bar_luck_index = progressbar.ProgressBar(max_value=len(teams))
+
+season_luck_index = []
+luck_index_value = 0
+for i, team in enumerate(teams):
+    team_name = team.team_name
+    for luck_week in range(1, week+1):
+        luck_index_value += luck_index.get_weekly_luck_index(league, team, luck_week)
+
+    # append team's season long luck index to the list
+    season_luck_index.append([team, luck_index_value])
+
+    # reset luck index value
+    luck_index_value = 0
+
+    # Update the progress bar
+    bar_luck_index.update(i + 1)
+
+# convert season long luck index list to pandas dataframe
+season_luck_index = pd.DataFrame(season_luck_index, columns=['Team','Luck Index'])
+
 # Generate AI Summary
+print('\nGenerating AI Summary...')
 summary = gen_ai_summary()
 
 # Print everything
+print('\nWriting to markdown file...')
 # open text file
 filepath = f"/Users/christiangeer/Fantasy_Sports/football/power_rankings/jtown-dynasty/content/blog/Week{week}{year}PowerRankings.md"
 sys.stdout = open(filepath, "w")
@@ -174,8 +196,9 @@ print(table(rankings, headers='keys', tablefmt='pipe', numalign='center')) # hav
 
 # print(table(Value_Power_Rankings_print, headers='keys',tablefmt='pipe', numalign='center')) # have to manually center all play % and weekly change because not an int
 
-print('\n##Summary:\n')
+print('\n## Summary:\n')
 print(summary)
+
 # print("\n# EXPECTED STANDINGS (as of week ", week, ")")
 # league.printExpectedStandings(week)
 # print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
@@ -184,9 +207,8 @@ print(summary)
 #     print("\n# PLAYOFF PROBABILITIES (as of week ", week, ")")
 #     print(table(projections, headers='keys', tablefmt='pipe', numalign='center'))
 
-
-# print("\n# LUCK INDEX")
-# league.printLuckIndex(week)
+print("\n## LUCK INDEX")
+print(table(season_luck_index, headers='keys', tablefmt='pipe', numalign='center'))
 
 # print("\n WEEK ", week, " ALL PLAY STANDINGS (SORT BY WINS)")
 # print(table(allplay, headers='keys', tablefmt='github', numalign='decimal'))
