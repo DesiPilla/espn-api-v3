@@ -25,30 +25,32 @@ import progressbar
 from espn_api.football import League
 from datetime import datetime
 import re
-
+import json
+import openai
+from langchain import LLMChain, PromptTemplate
+from langchain_openai import ChatOpenAI
 from utils.printing_utils import printPowerRankings
+import os
+from dotenv import load_dotenv
 
 parser = argparse.ArgumentParser()
 parser.add_argument("week", help='Get week of the NFL season to run rankings for')
 args = parser.parse_args()
 week = int(args.week)
 
-# Define user and season year
-user_id = 'cgeer98'
+# Define dates/year
 year = datetime.now().year
 month =  datetime.now().month
 day = datetime.now().day
 
-# Get login credentials for leagues
-# login = pd.read_csv('C:\\Users\\desid\\Documents\\Fantasy_Football\\espn-api-v3\\login.csv')
-# _, username, password, league_id, swid, espn_s2 = login[login['id'] == user_id].values[0]
-username = 'cgeer98'
-password = 'Penguins1!'
-league_id = 916709
-swid = '{75C7094F-C467-4145-8709-4FC467C1457E}'
-espn_s2 = 'AEAldgr2G2n0JKOnYGii6ap3v4Yu03NjpuI2D0SSZDAMoUNm0y2DKP4GRofzL8sn%2Bzoc%2FAVwYxZ9Z9YvhFXPxZq9VE1d5KZIFOPQUWvx9mhdI0GJQUQU3OMid9SySbpzCI7K5hQ3LoxVAjqNT%2FvaIRy%2F7G8qm4l%2BL8fPBouCQI7k9W7c01T3J4RqFoQ3g%2B3ttyHKqhvg7DWDUkXNzJyxgFytKiRqah%2Fb77L67CD0bS7SFzFZPt%2BOrTohER9w8Lxoi0W0dAA%2BmqCfXzUTh9%2FEdxcf'
+# Load environment variables from .env file
+load_dotenv()
 
-root = '/Users/christiangeer/Fantasy_Sports/football/power_rankings/espn-api-v3/'
+# Get login credentials for leagues
+league_id = os.getenv('league_id')
+swid = os.getenv('swid')
+espn_s2 = os.getenv('espn_s2')
+api_key= os.getenv('OPEN_API_KEY')
 
 league = League(league_id, year, espn_s2, swid)
 print(league, "\n")
@@ -69,8 +71,87 @@ def gen_power_rankings():
 
     return power_rankings
 
+def gen_ai_summary():
+    # Retrieve all matchups for the given week
+    matchups = league.box_scores(week=week)
+
+    # Extract box score data
+    box_scores_data = []
+
+    for matchup in matchups:
+        matchup_data = {
+            "home_team": matchup.home_team.team_name,
+            "home_score": matchup.home_score,
+            "home_projected": matchup.home_projected,
+            "away_team": matchup.away_team.team_name,
+            "away_score": matchup.away_score,
+            "away_projected": matchup.away_projected,
+            "home_players": [
+                {
+                    "player_name": player.name,
+                    "slot_position": player.slot_position,
+                    "position": player.position,
+                    "points": player.points,
+                    "projected_points": player.projected_points
+                } for player in matchup.home_lineup
+            ],
+            "away_players": [
+                {
+                    "player_name": player.name,
+                    "position": player.position,
+                    "slot_position": player.slot_position,
+                    "points": player.points,
+                    "projected_points": player.projected_points
+                } for player in matchup.away_lineup
+            ]
+        }
+        box_scores_data.append(matchup_data)
+
+    # Convert to JSON format
+    box_scores_json = json.dumps(box_scores_data, indent=4)
+
+
+    # Sample JSON data (replace with your actual JSON data)
+    json_data = box_scores_json
+
+    # Setting up OpenAI model
+    llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0, openai_api_key=api_key)
+
+    # Define the prompt template for generating a newspaper-like summary
+    prompt_template = PromptTemplate(
+        input_variables=["json_data"],
+        template="""
+        Write a newspaper-style summary of the fantasy football matchups based on the following JSON data:
+
+        {json_data}
+
+        The summary should include:
+        - The names of the teams
+        - The projected scores for each team
+        - Key players and their projected points
+        - Any notable points or highlights
+
+        Write in a formal, engaging newspaper tone.
+        """
+    )
+
+    # Initialize the LLMChain with the Llama model and prompt template
+    llm_chain = LLMChain(
+        llm=llm,
+        prompt=prompt_template
+    )
+
+    # Sample JSON data (replace with your actual JSON data)
+    json_data = box_scores_json
+
+    # Generate the newspaper-like summary
+    result = llm_chain.run(json_data=json_data)
+
+    # return the result
+    return result
+
 # Generate Power Rankings
-power_rankings = gen_power_rankings()
+rankings = gen_power_rankings()
 
 # Generate Expected Standings
 
@@ -79,7 +160,7 @@ power_rankings = gen_power_rankings()
 # Generate Luck Index
 
 # Generate AI Summary
-
+summary = gen_ai_summary()
 
 # Print everything
 # open text file
@@ -98,12 +179,12 @@ print("<!-- excerpt -->")
 
 print("\n# POWER RANKINGS\n")
 # Value un-informed
-print(table(power_rankings, headers='keys', tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
+print(table(rankings, headers='keys', tablefmt='pipe', numalign='center')) # have to manually center all play % because its not a number
 
 # print(table(Value_Power_Rankings_print, headers='keys',tablefmt='pipe', numalign='center')) # have to manually center all play % and weekly change because not an int
 
-print('\n##Highlights:\n')
-
+print('\n##Summary:\n')
+print(summary)
 # print("\n# EXPECTED STANDINGS (as of week ", week, ")")
 # league.printExpectedStandings(week)
 # print(table(projectedStandings_prnt, headers='keys', tablefmt='pipe', numalign='center'))
