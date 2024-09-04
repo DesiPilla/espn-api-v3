@@ -3,8 +3,8 @@ TODO:
 1. Fix expected standings
 2. Clean up code (value rankings)
 3. Luck Index
-4. LLM Weekly reviews
 '''
+from langchain_core.runnables import RunnableSequence
 
 import playerID
 from authorize import Authorize
@@ -27,7 +27,8 @@ from datetime import datetime
 import re
 import json
 import openai
-from langchain import LLMChain, PromptTemplate
+from langchain.chains import LLMChain
+from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from utils.printing_utils import printPowerRankings
 import os
@@ -50,7 +51,7 @@ load_dotenv()
 league_id = os.getenv('league_id')
 swid = os.getenv('swid')
 espn_s2 = os.getenv('espn_s2')
-api_key= os.getenv('OPEN_API_KEY')
+api_key= os.getenv('OPEN_AI_KEY')
 
 league = League(league_id, year, espn_s2, swid)
 print(league, "\n")
@@ -136,16 +137,15 @@ def gen_ai_summary():
     )
 
     # Initialize the LLMChain with the Llama model and prompt template
-    llm_chain = LLMChain(
-        llm=llm,
-        prompt=prompt_template
+    llm_chain = RunnableSequence(
+        prompt_template | llm
     )
 
     # Sample JSON data (replace with your actual JSON data)
     json_data = box_scores_json
 
     # Generate the newspaper-like summary
-    result = llm_chain.run(json_data=json_data)
+    result = llm_chain.invoke(input=json_data)
 
     # return the result
     return result
