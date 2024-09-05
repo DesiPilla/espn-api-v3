@@ -58,9 +58,51 @@ def gen_power_rankings():
 
 
     # Switch Score and Team Name cols
-    power_rankings = power_rankings.reindex(columns=['Team', 'Power Score'])
+    power_rankings_df = power_rankings.reindex(columns=['Team', 'Power Score'])
 
-    return power_rankings
+    if week > 1:
+        # Generate last weeks' power rankings for comparison
+        prev_power_rankings = league.power_rankings(week=week-1)
+
+        # Extract team names
+        extracted_team_names = [(record, re.sub(r'Team\((.*?)\)', r'\1', str(team)))  # convert team object to string
+                                for record, team in prev_power_rankings]
+
+        # Convert to Dataframe
+        prev_power_rankings_df = pd.DataFrame(extracted_team_names, columns=['Power Score', 'Team'])
+
+        # Switch Score and Team Name cols
+        prev_power_rankings_df = prev_power_rankings_df.reindex(columns=['Team', 'Power Score'])
+
+        diffs = []
+        emojis = []
+
+        print('This week: \n', power_rankings_df)
+        print('Last week: \n', prev_power_rankings_df)
+
+        for team in league.teams:
+            # print(team)
+            tw_rank = power_rankings_df[power_rankings_df['Team'] == team.team_name].index.values  # get this week's rank
+            # print(f'{team.team_name} rank this week: {tw_rank}')
+            lw_rank = prev_power_rankings_df[prev_power_rankings_df['Team'] == team.team_name].index.values  # get last weeks' rank
+            # print(f'{team.team_name} rank last week: {lw_rank}')
+            diff = lw_rank - tw_rank  # find the difference between last week to this week
+            # print(f'{team.team_name} weekly change: {diff}')
+            diff = int(diff.item())  # turn into list to iterate over
+            diffs.append(diff)  # append to the list
+
+        # iterate over diffs list and edit values to include up/down arrow emoji and the number of spots the team moved
+        for item in diffs:
+            if item > 0:
+                emojis.append("**<span style=\"color: green;\">⬆️ " + str(abs(item)) + " </span>**")
+            elif item < 0:
+                emojis.append("**<span style=\"color: red;\">⬇️ " + str(abs(item)) + " </span>**")
+            elif item == 0:
+                emojis.append("")  # adds a index of nothing for teams that didn't move
+
+        power_rankings_df.insert(loc=1, column='Weekly Change', value=emojis)  # insert the weekly change column
+
+    return power_rankings_df
 
 def gen_ai_summary():
     print("\nRetrieving and processing matchups...")
@@ -162,7 +204,7 @@ rankings = gen_power_rankings()
 # Generate Playoff Probability (if week 5 or later) and append to expected standings
 
 # Generate Luck Index
-print('Generating Luck Index...')
+print('\nGenerating Luck Index...')
 bar_luck_index = progressbar.ProgressBar(max_value=len(teams))
 
 season_luck_index = []
