@@ -252,7 +252,11 @@ def django_luck_index(league: League, week: int):
 
 def django_standings(league: League, week: int):
     # Get power rankings for the current week
-    league_standings = league.standings_weekly(week)
+    if week <= 1:
+        # ZeroDivisionError if no games have meen completed yet
+        league_standings = league.standings()
+    else:
+        league_standings = league.standings_weekly(week)
 
     # Add the power rankings for each team
     standings = []
