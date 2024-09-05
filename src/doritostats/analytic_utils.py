@@ -215,80 +215,6 @@ def get_total_tds(league: League, lineup: List[Player]) -> float:
 """ ADVANCED STATS """
 
 
-def get_weekly_luck_index(league: League, team: Team, week: int) -> float:
-    """
-    This function returns an index quantifying how 'lucky' a team was in a given week
-
-    Luck index:
-        70% probability of playing a team with a lower total
-        20% your play compared to previous weeks
-        10% opp's play compared to previous weeks
-    """
-    opp = team.schedule[week - 1]
-    num_teams = len(league.teams)
-
-    # Set weights
-    w_sched = 7
-    w_team = 2
-    w_opp = 1
-
-    # Luck Index based on where the team and its opponent finished compared to the rest of the league
-    rank = get_weekly_finish(league, team, week)
-    opp_rank = get_weekly_finish(league, opp, week)
-
-    if rank < opp_rank:  # If the team won...
-        # Odds of this team playing a team with a higher score than it
-        luck_index = w_sched * (rank - 1) / (num_teams - 1)
-    elif rank > opp_rank:  # If the team lost or tied...
-        # Odds of this team playing a team with a lower score than it
-        luck_index = -w_sched * (num_teams - rank) / (num_teams - 1)
-
-    # If the team tied...
-    elif rank < (num_teams / 2):
-        # They are only half as unlucky, because tying is not as bad as losing
-        luck_index = -w_sched / 2 * (num_teams - rank - 1) / (num_teams - 1)
-    else:
-        # They are only half as lucky, because tying is not as good as winning
-        luck_index = w_sched / 2 * (rank - 1) / (num_teams - 1)
-
-    # Update luck index based on how team played compared to normal
-    team_score = team.scores[week - 1]
-    team_avg = np.mean(team.scores[:week])
-    team_std = np.std(team.scores[:week])
-    if team_std != 0:
-        # Get z-score of the team's performance
-        z = (team_score - team_avg) / team_std
-
-        # Noramlize the z-score so that a performance 2 std dev's away from the mean has an effect of 20% on the luck index
-        z_norm = z / 2 * w_team
-        luck_index += z_norm
-
-    # Update luck index based on how opponent played compared to normal
-    opp_score = opp.scores[week - 1]
-    opp_avg = np.mean(opp.scores[:week])
-    opp_std = np.std(opp.scores[:week])
-    if team_std != 0:
-        # Get z-score of the team's performance
-        z = (opp_score - opp_avg) / opp_std
-
-        # Noramlize the z-score so that a performance 2 std dev's away from the mean has an effect of 10% on the luck index
-        z_norm = z / 2 * w_opp
-        luck_index -= z_norm
-
-    return luck_index / np.sum([w_sched, w_team, w_opp])
-
-
-def get_season_luck_indices(league: League, week: int) -> Dict[Team, float]:
-    """This function returns an index quantifying how 'lucky' a team was all season long (up to a certain week)"""
-    luck_indices = {team: 0.0 for team in league.teams}
-    for wk in range(1, week + 1):
-        # Update luck_index for each team
-        for team in league.teams:
-            luck_indices[team] += get_weekly_luck_index(league, team, wk)
-
-    return luck_indices
-
-
 def calculate_win_pct(outcomes: np.array) -> float:
     """This function returns the win percentage of a team (excluding ties).
 
@@ -298,6 +224,8 @@ def calculate_win_pct(outcomes: np.array) -> float:
     Returns:
         float: Win percentage
     """
+    if not len(outcomes):
+        return 0
     return sum(outcomes == "W") / sum((outcomes == "W") | (outcomes == "L"))
 
 
@@ -371,6 +299,19 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
     Returns:
         pd.DataFrame
     """
+    if week <= 1:
+        return pd.DataFrame(
+            {
+                team: {
+                    "opp_points_for": 0,
+                    "opp_win_pct": 0,
+                    "opp_power_rank": 0,
+                    "overall_difficulty": 0,
+                }
+                for team in league.teams
+            }
+        ).T
+
     remaining_difficulty_dict = {}  # type: ignore
 
     # Get the remaining SOS for each team

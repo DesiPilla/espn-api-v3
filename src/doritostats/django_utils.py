@@ -10,9 +10,9 @@ from src.doritostats.analytic_utils import (
     avg_slot_score,
     sum_bench_points,
     get_score_surprise,
-    get_season_luck_indices,
     get_total_tds,
 )
+from src.doritostats.luck_index import get_weekly_luck_index
 
 
 def ordinal(n: int) -> str:
@@ -232,17 +232,17 @@ def django_power_rankings(league: League, week: int):
 
 def django_luck_index(league: League, week: int):
     # Get luck index for the current week
-    league_luck_index = get_season_luck_indices(league, week)
+    league_luck_index = [
+        (team, get_weekly_luck_index(league, team, week)) for team in league.teams
+    ]
 
     # Add the luck index for each team
     luck_index = []
-    for team, luck in sorted(
-        league_luck_index.items(), key=lambda x: x[1], reverse=True
-    ):
+    for team, luck in sorted(league_luck_index, key=lambda x: x[1], reverse=True):
         if luck >= 0:
-            luck_val = "+{:.1f} net wins gained by luck".format(luck)
+            luck_val = "+{:.1%} luckiness this week".format(luck)
         else:
-            luck_val = "{:.1f} net wins lost by unluckiness".format(luck)
+            luck_val = "{:.1%} unluckiness this week".format(luck)
         luck_index.append(
             {"team": team.team_name, "value": luck_val, "owner": team.owner}
         )
@@ -250,9 +250,9 @@ def django_luck_index(league: League, week: int):
     return luck_index
 
 
-def django_standings(league: League):
+def django_standings(league: League, week: int):
     # Get power rankings for the current week
-    league_standings = league.standings()
+    league_standings = league.standings_weekly(week)
 
     # Add the power rankings for each team
     standings = []
@@ -260,10 +260,10 @@ def django_standings(league: League):
         standings.append(
             {
                 "team": team.team_name,
-                "wins": team.wins,
-                "losses": team.losses,
-                "ties": team.ties,
-                "points_for": "{:.1f}".format(team.points_for),
+                "wins": sum([outcome == "W" for outcome in team.outcomes[:week]]),
+                "losses": sum([outcome == "L" for outcome in team.outcomes[:week]]),
+                "ties": sum([outcome == "T" for outcome in team.outcomes[:week]]),
+                "points_for": "{:.1f}".format(sum(team.scores[:week])),
                 "owner": team.owner,
             }
         )
