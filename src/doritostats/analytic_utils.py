@@ -34,6 +34,9 @@ def get_top_players(lineup: List[Player], slot: str, n: int) -> List[Player]:
     for player in lineup:
         if slot in player.eligibleSlots:
             eligible_players.append(player)
+            continue
+        if ("TE" in slot) and (player.name == "Taysom Hill"):
+            eligible_players.append(player)
 
     return sorted(eligible_players, key=lambda x: x.points, reverse=True)[:n]
 
@@ -60,10 +63,24 @@ def get_best_lineup(league: League, lineup: List[Player]) -> float:
 
 def get_best_trio(league: League, lineup: List[Player]) -> float:
     """Returns the the sum of the top QB/RB/Reciever trio for a team during the loaded week."""
-    qb = get_top_players(lineup, "QB", 1)[0].points
+    if "QB" in league.roster_settings["roster_slots"].keys():
+        # Most leagues have a QB slot
+        qb = get_top_players(lineup, "QB", 1)[0].points
+    elif "TQB" in league.roster_settings["roster_slots"].keys():
+        # Some leagues use Team QB instead of individual QBs
+        qb = get_top_players(lineup, "TQB", 1)[0].points
+    else:
+        # If for some reason a league doesn't have a QB slot, set it to 0
+        qb = 0
+
     rb = get_top_players(lineup, "RB", 1)[0].points
     wr = get_top_players(lineup, "WR", 1)[0].points
-    te = get_top_players(lineup, "TE", 1)[0].points
+
+    if "TE" in league.roster_settings["roster_slots"].keys():
+        te = get_top_players(lineup, "TE", 1)[0].points
+    else:
+        # If for some reason a league doesn't have a TE slot, set it to 0
+        te = 0
     best_trio = round(qb + rb + max(wr, te), 2)
     return best_trio
 
@@ -136,17 +153,24 @@ def sum_bench_points(league: League, lineup: list) -> float:
     return np.sum([player.points for player in lineup if player.slot_position == "BE"])
 
 
-def get_score_surprise(league: League, lineup: List[Player]) -> float:
+def get_projected_score(league: League, lineup: List[Player]) -> float:
     """
-    Returns the difference ("surprise") between a team's projected starting score and its actual score.
+    Returns the projected score of a team's starting lineup.
     """
-    projected_score = np.sum(
+    return np.sum(
         [
             player.projected_points
             for player in lineup
             if player.slot_position not in ("BE", "IR")
         ]
     )
+
+
+def get_score_surprise(league: League, lineup: List[Player]) -> float:
+    """
+    Returns the difference ("surprise") between a team's projected starting score and its actual score.
+    """
+    projected_score = get_projected_score(league, lineup)
     actual_score = np.sum(
         [player.points for player in lineup if player.slot_position not in ("BE", "IR")]
     )
@@ -191,80 +215,6 @@ def get_total_tds(league: League, lineup: List[Player]) -> float:
 """ ADVANCED STATS """
 
 
-def get_weekly_luck_index(league: League, team: Team, week: int) -> float:
-    """
-    This function returns an index quantifying how 'lucky' a team was in a given week
-
-    Luck index:
-        70% probability of playing a team with a lower total
-        20% your play compared to previous weeks
-        10% opp's play compared to previous weeks
-    """
-    opp = team.schedule[week - 1]
-    num_teams = len(league.teams)
-
-    # Set weights
-    w_sched = 7
-    w_team = 2
-    w_opp = 1
-
-    # Luck Index based on where the team and its opponent finished compared to the rest of the league
-    rank = get_weekly_finish(league, team, week)
-    opp_rank = get_weekly_finish(league, opp, week)
-
-    if rank < opp_rank:  # If the team won...
-        # Odds of this team playing a team with a higher score than it
-        luck_index = w_sched * (rank - 1) / (num_teams - 1)
-    elif rank > opp_rank:  # If the team lost or tied...
-        # Odds of this team playing a team with a lower score than it
-        luck_index = -w_sched * (num_teams - rank) / (num_teams - 1)
-
-    # If the team tied...
-    elif rank < (num_teams / 2):
-        # They are only half as unlucky, because tying is not as bad as losing
-        luck_index = -w_sched / 2 * (num_teams - rank - 1) / (num_teams - 1)
-    else:
-        # They are only half as lucky, because tying is not as good as winning
-        luck_index = w_sched / 2 * (rank - 1) / (num_teams - 1)
-
-    # Update luck index based on how team played compared to normal
-    team_score = team.scores[week - 1]
-    team_avg = np.mean(team.scores[:week])
-    team_std = np.std(team.scores[:week])
-    if team_std != 0:
-        # Get z-score of the team's performance
-        z = (team_score - team_avg) / team_std
-
-        # Noramlize the z-score so that a performance 2 std dev's away from the mean has an effect of 20% on the luck index
-        z_norm = z / 2 * w_team
-        luck_index += z_norm
-
-    # Update luck index based on how opponent played compared to normal
-    opp_score = opp.scores[week - 1]
-    opp_avg = np.mean(opp.scores[:week])
-    opp_std = np.std(opp.scores[:week])
-    if team_std != 0:
-        # Get z-score of the team's performance
-        z = (opp_score - opp_avg) / opp_std
-
-        # Noramlize the z-score so that a performance 2 std dev's away from the mean has an effect of 10% on the luck index
-        z_norm = z / 2 * w_opp
-        luck_index -= z_norm
-
-    return luck_index / np.sum([w_sched, w_team, w_opp])
-
-
-def get_season_luck_indices(league: League, week: int) -> Dict[Team, float]:
-    """This function returns an index quantifying how 'lucky' a team was all season long (up to a certain week)"""
-    luck_indices = {team: 0.0 for team in league.teams}
-    for wk in range(1, week + 1):
-        # Update luck_index for each team
-        for team in league.teams:
-            luck_indices[team] += get_weekly_luck_index(league, team, wk)
-
-    return luck_indices
-
-
 def calculate_win_pct(outcomes: np.array) -> float:
     """This function returns the win percentage of a team (excluding ties).
 
@@ -274,6 +224,8 @@ def calculate_win_pct(outcomes: np.array) -> float:
     Returns:
         float: Win percentage
     """
+    if not len(outcomes):
+        return 0
     return sum(outcomes == "W") / sum((outcomes == "W") | (outcomes == "L"))
 
 
@@ -347,6 +299,19 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
     Returns:
         pd.DataFrame
     """
+    if week <= 1:
+        return pd.DataFrame(
+            {
+                team: {
+                    "opp_points_for": 0,
+                    "opp_win_pct": 0,
+                    "opp_power_rank": 0,
+                    "overall_difficulty": 0,
+                }
+                for team in league.teams
+            }
+        ).T
+
     remaining_difficulty_dict = {}  # type: ignore
 
     # Get the remaining SOS for each team

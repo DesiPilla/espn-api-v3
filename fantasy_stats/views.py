@@ -228,7 +228,7 @@ def league(request, league_id: int, league_year: int, week: int = None):
         power_rankings = django_power_rankings(league_obj, week)
         luck_index = django_luck_index(league_obj, week)
         strength_of_schedule = django_strength_of_schedule(league_obj, week)
-        standings = django_standings(league_obj)
+        standings = django_standings(league_obj, week)
 
         context = {
             "league_info": league_info,
