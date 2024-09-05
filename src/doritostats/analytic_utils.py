@@ -319,20 +319,20 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
         remaining_difficulty_dict[team] = {}
 
         # SOS by points for
-        remaining_difficulty_dict[team]["opp_points_for"] = (
-            get_remaining_schedule_difficulty(team, week, strength="points_for")
-        )
+        remaining_difficulty_dict[team][
+            "opp_points_for"
+        ] = get_remaining_schedule_difficulty(team, week, strength="points_for")
 
         # SOS by win pct
-        remaining_difficulty_dict[team]["opp_win_pct"] = (
-            get_remaining_schedule_difficulty(team, week, strength="win_pct")
-        )
+        remaining_difficulty_dict[team][
+            "opp_win_pct"
+        ] = get_remaining_schedule_difficulty(team, week, strength="win_pct")
 
         # SOS by win pct
-        remaining_difficulty_dict[team]["opp_power_rank"] = (
-            get_remaining_schedule_difficulty(
-                team, week, strength="power_rank", league=league
-            )
+        remaining_difficulty_dict[team][
+            "opp_power_rank"
+        ] = get_remaining_schedule_difficulty(
+            team, week, strength="power_rank", league=league
         )
 
     # Identify the min and max values for each SOS metric
