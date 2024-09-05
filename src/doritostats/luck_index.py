@@ -386,6 +386,7 @@ def get_weekly_luck_index(
         ]
     )
     injury_bye_factor = get_injury_bye_factor(team_lineup, max_roster_size)
+    opp_injury_bye_factor = get_injury_bye_factor(opp_lineup, max_roster_size)
 
     # Calculate the performance vs optimal lineup factor
     optimal_vs_actual_factor = get_optimal_vs_actual_factor(
@@ -398,6 +399,39 @@ def get_weekly_luck_index(
         league, team_lineup, opp_lineup, outcome
     )
 
+    # Factors skew positive or negative, so an adjustment is needed
+    # Injuries/byes factor is week-dependent, as not all weeks have byes
+    factor_weight_adjustments = {
+        "performance_vs_projection": -0.0140,
+        "injuries_byes": {
+            1: -0.04821658498574727,
+            2: -0.05462462377911275,
+            3: -0.07378159473523208,
+            4: -0.05988203396348101,
+            5: -0.12914084334115997,
+            6: -0.13103688629728863,
+            7: -0.19256673733397794,
+            8: -0.08341519059524279,
+            9: -0.18534342059744405,
+            10: -0.17147536390054255,
+            11: -0.14725777569565657,
+            12: -0.07753578793949584,
+            13: -0.16768422902890318,
+            14: -0.13733533055934166,
+            15: -0.08955988712865509,
+            16: -0.08746216288440906,
+            17: -0.11969066586929249,
+            18: -0.1611111111111111,
+        },
+        "optimal_vs_actual": -0.1872,
+        "opp_optimal_vs_actual": -0.4970,
+    }
+    projection_factor -= factor_weight_adjustments["performance_vs_projection"]
+    injury_bye_factor -= factor_weight_adjustments["injuries_byes"][week]
+    opp_injury_bye_factor -= factor_weight_adjustments["injuries_byes"][week]
+    optimal_vs_actual_factor -= factor_weight_adjustments["optimal_vs_actual"]
+    opp_optimal_vs_actual_factor -= factor_weight_adjustments["opp_optimal_vs_actual"]
+
     # Combine the factors
     luck_index = (
         factor_weights["scheduling"] * scheduling_factor
@@ -405,7 +439,8 @@ def get_weekly_luck_index(
         + factor_weights["performance_vs_historical"] * 1 / 3 * opp_performance_factor
         + factor_weights["margin_of_victory"] * margin_of_victory_factor
         + factor_weights["performance_vs_projection"] * projection_factor
-        + factor_weights["injuries_byes"] * injury_bye_factor
+        + factor_weights["injuries_byes"] * 2 / 3 * injury_bye_factor
+        + factor_weights["opp_injuries_byes"] * 1 / 3 * opp_injury_bye_factor
         + factor_weights["optimal_vs_actual"] * 2 / 3 * optimal_vs_actual_factor
         + factor_weights["optimal_vs_actual"] * 1 / 3 * opp_optimal_vs_actual_factor
         + factor_weights["optimal_vs_optimal"] * optimal_vs_optimal_factor
@@ -419,6 +454,7 @@ def get_weekly_luck_index(
             "margin_of_victory": margin_of_victory_factor,
             "performance_vs_projection": projection_factor,
             "injuries_byes": injury_bye_factor,
+            "opp_injuries_byes": opp_injury_bye_factor,
             "optimal_vs_actual": optimal_vs_actual_factor,
             "opp_optimal_vs_actual": opp_optimal_vs_actual_factor,
             "optimal_vs_optimal": optimal_vs_optimal_factor,
