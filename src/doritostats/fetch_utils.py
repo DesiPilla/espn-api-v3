@@ -31,7 +31,8 @@ def get_postgres_conn() -> psycopg2.extensions.connection:
     conn_str = os.path.expandvars(os.environ.get("DATABASE_URL")).replace(
         "postgres://", "postgresql://"
     )
-    return psycopg2.connect(conn_str)
+
+    return psycopg2.connect(conn_str, connect_timeout=10)
 
 
 def get_league_creds(league_id: int, year: Optional[int] = None):
@@ -212,7 +213,7 @@ def fetch_league(
     # Set the owners for each team
     set_owner_names(league)
 
-    # TODO: Cache this function while PR is open
+    # Cache this function to speed up processing
     league.box_scores = functools.cache(league.box_scores)
 
     # Load current league data

@@ -34,6 +34,9 @@ def get_top_players(lineup: List[Player], slot: str, n: int) -> List[Player]:
     for player in lineup:
         if slot in player.eligibleSlots:
             eligible_players.append(player)
+            continue
+        if ("TE" in slot) and (player.name == "Taysom Hill"):
+            eligible_players.append(player)
 
     return sorted(eligible_players, key=lambda x: x.points, reverse=True)[:n]
 
@@ -60,10 +63,24 @@ def get_best_lineup(league: League, lineup: List[Player]) -> float:
 
 def get_best_trio(league: League, lineup: List[Player]) -> float:
     """Returns the the sum of the top QB/RB/Reciever trio for a team during the loaded week."""
-    qb = get_top_players(lineup, "QB", 1)[0].points
+    if "QB" in league.roster_settings["roster_slots"].keys():
+        # Most leagues have a QB slot
+        qb = get_top_players(lineup, "QB", 1)[0].points
+    elif "TQB" in league.roster_settings["roster_slots"].keys():
+        # Some leagues use Team QB instead of individual QBs
+        qb = get_top_players(lineup, "TQB", 1)[0].points
+    else:
+        # If for some reason a league doesn't have a QB slot, set it to 0
+        qb = 0
+
     rb = get_top_players(lineup, "RB", 1)[0].points
     wr = get_top_players(lineup, "WR", 1)[0].points
-    te = get_top_players(lineup, "TE", 1)[0].points
+
+    if "TE" in league.roster_settings["roster_slots"].keys():
+        te = get_top_players(lineup, "TE", 1)[0].points
+    else:
+        # If for some reason a league doesn't have a TE slot, set it to 0
+        te = 0
     best_trio = round(qb + rb + max(wr, te), 2)
     return best_trio
 

@@ -104,6 +104,9 @@ def calculate_margin_of_victory_factor(team_score: float, opp_score: float) -> f
     Returns:
         float: The luck factor for the team in the given week
     """
+    if not (team_score and opp_score):
+        return 0
+
     # Calculate the margin of victory
     mov = team_score - opp_score
 
@@ -135,6 +138,9 @@ def get_performance_vs_projection_factor(lineup: List[Player]) -> float:
     """
     projected_score = get_projected_score(None, lineup)
     score_surprise = get_score_surprise(None, lineup)
+
+    if not projected_score:
+        return 0
 
     # TODO: Incorporate total # of starting players that over/underperformed
     # TODO: Find a better way of scaling score surprise. The method below is crude and trash
@@ -308,6 +314,12 @@ def get_weekly_luck_index(
     """This function calculates the weekly luck index for a team in a given week.
     It does so by blending in many different factors.
 
+    Each factor also has a weight adjustment. This is to normalize each factor to have an
+    average weight of zero. For example, the factor due to byes & injuries will always be
+    negative (if there are any number of byes/injuries) or zero (if there are no byes/injures).
+    However, because this is purely a negative factor, it can also be said that having no
+    byes/injuries is actually lucky, not neutral.
+
     Args:
         league (League): An ESPN League object
         team (Team): An ESPN Team object
@@ -366,9 +378,12 @@ def get_weekly_luck_index(
     projection_factor = get_performance_vs_projection_factor(team_lineup)
 
     # Calculate the injury/bye factor
-    max_roster_size = (
-        sum(league.roster_settings["roster_slots"].values())
-        - league.roster_settings["roster_slots"]["IR"]
+    max_roster_size = sum(
+        [
+            count
+            for slot, count in league.roster_settings["roster_slots"].items()
+            if slot != "IR"
+        ]
     )
     injury_bye_factor = get_injury_bye_factor(team_lineup, max_roster_size)
 
