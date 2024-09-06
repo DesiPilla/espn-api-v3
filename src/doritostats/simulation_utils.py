@@ -513,6 +513,13 @@ def simulate_season(
         s["division_id"] = team.division_id
         return s
 
+    # Store box_scores function
+    box_scores_func = league.box_scores
+
+    # Set box_scores() to None so that the League object can be pickled
+    league.box_scores = None
+
+    # Run the simulations in parallel
     final_standings = pd.concat(
         Parallel(n_jobs=-1, verbose=1)(
             delayed(simulate_single_season_parallel)() for i in range(n)
@@ -521,6 +528,9 @@ def simulate_season(
     final_standings = (
         final_standings.reset_index().apply(get_team_info, axis=1).set_index("team_id")
     )
+
+    # Restore the box_scores function
+    league.box_scores = box_scores_func
 
     # Get the playoff odds for each team
     playoff_odds = get_playoff_odds_df(final_standings)

@@ -232,6 +232,7 @@ def calculate_win_pct(outcomes: np.array) -> float:
 def get_remaining_schedule_difficulty(
     team: Team,
     week: int,
+    regular_season_length: int,
     strength: str = "points_for",
     league: Optional[League] = None,
 ) -> float:
@@ -250,7 +251,7 @@ def get_remaining_schedule_difficulty(
     if strength == "points_for":
         # Get all scores from remaining opponenets through specified week
         remaining_strength = np.array(
-            [opp.scores[: week - 1][:n_completed_weeks] for opp in remaining_schedule]
+            [opp.scores[:week][:n_completed_weeks] for opp in remaining_schedule]
         ).flatten()
 
         # Exclude weeks that haven't occurred yet (not always applicable)
@@ -262,7 +263,7 @@ def get_remaining_schedule_difficulty(
     elif strength == "win_pct":
         # Get win pct of remaining opponenets through specified week
         remaining_strength = np.array(
-            [opp.outcomes[: week - 1] for opp in remaining_schedule]
+            [opp.outcomes[:week] for opp in remaining_schedule]
         ).flatten()
 
         # Divide # of wins by (# of wins + # of losses) -- this excludes matches that tied or have not occurred yet
@@ -319,20 +320,34 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
         remaining_difficulty_dict[team] = {}
 
         # SOS by points for
-        remaining_difficulty_dict[team][
-            "opp_points_for"
-        ] = get_remaining_schedule_difficulty(team, week, strength="points_for")
+        remaining_difficulty_dict[team]["opp_points_for"] = (
+            get_remaining_schedule_difficulty(
+                team,
+                week,
+                regular_season_length=league.settings.reg_season_count,
+                strength="points_for",
+            )
+        )
 
         # SOS by win pct
-        remaining_difficulty_dict[team][
-            "opp_win_pct"
-        ] = get_remaining_schedule_difficulty(team, week, strength="win_pct")
+        remaining_difficulty_dict[team]["opp_win_pct"] = (
+            get_remaining_schedule_difficulty(
+                team,
+                week,
+                regular_season_length=league.settings.reg_season_count,
+                strength="win_pct",
+            )
+        )
 
         # SOS by win pct
-        remaining_difficulty_dict[team][
-            "opp_power_rank"
-        ] = get_remaining_schedule_difficulty(
-            team, week, strength="power_rank", league=league
+        remaining_difficulty_dict[team]["opp_power_rank"] = (
+            get_remaining_schedule_difficulty(
+                team,
+                week,
+                regular_season_length=league.settings.reg_season_count,
+                strength="power_rank",
+                league=league,
+            )
         )
 
     # Identify the min and max values for each SOS metric
