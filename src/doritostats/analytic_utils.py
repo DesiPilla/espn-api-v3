@@ -323,35 +323,35 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
         remaining_difficulty_dict[team] = {}
 
         # SOS by points for
-        remaining_difficulty_dict[team]["opp_points_for"] = (
-            get_remaining_schedule_difficulty(
-                team,
-                week,
-                regular_season_length=league.settings.reg_season_count,
-                strength="points_for",
-            )
-        )
+        remaining_difficulty_dict[team][
+            "opp_points_for"
+        ] = get_remaining_schedule_difficulty(
+            team,
+            week,
+            regular_season_length=league.settings.reg_season_count,
+            strength="points_for",
+        )  # type: ignore
 
         # SOS by win pct
-        remaining_difficulty_dict[team]["opp_win_pct"] = (
-            get_remaining_schedule_difficulty(
-                team,
-                week,
-                regular_season_length=league.settings.reg_season_count,
-                strength="win_pct",
-            )
-        )
+        remaining_difficulty_dict[team][
+            "opp_win_pct"
+        ] = get_remaining_schedule_difficulty(
+            team,
+            week,
+            regular_season_length=league.settings.reg_season_count,
+            strength="win_pct",
+        )  # type: ignore
 
         # SOS by win pct
-        remaining_difficulty_dict[team]["opp_power_rank"] = (
-            get_remaining_schedule_difficulty(
-                team,
-                week,
-                regular_season_length=league.settings.reg_season_count,
-                strength="power_rank",
-                league=league,
-            )
-        )
+        remaining_difficulty_dict[team][
+            "opp_power_rank"
+        ] = get_remaining_schedule_difficulty(
+            team,
+            week,
+            regular_season_length=league.settings.reg_season_count,
+            strength="power_rank",
+            league=league,
+        )  # type: ignore
 
     # Identify the min and max values for each SOS metric
     team_avg_score = [t.points_for / (week - 1) for t in league.teams]
