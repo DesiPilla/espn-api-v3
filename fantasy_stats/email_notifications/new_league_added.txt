@@ -1,0 +1,13 @@
+<html>
+  <body>
+    <p>🎉🎉 A new league was added! 🎉🎉<br>
+        <br>
+        League name: {0} ({1})<br>
+        League year: {2}<br>
+        Date added:  {3}<br>
+        <br>
+        Total 2024 season leagues added: {4}<br>
+        Total leagues added this year:   {5}
+    </p>
+  </body>
+</html>
