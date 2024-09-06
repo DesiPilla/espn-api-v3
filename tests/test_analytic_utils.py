@@ -1,7 +1,9 @@
 import inspect
 import os
-from typing import Callable, List
+import numpy as np
 import pytest
+from typing import Callable, List, Optional
+
 from espn_api.football import League, Team, Player
 
 from src.doritostats.fetch_utils import fetch_league
@@ -14,14 +16,16 @@ espn_s2 = os.getenv("ESPN_S2")
 
 league_2018 = fetch_league(league_id=league_id, year=2018, swid=swid, espn_s2=espn_s2)
 league_2020 = fetch_league(league_id=league_id, year=2020, swid=swid, espn_s2=espn_s2)
+league_2021 = fetch_league(league_id=league_id, year=2021, swid=swid, espn_s2=espn_s2)
 league_2022 = fetch_league(league_id=league_id, year=2022, swid=swid, espn_s2=espn_s2)
 league_2023 = fetch_league(league_id=league_id, year=2023, swid=swid, espn_s2=espn_s2)
 
 team_2018_2 = league_2018.teams[2]
 team_2020_0 = league_2020.teams[0]
+team_2021_0 = league_2021.teams[0]
 team_2022_0 = league_2022.teams[0]
 team_2022_5 = league_2022.teams[5]
-team_2023_0 = league_2022.teams[5]
+team_2023_0 = league_2023.teams[0]
 box_scores_2022_4 = league_2022.box_scores(4)
 lineup_2020_t0_w15 = utils.get_lineup(league_2020, team_2020_0, 15)
 lineup_2022_t0_w1 = utils.get_lineup(league_2022, team_2022_0, 1)
@@ -279,6 +283,95 @@ def test_avg_slot_score(league: League, lineup: List[Player], slot: str, result:
 )
 def test_sum_bench_points(league: League, lineup: List[Player], result: float):
     assert utils.sum_bench_points(league, lineup) == result
+
+
+@pytest.mark.parametrize(
+    "league, lineup, result",
+    [
+        (league_2022, lineup_2022_t0_w1, 115.09),
+        (league_2022, lineup_2022_t5_w4, 110.38),
+    ],
+)
+def test_get_projected_score(league: League, lineup: List[Player], result: float):
+    assert utils.get_projected_score(league, lineup) == result
+
+
+@pytest.mark.parametrize(
+    "league, lineup, result",
+    [
+        (league_2022, lineup_2022_t0_w1, -9.59),
+        (league_2022, lineup_2022_t5_w4, 2.3),
+    ],
+)
+def test_get_score_surprise(league: League, lineup: List[Player], result: float):
+    assert pytest.approx(utils.get_score_surprise(league, lineup), 0.01) == result
+
+
+@pytest.mark.parametrize(
+    "league, lineup, result",
+    [
+        (league_2022, lineup_2022_t0_w1, 3),
+        (league_2022, lineup_2022_t5_w4, 6),
+    ],
+)
+def test_get_total_tds(league: League, lineup: List[Player], result: float):
+    assert utils.get_total_tds(league, lineup) == result
+
+
+@pytest.mark.parametrize(
+    "outcomes, result",
+    [
+        (team_2018_2.outcomes[:1], 0.0000),  # 0-1-0
+        (team_2018_2.outcomes[:10], 0.4000),  # 4-6-0
+        # TODO: Uncomment when Ties are implemented in espn-api
+        # (team_2021_0.outcomes[:7], 0.2857),  # 2-5-0
+        # (team_2021_0.outcomes[:8], 0.2857),  # 2-5-1
+        ([], 0),  # Season hasn't started
+        (team_2023_0.outcomes[:1], 1.0000),  # 1-0-0
+        (team_2023_0.outcomes[:10], 0.5000),  # 5-5-0
+    ],
+)
+def test_calculate_win_pct(outcomes: List[str], result: float):
+    assert pytest.approx(utils.calculate_win_pct(np.array(outcomes)), 0.0001) == result
+
+
+@pytest.mark.parametrize(
+    "team, week, regular_season_length, strength, league, result",
+    [
+        (team_2023_0, 11, 14, "points_for", None, 116.8479),
+        (team_2023_0, 12, 14, "points_for", None, 120.0408),
+        (team_2023_0, 13, 14, "points_for", None, 125.1508),
+        (team_2023_0, 14, 14, "points_for", None, 0),
+        (team_2023_0, 15, 14, "points_for", None, 0),
+        (team_2023_0, 11, 14, "win_pct", None, 0.4545),
+        (team_2023_0, 12, 14, "win_pct", None, 0.5417),
+        (team_2023_0, 13, 14, "win_pct", None, 0.5385),
+        (team_2023_0, 14, 14, "win_pct", None, 0),
+        (team_2023_0, 15, 14, "win_pct", None, 0),
+        (team_2023_0, 11, 14, "power_rank", league_2023, 42.3500),
+        (team_2023_0, 12, 14, "power_rank", league_2023, 52.7750),
+        (team_2023_0, 13, 14, "power_rank", league_2023, 56.8000),
+        (team_2023_0, 14, 14, "power_rank", league_2023, 0),
+        (team_2023_0, 15, 14, "power_rank", league_2023, 0),
+    ],
+)
+def test_get_remaining_schedule_difficulty(
+    team: Team,
+    week: int,
+    regular_season_length: int,
+    strength: str,
+    league: Optional[League],
+    result: float,
+):
+    assert (
+        pytest.approx(
+            utils.get_remaining_schedule_difficulty(
+                team, week, regular_season_length, strength, league
+            ),
+            0.0001,
+        )
+        == result
+    )
 
 
 @pytest.mark.parametrize(

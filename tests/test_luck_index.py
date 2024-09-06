@@ -27,7 +27,7 @@ def test_calculate_performance_vs_historical_average(
 ):
     assert luck.calculate_performance_vs_historical_average(
         team_score, team_scores
-    ) == pytest.approx(result, 2)
+    ) == pytest.approx(result, 0.01)
 
 
 @pytest.mark.parametrize(

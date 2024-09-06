@@ -234,9 +234,9 @@ def get_stats_by_matchup(
             )
 
             for slot in ["QB", "RB", "WR", "TE", "RB/WR/TE", "D/ST", "K"]:
-                df_week.loc[
-                    i * 2, "{}_pts".format(slot.replace("/", "_"))
-                ] = avg_slot_score(league, home_lineup, slot=slot)
+                df_week.loc[i * 2, "{}_pts".format(slot.replace("/", "_"))] = (
+                    avg_slot_score(league, home_lineup, slot=slot)
+                )
 
                 # Get the best player for each slot
                 top_players = get_top_players(home_lineup, slot, 1)
@@ -244,18 +244,18 @@ def get_stats_by_matchup(
                     # If no player for this position is rostered
                     df_week.loc[i * 2, "best_{}".format(slot.replace("/", "_"))] = 0
                 else:
-                    df_week.loc[
-                        i * 2, "best_{}".format(slot.replace("/", "_"))
-                    ] = top_players[0].points
+                    df_week.loc[i * 2, "best_{}".format(slot.replace("/", "_"))] = (
+                        top_players[0].points
+                    )
                 try:
-                    df_week.loc[
-                        i * 2, "worst_{}".format(slot.replace("/", "_"))
-                    ] = np.min(
-                        [
-                            player.points
-                            for player in get_top_players(home_lineup, slot, 10)
-                            if player.slot_position not in ("BE", "IR")
-                        ]
+                    df_week.loc[i * 2, "worst_{}".format(slot.replace("/", "_"))] = (
+                        np.min(
+                            [
+                                player.points
+                                for player in get_top_players(home_lineup, slot, 10)
+                                if player.slot_position not in ("BE", "IR")
+                            ]
+                        )
                     )
                 except Exception:
                     df_week.loc[i * 2, "worst_{}".format(slot.replace("/", "_"))] = 0
@@ -294,9 +294,9 @@ def get_stats_by_matchup(
                 league, away_lineup
             )
             for slot in ["QB", "RB", "WR", "TE", "RB/WR/TE", "D/ST", "K"]:
-                df_week.loc[
-                    i * 2 + 1, "{}_pts".format(slot.replace("/", "_"))
-                ] = avg_slot_score(league, away_lineup, slot=slot)
+                df_week.loc[i * 2 + 1, "{}_pts".format(slot.replace("/", "_"))] = (
+                    avg_slot_score(league, away_lineup, slot=slot)
+                )
 
                 # Get the best player for each slot
                 top_players = get_top_players(away_lineup, slot, 1)
@@ -304,9 +304,9 @@ def get_stats_by_matchup(
                     # If no player for this position is rostered
                     df_week.loc[i * 2 + 1, "best_{}".format(slot.replace("/", "_"))] = 0
                 else:
-                    df_week.loc[
-                        i * 2 + 1, "best_{}".format(slot.replace("/", "_"))
-                    ] = top_players[0].points
+                    df_week.loc[i * 2 + 1, "best_{}".format(slot.replace("/", "_"))] = (
+                        top_players[0].points
+                    )
             #                 df_week.loc[i*2+1, 'worst_{}'.format(slot.replace('/', '_'))] = np.min([player.points for player in get_top_players(home_lineup, slot, 10) if player.slot_position not in ('BE', 'IR')])
 
             #         df_week.loc[i*2, 'team_record'] = "{}-{}-{}".format(matchup.home_team.wins, matchup.home_team.losses, matchup.home_team.ties)
