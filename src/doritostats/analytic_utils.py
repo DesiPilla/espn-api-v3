@@ -190,6 +190,7 @@ def get_total_tds(league: League, lineup: List[Player]) -> float:
         # Skip players with no stats (players on Bye)
         if not list(player.stats.keys()):
             continue
+
         player_tds = 0
         for statId in [
             "passingTouchdowns",
@@ -245,17 +246,19 @@ def get_remaining_schedule_difficulty(
         - "power_rank" means that the difficult is defined by the average power rank of each of their remaining opponents.
 
     """
-    remaining_schedule = team.schedule[week - 1 :]
-    n_completed_weeks = len([o for o in team.outcomes if o != "U"])
+    if week >= regular_season_length:
+        return 0
+
+    remaining_schedule = team.schedule[week:regular_season_length]
+    n_completed_weeks = len(
+        [o for o in team.outcomes[:regular_season_length] if o != "U"]
+    )
 
     if strength == "points_for":
         # Get all scores from remaining opponenets through specified week
         remaining_strength = np.array(
             [opp.scores[:week][:n_completed_weeks] for opp in remaining_schedule]
         ).flatten()
-
-        # Exclude weeks that haven't occurred yet (not always applicable)
-        remaining_strength = remaining_strength[:n_completed_weeks]
 
         # Return average score
         return remaining_strength.mean()
@@ -352,7 +355,9 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
 
     # Identify the min and max values for each SOS metric
     team_avg_score = [t.points_for / (week - 1) for t in league.teams]
-    team_win_pct = [calculate_win_pct(np.array(t.outcomes)) for t in league.teams]
+    team_win_pct = [
+        calculate_win_pct(np.array(t.outcomes[:week])) for t in league.teams
+    ]
     power_ranks = [float(p) for p, _ in league.power_rankings(week)]
 
     # Organize into a dataframe and convert SOS values into a rank order
