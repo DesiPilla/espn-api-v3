@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 from django.template import RequestContext
-from .models import LeagueInfo
 import datetime
 from espn_api.football import League
+
+from fantasy_stats.email_notifications.email import send_new_league_added_alert
+from .models import LeagueInfo
 from src.doritostats.django_utils import (
     django_luck_index,
     django_power_rankings,
@@ -104,6 +106,9 @@ def league_input(request):
             )
         )
 
+        # Send an email notification that a new league has been added
+        send_new_league_added_alert(league_info)
+
     if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
         # If the league hasn't started yet, display the "too soon" page
         return HttpResponse(
@@ -175,6 +180,9 @@ def copy_old_league(request, league_id: int):
                 league_id, current_year
             )
         )
+
+        # Send an email notification that a new league has been added
+        send_new_league_added_alert(league_info)
 
     if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
         # If the league hasn't started yet, display the "too soon" page

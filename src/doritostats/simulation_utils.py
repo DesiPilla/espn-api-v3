@@ -513,10 +513,8 @@ def simulate_season(
         s["division_id"] = team.division_id
         return s
 
-    # Store box_scores function
+    # Store box_scores function and set to None so that the League object can be pickled
     box_scores_func = league.box_scores
-
-    # Set box_scores() to None so that the League object can be pickled
     league.box_scores = None
 
     # Run the simulations in parallel
