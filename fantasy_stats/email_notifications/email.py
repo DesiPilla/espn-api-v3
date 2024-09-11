@@ -28,10 +28,8 @@ def send_new_league_added_alert(league_info: LeagueInfo):
     year = league_info.league_year
 
     # Convert league_info.creeated_date FROM UTC to EST
-    date_added = (
-        pd.Timestamp(league_info.created_date, tz="UTC")
-        .tz_convert("US/Eastern")
-        .strftime("%B %d, %Y @ %I:%M %p")
+    date_added = league_info.created_date.tz_convert("US/Eastern").strftime(
+        "%B %d, %Y @ %I:%M %p"
     )
 
     # Get the number of new leagues added
