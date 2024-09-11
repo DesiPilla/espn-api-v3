@@ -303,7 +303,7 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
     Returns:
         pd.DataFrame
     """
-    if week <= 1:
+    if (week < 1) or league.current_week < 2:
         return pd.DataFrame(
             {
                 team: {

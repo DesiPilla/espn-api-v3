@@ -236,7 +236,7 @@ def league(request, league_id: int, league_year: int, week: int = None):
         weekly_awards = django_weekly_stats(league_obj, week)
         power_rankings = django_power_rankings(league_obj, week)
         luck_index = django_luck_index(league_obj, week)
-        strength_of_schedule = django_strength_of_schedule(league_obj, week)
+        strength_of_schedule = django_strength_of_schedule(league_obj, week + 1)
         standings = django_standings(league_obj, week)
 
         context = {
@@ -329,7 +329,7 @@ def simulation(
         "playoff_odds": playoff_odds,
         "rank_dist": rank_dist,
         "seeding_outcomes": seeding_outcomes,
-        "strength_of_schedule": django_strength_of_schedule(league_obj, week),
+        "strength_of_schedule": django_strength_of_schedule(league_obj, week + 1),
         "n_positions": len(league_obj.teams),
         "positions": [ordinal(i) for i in range(1, len(league_obj.teams) + 1)],
         "n_playoff_spots": league_obj.settings.playoff_team_count,
