@@ -84,6 +84,7 @@ def league_input(request):
         league_info = LeagueInfo.objects.get(
             league_id=league_id, league_year=league_year
         )
+        league_obj = fetch_league(league_id, league_year, swid, espn_s2)
         print("League found!")
     except LeagueInfo.DoesNotExist:
         print(
