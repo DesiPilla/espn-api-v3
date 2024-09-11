@@ -282,7 +282,7 @@ def django_strength_of_schedule(league: League, week: int):
 
     Args:
         league (League): A formatted ESPN league object.
-        week (int): The week to get the remaining strength of schedule for.
+        week (int): First week to include as "remaining". I.e., week = 10 will calculate the remaining SOS for Weeks 10 -> end of season.
 
     Returns:
         _type_: _description_
