@@ -32,7 +32,7 @@ def get_postgres_conn() -> psycopg2.extensions.connection:
         "postgres://", "postgresql://"
     )
 
-    return psycopg2.connect(conn_str, connect_timeout=10)
+    return psycopg2.connect(conn_str, sslmode="require", connect_timeout=10)
 
 
 def get_league_creds(league_id: int, year: Optional[int] = None):
