@@ -12,17 +12,17 @@ import datetime
 from typing import Optional
 from espn_api.football import League
 from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
-import psycopg2
+import sqlalchemy
 from dotenv import load_dotenv
 
 warnings.filterwarnings("ignore")
 
 
-def get_postgres_conn() -> psycopg2.extensions.connection:
+def get_postgres_conn() -> sqlalchemy.engine.base.Connection:
     """Create a postrges connection using the DATABASE_URL environment variable.
 
     Returns:
-        psycopg2.extensions.connection: A connection to the postgres database
+        sqlalchemy.engine.base.Connection: A connection to the database.
     """
     # Load environment variables
     load_dotenv("../.env", override=True)
@@ -32,7 +32,7 @@ def get_postgres_conn() -> psycopg2.extensions.connection:
         "postgres://", "postgresql://"
     )
 
-    return psycopg2.connect(conn_str, sslmode="require", connect_timeout=10)
+    return sqlalchemy.create_engine(conn_str, pool_pre_ping=True)
 
 
 def get_league_creds(league_id: int, year: Optional[int] = None):
