@@ -27,11 +27,6 @@ def send_new_league_added_alert(league_info: LeagueInfo):
     league_id = league_info.league_id
     year = league_info.league_year
 
-    # Convert league_info.creeated_date FROM UTC to EST
-    date_added = league_info.created_date.tz_convert("US/Eastern").strftime(
-        "%B %d, %Y @ %I:%M %p"
-    )
-
     # Get the number of new leagues added
     conn = get_postgres_conn()
     sql = (
@@ -48,7 +43,7 @@ def send_new_league_added_alert(league_info: LeagueInfo):
             league_name,
             league_id,
             year,
-            date_added,
+            pd.Timestamp.now(tz="US/Eastern").strftime("%B %d, %Y @ %I:%M %p"),
             n_leagues_2024,
             n_leagues_added_this_year,
         ),
