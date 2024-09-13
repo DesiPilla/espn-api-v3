@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, Http404
 from django.template import RequestContext
 import datetime
+
+import espn_api
 from espn_api.football import League
 
 from fantasy_stats.email_notifications.email import send_new_league_added_alert
@@ -13,6 +15,9 @@ from src.doritostats.django_utils import (
     django_standings,
     django_strength_of_schedule,
     django_weekly_stats,
+    get_distinct_leagues_previous_year,
+    get_leagues_current_year,
+    get_leagues_previous_year,
     ordinal,
 )
 from src.doritostats.fetch_utils import fetch_league
@@ -33,31 +38,16 @@ def get_default_week(league_obj: League):
 
 
 # Create your views here.
-def index(request):
-    now = datetime.datetime.now()
-    current_year = now.year if now.month >= 5 else now.year - 1
-    leagues_current_year = (
-        LeagueInfo.objects.filter(league_year=current_year)
-        .order_by("league_name", "-league_year", "league_id")
-        .distinct("league_name", "league_year", "league_id")
-    )
-    leagues_previous_year = (
-        LeagueInfo.objects.filter(league_year__lt=current_year)
-        .order_by("league_name", "-league_year", "league_id")
-        .distinct("league_name", "league_year", "league_id")
-    )
+def index(
+    request,
+    league_not_found: bool = False,
+    league_id_access_denied: bool = False,
+    unknown_error: bool = False,
+):
+    leagues_current_year = get_leagues_current_year()
+    leagues_previous_year = get_leagues_previous_year()
+    distinct_old_leagues = get_distinct_leagues_previous_year(leagues_current_year)
 
-    leagues_in_current_year = [
-        league_obj.league_id for league_obj in leagues_current_year
-    ]
-    distinct_leagues = (
-        LeagueInfo.objects.filter().order_by("-league_id").distinct("league_id")
-    )
-    distinct_old_leagues = [
-        league_obj
-        for league_obj in distinct_leagues
-        if league_obj.league_id not in leagues_in_current_year
-    ]
     return HttpResponse(
         render(
             request,
@@ -66,6 +56,9 @@ def index(request):
                 "leagues_current_year": leagues_current_year,
                 "leagues_previous_year": leagues_previous_year,
                 "distinct_old_leagues": distinct_old_leagues,
+                "league_not_found": league_not_found,
+                "league_id_access_denied": league_id_access_denied,
+                "unknown_error": unknown_error,
             },
         )
     )
@@ -77,38 +70,105 @@ def league_input(request):
     swid = request.POST.get("swid", None)
     espn_s2 = request.POST.get("espn_s2", None)
 
+    print("Checking for League {} ({}) in database...".format(league_id, league_year))
+    league_info_objs = LeagueInfo.objects.filter(
+        league_id=league_id, league_year=league_year
+    )
     try:
+        if league_info_objs:
+            league_info = league_info_objs[0]
+            league_obj = fetch_league(league_id, league_year, swid, espn_s2)
+            print("League found!")
+
+        else:
+            print(
+                "League {} ({}) NOT FOUND! Fetching league from ESPN...".format(
+                    league_id, league_year
+                )
+            )
+            league_obj = fetch_league(league_id, league_year, swid, espn_s2)
+            league_info = LeagueInfo(
+                league_id=league_id,
+                league_year=league_year,
+                swid=swid,
+                espn_s2=espn_s2,
+                league_name=league_obj.name,
+            )
+            league_info.save()
+            print(
+                "League {} ({}) fetched and saved to the databse.".format(
+                    league_id, league_year
+                )
+            )
+    except espn_api.requests.espn_requests.ESPNInvalidLeague as e:
         print(
-            "Checking for League {} ({}) in database...".format(league_id, league_year)
-        )
-        league_info = LeagueInfo.objects.get(
-            league_id=league_id, league_year=league_year
-        )
-        league_obj = fetch_league(league_id, league_year, swid, espn_s2)
-        print("League found!")
-    except LeagueInfo.DoesNotExist:
-        print(
-            "League {} ({}) NOT FOUND! Fetching league from ESPN...".format(
-                league_id, league_year
+            "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
+                league_id, league_year, e
             )
         )
-        league_obj = fetch_league(league_id, league_year, swid, espn_s2)
-        league_info = LeagueInfo(
-            league_id=league_id,
-            league_year=league_year,
-            swid=swid,
-            espn_s2=espn_s2,
-            league_name=league_obj.name,
+        leagues_current_year = get_leagues_current_year()
+        leagues_previous_year = get_leagues_previous_year()
+        distinct_old_leagues = get_distinct_leagues_previous_year(leagues_current_year)
+        return HttpResponse(
+            render(
+                request,
+                "fantasy_stats/index.html",
+                context={
+                    "leagues_current_year": leagues_current_year,
+                    "leagues_previous_year": leagues_previous_year,
+                    "distinct_old_leagues": distinct_old_leagues,
+                    "league_id": league_id,
+                    "league_not_found": True,
+                },
+            )
         )
-        league_info.save()
+    except espn_api.requests.espn_requests.ESPNAccessDenied as e:
         print(
-            "League {} ({}) fetched and saved to the databse.".format(
-                league_id, league_year
+            "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
+                league_id, league_year, e
+            )
+        )
+        leagues_current_year = get_leagues_current_year()
+        leagues_previous_year = get_leagues_previous_year()
+        distinct_old_leagues = get_distinct_leagues_previous_year(leagues_current_year)
+        return HttpResponse(
+            render(
+                request,
+                "fantasy_stats/index.html",
+                context={
+                    "leagues_current_year": leagues_current_year,
+                    "leagues_previous_year": leagues_previous_year,
+                    "distinct_old_leagues": distinct_old_leagues,
+                    "league_id": league_id,
+                    "league_id_access_denied": True,
+                },
+            )
+        )
+    except espn_api.requests.espn_requests.ESPNUnknownError as e:
+        print(
+            "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
+                league_id, league_year, e
+            )
+        )
+        leagues_current_year = get_leagues_current_year()
+        leagues_previous_year = get_leagues_previous_year()
+        distinct_old_leagues = get_distinct_leagues_previous_year(leagues_current_year)
+        return HttpResponse(
+            render(
+                request,
+                "fantasy_stats/index.html",
+                context={
+                    "leagues_current_year": leagues_current_year,
+                    "leagues_previous_year": leagues_previous_year,
+                    "distinct_old_leagues": distinct_old_leagues,
+                    "league_id": league_id,
+                    "unknown_error": True,
+                },
             )
         )
 
-        # Send an email notification that a new league has been added
-        send_new_league_added_alert(league_info)
+    # Send an email notification that a new league has been added
+    send_new_league_added_alert(league_info)
 
     if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
         # If the league hasn't started yet, display the "too soon" page
