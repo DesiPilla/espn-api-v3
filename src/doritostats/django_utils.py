@@ -40,6 +40,7 @@ def ordinal(n: int) -> str:
 def get_leagues_current_year():
     now = datetime.datetime.now()
     current_year = now.year if now.month >= 5 else now.year - 1
+
     return (
         LeagueInfo.objects.filter(league_year=current_year)
         .order_by("league_name", "-league_year", "league_id")

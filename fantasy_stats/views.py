@@ -44,7 +44,6 @@ def index(
     league_id_access_denied: bool = False,
     unknown_error: bool = False,
 ):
-
     leagues_current_year = get_leagues_current_year()
     leagues_previous_year = get_leagues_previous_year()
     distinct_old_leagues = get_distinct_leagues_previous_year(leagues_current_year)
