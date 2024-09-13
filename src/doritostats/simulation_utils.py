@@ -359,7 +359,7 @@ def get_rank_distribution_df(final_standings: pd.DataFrame) -> pd.DataFrame:
     # Calculate the playoff odds for each team and join it to the dataframe
     rank_dist_df = rank_dist_df.join(
         final_standings.groupby(["team_name", "team_id"])
-        .mean()["made_playoffs"]
+        .mean(numeric_only=True)["made_playoffs"]
         .rename("playoff_odds")
         * 100
     )
@@ -518,11 +518,15 @@ def simulate_season(
     league.box_scores = None
 
     # Run the simulations in parallel
-    final_standings = pd.concat(
-        Parallel(n_jobs=-1, verbose=1)(
-            delayed(simulate_single_season_parallel)() for i in range(n)
+    if n > 1:
+        final_standings = pd.concat(
+            Parallel(n_jobs=-1, verbose=1)(
+                delayed(simulate_single_season_parallel)() for i in range(n)
+            )
         )
-    )
+    else:
+        final_standings = simulate_single_season(league, standings)
+
     final_standings = (
         final_standings.reset_index().apply(get_team_info, axis=1).set_index("team_id")
     )
