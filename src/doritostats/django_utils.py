@@ -352,6 +352,9 @@ def django_strength_of_schedule(league: League, week: int):
 
 
 def django_simulation(league: League, n_simulations: int):
+    if league.current_week >= league.settings.reg_season_count:
+        n_simulations = 1
+
     # Get power rankings for the current week
     playoff_odds, rank_dist, seeding_outcomes = simulate_season(league, n=n_simulations)
 
