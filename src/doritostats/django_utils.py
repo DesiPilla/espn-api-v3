@@ -1,5 +1,8 @@
-from src.doritostats.simulation_utils import simulate_season
+import datetime
+from typing import List, Optional
 from espn_api.football import League
+
+from fantasy_stats.models import LeagueInfo
 from src.doritostats.analytic_utils import (
     get_num_active,
     get_remaining_schedule_difficulty_df,
@@ -13,6 +16,7 @@ from src.doritostats.analytic_utils import (
     get_total_tds,
 )
 from src.doritostats.luck_index import get_weekly_luck_index
+from src.doritostats.simulation_utils import simulate_season
 
 
 def ordinal(n: int) -> str:
@@ -31,6 +35,43 @@ def ordinal(n: int) -> str:
     else:
         suffix = ["th", "st", "nd", "rd", "th"][min(n % 10, 4)]
     return str(n) + suffix
+
+
+def get_leagues_current_year():
+    now = datetime.datetime.now()
+    current_year = now.year if now.month >= 5 else now.year - 1
+    return (
+        LeagueInfo.objects.filter(league_year=current_year)
+        .order_by("league_name", "-league_year", "league_id")
+        .distinct("league_name", "league_year", "league_id")
+    )
+
+
+def get_leagues_previous_year():
+    now = datetime.datetime.now()
+    current_year = now.year if now.month >= 5 else now.year - 1
+
+    return (
+        LeagueInfo.objects.filter(league_year__lt=current_year)
+        .order_by("league_name", "-league_year", "league_id")
+        .distinct("league_name", "league_year", "league_id")
+    )
+
+
+def get_distinct_leagues_previous_year(
+    leagues_current_year: Optional[List[LeagueInfo]] = None,
+):
+    if not leagues_current_year:
+        leagues_current_year = get_leagues_current_year()
+
+    distinct_leagues = (
+        LeagueInfo.objects.filter().order_by("-league_id").distinct("league_id")
+    )
+    return [
+        league_obj
+        for league_obj in distinct_leagues
+        if league_obj.league_id not in leagues_current_year
+    ]
 
 
 def django_weekly_stats(league: League, week: int):

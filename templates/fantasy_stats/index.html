@@ -84,12 +84,27 @@
         {% csrf_token %}
         <label>League ID: </label><br>
         <input type="text" name="league_id"><br>
+        {% if league_id and league_not_found %}
+        <a class="error-message">
+          <em>League ID {{ league_id }} not found. Please check that you have entered the correct league ID.</em><br>
+        </a>
+        {% endif %}
         <label>League year: </label><br>
         <input type="number" min="2017" name="league_year", value=2024><br> 
         <label>SWID: </label> <br>
         <input type="password" name="swid", value=''><br>
         <label>ESPN s2: </label><br>
-        <input type="password" name="espn_s2", value=''><br><br>
+        <input type="password" name="espn_s2", value=''><br>
+        {% if league_id and league_id_access_denied %}
+          <a class="error-message">
+            <em>SWID or espn_s2 is incorrect. Please try again.</em><br>
+          </a>
+        {% elif league_id and unknown_error %}
+          <a class="error-message">
+            <em>An unknown error has occurred. Please check that you have entered the correct league ID, SWID, and espn_s2.</em><br>
+          </a>
+        {% endif %}
+        <br>
         <button type="submit">Fetch league</button>
       </form>
       <hr>
