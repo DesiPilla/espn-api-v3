@@ -334,9 +334,9 @@ def get_weekly_luck_index(
     """
     # Define the weights to apply to each factor
     factor_weights = {
-        "scheduling": 0.25,
-        "performance_vs_projection": 0.20,
-        "injuries_byes": 0.20,
+        "scheduling": 0.30,
+        "performance_vs_projection": 0.10,
+        "injuries_byes": 0.25,
         "performance_vs_historical": 0.10,
         "optimal_vs_actual": 0.10,
         "optimal_vs_optimal": 0.10,

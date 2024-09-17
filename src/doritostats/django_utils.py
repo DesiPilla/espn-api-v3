@@ -79,12 +79,17 @@ def django_weekly_stats(league: League, week: int):
     # Load box scores for specified week
     box_scores = league.box_scores(week)
 
+    # Get the scores for each team
+    team_scores = []
+    for matchup in box_scores:
+        team_scores.append((matchup.home_team, matchup.home_score))
+        team_scores.append((matchup.away_team, matchup.away_score))
+    team_scores
+
     best_table = [
         [
             "Most Points Scored: ",
-            sorted(league.teams, key=lambda x: x.scores[week - 1], reverse=True)[
-                0
-            ].owner,
+            sorted(team_scores, key=lambda x: x[1], reverse=True)[0][0].owner,
         ],
         [
             "Best Possible Lineup: ",
@@ -164,7 +169,7 @@ def django_weekly_stats(league: League, week: int):
     worst_table = [
         [
             "Least Points Scored: ",
-            sorted(league.teams, key=lambda x: x.scores[week - 1])[0].owner,
+            sorted(team_scores, key=lambda x: x[1])[0][0].owner,
         ],
         [
             "Worst Optimal Lineup: ",

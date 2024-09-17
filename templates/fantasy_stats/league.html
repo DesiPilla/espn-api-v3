@@ -93,6 +93,15 @@
     {# Weekly Awards #}
     <div class="wrapper">
       <h2>Weekly awards</h2>
+      {% if scores_are_finalized %}
+        <em>
+          <strong>
+            <a>Note that scores have not yet been finalized for this week and award winners are likely to change.</a>
+            <br />
+            <a>Please check back on Tuesday morning for the final results.</a>
+          </strong>
+        </em>
+      {% endif %}
       <div class="table">
         {# Table header #}
         <div class="row header">
@@ -117,6 +126,15 @@
     {# Power Rankings #}
     <div class="wrapper">
       <h2>Power Rankings</h2>
+      {% if scores_are_finalized %}
+        <em>
+          <strong>
+            <a>Note that scores have not yet been final for this week and power rankings are likely to change.</a>
+            <br />
+            <a>Please check back on Tuesday morning for the final results.</a>
+          </strong>
+        </em>
+      {% endif %}
       <div class="table">
         {# Table header #}
         <div class="row header">
@@ -139,6 +157,15 @@
     {# Luck Index #}
     <div class="wrapper">
       <h2>Luck Index</h2>
+      {% if scores_are_finalized %}
+        <em>
+          <strong>
+            <a>Note that scores have not yet been final for this week and the Luck Index is likely to change.</a>
+            <br />
+            <a>Please check back on Tuesday morning for the final results.</a>
+          </strong>
+        </em>
+      {% endif %}
       <div class="table">
         {# Table header #}
         <div class="row header">
@@ -189,6 +216,15 @@
     {# Remaining strength of schedule #}
     <div class="wrapper-wide">
       <h2>Remaining strength of schedule</h2>
+      {% if scores_are_finalized %}
+        <em>
+          <strong>
+            <a>Note that scores have not yet been final for this week and remaining SOS is likely to change.</a>
+            <br />
+            <a>Please check back on Tuesday morning for the final results.</a>
+          </strong>
+        </em>
+      {% endif %}
       <table class="table">
         {# Table header #}
         <div class="row header">
