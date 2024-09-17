@@ -309,6 +309,7 @@ def league(request, league_id: int, league_year: int, week: int = None):
             "luck_index": luck_index,
             "strength_of_schedule": strength_of_schedule,
             "standings": standings,
+            "scores_are_finalized": league_obj.current_week <= week,
         }
 
         return HttpResponse(render(request, "fantasy_stats/league.html", context))
