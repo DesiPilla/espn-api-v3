@@ -1,7 +1,8 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, Http404
-from django.template import RequestContext
 import datetime
+import pytz
+from django.http import HttpResponse, Http404
+from django.shortcuts import render, redirect, get_object_or_404
+from django.template import RequestContext
 
 import espn_api
 from espn_api.football import League
@@ -31,7 +32,11 @@ def get_default_week(league_obj: League):
     current_matchup_period = league_obj.settings.week_to_matchup_period[
         league_obj.current_week
     ]
-    if datetime.datetime.now().strftime("%A") in ["Tuesday", "Wednesday"]:
+
+    if datetime.datetime.now(pytz.timezone("US/Eastern")).strftime("%A") in [
+        "Tuesday",
+        "Wednesday",
+    ]:
         return current_matchup_period - 1
     else:
         return current_matchup_period

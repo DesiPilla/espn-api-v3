@@ -30,6 +30,7 @@ urllib3 = "^2.2.2"
 whitenoise = { extras = ["brotli"], version = "^6.2.0" }
 Django = "^4.2.14"
 psycopg2-binary = "^2.9.9"
+pytz = "^2024.2"
 
 [build-system]
 requires = ["poetry-core"]
