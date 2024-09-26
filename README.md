@@ -27,10 +27,10 @@ With the introduction of version 3 of ESPN's API, this structure creates leagues
   - [Luck Index](##luckindex)
   - [Projected Standings](##projectedstandings)
 - User Functionality
-  - [Highlighting Weekly Achievements] (##weeklyachievements)
-  - [Strength Rankings] (##strengthrankings)
-  - [Luck Evaluation] (##luckevaluation)
-  - [Season Forecasting] (##seasonforecasting)
+  - [Highlighting Weekly Achievements](##weeklyachievements)
+  - [Strength Rankings](##strengthrankings)
+  - [Luck Evaluation](##luckevaluation)
+  - [Season Forecasting](##seasonforecasting)
 - [Credits] (##credits)
 
 <a name="doritoStatsWebsite"></a>
