@@ -393,8 +393,7 @@ Fewest K pts this season          - 20 pts - Marc Chirico
 
 Dorito Stats brings some extra flavor to your league by showcasing unique milestones, like "Top Lineup Efficiency" or "Most Touchdowns Scored." Each week, there’s more to strive for beyond just racking up wins! 
 
-Examples
---------
+### Examples
 
 Best/Worst Lineup Setter
 Projection Outperformer/Underperformer
