@@ -31,7 +31,7 @@ With the introduction of version 3 of ESPN's API, this structure creates leagues
   - [Strength Rankings](##strengthrankings)
   - [Luck Evaluation](##luckevaluation)
   - [Season Forecasting](##seasonforecasting)
-- [Credits] (##credits)
+- [Credits](##credits)
 
 <a name="doritoStatsWebsite"></a>
 
