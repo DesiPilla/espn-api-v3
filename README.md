@@ -1,23 +1,23 @@
-# espn-api-v3
+# Dorito Stats
 
 Link to [website](https://doritostats.up.railway.app/)
 
 Link to [Postgres database](https://console.neon.tech/app/projects/spring-star-554438) on Neon
 
-This project aims to make ESPN Fantasy Football statistics easily available.
-With the introduction of version 3 of the ESPN's API, this structure creates leagues, teams, and player classes that allow for advanced data analytics and the potential for many new features to be added.
+Dorito Stats is an open-source project aiming to make ESPN Fantasy Football statistics more easily available for users. 
 
-This project was initially inspired by[rbarton65/espnff](https://github.com/rbarton65/espnff)
+The application utilizes a variety of statistical methods to provide the user with a variety of advanced analytical tools that can be used to make future decisions about their team on a weekly basis. User can determine whether their performance has been based on luck or skill, simulate the remainder of their season, determine the strength of their team relative to others, and much more! This analysis can be used to shape the future of their season, and potentially win a championship.
 
-This project would not be possible without all the amazing work by [cwendt94/ff-espn-api](https://github.com/cwendt94/ff-espn-api)
+With the introduction of version 3 of ESPN's API, this structure creates leagues, teams, and player classes that allow for advanced data analytics and the potential for many new features to be added.
+
 
 ## Table of Contents
 
 - [Dorito Stats Website](##doritoStatsWebsite)
-- Fetching leagues
+- Fetching Leagues
   - [Fetch public leagues](##fetchpublicleagues)
   - [Fetch private leagues](##fetchprivateleagues)
-- Viewing league information
+- Viewing League Information
   - [View league information](##viewleagueinformation)
   - [View team information](##viewteaminformation)
   - [View player information](##viewplayerinformation)
@@ -26,6 +26,12 @@ This project would not be possible without all the amazing work by [cwendt94/ff-
   - [Power Rankings](##powerrankings)
   - [Luck Index](##luckindex)
   - [Projected Standings](##projectedstandings)
+- User Functionality
+  - [Highlighting Weekly Achievements](##weeklyachievements)
+  - [Strength Rankings](##strengthrankings)
+  - [Luck Evaluation](##luckevaluation)
+  - [Season Forecasting](##seasonforecasting)
+- [Credits](##credits)
 
 <a name="doritoStatsWebsite"></a>
 
@@ -35,7 +41,7 @@ The main website for this project is [here](https://doritostats.up.railway.app/f
 
 <a name="fetchpublicleagues"></a>
 
-## Fetch public leagues
+## Fetch Public Leagues
 
 If your league is public, you don't need any credentials to pull data. The `fetch_league()` function will create a `League` object for your league that is populated with information about your league.
 
@@ -51,7 +57,7 @@ If your league is public, you don't need any credentials to pull data. The `fetc
 
 <a name="fetchprivateleagues"></a>
 
-## Fetch private leagues
+## Fetch Private Leagues
 
 If your league is private, you will need to get your `SWID` and `espn_s2` cookies from [espn.com](https://www.espn.com/fantasy/). The `fetch_league()` function will create a `League` object for your league that is populated with information about your league.
 
@@ -69,7 +75,7 @@ If your league is private, you will need to get your `SWID` and `espn_s2` cookie
 
 <a name="viewleagueinformation"></a>
 
-## View league information
+## View League Information
 
 You can view high level information about a league using the [`League`](https://github.com/cwendt94/espn-api/blob/3bffd8b5f2fee3360c1a039221f9f5fedc127ac5/espn_api/football/league.py#L17) object returned by `fetch_league`. Info that can be found includes:
 
@@ -103,7 +109,7 @@ Settings(La Lega dei Cugini)
 
 <a name="viewteaminformation"></a>
 
-## View team information
+## View Team Information
 
 ```python
 >>> league.teams
@@ -157,7 +163,7 @@ Team(Harris Styles)
 
 <a name="viewplayerinformation"></a>
 
-## View player information
+## View Player Information
 
 Here are some of the player details available:
 
@@ -177,7 +183,7 @@ There are many specific scoring stats that can be found under `player.stats` for
 
 <a name="viewstatsforaspecificweek"></a>
 
-## View stats for a specific week
+## View Statistics for Specific Week
 
 The two main purposes for this package is to be able to quickly and seamlessly view stats for a team or league that ESPN doesn't readily compute.
 
@@ -245,7 +251,7 @@ a lower (or more 'unlucky') score. Over the course of the season, the luck score
  Team(Herbert Hijinks): -0.1452755616732036}
 ```
 
-## Historical stats
+## Historical Statistics
 
 If a league has been around for more than one season, historical records can be easily fetched. A row will exist for each team's matchup.
 
@@ -303,7 +309,7 @@ The list of fields available for each record includes:
 - `opp_score_adj`
 - `streak`
 
-## Weekly stats analysis
+## Weekly Statistics Analysis
 
 To see if any records were broken during a given week
 
@@ -340,7 +346,7 @@ Julia Selleck had the 1st lowest QB_pts (-1.80 pts) in franchise history
 Gianna Selleck had the 1st lowest TE_pts (0.00 pts) in franchise history
 ```
 
-## Season stats analysis
+## Season Statistics Analysis
 
 To see the records for a given season
 
@@ -380,3 +386,48 @@ Fewest RB/WR/TE pts this season   - 38 pts - Carmine Pilla
 Fewest D/ST pts this season       - 25 pts - Nikki  Pilla
 Fewest K pts this season          - 20 pts - Marc Chirico
 ```
+
+<a name="weeklyachievements"></a>
+
+## Highlighting Weekly Achievements
+
+Dorito Stats brings some extra flavor to your league by showcasing unique milestones, like "Top Lineup Efficiency" or "Most Touchdowns Scored." Each week, there’s more to strive for beyond just racking up wins! 
+
+### Examples
+
+Best/Worst Lineup Setter
+Projection Outperformer/Underperformer
+Best/Worst Possible Lineup
+Best/Worst Bench
+
+
+<a name="strengthrankings"></a>
+
+## Strength Rankings
+
+The site also offers rankings that evaluate how strong each team is, giving you a clear view of where everyone stands throughout the season. Use this to your advantage when evaluating your relative performance! 
+
+("Remaining Strength of Schedule" details start after Week 2).
+(Final Power Ranking Results are posted on Tuesday morning following the completion of MNF).
+
+<a name="luckevaluation"></a>
+
+## Luck Evaluation
+
+Think that undefeated team is unstoppable, or have they just had some good fortune on their side? Dorito Stats reveals how much luck has impacted each team's wins and losses. Using the analytical process noted above, you can decide if you need to make changes to your team or stay the course!
+
+<a name="seasonforecasting"></a>
+
+## Season Forecasting
+
+A standout feature is the ability to simulate the remaining season. Run 100-1000 simulations to see which teams are most likely to clinch playoff spots or grab the top seed. Increase the number of simulations for the most accurate results!
+
+(Only available after Week 4 to collect enough data).
+
+<a name="credits"></a>
+
+## Credits
+
+This project was initially inspired by[rbarton65/espnff](https://github.com/rbarton65/espnff)
+
+This project would not be possible without all the amazing work by [cwendt94/ff-espn-api](https://github.com/cwendt94/ff-espn-api)
