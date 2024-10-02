@@ -325,7 +325,7 @@ def get_playoff_odds_df(final_standings: pd.DataFrame) -> pd.DataFrame:
     playoff_odds["ties"] = playoff_odds["ties"].round(decimals=1)
     playoff_odds["losses"] = playoff_odds["losses"].round(decimals=1)
     playoff_odds["points_for"] = playoff_odds["points_for"].round(decimals=2)
-    return playoff_odds
+    return playoff_odds.sort_values(by="playoff_odds", ascending=False)
 
 
 def get_rank_distribution_df(final_standings: pd.DataFrame) -> pd.DataFrame:
