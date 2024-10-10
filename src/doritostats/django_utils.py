@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple, Union
 from espn_api.football import League
 
 from fantasy_stats.models import LeagueInfo
@@ -322,7 +322,9 @@ def django_standings(league: League, week: int):
     return standings
 
 
-def django_strength_of_schedule(league: League, week: int):
+def django_strength_of_schedule(
+    league: League, week: int
+) -> Tuple[List[Dict[str, Union[str, float]]], Tuple[int, int]]:
     """This is a helper function to get the remaining strength of schedule for each team in the league.
     The results are returned as a list of dictionaries, which is the most conveneint format
     for django to render.
@@ -332,10 +334,12 @@ def django_strength_of_schedule(league: League, week: int):
         week (int): First week to include as "remaining". I.e., week = 10 will calculate the remaining SOS for Weeks 10 -> end of season.
 
     Returns:
-        _type_: _description_
+        List[Dict[str, Union[str, float]]]: List of dictionaries containing the strength of schedule for each team
+        Tuple[int, int]: Tuple containing the range of weeks defining a team's remaining schedule
+            * For example, if the SOS for Week 6 and beyond is desired, this tuple would be (6, regular_season_length)
     """
     # Get strength of schedule for the current week
-    sos_df = get_remaining_schedule_difficulty_df(league, week)
+    sos_df, _, schedule_period = get_remaining_schedule_difficulty_df(league, week)
 
     # Add the strength of schedule for each team
     django_sos = []
@@ -353,7 +357,7 @@ def django_strength_of_schedule(league: League, week: int):
             }
         )
 
-    return django_sos
+    return django_sos, schedule_period
 
 
 def django_simulation(league: League, n_simulations: int):

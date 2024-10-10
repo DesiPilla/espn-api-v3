@@ -236,7 +236,7 @@ def get_remaining_schedule_difficulty(
     regular_season_length: int,
     strength: str = "points_for",
     league: Optional[League] = None,
-) -> float:
+) -> Tuple[float, Tuple[int, int], Tuple[int, int]]:
     """
     This function returns the average score of a team's remaining opponents.
 
@@ -245,49 +245,120 @@ def get_remaining_schedule_difficulty(
         - "win_pct" means that the difficult is defined by the average winning percentage of each of their remaining opponents.
         - "power_rank" means that the difficult is defined by the average power rank of each of their remaining opponents.
 
+    Returns:
+        float: strength of schedule, as defined by the `strength` parameter
+        Tuple[int, int]: Tuple containing the range of weeks included in calculating a team's opponent's strength
+            * For example, if the SOS for Week 6 and beyond is desired, this tuple would be (1, 5)
+        Tuple[int, int]: Tuple containing the range of weeks defining a team's remaining schedule
+            * For example, if the SOS for Week 6 and beyond is desired, this tuple would be (6, regular_season_length)
+
     """
     if week >= regular_season_length:
-        return 0
+        return 0, (0, 0), (0, 0)
 
+    # Get the remaining schedule for the team
     remaining_schedule = team.schedule[week:regular_season_length]
     n_completed_weeks = len(
         [o for o in team.outcomes[:regular_season_length] if o != "U"]
     )
 
+    # How many completed weeks should be included?
+    strength_weeks_to_consider = min(week, n_completed_weeks)
+
+    if strength_weeks_to_consider == 0:
+        return 0, (0, 0), (0, 0)
+
+    # Define the week ranges for calculating the strength of schedule
+    strength_period = (1, strength_weeks_to_consider)
+    schedule_period = (
+        regular_season_length - len(remaining_schedule) + 1,
+        regular_season_length,
+    )
+
     if strength == "points_for":
-        # Get all scores from remaining opponenets through specified week
+        # Get all scores from remaining opponents through specified week
         remaining_strength = np.array(
-            [opp.scores[:week][:n_completed_weeks] for opp in remaining_schedule]
+            [opp.scores[:strength_weeks_to_consider] for opp in remaining_schedule]
         ).flatten()
 
-        # Return average score
-        return remaining_strength.mean()
+        # # Slower, but easier for dubugging
+        # remaining_strength = pd.DataFrame(
+        #     [opp.scores[:strength_weeks_to_consider] for opp in remaining_schedule],
+        #     columns=[
+        #         "Week {} score".format(i)
+        #         for i in range(1, strength_weeks_to_consider + 1)
+        #     ],
+        #     index=[
+        #         "Week {} opponent - {}".format(
+        #             regular_season_length - len(remaining_schedule) + i + 1, opp.owner
+        #         )
+        #         for i, opp in enumerate(remaining_schedule)
+        #     ],
+        # )
+        # return (remaining_strength, strength_period, schedule_period)
+
+        # Return average score and calculation periods
+        return (remaining_strength.mean(), strength_period, schedule_period)
 
     elif strength == "win_pct":
-        # Get win pct of remaining opponenets through specified week
+        # Get win pct of remaining opponents through specified week
         remaining_strength = np.array(
-            [opp.outcomes[:week] for opp in remaining_schedule]
+            [opp.outcomes[:strength_weeks_to_consider] for opp in remaining_schedule]
         ).flatten()
 
-        # Divide # of wins by (# of wins + # of losses) -- this excludes matches that tied or have not occurred yet
-        return calculate_win_pct(remaining_strength)
+        # # Slower, but easier for dubugging
+        # remaining_strength = pd.DataFrame(
+        #     [
+        #         calculate_win_pct(np.array(opp.outcomes[:strength_weeks_to_consider]))
+        #         for opp in remaining_schedule
+        #     ],
+        #     columns=["Win pct"],
+        #     index=[
+        #         "Week {} opponent - {}".format(
+        #             regular_season_length - len(remaining_schedule) + i + 1, opp.owner
+        #         )
+        #         for i, opp in enumerate(remaining_schedule)
+        #     ],
+        # )
+        # return (remaining_strength, strength_period, schedule_period)
+
+        # Return average win pct and calculation periods
+        return (calculate_win_pct(remaining_strength), strength_period, schedule_period)
 
     elif strength == "power_rank":
-        power_rankings = {t: float(r) for r, t in league.power_rankings(week=week)}
+        # Get the power ranking from remaining opponents through specified week
+        power_rankings = {
+            t: float(r)
+            for r, t in league.power_rankings(week=strength_weeks_to_consider)
+        }
 
-        # Get all scores from remaining opponenets through specified week
         remaining_strength = np.array(
             [power_rankings[opp] for opp in remaining_schedule]
         ).flatten()
 
-        # Return average power rank
-        return remaining_strength.mean()
+        # # Slower, but easier for dubugging
+        # remaining_strength = pd.DataFrame(
+        #     [power_rankings[opp] for opp in remaining_schedule],
+        #     columns=["Power rank"],
+        #     index=[
+        #         "Week {} opponent - {}".format(
+        #             regular_season_length - len(remaining_schedule) + i + 1, opp.owner
+        #         )
+        #         for i, opp in enumerate(remaining_schedule)
+        #     ],
+        # )
+        # return (remaining_strength, strength_period, schedule_period)
+
+        # Return average power rank and calculation periods
+        return (remaining_strength.mean(), strength_period, schedule_period)
 
     else:
         raise Exception("Unrecognized parameter passed for `strength`")
 
 
-def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFrame:
+def get_remaining_schedule_difficulty_df(
+    league: League, week: int
+) -> Tuple[pd.DataFrame, Tuple[int, int], Tuple[int, int]]:
     """
     This function creates a dataframe containing each team's remaining strength of schedule. Strength of schedule is determined by two factors:
         - "opp_points_for" is the average points for scored by each of a team's remaining opponents.
@@ -301,7 +372,11 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
         week (int): First week to include as "remaining". I.e., week = 10 will calculate the remaining SOS for Weeks 10 -> end of season.
 
     Returns:
-        pd.DataFrame
+        pd.DataFrame: Dataframe containing the each team's remaining strength of schedule
+        Tuple[int, int]: Tuple containing the range of weeks included in calculating a team's opponent's strength
+            * For example, if the SOS for Week 6 and beyond is desired, this tuple would be (1, 5)
+        Tuple[int, int]: Tuple containing the range of weeks defining a team's remaining schedule
+            * For example, if the SOS for Week 6 and beyond is desired, this tuple would be (6, regular_season_length)
     """
     if (week < 1) or league.current_week < 2:
         return pd.DataFrame(
@@ -323,9 +398,11 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
         remaining_difficulty_dict[team] = {}
 
         # SOS by points for
-        remaining_difficulty_dict[team][
-            "opp_points_for"
-        ] = get_remaining_schedule_difficulty(
+        (
+            remaining_difficulty_dict[team]["opp_points_for"],
+            strength_period,
+            schedule_period,
+        ) = get_remaining_schedule_difficulty(
             team,
             week,
             regular_season_length=league.settings.reg_season_count,
@@ -333,9 +410,11 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
         )  # type: ignore
 
         # SOS by win pct
-        remaining_difficulty_dict[team][
-            "opp_win_pct"
-        ] = get_remaining_schedule_difficulty(
+        (
+            remaining_difficulty_dict[team]["opp_win_pct"],
+            _,
+            _,
+        ) = get_remaining_schedule_difficulty(
             team,
             week,
             regular_season_length=league.settings.reg_season_count,
@@ -343,9 +422,11 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
         )  # type: ignore
 
         # SOS by win pct
-        remaining_difficulty_dict[team][
-            "opp_power_rank"
-        ] = get_remaining_schedule_difficulty(
+        (
+            remaining_difficulty_dict[team]["opp_power_rank"],
+            _,
+            _,
+        ) = get_remaining_schedule_difficulty(
             team,
             week,
             regular_season_length=league.settings.reg_season_count,
@@ -385,9 +466,13 @@ def get_remaining_schedule_difficulty_df(league: League, week: int) -> pd.DataFr
         ["opp_points_for_index", "opp_win_pct_index", "opp_power_rank_index"]
     ].mean(axis=1)
 
-    return remaining_difficulty[
-        ["opp_points_for", "opp_win_pct", "opp_power_rank", "overall_difficulty"]
-    ].sort_values(by="overall_difficulty", ascending=False)
+    return (
+        remaining_difficulty[
+            ["opp_points_for", "opp_win_pct", "opp_power_rank", "overall_difficulty"]
+        ].sort_values(by="overall_difficulty", ascending=False),
+        strength_period,
+        schedule_period,
+    )
 
 
 def sort_lineups_by_func(
