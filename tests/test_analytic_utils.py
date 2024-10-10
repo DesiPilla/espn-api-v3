@@ -367,7 +367,7 @@ def test_get_remaining_schedule_difficulty(
         pytest.approx(
             utils.get_remaining_schedule_difficulty(
                 team, week, regular_season_length, strength, league
-            ),
+            )[0],
             0.0001,
         )
         == result

@@ -425,8 +425,8 @@ def get_seeding_outcomes_df(final_standings: pd.DataFrame) -> pd.DataFrame:
 
     return final_standings_agg.sort_values(
         by=[
-            "first_in_league",
             "make_playoffs",
+            "first_in_league",
             "first_in_division",
             "last_in_division",
             "last_in_league",

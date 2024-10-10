@@ -215,7 +215,9 @@
 
     {# Remaining strength of schedule #}
     <div class="wrapper-wide">
-      <h2>Remaining strength of schedule</h2>
+      <h2>
+        Remaining strength of schedule (for Weeks {{ sos_weeks.0 }}-{{ sos_weeks.1 }})
+      </h2>
       {% if scores_are_finalized %}
         <em>
           <strong>
@@ -225,6 +227,7 @@
           </strong>
         </em>
       {% endif %}
+
       <table class="table">
         {# Table header #}
         <div class="row header">

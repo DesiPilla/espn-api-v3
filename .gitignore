@@ -1,17 +1,20 @@
 # Distribution / packaging
 .env
-
 *__pycache__*
-*.ipynb_checkpoints*
-.DS_Store
+*.DS_Store
 .vscode*
 dist/*
-*historical_stats.csv
+
+# Notebooks
+*.ipynb_checkpoints*
 *new espn.ipynb
 src/new espn.ipynb
-draft_history.csv
-src/.DS_Store
-league_info_backup.csv
-src/tmp.csv
 website.ipynb
 dev.ipynb
+
+src/tmp.csv
+all_league_creds.csv
+draft_history.csv
+*historical_stats.csv
+historical_stats_all_teams.csv
+league_info_backup.csv
