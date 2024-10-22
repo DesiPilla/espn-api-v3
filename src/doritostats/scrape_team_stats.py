@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
-from espn_api.football import League, Team, Player, Matchup
-from typing import Optional, List, Tuple, Dict
-from src.doritostats.fetch_utils import fetch_league
+from espn_api.football import League, Team, Matchup
+from typing import Optional
+from src.doritostats.fetch_utils import fetch_league, OWNER_MAP
 from src.doritostats.PseudoMatchup import PseudoMatchup
 from src.doritostats.analytic_utils import (
     get_weekly_finish,
@@ -13,7 +13,6 @@ from src.doritostats.analytic_utils import (
     get_top_players,
     avg_slot_score,
 )
-from src.doritostats.luck_index import get_weekly_luck_index
 
 
 def is_playoff_game(league: League, matchup: Matchup, week: int) -> bool:
@@ -471,8 +470,7 @@ def scrape_team_stats(
     df["team_owner"] = df.team_owner.str.title()
 
     # Map owners of previous/co-owned teams to current owners to preserve "franchise"
-    owner_map = {"Katie Brooks": "Nikki Pilla"}
-    df.replace({"team_owner": owner_map, "opp_owner": owner_map}, inplace=True)
+    df.replace({"team_owner": OWNER_MAP, "opp_owner": OWNER_MAP}, inplace=True)
 
     # Get win streak data for each owner
     df = append_streaks(df)

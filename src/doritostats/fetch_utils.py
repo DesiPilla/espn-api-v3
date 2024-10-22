@@ -17,6 +17,11 @@ from dotenv import load_dotenv
 
 warnings.filterwarnings("ignore")
 
+OWNER_MAP = {
+    "Katie Brooks": "Nikki Pilla",
+    "Joseph Ricupero": "Jojo & Matt",
+}
+
 
 def get_postgres_conn() -> sqlalchemy.engine.base.Connection:
     """Create a postrges connection using the DATABASE_URL environment variable.
@@ -166,6 +171,9 @@ def set_owner_names(league: League) -> None:
             ).title()
         else:
             team.owner = "Unknown Owner"
+
+        # Map owners of previous/co-owned teams to current owners to preserve "franchise"
+        team.owner = OWNER_MAP.get(team.owner, team.owner)
 
 
 def set_additional_settings(league: League) -> None:

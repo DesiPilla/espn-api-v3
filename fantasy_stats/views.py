@@ -25,7 +25,8 @@ from src.doritostats.fetch_utils import fetch_league
 from src.doritostats.simulation_utils import simulate_season
 
 MIN_WEEK_TO_DISPLAY = 4  # Only run simulations after Week 4 has completed
-N_SIMULATIONS = 500
+N_SIMULATIONS = 500  # Default number of simulations to run
+MAX_SIMULATIONS = 999  # Maximum number of simulations to run
 
 
 def get_default_week(league_obj: League):
@@ -341,8 +342,12 @@ def simulation(
     week: int = None,
     n_simulations: int = None,
 ):
+    # Set default number of simulations
     if n_simulations is None:
         n_simulations = N_SIMULATIONS
+
+    # Limit the number of simulations to MAX_SIMULATIONS
+    n_simulations = min(n_simulations, MAX_SIMULATIONS)
 
     # If the week is known, check if it is too early to display
     # If so, display the "too soon" page immediately
@@ -408,7 +413,7 @@ def simulation(
         "positions": [ordinal(i) for i in range(1, len(league_obj.teams) + 1)],
         "n_playoff_spots": league_obj.settings.playoff_team_count,
         "n_simulations": n_simulations,
-        "simulation_presets": [100, 500, 1000],
+        "simulation_presets": [100, 500, 999],
     }
     return HttpResponse(render(request, "fantasy_stats/simulation.html", context))
 
