@@ -84,7 +84,11 @@ def league_input(request):
         if league_info_objs:
             league_info = league_info_objs[0]
             league_obj = fetch_league(league_id, league_year, swid, espn_s2)
-            print("League found!")
+            print(
+                "League {} ({}) already exists in the database.".format(
+                    league_id, league_year
+                )
+            )
 
         else:
             print(
@@ -106,6 +110,10 @@ def league_input(request):
                     league_id, league_year
                 )
             )
+
+            # Send an email notification that a new league has been added
+            send_new_league_added_alert(league_info)
+
     except espn_api.requests.espn_requests.ESPNInvalidLeague as e:
         print(
             "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
@@ -172,9 +180,6 @@ def league_input(request):
                 },
             )
         )
-
-    # Send an email notification that a new league has been added
-    send_new_league_added_alert(league_info)
 
     if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
         # If the league hasn't started yet, display the "too soon" page
