@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from typing import Optional
-from .fetch_utils import fetch_league
+from .fetch_utils import fetch_league, OWNER_MAP
 from espn_api.football import League
 
 
@@ -53,8 +53,7 @@ def get_draft_details(league: League) -> pd.DataFrame:
             draft.loc[i, "position"] = player.eligibleSlots[0]
 
     # Map owners of previous/co-owned teams to current owners to preserve "franchise"
-    owner_map = {"Katie Brooks": "Nikki Pilla"}
-    draft.replace({"team_owner": owner_map, "opp_owner": owner_map}, inplace=True)
+    draft.replace({"team_owner": OWNER_MAP, "opp_owner": OWNER_MAP}, inplace=True)
 
     # Add some additional columns
     draft["first_letter"] = draft.player_name.str[0]
