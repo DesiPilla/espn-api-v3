@@ -185,6 +185,26 @@
       </div>
     </div>
 
+    {# Naughty list #}
+    <div class="wrapper naughty-list">
+      <h2>Naughty List</h2>
+      {% if scores_are_finalized %}
+        <em>
+          <strong>
+            <a>Note that scores have not yet been final for this week and the Naughty List is likely to change.</a>
+            <br />
+            <a>Please check back on Tuesday morning for the final results.</a>
+          </strong>
+        </em>
+      {% endif %}
+      {% comment %} Print out a list of all the elements in the naughty list {% endcomment %}
+      <ul>
+        {% for r in naughty_list_str %}
+          <li>{{ r }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
     {# Standings #}
     <div class="wrapper">
       <h2>Standings</h2>
