@@ -1,7 +1,7 @@
 import datetime
 import pytz
-from django.http import HttpResponse, Http404
-from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
 from django.template import RequestContext
 
 import espn_api
@@ -21,8 +21,8 @@ from src.doritostats.django_utils import (
     get_leagues_previous_year,
     ordinal,
 )
+from src.doritostats.analytic_utils import get_naughty_list_str
 from src.doritostats.fetch_utils import fetch_league
-from src.doritostats.simulation_utils import simulate_season
 
 MIN_WEEK_TO_DISPLAY = 4  # Only run simulations after Week 4 has completed
 N_SIMULATIONS = 500  # Default number of simulations to run
@@ -311,6 +311,7 @@ def league(request, league_id: int, league_year: int, week: int = None):
             league_obj, week
         )
         standings = django_standings(league_obj, week)
+        naughty_list_str = get_naughty_list_str(league_obj, week)
 
         context = {
             "league_info": league_info,
@@ -320,6 +321,7 @@ def league(request, league_id: int, league_year: int, week: int = None):
             "weekly_awards": weekly_awards,
             "power_rankings": power_rankings,
             "luck_index": luck_index,
+            "naughty_list_str": naughty_list_str,
             "strength_of_schedule": strength_of_schedule,
             "sos_weeks": schedule_period,
             "standings": standings,

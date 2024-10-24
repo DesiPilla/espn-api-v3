@@ -527,6 +527,57 @@ def get_leader_str(stats_list: list, high_first: bool = True) -> Tuple[float, st
         return sorted_stats_list[0][1], "{}".format(", ".join(leaders))
 
 
+def get_naughty_players(lineup: List[Player], week: int) -> List[Player]:
+    """This function identifies all players that were started by their owners, but were inactive or on bye.
+    The function returns a list of all players that were started by their owners, but were inactive or on bye.
+
+    A player is only considered "naughty" once they have locked (i.e., their matchup has begun) for the week.
+    This is to prevent lineups that have not yet been set from being flagged as "naughty".
+
+    Args:
+        lineup (List[Player]): A list of players in a team's lineup
+        week (int): The week to check for inactive players
+
+    Returns:
+        List[Player]: A list of all players that were started by their owners, but were inactive or on bye.
+    """
+    return [
+        player
+        for player in lineup
+        if player.active_status in ["bye", "inactive"]  # Player was on bye or inactive
+        and player.slot_position
+        not in ["IR", "BE"]  # Player was in the player's starting lineup
+        and "points" in player.stats[week].keys()  # The player is locked for the week
+    ]
+
+
+def get_naughty_list_str(league: League, week: int) -> List[str]:
+    """This function identifies all players that were started by their owners, but were inactive or on bye.
+
+    Args:
+        league (League): League object
+        week (int): The week to check for inactive players
+
+    Returns:
+        List[str]: A list of strings that list all players that were started by their owners, but were inactive or on bye.
+    """
+    naughty_list_str = []
+    for team in league.teams:
+        lineup = get_lineup(league, team, week)
+        naughty_players = get_naughty_players(lineup, week)
+        for player in naughty_players:
+            naughty_list_str.append(
+                "❌ {} started {} ({})".format(
+                    team.owner, player.name, player.active_status
+                )
+            )
+
+    if not naughty_list_str:
+        naughty_list_str = ["🎉 No teams started any inactive players!"]
+
+    return naughty_list_str
+
+
 def make_ordinal(n: int) -> str:
     """
     Convert an integer into its ordinal representation::
