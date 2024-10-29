@@ -375,7 +375,7 @@ def get_weekly_luck_index(
     opp_lineup = get_lineup(league=league, team=opp, week=week, box_scores=box_scores)
 
     # Calculate the performance vs projection factor
-    projection_factor = -1 * get_performance_vs_projection_factor(team_lineup)
+    projection_factor = get_performance_vs_projection_factor(team_lineup)
 
     # Calculate the injury/bye factor
     max_roster_size = sum(
