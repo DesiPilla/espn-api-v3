@@ -357,7 +357,7 @@ def get_weekly_luck_index(
         team.scores[week - 1],
         team.scores,
     )
-    opp_performance_factor = calculate_performance_vs_historical_average(
+    opp_performance_factor = -1 * calculate_performance_vs_historical_average(
         opp.scores[week - 1],
         opp.scores,
     )
@@ -375,7 +375,7 @@ def get_weekly_luck_index(
     opp_lineup = get_lineup(league=league, team=opp, week=week, box_scores=box_scores)
 
     # Calculate the performance vs projection factor
-    projection_factor = get_performance_vs_projection_factor(team_lineup)
+    projection_factor = -1 * get_performance_vs_projection_factor(team_lineup)
 
     # Calculate the injury/bye factor
     max_roster_size = sum(
@@ -386,13 +386,13 @@ def get_weekly_luck_index(
         ]
     )
     injury_bye_factor = get_injury_bye_factor(team_lineup, max_roster_size)
-    opp_injury_bye_factor = get_injury_bye_factor(opp_lineup, max_roster_size)
+    opp_injury_bye_factor = -1 * get_injury_bye_factor(opp_lineup, max_roster_size)
 
     # Calculate the performance vs optimal lineup factor
     optimal_vs_actual_factor = get_optimal_vs_actual_factor(
         league, team_lineup, opp_lineup, outcome
     )
-    opp_optimal_vs_actual_factor = get_optimal_vs_actual_factor(
+    opp_optimal_vs_actual_factor = -1 * get_optimal_vs_actual_factor(
         league, opp_lineup, team_lineup, outcome
     )
     optimal_vs_optimal_factor = get_optimal_vs_optimal_factor(
