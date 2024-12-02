@@ -49,6 +49,36 @@ def build_standings(league: League) -> pd.DataFrame:
     return sort_standings(standings)
 
 
+def build_standings_for_week(league: League, week: int) -> pd.DataFrame:
+    """This function builds the current leaderboard for a league
+
+    Args:
+        league (League): League object
+        week (int): Week to build standings from (standings after week completed)
+
+    Returns:
+        pd.DataFrame: standings dataframe
+    """
+    # Get the standings for the given week
+    standings_list = league.standings_weekly(week=week)
+
+    # Format the standings as a dataframe
+    standings = pd.DataFrame()
+    standings["team_id"] = [team.team_id for team in standings_list]
+    standings["team_name"] = [team.team_name for team in standings_list]
+    standings["wins"] = [
+        sum([o == "W" for o in team.outcomes[:week]]) for team in standings_list
+    ]
+    standings["ties"] = [
+        sum([o == "T" for o in team.outcomes[:week]]) for team in standings_list
+    ]
+    standings["losses"] = [
+        sum([o == "L" for o in team.outcomes[:week]]) for team in standings_list
+    ]
+    standings["points_for"] = [sum(team.scores[:week]) for team in standings_list]
+    return standings.set_index("team_id")
+
+
 def simulate_score(team: Team) -> float:
     """Generate a team score.
     The score is randomly selected from a normal distribution defined by:
@@ -153,8 +183,12 @@ def simulate_single_season(
     """
 
     if standings is None:
-        # Get current standings
-        standings = build_standings(league)
+        if first_week_to_simulate is None:
+            standings = build_standings(league)
+        else:
+            standings = build_standings_for_week(
+                league, week=first_week_to_simulate - 1
+            )
 
     if first_week_to_simulate is None:
         first_week_to_simulate = (
@@ -440,6 +474,7 @@ def simulate_season(
     n: int = 1000,
     what_if: Optional[bool] = False,
     outcomes: Optional[List[int]] = None,
+    first_week_to_simulate: Optional[int] = None,
     random_state: Optional[int] = 42,
 ) -> pd.DataFrame:
     """
@@ -452,6 +487,9 @@ def simulate_season(
         n (int): Number of Monte Carlo simulations to run
         what_if (Optional[bool]): Manually specify the outcomes of the current week? Defaults to False
         outcomes (List[int]): Outcomes passed in as an argument instead of user input. Defaults to None
+        first_week_to_simulate (Optional[int]):
+            - If first_week_to_simulate = 10, the function will simulate all matchups from Weeks 10 -> end of season.
+            - If None, the function will use `standings` to imply how many weeks have finished already and simulate the rest
         random_state (Optional[int]): Random seed. Defaults to 42.
 
     Returns:
@@ -463,16 +501,23 @@ def simulate_season(
     np.random.seed(random_state)
 
     # Get current standings
-    standings = build_standings(league)
+    if first_week_to_simulate is None:
+        standings = build_standings(league)
+    else:
+        standings = build_standings_for_week(league, week=first_week_to_simulate - 1)
 
     # Manually enter the outcome of the next week
     if what_if:
-        first_week_to_simulate = (
-            standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1
-        )
-        current_matchup_period = league.settings.week_to_matchup_period[
-            league.current_week
-        ]
+        if first_week_to_simulate is None:
+            first_week_to_simulate = (
+                standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1
+            )
+            current_matchup_period = league.settings.week_to_matchup_period[
+                league.current_week
+            ]
+        else:
+            current_matchup_period = first_week_to_simulate
+
         standings, matchups_to_exclude = input_outcomes(
             league=league,
             standings=standings,
@@ -480,7 +525,6 @@ def simulate_season(
             outcomes=outcomes,
         )
     else:
-        first_week_to_simulate = None
         matchups_to_exclude = {}
 
     if first_week_to_simulate is not None:
@@ -517,22 +561,27 @@ def simulate_season(
     box_scores_func = league.box_scores
     league.box_scores = None
 
-    # Run the simulations in parallel
-    if n > 1:
-        final_standings = pd.concat(
-            Parallel(n_jobs=-1, verbose=1)(
-                delayed(simulate_single_season_parallel)() for i in range(n)
+    try:
+        # Run the simulations in parallel
+        if n > 1:
+            final_standings = pd.concat(
+                Parallel(n_jobs=-1, verbose=1)(
+                    delayed(simulate_single_season_parallel)() for i in range(n)
+                )
             )
+        else:
+            final_standings = simulate_single_season(league, standings)
+
+        final_standings = (
+            final_standings.reset_index()
+            .apply(get_team_info, axis=1)
+            .set_index("team_id")
         )
-    else:
-        final_standings = simulate_single_season(league, standings)
-
-    final_standings = (
-        final_standings.reset_index().apply(get_team_info, axis=1).set_index("team_id")
-    )
-
-    # Restore the box_scores function
-    league.box_scores = box_scores_func
+    except Exception as e:
+        raise e
+    finally:
+        # Restore the box_scores function
+        league.box_scores = box_scores_func
 
     # Get the playoff odds for each team
     playoff_odds = get_playoff_odds_df(final_standings)

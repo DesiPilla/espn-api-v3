@@ -46,6 +46,11 @@ urlpatterns = [
         views.simulation,
         name="simulation",
     ),
+    path(
+        "season_stats/<int:league_year>/<int:league_id>/",
+        views.season_stats,
+        name="season_stats",
+    ),
     #
     #
     #

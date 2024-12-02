@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from copy import copy
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple, Union
 from espn_api.football import League, Team, Player
 from espn_api.football.box_score import BoxScore
 from sklearn import preprocessing
@@ -491,16 +491,19 @@ def sort_lineups_by_func(
     )
 
 
-def get_leader_str(stats_list: list, high_first: bool = True) -> Tuple[float, str]:
+def get_leader_str(
+    stats_list: List[Tuple[str, float]], high_first: bool = True
+) -> Tuple[float, str]:
     """Return a list of team owners who have the best stat,
     given a list of teams and stat values.
 
     Args:
-        stats_list (list): list of teams and a stat value
+        stats_list (List[Tuple[str, float]]): list of teams and a stat value
           - Ex: [('Team 1', 103.7), ('Team 2', 83.7), ('Team 3', 98.8)]
         high_first (bool, optional): Are higher values better than lower values?. Defaults to True.
 
     Returns:
+        float: The value being sorted
         str: List of team owners with the highest value
     """
 
@@ -524,7 +527,7 @@ def get_leader_str(stats_list: list, high_first: bool = True) -> Tuple[float, st
                 break
 
         # Return the stat value and the leaders string
-        return sorted_stats_list[0][1], "{}".format(", ".join(leaders))
+        return sorted_stats_list[0][1], "{}".format(", ".join(set(leaders)))
 
 
 def get_naughty_players(lineup: List[Player], week: int) -> List[Player]:
@@ -653,7 +656,7 @@ def print_franchise_records(
         n (int): How far down the record list to check (defaults to 5)
     """
     # Get a list of all active teams that have been in the league for 2+ years
-    current_teams = df.query(f"year == {df.year.max()}").team_owner.unique()
+    current_teams = df[df["year"] == df["year"].max()].team_owner.unique()
     list_of_teams = df.groupby(["team_owner"]).nunique()
     list_of_teams = list_of_teams[
         (list_of_teams.year > 1) & list_of_teams.index.isin(current_teams)
@@ -661,7 +664,7 @@ def print_franchise_records(
 
     for team_owner in list_of_teams:
         # Get all rows for the given team
-        team_df = df.query(f"team_owner == '{team_owner}'")
+        team_df = df[df["team_owner"] == team_owner]
 
         # Get any records for that team
         records_df = get_any_records(
@@ -692,10 +695,10 @@ def get_wins_leaderboard(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.Series: Ordered leaderboard by career wins
     """
-    df = df.query("outcome == 'win' & is_meaningful_game == True")
+    df = df[(df["outcome"] == "win") & (df["is_meaningful_game"])]
     leaderboard_df = (
-        df.groupby("team_owner")
-        .count()["outcome"]
+        df.groupby("team_owner")["outcome"]
+        .count()
         .sort_values(ascending=False)
         .reset_index()
     )
@@ -712,7 +715,7 @@ def get_losses_leaderboard(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.Series: Ordered leaderboard by career wins
     """
-    df = df.query("outcome == 'lose' & is_meaningful_game == True")
+    df = df[(df["outcome"] == "lose") & (df["is_meaningful_game"])]
     leaderboard_df = (
         df.groupby("team_owner")
         .count()["outcome"]
@@ -811,22 +814,24 @@ def get_division_standings(league: League) -> Dict[str, List[Team]]:
 def game_of_the_week_stats(
     league: League, df: pd.DataFrame, owner1: str, owner2: str
 ) -> None:
-    gow_df = df.query(
-        f"team_owner == '{owner1}' & opp_owner == '{owner2}' & is_meaningful_game == True"
-    )
+    gow_df = df[
+        (df["team_owner"] == owner1)
+        & (df["opp_owner"] == owner2)
+        & (df["is_meaningful_game"])
+    ]
     gow_df.sort_values(["year", "week"], ascending=True, inplace=True)
 
     print(
         "{} has won {} / {} matchups.".format(
-            owner1, len(gow_df.query("outcome == 'win'")), len(gow_df)
+            owner1, len(gow_df[gow_df["outcome"] == "win"]), len(gow_df)
         )
     )
     print(
         "{} has won {} / {} matchups.".format(
-            owner2, len(gow_df.query("outcome == 'lose'")), len(gow_df)
+            owner2, len(gow_df[gow_df["outcome"] == "lose"]), len(gow_df)
         )
     )
-    print("There have been {} ties".format(len(gow_df.query("outcome == 'tie'"))))
+    print("There have been {} ties".format(len(gow_df[gow_df["outcome"] == "tie"])))
 
     last_matchup = gow_df.iloc[-1]
     print(
@@ -850,9 +855,11 @@ def game_of_the_week_stats(
     print(f"{owner1} has a record of {team1.wins}-{team1.losses}-{team1.ties}")
     print(
         "They have averaged {:.2f} points per game.".format(
-            df.query(
-                f"team_owner == '{owner1}' & year == {league.year} & is_meaningful_game == True"
-            ).team_score.mean()
+            df[
+                (df["team_owner"] == owner1)
+                & (df["year"] == league.year)
+                & (df["is_meaningful_game"])
+            ].team_score.mean()
         )
     )
     print(
@@ -867,9 +874,11 @@ def game_of_the_week_stats(
     print(f"{owner2} has a record of {team2.wins}-{team2.losses}-{team2.ties}")
     print(
         "They have averaged {:.2f} points per game.".format(
-            df.query(
-                f"team_owner == '{owner2}' & year == {league.year} & is_meaningful_game == True"
-            ).team_score.mean()
+            df[
+                (df["team_owner"] == owner2)
+                & (df["year"] == league.year)
+                & (df["is_meaningful_game"])
+            ].team_score.mean()
         )
     )
     print(
@@ -890,8 +899,7 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
         year (int): Year
         week (int): Week
     """
-
-    df = df.query("is_meaningful_game == True")
+    df = df[df["is_meaningful_game"]]
 
     league_positive_stats_to_check = [
         {"stat": "team_score", "units": "pts", "high_first": True, "n": 3},
@@ -969,7 +977,7 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
 
     print("----------------------------------------------------------------")
     print(
-        "|                        Week {:2.0f} Analysis                      |".format(
+        "|                        Week {:2.0f} Analysis                            |".format(
             week
         )
     )
@@ -1027,367 +1035,799 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
 
 
 def season_stats_analysis(
-    league: League, df: pd.DataFrame, week: Optional[int] = None
-) -> None:
+    league: League, df: pd.DataFrame
+) -> Dict[str, Dict[str, Union[str, int, float]]]:
     """Display season-bests and -worsts.
 
     Args:
         league (League): League object
         df (pd.DataFrame): Historical records dataframe
-        week (int, optional): Maximum week to include. Defaults to None.
+
+    Returns:
+        Dict[str, Dict[str, Union[str, int, float]]]: Dictionary containing the season stats
     """
-    if week is None:
-        week = df.query(f"year == {df.year.max()}").week.max()
+    # Filter the dataframe to only include meaningful games in the current year
+    df = df[df["is_meaningful_game"]]
+    df_current_year = df[df["year"] == league.year]
 
-    current_matchup_period = league.settings.week_to_matchup_period[league.current_week]
-    df = df.query("is_meaningful_game == True")
-    df_current_year = df.query(f"year == {league.year}")
-    df_current_week = df_current_year.query(f"week == {current_matchup_period - 1}")
+    # Calculate good awards
+    season_stats_dict: Dict[str, Dict[str, Union[str, int, float]]] = {}
+    season_stats_dict["most_wins"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str([(team.owner, team.wins) for team in league.teams]),
+                "wins",
+                "{:d}",
+            ],
+        )
+    )
+    season_stats_dict["highest_single_game_score"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(df_current_year[["team_owner", "team_score"]].values),
+                    high_first=True,
+                ),
+                "pts",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["longest_win_streak"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(df_current_year[["team_owner", "streak"]].values),
+                    high_first=True,
+                ),
+                "games",
+                "{:d}",
+            ],
+        )
+    )
 
+    season_stats_dict["highest_avg_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["team_score"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    )
+                ),
+                "pts/gm",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["highest_avg_pts_against"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["opp_score"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                ),
+                "pts/gm",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["highest_single_game_score_dif"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(df_current_year[["team_owner", "score_dif"]].values),
+                    high_first=True,
+                ),
+                "pts",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["highest_single_game_pts_surprise"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year[["team_owner", "team_projection_beat"]].values
+                    ),
+                    high_first=True,
+                ),
+                "pts",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["highest_avg_lineup_efficiency"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["lineup_efficiency"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=True,
+                ),
+                "",
+                "{:7.2%}",
+            ],
+        )
+    )
+
+    # Calculate bad awards
+    season_stats_dict["most_losses"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str([(team.owner, team.losses) for team in league.teams]),
+                "losses",
+                "{:d}",
+            ],
+        )
+    )
+    season_stats_dict["lowest_single_game_score"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(df_current_year[["team_owner", "team_score"]].values),
+                    high_first=False,
+                ),
+                "pts",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["lowest_avg_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["team_score"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/gm",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["longest_loss_streak"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(df_current_year[["team_owner", "streak"]].values),
+                    high_first=False,
+                ),
+                "games",
+                "{:d}",
+            ],
+        )
+    )
+    season_stats_dict["lowest_avg_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["team_score"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/gm",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["lowest_avg_pts_against"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["opp_score"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/gm",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["lowest_single_game_score_dif"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(df_current_year[["team_owner", "score_dif"]].values),
+                    high_first=False,
+                ),
+                "pts",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["lowest_single_game_pts_surprise"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year[["team_owner", "team_projection_beat"]].values
+                    ),
+                    high_first=False,
+                ),
+                "pts",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["lowest_avg_lineup_efficiency"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["lineup_efficiency"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "",
+                "{:7.2%}",
+            ],
+        )
+    )
+
+    # Calculte good position awards
+    season_stats_dict["most_QB_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["QB_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=True,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["most_RB_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["RB_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=True,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["most_WR_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["WR_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=True,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["most_TE_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["TE_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=True,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["most_RB_WR_TE_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["RB_WR_TE_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=True,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["most_D_ST_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["D_ST_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=True,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["most_K_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["K_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=True,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["most_bench_points"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["bench_points"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=True,
+                ),
+                "pts/week",
+                "{:7.2f}",
+            ],
+        )
+    )
+
+    # Calculate bad position awards
+    season_stats_dict["least_QB_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["QB_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["least_RB_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["RB_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["least_WR_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["WR_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["least_TE_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["TE_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["least_RB_WR_TE_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["RB_WR_TE_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["least_D_ST_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["D_ST_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["least_K_pts"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["K_pts"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/player",
+                "{:7.2f}",
+            ],
+        )
+    )
+    season_stats_dict["least_bench_points"] = dict(
+        zip(
+            ["val", "owners", "val_units", "val_format"],
+            [
+                *get_leader_str(
+                    list(
+                        df_current_year.groupby("team_owner")["bench_points"]
+                        .mean()
+                        .to_dict()
+                        .items()
+                    ),
+                    high_first=False,
+                ),
+                "pts/week",
+                "{:7.2f}",
+            ],
+        )
+    )
+
+    # Flip the sign of some of the negative stats
+    season_stats_dict["longest_loss_streak"]["val"] *= -1
+    season_stats_dict["lowest_single_game_score_dif"]["val"] *= -1
+    season_stats_dict["lowest_single_game_pts_surprise"]["val"] *= -1
+
+    # Print good team awards
     print("----------------------------------------------------------------")
     print(
-        "|             Season {:2.0f} Analysis (through Week {:2.0f})           |".format(
-            league.year, week
+        "|             Season {:2.0f} Analysis                          |".format(
+            league.year
         )
     )
     print("----------------------------------------------------------------")
-
-    # Good awards
     print(
-        "Most wins this season              - {:.0f} wins - {}".format(
-            *get_leader_str([(team.owner, team.wins) for team in league.teams])
+        "Most wins this season              - {:.0f} {} - {}".format(
+            float(season_stats_dict["most_wins"]["val"]),
+            season_stats_dict["most_wins"]["val_units"],
+            season_stats_dict["most_wins"]["owners"],
         )
     )
     print(
-        "Highest single game score          - {:.0f} pts - {}".format(
-            *get_leader_str(
-                df_current_year[["team_owner", "team_score"]].values, high_first=True
-            )
+        "Highest single game score          - {:.0f} {} - {}".format(
+            float(season_stats_dict["highest_single_game_score"]["val"]),
+            season_stats_dict["highest_single_game_score"]["val_units"],
+            season_stats_dict["highest_single_game_score"]["owners"],
         )
     )
     print(
-        "Highest average points this season - {:.0f} pts/gm - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["team_score"]
-                .to_dict()
-                .items()
-            )
+        "Longest win streak this season     - {:.0f} {} - {}".format(
+            float(season_stats_dict["longest_win_streak"]["val"]),
+            season_stats_dict["longest_win_streak"]["val_units"],
+            season_stats_dict["longest_win_streak"]["owners"],
         )
     )
     print(
-        "Longest active win streak          - {:.0f} gms - {}".format(
-            *get_leader_str(
-                df_current_week[["team_owner", "streak"]].values, high_first=True
-            )
+        "Most PPG this season               - {:.1f} {} - {}".format(
+            float(season_stats_dict["highest_avg_pts"]["val"]),
+            season_stats_dict["highest_avg_pts"]["val_units"],
+            season_stats_dict["highest_avg_pts"]["owners"],
         )
     )
     print(
-        "Longest win streak this season     - {:.0f} gms - {}".format(
-            *get_leader_str(
-                df_current_year[["team_owner", "streak"]].values, high_first=True
-            )
+        "Most PAPG this season              - {:.1f} {} - {}".format(
+            float(season_stats_dict["highest_avg_pts_against"]["val"]),
+            season_stats_dict["highest_avg_pts_against"]["val_units"],
+            season_stats_dict["highest_avg_pts_against"]["owners"],
         )
     )
     print(
-        "Most PPG this season               - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["team_score"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
-        )
-    )
-    print(
-        "Most PAPG this season              - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["opp_score_adj"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
-        )
-    )
-    print(
-        "Highest score diff                 - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["score_dif"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
+        "Highest score diff                 - {:.1f} {} - {}".format(
+            float(season_stats_dict["highest_single_game_score_dif"]["val"]),
+            season_stats_dict["highest_single_game_score_dif"]["val_units"],
+            season_stats_dict["highest_single_game_score_dif"]["owners"],
         )
     )
     print(
         "Highest lineup efficiency          - {:.1%} - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["lineup_efficiency"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
+            float(season_stats_dict["highest_avg_lineup_efficiency"]["val"]),
+            season_stats_dict["highest_avg_lineup_efficiency"]["owners"],
         )
     )
 
-    # Bad awards
+    # Bad team awards
     print()
     print(
-        "Most losses this season           - {:.0f} losses - {}".format(
-            *get_leader_str([(team.owner, team.losses) for team in league.teams])
+        "Most losses this season           - {:.0f} {} - {}".format(
+            float(season_stats_dict["most_losses"]["val"]),
+            season_stats_dict["most_losses"]["val_units"],
+            season_stats_dict["most_losses"]["owners"],
         )
     )
     print(
-        "Lowest single game score          - {:.0f} pts - {}".format(
-            *get_leader_str(
-                df_current_year[["team_owner", "team_score"]].values, high_first=False
-            )
+        "Lowest single game score          - {:.0f} {} - {}".format(
+            float(season_stats_dict["lowest_single_game_score"]["val"]),
+            season_stats_dict["lowest_single_game_score"]["val_units"],
+            season_stats_dict["lowest_single_game_score"]["owners"],
         )
     )
     print(
-        "Lowest average points this season - {:.0f} pts/gm - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["team_score"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
+        "Longest loss streak this season   - {:.0f} {} - {}".format(
+            float(season_stats_dict["longest_loss_streak"]["val"]),
+            season_stats_dict["longest_loss_streak"]["val_units"],
+            season_stats_dict["longest_loss_streak"]["owners"],
         )
     )
     print(
-        "Longest active loss streak        - {:.0f} gms - {}".format(
-            *get_leader_str(
-                df_current_week[["team_owner", "streak"]].values, high_first=False
-            )
+        "Lowest PPG this season            - {:.1f} {} - {}".format(
+            float(season_stats_dict["lowest_avg_pts"]["val"]),
+            season_stats_dict["lowest_avg_pts"]["val_units"],
+            season_stats_dict["lowest_avg_pts"]["owners"],
         )
     )
     print(
-        "Longest loss streak this season   - {:.0f} gms - {}".format(
-            *get_leader_str(
-                df_current_year[["team_owner", "streak"]].values, high_first=False
-            )
+        "Lowest PAPG this season           - {:.1f} {} - {}".format(
+            float(season_stats_dict["lowest_avg_pts_against"]["val"]),
+            season_stats_dict["lowest_avg_pts_against"]["val_units"],
+            season_stats_dict["lowest_avg_pts_against"]["owners"],
         )
     )
     print(
-        "Lowest PPG this season            - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["team_score"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
-        )
-    )
-    print(
-        "Lowest PAPG this season           - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["opp_score_adj"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
-        )
-    )
-    print(
-        "Lowest score diff                 - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["score_dif"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
+        "Lowest score diff                 - {:.1f} {} - {}".format(
+            float(season_stats_dict["lowest_single_game_score_dif"]["val"]),
+            season_stats_dict["lowest_single_game_score_dif"]["val_units"],
+            season_stats_dict["lowest_single_game_score_dif"]["owners"],
         )
     )
     print(
         "Lowest lineup efficiency          - {:.1%} - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["lineup_efficiency"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
+            float(season_stats_dict["lowest_avg_lineup_efficiency"]["val"]),
+            season_stats_dict["lowest_avg_lineup_efficiency"]["owners"],
+        )
+    )
+
+    # Print good position awards
+    print()
+    print(
+        "Most QB pts this season           - {:.1f} {} - {}".format(
+            float(season_stats_dict["most_QB_pts"]["val"]),
+            season_stats_dict["most_QB_pts"]["val_units"],
+            season_stats_dict["most_QB_pts"]["owners"],
+        )
+    )
+    print(
+        "Most RB pts this season           - {:.1f} {} - {}".format(
+            float(season_stats_dict["most_RB_pts"]["val"]),
+            season_stats_dict["most_RB_pts"]["val_units"],
+            season_stats_dict["most_RB_pts"]["owners"],
+        )
+    )
+    print(
+        "Most WR pts this season           - {:.1f} {} - {}".format(
+            float(season_stats_dict["most_WR_pts"]["val"]),
+            season_stats_dict["most_WR_pts"]["val_units"],
+            season_stats_dict["most_WR_pts"]["owners"],
+        )
+    )
+    print(
+        "Most TE pts this season           - {:.1f} {} - {}".format(
+            float(season_stats_dict["most_TE_pts"]["val"]),
+            season_stats_dict["most_TE_pts"]["val_units"],
+            season_stats_dict["most_TE_pts"]["owners"],
+        )
+    )
+    print(
+        "Most RB/WR/TE pts this season     - {:.1f} {} - {}".format(
+            float(season_stats_dict["most_RB_WR_TE_pts"]["val"]),
+            season_stats_dict["most_RB_WR_TE_pts"]["val_units"],
+            season_stats_dict["most_RB_WR_TE_pts"]["owners"],
+        )
+    )
+    print(
+        "Most D/ST pts this season         - {:.1f} {} - {}".format(
+            float(season_stats_dict["most_D_ST_pts"]["val"]),
+            season_stats_dict["most_D_ST_pts"]["val_units"],
+            season_stats_dict["most_D_ST_pts"]["owners"],
+        )
+    )
+    print(
+        "Most K pts this season            - {:.1f} {} - {}".format(
+            float(season_stats_dict["most_K_pts"]["val"]),
+            season_stats_dict["most_K_pts"]["val_units"],
+            season_stats_dict["most_K_pts"]["owners"],
+        )
+    )
+    print(
+        "Most bench pts this season        - {:.1f} {} - {}".format(
+            float(season_stats_dict["most_bench_points"]["val"]),
+            season_stats_dict["most_bench_points"]["val_units"],
+            season_stats_dict["most_bench_points"]["owners"],
         )
     )
 
     print()
     print(
-        "Most QB pts this season           - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["QB_pts"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
+        "Fewest QB pts this season         - {:.1f} {} - {}".format(
+            float(season_stats_dict["least_QB_pts"]["val"]),
+            season_stats_dict["least_QB_pts"]["val_units"],
+            season_stats_dict["least_QB_pts"]["owners"],
         )
     )
     print(
-        "Most RB pts this season           - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["RB_pts"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
+        "Fewest RB pts this season         - {:.1f} {} - {}".format(
+            float(season_stats_dict["least_RB_pts"]["val"]),
+            season_stats_dict["least_RB_pts"]["val_units"],
+            season_stats_dict["least_RB_pts"]["owners"],
         )
     )
     print(
-        "Most WR pts this season           - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["WR_pts"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
+        "Fewest WR pts this season         - {:.1f} {} - {}".format(
+            float(season_stats_dict["least_WR_pts"]["val"]),
+            season_stats_dict["least_WR_pts"]["val_units"],
+            season_stats_dict["least_WR_pts"]["owners"],
         )
     )
     print(
-        "Most TE pts this season           - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["TE_pts"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
+        "Fewest TE pts this season         - {:.1f} {} - {}".format(
+            float(season_stats_dict["least_TE_pts"]["val"]),
+            season_stats_dict["least_TE_pts"]["val_units"],
+            season_stats_dict["least_TE_pts"]["owners"],
         )
     )
     print(
-        "Most RB/WR/TE pts this season     - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["RB_WR_TE_pts"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
+        "Fewest RB/WR/TE pts this season   - {:.1f} {} - {}".format(
+            float(season_stats_dict["least_RB_WR_TE_pts"]["val"]),
+            season_stats_dict["least_RB_WR_TE_pts"]["val_units"],
+            season_stats_dict["least_RB_WR_TE_pts"]["owners"],
         )
     )
     print(
-        "Most D/ST pts this season         - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["D_ST_pts"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
+        "Fewest D/ST pts this season       - {:.1f} {} - {}".format(
+            float(season_stats_dict["least_D_ST_pts"]["val"]),
+            season_stats_dict["least_D_ST_pts"]["val_units"],
+            season_stats_dict["least_D_ST_pts"]["owners"],
         )
     )
     print(
-        "Most K pts this season            - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner").mean()["K_pts"].to_dict().items(),
-                high_first=True,
-            )
+        "Fewest K pts this season          - {:.1f} {} - {}".format(
+            float(season_stats_dict["least_K_pts"]["val"]),
+            season_stats_dict["least_K_pts"]["val_units"],
+            season_stats_dict["least_K_pts"]["owners"],
         )
     )
     print(
-        "Most bench pts this season        - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["bench_points"]
-                .to_dict()
-                .items(),
-                high_first=True,
-            )
+        "Fewest bench pts this season      - {:.1f} {} - {}".format(
+            float(season_stats_dict["least_bench_points"]["val"]),
+            season_stats_dict["least_bench_points"]["val_units"],
+            season_stats_dict["least_bench_points"]["owners"],
         )
     )
 
-    print()
-    print(
-        "Fewest QB pts this season         - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["QB_pts"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
-        )
-    )
-    print(
-        "Fewest RB pts this season         - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["RB_pts"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
-        )
-    )
-    print(
-        "Fewest WR pts this season         - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["WR_pts"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
-        )
-    )
-    print(
-        "Fewest TE pts this season         - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["TE_pts"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
-        )
-    )
-    print(
-        "Fewest RB/WR/TE pts this season   - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["RB_WR_TE_pts"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
-        )
-    )
-    print(
-        "Fewest D/ST pts this season       - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["D_ST_pts"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
-        )
-    )
-    print(
-        "Fewest K pts this season          - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner").mean()["K_pts"].to_dict().items(),
-                high_first=False,
-            )
-        )
-    )
-    print(
-        "Fewest bench pts this season      - {:.1f} pts - {}".format(
-            *get_leader_str(
-                df_current_year.groupby("team_owner")
-                .mean()["bench_points"]
-                .to_dict()
-                .items(),
-                high_first=False,
-            )
-        )
-    )
+    return season_stats_dict

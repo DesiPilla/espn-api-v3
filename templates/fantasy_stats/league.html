@@ -64,6 +64,9 @@
     {% comment %}Playoff simulations{% endcomment %}
     <a href="/fantasy_stats/simulation/{{ league_info.league_year }}/{{ league_info.league_id }}/n_simulations=250" class="simulation-button">Simulate Playoff Odds</a>
 
+    {% comment %}Season records{% endcomment %}
+    <a href="/fantasy_stats/season_stats/{{ league_info.league_year }}/{{ league_info.league_id }}/" class="simulation-button">Season records & leaders</a>
+
     {% comment %}Current week scores{% endcomment %}
     <div class="wrapper">
       <h2>Scores</h2>
@@ -93,7 +96,7 @@
     {# Weekly Awards #}
     <div class="wrapper">
       <h2>Weekly awards</h2>
-      {% if scores_are_finalized %}
+      {% if not scores_are_finalized %}
         <em>
           <strong>
             <a>Note that scores have not yet been finalized for this week and award winners are likely to change.</a>
@@ -126,7 +129,7 @@
     {# Power Rankings #}
     <div class="wrapper">
       <h2>Power Rankings</h2>
-      {% if scores_are_finalized %}
+      {% if not scores_are_finalized %}
         <em>
           <strong>
             <a>Note that scores have not yet been final for this week and power rankings are likely to change.</a>
@@ -157,7 +160,7 @@
     {# Luck Index #}
     <div class="wrapper">
       <h2>Luck Index</h2>
-      {% if scores_are_finalized %}
+      {% if not scores_are_finalized %}
         <em>
           <strong>
             <a>Note that scores have not yet been final for this week and the Luck Index is likely to change.</a>
@@ -188,7 +191,7 @@
     {# Naughty list #}
     <div class="wrapper naughty-list">
       <h2>Naughty List</h2>
-      {% if scores_are_finalized %}
+      {% if not scores_are_finalized %}
         <em>
           <strong>
             <a>Note that scores have not yet been final for this week and the Naughty List is likely to change.</a>
@@ -238,7 +241,7 @@
       <h2>
         Remaining strength of schedule (for Weeks {{ sos_weeks.0 }}-{{ sos_weeks.1 }})
       </h2>
-      {% if scores_are_finalized %}
+      {% if not scores_are_finalized %}
         <em>
           <strong>
             <a>Note that scores have not yet been final for this week and remaining SOS is likely to change.</a>
@@ -277,17 +280,23 @@
     </div>
 
     <footer>
-      <div class="container">
-        <div class="footer-content">
-          <div class="footer-text">
-            <p>For suggestions or feature requests, please connect with us on GitHub or LinkedIn.</p>
-          </div>
-          <div class="footer-icons">
-            <a href="https://github.com/DesiPilla/espn-api-v3" target="_blank"><img src="{% static 'fantasy_stats/img/github-icon.svg' %}" alt="GitHub" /></a>
-            <a href="https://www.linkedin.com/in/desipilla/" target="_blank"><img src="{% static 'fantasy_stats/img/linkedin-icon.svg' %}" alt="LinkedIn" /></a>
-          </div>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <p>For suggestions or feature requests, please connect with us on GitHub or LinkedIn.</p>
+                </div>
+                <div class="footer-icons">
+                    <a href="https://github.com/DesiPilla/espn-api-v3" target="_blank">
+                        <img src="{% static 'fantasy_stats/img/github-icon.svg' %}" alt="GitHub">
+                    </a>
+                    <a href="https://www.linkedin.com/in/desipilla/" target="_blank">
+                        <img src="{% static 'fantasy_stats/img/linkedin-icon.svg' %}" alt="LinkedIn">
+                    </a>
+                </div>
+                <a href="https://www.buymeacoffee.com/desipilla" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+            </div>
         </div>
-      </div>
     </footer>
-  </body>
+</body>
 </html>
+
