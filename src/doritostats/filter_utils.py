@@ -11,8 +11,8 @@ def exclude_most_recent_week(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: Filtered dataframe
     """
     year_to_exclude = df.year.max()
-    week_to_exclude = df.query(f"year == {year_to_exclude}").week.max()
-    return df.query(f"~(year == {year_to_exclude} & week == {week_to_exclude})")
+    week_to_exclude = df[df["year"] == year_to_exclude].week.max()
+    return df[(df["year"] != year_to_exclude) | (df["week"] != week_to_exclude)]
 
 
 def get_any_records(
@@ -40,6 +40,6 @@ def get_any_records(
 
     # Keep only the top n records, in the year-week of note
     sub_df = sub_df[sub_df["rank"] <= n]
-    sub_df = sub_df.query(f"year == {year} & week == {week}")
+    sub_df = sub_df[(sub_df["year"] == year) & (sub_df["week"] == week)]
 
     return sub_df[["year", "week", "team_owner", stat, "rank"]]

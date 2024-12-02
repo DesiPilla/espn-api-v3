@@ -9,10 +9,12 @@ from espn_api.football import League
 
 from fantasy_stats.email_notifications.email import send_new_league_added_alert
 from .models import LeagueInfo
+from src.doritostats.analytic_utils import get_naughty_list_str, season_stats_analysis
 from src.doritostats.django_utils import (
     django_luck_index,
     django_power_rankings,
     django_simulation,
+    django_season_stats,
     django_standings,
     django_strength_of_schedule,
     django_weekly_stats,
@@ -21,7 +23,6 @@ from src.doritostats.django_utils import (
     get_leagues_previous_year,
     ordinal,
 )
-from src.doritostats.analytic_utils import get_naughty_list_str
 from src.doritostats.fetch_utils import fetch_league
 
 MIN_WEEK_TO_DISPLAY = 4  # Only run simulations after Week 4 has completed
@@ -325,7 +326,7 @@ def league(request, league_id: int, league_year: int, week: int = None):
             "strength_of_schedule": strength_of_schedule,
             "sos_weeks": schedule_period,
             "standings": standings,
-            "scores_are_finalized": league_obj.current_week <= week,
+            "scores_are_finalized": league_obj.current_week > week,
         }
 
         return HttpResponse(render(request, "fantasy_stats/league.html", context))
@@ -423,6 +424,38 @@ def simulation(
         "simulation_presets": [100, 500, 999],
     }
     return HttpResponse(render(request, "fantasy_stats/simulation.html", context))
+
+
+def season_stats(
+    request,
+    league_id: int,
+    league_year: int,
+):
+    # Fetch the league
+    league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
+    league_obj = fetch_league(
+        league_info.league_id,
+        league_info.league_year,
+        league_info.swid,
+        league_info.espn_s2,
+    )
+
+    (
+        best_team_stats_list,
+        worst_team_stats_list,
+        best_position_stats_list,
+        worst_position_stats_list,
+    ) = django_season_stats(league=league_obj)
+
+    context = {
+        "league_info": league_info,
+        "scores_are_finalized": league_obj.is_season_complete,
+        "best_team_stats": best_team_stats_list,
+        "worst_team_stats": worst_team_stats_list,
+        "best_position_stats": best_position_stats_list,
+        "worst_position_stats": worst_position_stats_list,
+    }
+    return HttpResponse(render(request, "fantasy_stats/season_stats.html", context))
 
 
 #############################################################

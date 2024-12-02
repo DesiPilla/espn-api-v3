@@ -158,11 +158,18 @@ def get_stats_by_week(
         df.groupby(["team_owner"])["win_pct"].apply(lambda x: x.shift(1)).values
     )
 
+    # Map owners of previous/co-owned teams to current owners to preserve "franchise"
+    df.replace({"team_owner": OWNER_MAP, "opp_owner": OWNER_MAP}, inplace=True)
+
     return df
 
 
 def get_stats_by_matchup(
-    league_id: int, year: int, swid: str, espn_s2: str
+    league: Optional[League] = None,
+    league_id: Optional[int] = None,
+    year: Optional[int] = None,
+    swid: Optional[str] = None,
+    espn_s2: Optional[str] = None,
 ) -> pd.DataFrame:
     """This function creates a historical dataframe for the league in a given year.
 
@@ -174,6 +181,7 @@ def get_stats_by_matchup(
     This is used for years in 2019 or later, where the BoxScores are available.
 
     Args:
+        league (League): League object
         league_id (int): League ID
         year (int): Year of the league
         swid (str): User credential
@@ -182,8 +190,18 @@ def get_stats_by_matchup(
     Returns:
         pd.DataFrame: Historical stats dataframe
     """
-    # Fetch league for year
-    league = fetch_league(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)
+    if league is None:
+        assert (
+            league_id is not None and year is not None
+        ), "Must pass in either a League object or a league_id and year"
+
+        # Fetch league for year
+        league = fetch_league(
+            league_id=league_id, year=year, swid=swid, espn_s2=espn_s2
+        )
+    else:
+        league_id = league.league_id
+        year = league.year
 
     # Instantiate data frame
     df = pd.DataFrame()
@@ -346,6 +364,9 @@ def get_stats_by_matchup(
         df.groupby(["team_owner"])["win_pct"].apply(lambda x: x.shift(1)).values
     )
 
+    # Map owners of previous/co-owned teams to current owners to preserve "franchise"
+    df.replace({"team_owner": OWNER_MAP, "opp_owner": OWNER_MAP}, inplace=True)
+
     return df
 
 
@@ -434,7 +455,9 @@ def scrape_team_stats(
             df_year["box_score_available"] = False
         else:
             # Build the data from BoxScore information
-            df_year = get_stats_by_matchup(league_id, year, swid, espn_s2)
+            df_year = get_stats_by_matchup(
+                league_id=league_id, year=year, swid=swid, espn_s2=espn_s2
+            )
             df_year["box_score_available"] = True
 
         # Properly cast boolean columns to bool
@@ -468,9 +491,6 @@ def scrape_team_stats(
 
     # Correct capitalization of team owners
     df["team_owner"] = df.team_owner.str.title()
-
-    # Map owners of previous/co-owned teams to current owners to preserve "franchise"
-    df.replace({"team_owner": OWNER_MAP, "opp_owner": OWNER_MAP}, inplace=True)
 
     # Get win streak data for each owner
     df = append_streaks(df)

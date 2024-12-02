@@ -128,7 +128,9 @@ def get_roster_settings(league: League) -> None:
     if type(r) == list:
         r = r[0]
     settings = r["settings"]
+
     league.name = settings["name"]
+    league.is_season_complete = r["schedule"][-1]["winner"] != "UNDECIDED"
 
     # Grab the dictionary containing the number of players of each position a roster contains
     roster = settings["rosterSettings"]["lineupSlotCounts"]

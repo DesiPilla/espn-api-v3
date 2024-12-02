@@ -4,18 +4,23 @@ from espn_api.football import League
 
 from fantasy_stats.models import LeagueInfo
 from src.doritostats.analytic_utils import (
-    get_num_active,
-    get_remaining_schedule_difficulty_df,
-    sort_lineups_by_func,
+    avg_slot_score,
     get_best_lineup,
     get_best_trio,
     get_lineup_efficiency,
-    avg_slot_score,
-    sum_bench_points,
+    get_num_active,
+    get_remaining_schedule_difficulty_df,
     get_score_surprise,
     get_total_tds,
+    season_stats_analysis,
+    sort_lineups_by_func,
+    sum_bench_points,
 )
 from src.doritostats.luck_index import get_weekly_luck_index
+from src.doritostats.scrape_team_stats import (
+    append_streaks,
+    get_stats_by_matchup,
+)
 from src.doritostats.simulation_utils import simulate_season
 
 
@@ -257,6 +262,105 @@ def django_weekly_stats(league: League, week: int):
         )
 
     return weekly_stats
+
+
+def django_season_stats(league: League):
+    # Get the season stats
+    df_year = get_stats_by_matchup(league=league)
+
+    # Get win streak data for each owner
+    df_year = append_streaks(df_year)
+    df_year["box_score_available"] = True
+
+    # Properly cast boolean columns to bool
+    bool_cols = {
+        col: bool for col in df_year.columns[df_year.columns.str.contains("is_")]
+    }
+    df_year = df_year.astype(bool_cols)
+
+    # Get season records
+    season_stats_dict = season_stats_analysis(
+        league=league,
+        df=df_year,
+    )
+
+    best_team_stats_dict = {
+        "most_wins": "Most wins",
+        "highest_single_game_score": "Highest game score",
+        "longest_win_streak": "Longest win streak",
+        "highest_avg_pts": "Most Points For",
+        "highest_avg_pts_against": "Highest Points Against",
+        "highest_single_game_score_dif": "Largest margin of victory",
+        "highest_single_game_pts_surprise": "Largest projection beat",
+        "highest_avg_lineup_efficiency": "Highest average lineup efficiency",
+    }
+    worst_team_stats_dict = {
+        "most_losses": "Most losses",
+        "lowest_single_game_score": "Lowest game score",
+        "longest_loss_streak": "Longest loss streak",
+        "lowest_avg_pts": "Fewest Points For",
+        "lowest_avg_pts_against": "Fewest Points Against",
+        "lowest_single_game_score_dif": "Biggest loss",
+        "lowest_single_game_pts_surprise": "Biggest underperformance",
+        "lowest_avg_lineup_efficiency": "Lowest average lineup efficiency",
+    }
+    best_position_stats_dict = {
+        "most_QB_pts": "Most QB points",
+        "most_RB_pts": "Most RB points",
+        "most_WR_pts": "Most WR points",
+        "most_TE_pts": "Most TE points",
+        "most_RB_WR_TE_pts": "Most FLEX points",
+        "most_D_ST_pts": "Most D/ST points",
+        "most_K_pts": "Most K points",
+        "most_bench_points": "Most Bench points",
+    }
+    worst_position_stats_dict = {
+        "least_QB_pts": "Fewest QB points",
+        "least_RB_pts": "Fewest RB points",
+        "least_WR_pts": "Fewest WR points",
+        "least_TE_pts": "Fewest TE points",
+        "least_RB_WR_TE_pts": "Fewest FLEX points",
+        "least_D_ST_pts": "Fewest D/ST points",
+        "least_K_pts": "Fewest K points",
+        "least_bench_points": "Fewest Bench points",
+    }
+
+    # Define lists for contain each set of stats
+    best_team_stats_list = []
+    worst_team_stats_list = []
+    best_position_stats_list = []
+    worst_position_stats_list = []
+    stat_lists = [
+        (best_team_stats_list, best_team_stats_dict),
+        (worst_team_stats_list, worst_team_stats_dict),
+        (best_position_stats_list, best_position_stats_dict),
+        (worst_position_stats_list, worst_position_stats_dict),
+    ]
+
+    # Add the best and worst stats to the season stats list
+    for stat_list, stat_dict in stat_lists:
+        for stat_key, stat_label in stat_dict.items():
+            # Format the best and worst stats
+            stat = season_stats_dict[stat_key]
+            stat_value = (
+                stat["val_format"].format(stat["val"]) + " " + stat["val_units"]
+            )
+
+            # Add the best and worst stats to the season stats list
+            stat_list.append(
+                {
+                    "label": stat_label,
+                    "owner": stat["owners"],
+                    "value": stat_value,
+                }
+            )
+
+    return (
+        best_team_stats_list,
+        worst_team_stats_list,
+        best_position_stats_list,
+        worst_position_stats_list,
+    )
 
 
 def django_power_rankings(league: League, week: int):
