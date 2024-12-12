@@ -465,7 +465,7 @@ def django_strength_of_schedule(
 
 
 def django_simulation(league: League, n_simulations: int):
-    if league.current_week >= league.settings.reg_season_count:
+    if league.current_week > league.settings.reg_season_count:
         n_simulations = 1
 
     # Get power rankings for the current week

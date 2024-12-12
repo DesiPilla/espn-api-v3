@@ -1186,7 +1186,11 @@ def season_stats_analysis(
             ["val", "owners", "val_units", "val_format"],
             [
                 *get_leader_str(
-                    list(df_current_year[["team_owner", "team_score"]].values),
+                    list(
+                        df_current_year[df_current_year["team_score"] > 0][
+                            ["team_owner", "team_score"]
+                        ].values
+                    ),
                     high_first=False,
                 ),
                 "pts",
