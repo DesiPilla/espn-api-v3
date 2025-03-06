@@ -890,6 +890,8 @@ def game_of_the_week_stats(
         )
     )
 
+    return gow_df
+
 
 def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
     """Generate any league- or franchise-records for a given week.

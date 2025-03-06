@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Tuple
 from src.doritostats.analytic_utils import get_team
 from espn_api.football import League, Team, Matchup
 from src.doritostats.PseudoMatchup import PseudoMatchup
+from src.doritostats.PseudoTeam import PseudoTeam
 
 
 def sort_standings(
@@ -274,18 +275,10 @@ def input_outcomes(
         else:
             # Regardless of the winner, assign each team their average ppg over the last 4 weeks
             home_ppg = np.average(matchup.home_team.scores[: week - 1][:-4])
-            away_ppg = np.average(matchup.home_team.scores[: week - 1][:-4])
-
             if winner == 1:
-                (home_outcome, away_outcome) = [
-                    (1, 0, 0, home_ppg),
-                    (0, 0, 1, away_ppg),
-                ]
+                home_outcome = (1, 0, 0, home_ppg)
             elif winner == 2:
-                (home_outcome, away_outcome) = [
-                    (0, 0, 1, home_ppg),
-                    (1, 0, 0, away_ppg),
-                ]
+                home_outcome = (0, 0, 1, home_ppg)
             else:
                 raise Exception("Incorrect input type. Please enter `1` or `2`.")
 
@@ -293,13 +286,27 @@ def input_outcomes(
             standings.loc[matchup.home_team.team_id, "wins"] += home_outcome[0]  # type: ignore
             standings.loc[matchup.home_team.team_id, "losses"] += home_outcome[2]  # type: ignore
             standings.loc[matchup.home_team.team_id, "points_for"] += home_outcome[3]  # type: ignore
-            standings.loc[matchup.away_team.team_id, "wins"] += away_outcome[0]  # type: ignore
-            standings.loc[matchup.away_team.team_id, "losses"] += away_outcome[2]  # type: ignore
-            standings.loc[matchup.away_team.team_id, "points_for"] += away_outcome[3]  # type: ignore
+
+            # Only calculate away team if there is no bye
+            if isinstance(matchup.away_team, Team):
+                # Regardless of the winner, assign each team their average ppg over the last 4 weeks
+                away_ppg = np.average(matchup.away_team.scores[: week - 1][:-4])
+                if winner == 1:
+                    away_outcome = (0, 0, 1, away_ppg)
+                elif winner == 2:
+                    away_outcome = (1, 0, 0, away_ppg)
+                else:
+                    raise Exception("Incorrect input type. Please enter `1` or `2`.")
+                standings.loc[matchup.away_team.team_id, "wins"] += away_outcome[0]  # type: ignore
+                standings.loc[matchup.away_team.team_id, "losses"] += away_outcome[2]  # type: ignore
+                standings.loc[matchup.away_team.team_id, "points_for"] += away_outcome[3]  # type: ignore
+                away_team = matchup.away_team
+            else:
+                away_team = PseudoTeam(99)
 
             # Assign the team with the smaller team_id as the "home team"
             (home_team, away_team) = sorted(
-                [matchup.home_team, matchup.away_team], key=lambda x: x.team_id
+                [matchup.home_team, away_team], key=lambda x: x.team_id
             )
             # Add matchup to list of excluded matchups
             matchups_to_exclude[week].append(PseudoMatchup(home_team, away_team))
@@ -521,7 +528,7 @@ def simulate_season(
         standings, matchups_to_exclude = input_outcomes(
             league=league,
             standings=standings,
-            week=current_matchup_period,
+            week=first_week_to_simulate,
             outcomes=outcomes,
         )
     else:
@@ -683,21 +690,29 @@ def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
         home_team = matchup.home_team
         outcomes_home_win = get_outcomes_if_team_wins(home_team, week, matchups)
         odds_home_win = simulate_season(
-            league, n, what_if=True, outcomes=outcomes_home_win
+            league,
+            n,
+            what_if=True,
+            outcomes=outcomes_home_win,
+            first_week_to_simulate=week,
         )[0].set_index("team_owner")
 
         # Simulate season if away team wins
         away_team = matchup.away_team
         outcomes_away_win = get_outcomes_if_team_wins(away_team, week, matchups)
         odds_away_win = simulate_season(
-            league, n, what_if=True, outcomes=outcomes_away_win
+            league,
+            n,
+            what_if=True,
+            outcomes=outcomes_away_win,
+            first_week_to_simulate=week,
         )[0].set_index("team_owner")
 
         # Merge results
         odds = pd.merge(
             odds_home_win[["playoff_odds"]],
             odds_away_win[["playoff_odds"]],
-            suffixes=("_if_home_win", "_if_away_lose"),
+            suffixes=("_if_home_win", "_if_away_win"),
             left_index=True,
             right_index=True,
         )
@@ -719,3 +734,93 @@ def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
         )
 
     return odds_diff
+
+
+def sweater_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
+    """
+    This function determines how much a team's playoff odds will change based on if they win or lose their next matchup.
+
+    For each matchup, two simulations are run:
+        - one where the home team wins, and
+        - one where the away team wins
+
+        In each simulation, only the one matchup is pre-determined. All other matchups in that week are simulated.
+
+        The difference between the home and away teams' playoff odds in the two simulations is called the "swing".
+            - If the simulated playoff odds for a team is 75% if they win and 50% if they lose, then the "swing" is 25%
+
+    The playoff "swings" for each team is returned as a pandas Series where "team_owner" is the index.
+
+    Args:
+        league (League): League
+        week (int): First week to include in the simulation.
+            - If first_week_to_simulate = 10, the function will simulate all matchups from Weeks 10 -> end of season.
+        n (int): Number of Monte Carlo simulations to run
+
+    Returns:
+        pd.DataFrame: Difference in playoff odds for each team if they win vs if they lose
+    """
+    # Get all matchups for the week.
+    matchups = league.box_scores(week)
+
+    # Instantiate the series
+    seeding_outcomes_diff = pd.DataFrame(dtype=float)
+
+    # Simulate playoff odds based on outcome of each matchup
+    for matchup in matchups:
+        # Simulate season if home team wins
+        home_team = matchup.home_team
+        outcomes_home_win = get_outcomes_if_team_wins(home_team, week, matchups)
+        seeding_outcomes_home_win = simulate_season(
+            league,
+            n,
+            what_if=True,
+            outcomes=outcomes_home_win,
+            first_week_to_simulate=week,
+        )[2].set_index("team_owner")
+
+        # Simulate season if away team wins
+        away_team = matchup.away_team
+        outcomes_away_win = get_outcomes_if_team_wins(away_team, week, matchups)
+        seeding_outcomes_away_win = simulate_season(
+            league,
+            n,
+            what_if=True,
+            outcomes=outcomes_away_win,
+            first_week_to_simulate=week,
+        )[2].set_index("team_owner")
+
+        # Merge results
+        seeding_outcomes = pd.merge(
+            seeding_outcomes_home_win[["last_in_league"]],
+            seeding_outcomes_away_win[["last_in_league"]],
+            suffixes=("_if_home_win", "_if_away_win"),
+            left_index=True,
+            right_index=True,
+        )
+        (
+            seeding_outcomes["last_in_league_if_win"],
+            seeding_outcomes["last_in_league_if_lose"],
+        ) = (
+            seeding_outcomes.min(axis=1),
+            seeding_outcomes.max(axis=1),
+        )
+
+        # Calculate difference in playoff odds
+        seeding_outcomes["swing"] = (
+            seeding_outcomes["last_in_league_if_win"]
+            - seeding_outcomes["last_in_league_if_lose"]
+        )
+
+        seeding_outcomes_diff = pd.concat(
+            [
+                seeding_outcomes,
+                seeding_outcomes[
+                    ["last_in_league_if_win", "last_in_league_if_lose", "swing"]
+                ]
+                .abs()
+                .loc[[home_team.owner, away_team.owner]],
+            ]
+        )
+
+    return seeding_outcomes_diff
