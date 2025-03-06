@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "doritostats"
-version = "3.5.3"
+version = "3.6.0"
 description = "This project aims to make ESPN Fantasy Football statistics easily available. With the introduction of version 3 of the ESPN's API, this structure creates leagues, teams, and player classes that allow for advanced data analytics and the potential for many new features to be added."
 authors = ["Desi Pilla <desi.m.pilla@gmail.com>"]
 license = "https://github.com/DesiPilla/espn-api-v3/blob/master/LICENSE"
@@ -9,7 +9,7 @@ packages = [{ include = "src" }, { from = "src", include = "doritostats" }]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-espn-api = "0.40.1"
+espn-api = "0.44.1"
 numpy = "^2.1.2"
 pandas = "^2.2.2"
 pytest = "^8.3.3"

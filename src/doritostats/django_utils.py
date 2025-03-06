@@ -87,9 +87,11 @@ def django_weekly_stats(league: League, week: int):
     # Get the scores for each team
     team_scores = []
     for matchup in box_scores:
+        if not (matchup.home_team and matchup.away_team):
+            # Skip byes
+            continue
         team_scores.append((matchup.home_team, matchup.home_score))
         team_scores.append((matchup.away_team, matchup.away_score))
-    team_scores
 
     best_table = [
         [
