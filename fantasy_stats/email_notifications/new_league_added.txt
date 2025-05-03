@@ -6,8 +6,9 @@
         League year: {2}<br>
         Date added:  {3}<br>
         <br>
-        Total 2024 season leagues added: {4}<br>
-        Total leagues added this year:   {5}
+        Total 2025 season leagues added: {4}<br>
+        Total leagues added this year:   {5}<br>
+        Total leagues added all time:    {6}
     </p>
   </body>
 </html>

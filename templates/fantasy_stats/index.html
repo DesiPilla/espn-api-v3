@@ -103,6 +103,10 @@
           <a class="error-message">
             <em>An unknown error has occurred. Please check that you have entered the correct league ID, SWID, and espn_s2.</em><br>
           </a>
+        {% elif league_id and league_id_inactive %}
+          <a class="error-message">
+            <em>This league has not been activated yet. Please activate the league before adding it here.</em><br>
+          </a>
         {% endif %}
         <br>
         <button type="submit">Fetch league</button>

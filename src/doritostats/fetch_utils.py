@@ -15,6 +15,8 @@ from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
 import sqlalchemy
 from dotenv import load_dotenv
 
+from src.doritostats.exceptions import InactiveLeagueError
+
 warnings.filterwarnings("ignore")
 
 OWNER_MAP = {
@@ -83,6 +85,27 @@ def set_league_endpoint(league: League) -> None:
     else:
         league.endpoint = f"{FANTASY_BASE_ENDPOINT}ffl/leagueHistory/{league.league_id}?seasonId={league.year}&"
     print("[BUILDING LEAGUE] League endpoint set to: {}".format(league.endpoint))
+
+
+def verify_league_is_active(league: League) -> None:
+    """Verify that the league is active and not in the offseason.
+
+    Args:
+        league (League): ESPN League object
+    """
+    # Check if the league is active
+    r = requests.get(league.endpoint, cookies=league.cookies).json()
+    if type(r) == list:
+        r = r[0]
+
+    # Check if the league is active
+    if not r["status"]["isActive"]:
+        raise InactiveLeagueError(
+            "League {} is not active. The league must be activated on ESPN to use.".format(
+                league.league_id
+            )
+        )
+    print("[BUILDING LEAGUE] League is active.")
 
 
 def get_roster_settings(league: League) -> None:
@@ -213,6 +236,7 @@ def fetch_league(
 
     # Set league endpoint
     set_league_endpoint(league)
+    verify_league_is_active(league)
 
     # Get roster information
     get_roster_settings(league)
