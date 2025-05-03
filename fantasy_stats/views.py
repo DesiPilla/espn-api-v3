@@ -6,6 +6,11 @@ from django.template import RequestContext
 
 import espn_api
 from espn_api.football import League
+from espn_api.requests.espn_requests import (
+    ESPNInvalidLeague,
+    ESPNAccessDenied,
+    ESPNUnknownError,
+)
 
 from fantasy_stats.email_notifications.email import send_new_league_added_alert
 from .models import LeagueInfo
@@ -22,6 +27,9 @@ from src.doritostats.django_utils import (
     get_leagues_current_year,
     get_leagues_previous_year,
     ordinal,
+)
+from src.doritostats.exceptions import (
+    InactiveLeagueError,
 )
 from src.doritostats.fetch_utils import fetch_league
 
@@ -115,7 +123,7 @@ def league_input(request):
             # Send an email notification that a new league has been added
             send_new_league_added_alert(league_info)
 
-    except espn_api.requests.espn_requests.ESPNInvalidLeague as e:
+    except ESPNInvalidLeague as e:
         print(
             "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
                 league_id, league_year, e
@@ -137,7 +145,7 @@ def league_input(request):
                 },
             )
         )
-    except espn_api.requests.espn_requests.ESPNAccessDenied as e:
+    except ESPNAccessDenied as e:
         print(
             "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
                 league_id, league_year, e
@@ -159,7 +167,30 @@ def league_input(request):
                 },
             )
         )
-    except espn_api.requests.espn_requests.ESPNUnknownError as e:
+    except InactiveLeagueError as e:
+        print(
+            "League {} ({}) IS NOT ACTIVE YET! ESPN returned an error: {}".format(
+                league_id, league_year, e
+            )
+        )
+        leagues_current_year = get_leagues_current_year()
+        leagues_previous_year = get_leagues_previous_year()
+        distinct_old_leagues = get_distinct_leagues_previous_year(leagues_current_year)
+        return HttpResponse(
+            render(
+                request,
+                "fantasy_stats/index.html",
+                context={
+                    "leagues_current_year": leagues_current_year,
+                    "leagues_previous_year": leagues_previous_year,
+                    "distinct_old_leagues": distinct_old_leagues,
+                    "league_id": league_id,
+                    "league_id_inactive": True,
+                },
+            )
+        )
+
+    except ESPNUnknownError as e:
         print(
             "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
                 league_id, league_year, e
@@ -234,28 +265,54 @@ def copy_old_league(request, league_id: int):
         return league(request, league_id, current_year, week=None)
 
     except LeagueInfo.DoesNotExist:
-        print(
-            "League {} ({}) NOT FOUND! Fetching league from ESPN...".format(
-                league_id, current_year
+        try:
+            print(
+                "League {} ({}) NOT FOUND! Fetching league from ESPN...".format(
+                    league_id, current_year
+                )
             )
-        )
-        league_obj = fetch_league(league_id, current_year, swid, espn_s2)
-        league_info = LeagueInfo(
-            league_id=league_id,
-            league_year=current_year,
-            swid=swid,
-            espn_s2=espn_s2,
-            league_name=league_obj.name,
-        )
-        league_info.save()
-        print(
-            "League {} ({}) fetched and saved to the databse.".format(
-                league_id, current_year
+            league_obj = fetch_league(league_id, current_year, swid, espn_s2)
+            league_info = LeagueInfo(
+                league_id=league_id,
+                league_year=current_year,
+                swid=swid,
+                espn_s2=espn_s2,
+                league_name=league_obj.name,
             )
-        )
+            league_info.save()
+            print(
+                "League {} ({}) fetched and saved to the databse.".format(
+                    league_id, current_year
+                )
+            )
 
-        # Send an email notification that a new league has been added
-        send_new_league_added_alert(league_info)
+            # Send an email notification that a new league has been added
+            send_new_league_added_alert(league_info)
+
+        except InactiveLeagueError as e:
+            print(
+                "League {} ({}) IS NOT ACTIVE YET! ESPN returned an error: {}".format(
+                    league_id, current_year, e
+                )
+            )
+            leagues_current_year = get_leagues_current_year()
+            leagues_previous_year = get_leagues_previous_year()
+            distinct_old_leagues = get_distinct_leagues_previous_year(
+                leagues_current_year
+            )
+            return HttpResponse(
+                render(
+                    request,
+                    "fantasy_stats/index.html",
+                    context={
+                        "leagues_current_year": leagues_current_year,
+                        "leagues_previous_year": leagues_previous_year,
+                        "distinct_old_leagues": distinct_old_leagues,
+                        "league_id": league_id,
+                        "league_id_inactive": True,
+                    },
+                )
+            )
 
     if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
         # If the league hasn't started yet, display the "too soon" page

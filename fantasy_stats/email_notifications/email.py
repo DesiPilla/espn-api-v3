@@ -29,13 +29,17 @@ def send_new_league_added_alert(league_info: LeagueInfo):
 
     # Get the number of new leagues added
     conn = get_postgres_conn()
-    sql = (
-        "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo WHERE league_year = 2024"
-    )
-    n_leagues_2024 = pd.read_sql(sql, conn).values[0][0]
-
-    sql = "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo WHERE created_date > '2024-07-24'"
-    n_leagues_added_this_year = pd.read_sql(sql, conn).values[0][0]
+    n_leagues_2025 = pd.read_sql(
+        "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo WHERE league_year = 2025",
+        conn,
+    ).values[0][0]
+    n_leagues_added_this_year = pd.read_sql(
+        "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo WHERE created_date > '2025-03-15'",
+        conn,
+    ).values[0][0]
+    n_leagues_added_all_time = pd.read_sql(
+        "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo", conn
+    ).values[0][0]
 
     # Fill in the placeholders in the email template
     email_body = MIMEText(
@@ -44,8 +48,9 @@ def send_new_league_added_alert(league_info: LeagueInfo):
             league_id,
             year,
             pd.Timestamp.now(tz="US/Eastern").strftime("%B %d, %Y @ %I:%M %p"),
-            n_leagues_2024,
+            n_leagues_2025,
             n_leagues_added_this_year,
+            n_leagues_added_all_time,
         ),
         "html",
     )
