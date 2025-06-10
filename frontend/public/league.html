@@ -1,0 +1,302 @@
+{% load static %}
+{% load filters %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/league.css' %}" />
+    <link rel="stylesheet" href="{% static 'fantasy_stats/css/footer.css' %}" />
+    <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/favicon.png' %}" />
+    <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/logo.png' %}" />
+    <title>Dorito Stats | {{ league_info.league_name }}</title>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-45P4BQ6XJR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || []
+      function gtag() {
+        dataLayer.push(arguments)
+      }
+      gtag('js', new Date())
+      
+      gtag('config', 'G-45P4BQ6XJR')
+    </script>
+  </head>
+
+  <body>
+    {% comment %} <div class="logo-container">
+      <img class="logo" src="{% static 'fantasy_stats/img/logo2.png' %}" alt="Dorito Stats Logo" />
+    </div> {% endcomment %}
+
+    <h2>{{ league_info.league_name }}</h2>
+    <div>League ID: {{ league_info.league_id }}</div>
+    <div>League year: {{ league_info.league_year }}</div>
+    <br />
+
+    {% comment %}Select a different week{% endcomment %}
+    <div class="select">
+      <select name="league-select" id="league-select" onchange="location = this.value">
+        {% comment %}Add an option for all previous weeks{% endcomment %}
+        {% for week in 1|range:league.current_week %}
+          {% if week == page_week %}
+            {% comment %}If the previous week is the one currently displayed, have it auto-selected{% endcomment %}
+            <option value="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}/week={{ week }}" selected>Week {{ week }}</option>
+          {% else %}
+            {% comment %}Otherwise, have it not auto-selected{% endcomment %}
+            <option value="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}/week={{ week }}">Week {{ week }}</option>
+          {% endif %}
+        {% endfor %}
+        {% comment %}Add option for current week{% endcomment %}
+        {% if page_week == league.current_week %}
+          {% comment %}If the current week is the one currently displayed, have it auto-selected{% endcomment %}
+          <option value="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}/" selected>Week {{ league.current_week }}</option>
+        {% else %}
+          {% comment %}Otherwise, have it not auto-selected{% endcomment %}
+          <option value="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}/">Week {{ league.current_week }}</option>
+        {% endif %}
+      </select>
+      <span class="focus"></span>
+    </div>
+    <br />
+    <a href="/fantasy_stats/">Return to home page</a>
+    <hr />
+
+    {% comment %}Playoff simulations{% endcomment %}
+    <a href="/fantasy_stats/simulation/{{ league_info.league_year }}/{{ league_info.league_id }}/n_simulations=250" class="simulation-button">Simulate Playoff Odds</a>
+
+    {% comment %}Season records{% endcomment %}
+    <a href="/fantasy_stats/season_stats/{{ league_info.league_year }}/{{ league_info.league_id }}/" class="simulation-button">Season records & leaders</a>
+
+    {% comment %}Current week scores{% endcomment %}
+    <div class="wrapper">
+      <h2>Scores</h2>
+      <div class="table">
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Away</div>
+          <div class="cell">Score</div>
+          <div class="cell"></div>
+          <div class="cell">Score</div>
+          <div class="cell">Home</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in box_scores %}
+          <div class="row">
+            <div class="cell" data-title="Award">{{ r.away_team.team_name }}</div>
+            <div class="cell" data-title="Winner">{{ r.away_score }}</div>
+            <div class="cell" data-title="Award">-</div>
+            <div class="cell" data-title="Award">{{ r.home_score }}</div>
+            <div class="cell" data-title="Loser">{{ r.home_team.team_name }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Weekly Awards #}
+    <div class="wrapper">
+      <h2>Weekly awards</h2>
+      {% if not scores_are_finalized %}
+        <em>
+          <strong>
+            <a>Note that scores have not yet been finalized for this week and award winners are likely to change.</a>
+            <br />
+            <a>Please check back on Tuesday morning for the final results.</a>
+          </strong>
+        </em>
+      {% endif %}
+      <div class="table">
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Award</div>
+          <div class="cell">Winner</div>
+          <div class="cell">Award</div>
+          <div class="cell">Loser</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in weekly_awards %}
+          <div class="row">
+            <div class="cell" data-title="Award">{{ r.best_label }}</div>
+            <div class="cell" data-title="Winner">{{ r.best_owner }}</div>
+            <div class="cell" data-title="Award">{{ r.worst_label }}</div>
+            <div class="cell" data-title="Loser">{{ r.worst_owner }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Power Rankings #}
+    <div class="wrapper">
+      <h2>Power Rankings</h2>
+      {% if not scores_are_finalized %}
+        <em>
+          <strong>
+            <a>Note that scores have not yet been final for this week and power rankings are likely to change.</a>
+            <br />
+            <a>Please check back on Tuesday morning for the final results.</a>
+          </strong>
+        </em>
+      {% endif %}
+      <div class="table">
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Power Ranking</div>
+          <div class="cell">Owner</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in power_rankings %}
+          <div class="row">
+            <div class="cell" data-title="Team">{{ r.team }}</div>
+            <div class="cell" data-title="Power Ranking">{{ r.value }}</div>
+            <div class="cell" data-title="Owner">{{ r.owner }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Luck Index #}
+    <div class="wrapper">
+      <h2>Luck Index</h2>
+      {% if not scores_are_finalized %}
+        <em>
+          <strong>
+            <a>Note that scores have not yet been final for this week and the Luck Index is likely to change.</a>
+            <br />
+            <a>Please check back on Tuesday morning for the final results.</a>
+          </strong>
+        </em>
+      {% endif %}
+      <div class="table">
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Luck Index</div>
+          <div class="cell">Owner</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in luck_index %}
+          <div class="row">
+            <div class="cell" data-title="Team">{{ r.team }}</div>
+            <div class="cell" data-title="Luck Index">{{ r.value }}</div>
+            <div class="cell" data-title="Owner">{{ r.owner }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Naughty list #}
+    <div class="wrapper naughty-list">
+      <h2>Naughty List</h2>
+      {% if not scores_are_finalized %}
+        <em>
+          <strong>
+            <a>Note that scores have not yet been final for this week and the Naughty List is likely to change.</a>
+            <br />
+            <a>Please check back on Tuesday morning for the final results.</a>
+          </strong>
+        </em>
+      {% endif %}
+      {% comment %} Print out a list of all the elements in the naughty list {% endcomment %}
+      <ul>
+        {% for r in naughty_list_str %}
+          <li>{{ r }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {# Standings #}
+    <div class="wrapper">
+      <h2>Standings</h2>
+      <div class="table">
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Wins</div>
+          <div class="cell">Losses</div>
+          <div class="cell">Ties</div>
+          <div class="cell">Points For</div>
+          <div class="cell">Owner</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in standings %}
+          <div class="row">
+            <div class="cell" data-title="Team">{{ r.team }}</div>
+            <div class="cell" data-title="Wins">{{ r.wins }}</div>
+            <div class="cell" data-title="Losses">{{ r.losses }}</div>
+            <div class="cell" data-title="Ties">{{ r.ties }}</div>
+            <div class="cell" data-title="Points For">{{ r.points_for }}</div>
+            <div class="cell" data-title="Owner">{{ r.owner }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Remaining strength of schedule #}
+    <div class="wrapper-wide">
+      <h2>
+        Remaining strength of schedule (for Weeks {{ sos_weeks.0 }}-{{ sos_weeks.1 }})
+      </h2>
+      {% if not scores_are_finalized %}
+        <em>
+          <strong>
+            <a>Note that scores have not yet been final for this week and remaining SOS is likely to change.</a>
+            <br />
+            <a>Please check back on Tuesday morning for the final results.</a>
+          </strong>
+        </em>
+      {% endif %}
+
+      <table class="table">
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Owner</div>
+          <div class="cell">Blended difficulty</div>
+          <div class="cell">Opp's Points For</div>
+          <div class="cell">Opp's Win %</div>
+          <div class="cell">Opp's Power Ranking</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in strength_of_schedule %}
+          <div class="row">
+            <div class="cell" data-title="team">{{ r.team }}</div>
+            <div class="cell" data-title="owner">{{ r.owner }}</div>
+            <div class="cell" data-title="blended_difficulty">{{ r.overall_difficulty }}</div>
+            <div class="cell" data-title="opponent_points_for">{{ r.opp_points_for }}</div>
+            <div class="cell" data-title="opponent_win_pct">{{ r.opp_win_pct }}</div>
+            <div class="cell" data-title="opponent_power_ranking">{{ r.opp_power_rank }}</div>
+          </div>
+        {% endfor %}
+        <em>Blended difficulty</em> accounts for the <em>points for</em>, <em>winning %</em>, and <em>power ranking</em> of each team's remaining opponents.
+        <br />
+        Each team's schedule is then compared to the hardest and easiest possible schedule.
+      </table>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <p>For suggestions or feature requests, please connect with us on GitHub or LinkedIn.</p>
+                </div>
+                <div class="footer-icons">
+                    <a href="https://github.com/DesiPilla/espn-api-v3" target="_blank">
+                        <img src="{% static 'fantasy_stats/img/github-icon.svg' %}" alt="GitHub">
+                    </a>
+                    <a href="https://www.linkedin.com/in/desipilla/" target="_blank">
+                        <img src="{% static 'fantasy_stats/img/linkedin-icon.svg' %}" alt="LinkedIn">
+                    </a>
+                </div>
+                <a href="https://www.buymeacoffee.com/desipilla" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+

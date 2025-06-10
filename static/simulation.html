@@ -1,0 +1,240 @@
+{% load static %}
+{% load filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/league.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/logo.css' %}">
+    <link rel="stylesheet" href="{% static 'fantasy_stats/css/footer.css' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'fantasy_stats/img/favicon.png' %}">
+    <title>Playoff simulation</title>
+    <style>
+      
+        .hero {
+            background-color: transparent;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-container {
+            text-align: center;
+        }
+
+        .btn {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            margin: 10px;
+        }
+
+    </style>
+    
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-45P4BQ6XJR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-45P4BQ6XJR');
+    </script>
+</head>
+<body>
+    <div class="logo-container">
+        <img class="logo" src="{% static 'fantasy_stats/img/logo2.png' %}" alt="Dorito Stats Logo">
+    </div>
+
+    <div class="btn-container">
+      <a href="/fantasy_stats/" class="btn">Return to Homepage</a>
+      <a href="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}" class="btn">Return to Your League</a>
+    </div>
+
+    {% comment %} 
+    <h2>{{league_info.league_name}}</h2>
+    <p>League ID: {{league_info.league_id}}</p>
+    <p>League year: {{league_info.league_year}}</p>
+    {% endcomment %}
+    
+    <div class="select">
+      <select name="league-select" id="league-select" disabled>
+        {% for week in 1|range:league.current_week %}
+        <option value="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}/week={{ week }}" {% if week == page_week %}selected{% endif %}>Week {{ week }}</option>
+        {% endfor %}
+        <option value="/fantasy_stats/league/{{ league_info.league_year }}/{{ league_info.league_id }}/" {% if page_week == league.current_week %}selected{% endif %}>Week {{ league.current_week }}</option>
+      </select>
+      <span class="focus"></span>
+    </div>
+    <br>
+
+    <div class="wrapper-wide">
+      Playoff odds are calculated by generating {{ n_simulations }} Monte Carlo simulations and comparing the results.<br>
+      You can choose a different <em>n</em> by selecting one of these options:
+
+      <select name="league-select" id="league-select" onchange="location = this.value">
+          <option value="/fantasy_stats/simulation/{{ league_info.league_year}}/{{ league_info.league_id }}/" selected> -- </option>
+          {% for n in simulation_presets %}   
+              {% if n == n_simulations %}
+                  <option value="/fantasy_stats/simulation/{{ league_info.league_year}}/{{ league_info.league_id }}/n_simulations={{ n }}" selected> {{ n }} </option>
+              {% else %}
+                  <option value="/fantasy_stats/simulation/{{ league_info.league_year}}/{{ league_info.league_id }}/n_simulations={{ n }}"> {{ n }} </option>
+              {% endif %}
+          {% endfor %}
+      </select>
+      <br>
+
+      You can also edit the <em>n_simulations=</em> value in the URL. 
+      However, the more simulations that are run, the longer the page will take to load.
+    </div>
+    
+    <div class="wrapper-wide">
+    <h2>Playoff simulation</h2>
+    <table class="table">
+
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Owner</div>
+          <div class="cell">Projected Wins </div>
+          <div class="cell">Projected Losses</div>
+          <div class="cell">Projected Ties</div>
+          <div class="cell">Projected Points For</div>
+          <div class="cell">Playoff Odds</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in playoff_odds %}
+        <div class="row">
+          <div class="cell" data-title="team"> {{ r.team }}</div>
+          <div class="cell" data-title="owner"> {{ r.owner }}</div>
+          <div class="cell" data-title="projected_wins"> {{ r.projected_wins }}</div>
+          <div class="cell" data-title="projected_losses"> {{ r.projected_losses }}</div>
+          <div class="cell" data-title="projected_ties"> {{ r.projected_ties }}</div>
+          <div class="cell" data-title="projected_points_for"> {{ r.projected_points_for }}</div>
+          <div class="cell" data-title="playoff_odds"> {{ r.playoff_odds }}</div>
+        </div>
+        {% endfor %}
+      <b>Note that for this league, {{ n_playoff_spots }} teams make the playoffs.</b>
+      <br>
+      <em>All playoff odds are based on simulation results alone. Values of 0% or 100% do not necessarily mean that a team has been mathematically eliminated or clinched a playoff spot.</em>
+    </table>
+
+    <h2>Final position distribution</h2>
+    <table class="table">
+
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Owner</div>
+          {% for position in positions %}
+               <div class="cell"> {{ position }} </div>
+          {% endfor %}
+          <div class="cell">Playoff Odds</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in rank_dist %}
+        <div class="row">
+          <div class="cell" data-title="team"> {{ r.team }}</div>
+          <div class="cell" data-title="owner"> {{ r.owner }}</div>
+          {% for odds in r.position_odds %}
+               <div class="cell"> {{ odds }} </div>
+          {% endfor %}
+          <div class="cell" data-title="playoff_odds"> {{ r.playoff_odds }}</div>
+        </div>
+        {% endfor %}
+      <b>Note that for this league, {{ n_playoff_spots }} teams make the playoffs.</b>
+      <br>
+      <em>All playoff odds are based on simulation results alone. Values of 0% or 100% do not necessarily mean that a team has been mathematically eliminated or clinched a playoff spot.</em>
+    </table>
+
+    <h2>Seeding outcomes</h2>
+    <table class="table">
+
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Owner</div>
+          <div class="cell">1st overall</div>
+          <div class="cell">1st in division</div>
+          <div class="cell">Make playoffs</div>
+          <div class="cell">Last in division</div>
+          <div class="cell">Last overall</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in seeding_outcomes %}
+        <div class="row">
+          <div class="cell" data-title="team"> {{ r.team }}</div>
+          <div class="cell" data-title="owner"> {{ r.owner }}</div>
+          <div class="cell" data-title="first_in_league"> {{ r.first_in_league }}</div>
+          <div class="cell" data-title="first_in_division"> {{ r.first_in_division }}</div>
+          <div class="cell" data-title="make_playoffs"> {{ r.make_playoffs }}</div>
+          <div class="cell" data-title="last_in_division"> {{ r.last_in_division }}</div>
+          <div class="cell" data-title="last_in_league"> {{ r.last_in_league }}</div>
+        </div>
+        {% endfor %}
+      <b>Note that for this league, {{ n_playoff_spots }} teams make the playoffs.</b>
+      <br>
+      <em>All playoff odds are based on simulation results alone. Values of 0% or 100% do not necessarily mean that a team has been mathematically eliminated or clinched a playoff spot.</em>
+    </table>
+
+
+
+    <h2>
+      Remaining strength of schedule (for Weeks {{ sos_weeks.0 }}-{{ sos_weeks.1 }})
+    </h2>
+    <table class="table">
+
+        {# Table header #}
+        <div class="row header">
+          <div class="cell">Team</div>
+          <div class="cell">Owner</div>
+          <div class="cell">Blended difficulty</div>
+          <div class="cell">Opp's Points For</div>
+          <div class="cell">Opp's Win %</div>
+          <div class="cell">Opp's Power Ranking</div>
+        </div>
+
+        {# Table elements #}
+        {% for r in strength_of_schedule %}
+        <div class="row">
+          <div class="cell" data-title="team"> {{ r.team }}</div>
+          <div class="cell" data-title="owner"> {{ r.owner }}</div>
+          <div class="cell" data-title="blended_difficulty"> {{ r.overall_difficulty }}</div>
+          <div class="cell" data-title="opponent_points_for"> {{ r.opp_points_for }}</div>
+          <div class="cell" data-title="opponent_win_pct"> {{ r.opp_win_pct }}</div>
+          <div class="cell" data-title="opponent_power_ranking"> {{ r.opp_power_rank }}</div>
+
+        </div>
+        {% endfor %}
+        <em>Blended difficulty</em> accounts for the <em>points for</em>, <em>winning %</em>, and <em>power ranking</em> of each team's remaining opponents.
+        <br />
+        Each team's schedule is then compared to the hardest and easiest possible schedule.
+      </table>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <p>For suggestions or feature requests, please connect with us on GitHub or LinkedIn.</p>
+                </div>
+                <div class="footer-icons">
+                    <a href="https://github.com/DesiPilla/espn-api-v3" target="_blank">
+                        <img src="{% static 'fantasy_stats/img/github-icon.svg' %}" alt="GitHub">
+                    </a>
+                    <a href="https://www.linkedin.com/in/desipilla/" target="_blank">
+                        <img src="{% static 'fantasy_stats/img/linkedin-icon.svg' %}" alt="LinkedIn">
+                    </a>
+                </div>
+                <a href="https://www.buymeacoffee.com/desipilla" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

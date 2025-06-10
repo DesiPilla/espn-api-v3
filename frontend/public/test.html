@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'fantasy_stats/css/test.css' %}">
+    <link rel="stylesheet" href="{% static 'fantasy_stats/css/footer.css' %}">
+    <!-- load jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="{% static "fantasy_stats/js/league.js" %}"></script>
+</head>
+<body>
+  <!-- Create the tabs -->
+  <div class="tab">
+    
+    {% comment %} <button class="tablinks" onclick="openTab(event, 'Most')">Most</button>
+    <button class="tablinks" onclick="openTab(event, 'Fewest')">Fewest</button>
+    <button class="tablinks" onclick="openTab(event, 'Highest')">Highest</button>
+    <button class="tablinks" onclick="openTab(event, 'Lowest')">Lowest</button> {% endcomment %}
+    <button id="mostBtn" class="tablinks" onclick=onclick="document.getElementById('Most').style.display='block'">Most</button>
+    <button id="fewestBtn" class="tablinks" onclick=onclick="document.getElementById('Fewest').style.display='block'">Fewest</button>
+    <button id="highestBtn" class="tablinks" onclick=onclick="document.getElementById('Highest').style.display='block'">Highest</button>
+    <button id="lowestBtn" class="tablinks" onclick=onclick="document.getElementById('Lowest').style.display='block'">Lowest</button>
+  </div>
+
+  <!-- Create the tab contents -->
+  <div id="Most" class="tabcontent">
+    <!-- Insert the table for Most statistics here -->
+    <table>
+    <tr>
+      <td>Most wins this season</td>
+      <td>10 wins</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Most PPG this season</td>
+      <td>125.0 pts</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Most QB pts this season</td>
+      <td>25.4 pts</td>
+      <td>Marc Chirico</td>
+    </tr>
+    <tr>
+      <td>Most RB pts this season</td>
+      <td>16.7 pts</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Most WR pts this season</td>
+      <td>15.9 pts</td>
+      <td>Julia Selleck</td>
+    </tr>
+    <tr>
+      <td>Most TE pts this season</td>
+      <td>16.1 pts</td>
+      <td>Desi Pilla</td>
+    </tr>
+    <tr>
+      <td>Most RB/WR/TE pts this season</td>
+      <td>12.3 pts</td>
+      <td>James Selleck</td>
+    </tr>
+  </table>
+  </div>
+  <div id="Fewest" class="tabcontent">
+    <!-- Insert the table for Fewest statistics here -->
+    <table>
+    <tr>
+      <td>Fewest wins this season</td>
+      <td>10 wins</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Fewest PPG this season</td>
+      <td>125.0 pts</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Fewest QB pts this season</td>
+      <td>25.4 pts</td>
+      <td>Marc Chirico</td>
+    </tr>
+    <tr>
+      <td>Fewest RB pts this season</td>
+      <td>16.7 pts</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Fewest WR pts this season</td>
+      <td>15.9 pts</td>
+      <td>Julia Selleck</td>
+    </tr>
+    <tr>
+      <td>Fewest TE pts this season</td>
+      <td>16.1 pts</td>
+      <td>Desi Pilla</td>
+    </tr>
+    <tr>
+      <td>Fewest RB/WR/TE pts this season</td>
+      <td>12.3 pts</td>
+      <td>James Selleck</td>
+    </tr>
+  </table>
+  </div>
+  <div id="Highest" class="tabcontent">
+    <!-- Insert the table for Highest statistics here -->
+    <table>
+    <tr>
+      <td>Highest wins this season</td>
+      <td>10 wins</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Highest PPG this season</td>
+      <td>125.0 pts</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Highest QB pts this season</td>
+      <td>25.4 pts</td>
+      <td>Marc Chirico</td>
+    </tr>
+    <tr>
+      <td>Highest RB pts this season</td>
+      <td>16.7 pts</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Highest WR pts this season</td>
+      <td>15.9 pts</td>
+      <td>Julia Selleck</td>
+    </tr>
+    <tr>
+      <td>Highest TE pts this season</td>
+      <td>16.1 pts</td>
+      <td>Desi Pilla</td>
+    </tr>
+    <tr>
+      <td>Highest RB/WR/TE pts this season</td>
+      <td>12.3 pts</td>
+      <td>James Selleck</td>
+    </tr>
+  </table>
+  </div>
+  <div id="Lowest" class="tabcontent">
+    <!-- Insert the table for Lowest statistics here -->
+    <table>
+    <tr>
+      <td>Lowest wins this season</td>
+      <td>10 wins</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Lowest PPG this season</td>
+      <td>125.0 pts</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Lowest QB pts this season</td>
+      <td>25.4 pts</td>
+      <td>Marc Chirico</td>
+    </tr>
+    <tr>
+      <td>Lowest RB pts this season</td>
+      <td>16.7 pts</td>
+      <td>Nikki  Pilla</td>
+    </tr>
+    <tr>
+      <td>Lowest WR pts this season</td>
+      <td>15.9 pts</td>
+      <td>Julia Selleck</td>
+    </tr>
+    <tr>
+      <td>Lowest TE pts this season</td>
+      <td>16.1 pts</td>
+      <td>Desi Pilla</td>
+    </tr>
+    <tr>
+      <td>Lowest RB/WR/TE pts this season</td>
+      <td>12.3 pts</td>
+      <td>James Selleck</td>
+    </tr>
+  </table>
+  </div>
+
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <p>For suggestions or feature requests, please connect with us on GitHub or LinkedIn.</p>
+                </div>
+                <div class="footer-icons">
+                    <a href="https://github.com/DesiPilla/espn-api-v3" target="_blank">
+                        <img src="{% static 'fantasy_stats/img/github-icon.svg' %}" alt="GitHub">
+                    </a>
+                    <a href="https://www.linkedin.com/in/desipilla/" target="_blank">
+                        <img src="{% static 'fantasy_stats/img/linkedin-icon.svg' %}" alt="LinkedIn">
+                    </a>
+                </div>
+                <a href="https://www.buymeacoffee.com/desipilla" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,162 @@
+html, body, #root { 
+  margin: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: #3b3b3b;
+  background: #95f56fb9;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+@media screen and (max-width: 580px) {
+
+  /* mobile settings */
+  body {
+    font-size: 16px;
+    line-height: 22px;
+  }
+}
+
+.wrapper {
+  margin: 0 auto;
+  padding: 40px;
+  max-width: 900px;
+}
+
+
+.wrapper-wide {
+  margin: 0 auto;
+  padding: 40px;
+  max-width: 1200px;
+}
+
+.table {
+  /* margin: 0 auto 40px auto; */
+  margin: 0 0 40px 0;
+  width: 80%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  display: table;
+}
+
+@media screen and (max-width: 580px) {
+
+  /* mobile settings */
+  .table {
+    display: block;
+    margin: 0 auto 40px auto;
+    width: 80%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.row {
+  display: table-row;
+  background: #f6f6f6;
+}
+
+.row:nth-of-type(odd) {
+  background: #d7e0d2;
+}
+
+.row.header {
+  font-weight: 900;
+  color: #ffffff;
+  background: #333b36;
+}
+
+.row.green {
+  background: #27ae60;
+}
+
+.row.blue {
+  background: #2980b9;
+}
+
+@media screen and (max-width: 580px) {
+  .row {
+    padding: 14px 0 7px;
+    display: block;
+  }
+
+  .row.header {
+    padding: 0;
+    height: 6px;
+  }
+
+  .row.header .cell {
+    display: none;
+  }
+
+  .row .cell {
+    margin-bottom: 10px;
+  }
+
+  .row .cell:before {
+    margin-bottom: 3px;
+    content: attr(data-title);
+    min-width: 98px;
+    font-size: 10px;
+    line-height: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #969696;
+    display: block;
+  }
+}
+
+.cell {
+  padding: 6px 12px;
+  display: table-cell;
+}
+
+@media screen and (max-width: 580px) {
+  .cell {
+    padding: 2px 16px;
+    display: block;
+  }
+}
+
+/* Create a class for an error message text */
+.error-message {
+  color: red;
+  font-weight: bold;
+}
+
+
+/* Add this to your CSS file, such as 'fantasy_stats/css/league.css' */
+/* Styling for the simulation button */
+.simulation-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #2264ff;
+  /* Choose a suitable button color */
+  color: #fff;
+  /* Text color */
+  border: none;
+  border-radius: 5px;
+  /* Rounded corners */
+  text-align: center;
+  text-decoration: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  /* Smooth color transition on hover */
+
+  /* Optional: Add a box shadow for depth */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+  /* Optional: Make it more apparent, e.g., by adding a border or underline */
+  border: 2px solid #1c54d9;
+}
+
+/* Hover effect to change the background color on hover */
+.simulation-button:hover {
+  background-color: #1c54d9;
+  /* Adjust the color for hover effect */
+}
+
+.league-content {
+  flex: 1; /* Allow the content to grow and push the footer down */
+}
