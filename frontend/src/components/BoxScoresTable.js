@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import LoadingRow from "./LoadingRow"; // Import the LoadingRow component
-import "./styles/tableStyles.css"; // Adjust the path as needed
+import LoadingRow from "./LoadingRow";
+import "./styles/tableStyles.css";
 
 const BoxScoresTable = ({ leagueYear, leagueId, week }) => {
   const [boxScores, setBoxScores] = useState([]);

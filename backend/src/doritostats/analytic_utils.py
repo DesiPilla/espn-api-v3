@@ -584,7 +584,6 @@ def get_naughty_list_str(league: League, week: int) -> List[str]:
         naughty_list_str = ["🎉 No teams started any inactive players!"]
 
     return naughty_list_str
-    
 
 
 def make_ordinal(n: int) -> str:
@@ -878,7 +877,6 @@ def game_of_the_week_stats(
             team1.division_name,
         )
     )
-    logger.info()
     logger.info(f"{owner2} has a record of {team2.wins}-{team2.losses}-{team2.ties}")
     logger.info(
         "They have averaged {:.2f} points per game.".format(
@@ -1677,7 +1675,6 @@ def season_stats_analysis(
     )
 
     # Bad team awards
-    logger.info()
     logger.info(
         "Most losses this season           - {:.0f} {} - {}".format(
             float(season_stats_dict["most_losses"]["val"]),
@@ -1728,7 +1725,6 @@ def season_stats_analysis(
     )
 
     # Print good position awards
-    logger.info()
     logger.info(
         "Most QB pts this season           - {:.1f} {} - {}".format(
             float(season_stats_dict["most_QB_pts"]["val"]),
@@ -1786,7 +1782,6 @@ def season_stats_analysis(
         )
     )
 
-    logger.info()
     logger.info(
         "Fewest QB pts this season         - {:.1f} {} - {}".format(
             float(season_stats_dict["least_QB_pts"]["val"]),

@@ -28,20 +28,9 @@ from src.doritostats.analytic_utils import (
     get_naughty_list_str,
     get_naughty_players,
     get_lineup,
-    season_stats_analysis,
-    avg_slot_score,
-    get_best_lineup,
-    get_best_trio,
-    get_lineup_efficiency,
-    get_num_active,
-    get_remaining_schedule_difficulty_df,
-    get_score_surprise,
-    get_total_tds,
-    season_stats_analysis,
-    sort_lineups_by_func,
-    sum_bench_points
 )
 from src.doritostats.django_utils import (
+    CURRENT_YEAR,
     django_luck_index,
     django_power_rankings,
     django_simulation,
@@ -61,7 +50,8 @@ logger = logging.getLogger(__name__)
 
 MIN_WEEK_TO_DISPLAY = 4  # Only run simulations after Week 4 has completed
 N_SIMULATIONS = 500  # Default number of simulations to run
-MAX_SIMULATIONS = 999  # Maximum number of simulations to run
+MAX_SIMULATIONS = 500  # Maximum number of simulations to run
+CACHE_DURATION = 10 * 60
 
 
 def get_default_week(league_obj: League):
@@ -201,157 +191,6 @@ def league_input(request):
         )
 
 
-def league(request, league_id: int, league_year: int, week: int = None):
-    # Fetch the league
-    league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
-    league_obj = fetch_league(
-        league_info.league_id,
-        league_info.league_year,
-        league_info.swid,
-        league_info.espn_s2,
-    )
-
-    # Set default week to display on page
-    if week is None:
-        week = get_default_week(league_obj)
-
-    if week == 0 or not league_obj.draft:
-        # If the league hasn't started yet, display the "too soon" page
-        return HttpResponse(
-            render(
-                request,
-                "fantasy_stats/uh_oh_too_soon.html",
-                context={
-                    "league_id": league_id,
-                    "league_year": league_obj.year,
-                    "page": "league_homepage",
-                },
-            )
-        )
-
-    else:
-        box_scores = league_obj.box_scores(week)
-        weekly_awards = django_weekly_stats(league_obj, week)
-        power_rankings = django_power_rankings(league_obj, week)
-        luck_index = django_luck_index(league_obj, week)
-        strength_of_schedule, schedule_period = django_strength_of_schedule(
-            league_obj, week
-        )
-        standings = django_standings(league_obj, week)
-        naughty_list_str = get_naughty_list_str(league_obj, week)
-
-        context = {
-            "league_info": league_info,
-            "league": league_obj,
-            "page_week": week,
-            "box_scores": box_scores,
-            "weekly_awards": weekly_awards,
-            "power_rankings": power_rankings,
-            "luck_index": luck_index,
-            "naughty_list_str": naughty_list_str,
-            "strength_of_schedule": strength_of_schedule,
-            "sos_weeks": schedule_period,
-            "standings": standings,
-            "scores_are_finalized": league_obj.current_week > week,
-        }
-
-        return HttpResponse(render(request, "fantasy_stats/league.html", context))
-
-
-def standings(reqeust):
-    return HttpResponse("League still exitst")
-
-
-def all_leagues(request):
-    league_objs = LeagueInfo.objects.order_by(
-        "league_name", "-league_year", "league_id"
-    )
-    return render(request, "fantasy_stats/all_leagues.html", {"leagues": league_objs})
-
-
-def simulation(
-    request,
-    league_id: int,
-    league_year: int,
-    week: int = None,
-    n_simulations: int = None,
-):
-    # Set default number of simulations
-    if n_simulations is None:
-        n_simulations = N_SIMULATIONS
-
-    # Limit the number of simulations to MAX_SIMULATIONS
-    n_simulations = min(n_simulations, MAX_SIMULATIONS)
-
-    # If the week is known, check if it is too early to display
-    # If so, display the "too soon" page immediately
-    if week is not None and week < MIN_WEEK_TO_DISPLAY:
-        return HttpResponse(
-            render(
-                request,
-                "fantasy_stats/uh_oh_too_soon.html",
-                context={
-                    "league_id": league_id,
-                    "league_year": league_year,
-                    "page": "playoff_simulations",
-                },
-            )
-        )
-
-    # Fetch the league
-    league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
-    league_obj = fetch_league(
-        league_info.league_id,
-        league_info.league_year,
-        league_info.swid,
-        league_info.espn_s2,
-    )
-
-    # Set default week to display on page
-    if week is None:
-        week = get_default_week(league_obj)
-
-    # If the week is less than the minimum week to display, display the "too soon" page
-    if week < MIN_WEEK_TO_DISPLAY:
-        return HttpResponse(
-            render(
-                request,
-                "fantasy_stats/uh_oh_too_soon.html",
-                context={
-                    "league_id": league_id,
-                    "league_year": league_year,
-                    "page": "playoff_simulations",
-                },
-            )
-        )
-
-    else:
-        playoff_odds, rank_dist, seeding_outcomes = django_simulation(
-            league_obj, n_simulations
-        )
-
-    strength_of_schedule, schedule_period = django_strength_of_schedule(
-        league_obj, week - 1
-    )
-
-    context = {
-        "league_info": league_info,
-        "league": league_obj,
-        "page_week": week,
-        "playoff_odds": playoff_odds,
-        "rank_dist": rank_dist,
-        "seeding_outcomes": seeding_outcomes,
-        "strength_of_schedule": strength_of_schedule,
-        "sos_weeks": schedule_period,
-        "n_positions": len(league_obj.teams),
-        "positions": [ordinal(i) for i in range(1, len(league_obj.teams) + 1)],
-        "n_playoff_spots": league_obj.settings.playoff_team_count,
-        "n_simulations": n_simulations,
-        "simulation_presets": [100, 500, 999],
-    }
-    return HttpResponse(render(request, "fantasy_stats/simulation.html", context))
-
-
 def season_stats(
     request,
     league_id: int,
@@ -470,8 +309,10 @@ def get_distinct_leagues_previous_year(request):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     # For each row in LeagueInfo, create a subquery to fetch the latest league_year for the same league_id.
+    # Make sure that the league_year is less than 2025
     latest_league_qs = LeagueInfo.objects.filter(
-        league_id=OuterRef("league_id")
+        league_id=OuterRef("league_id"),
+        league_year__lt=CURRENT_YEAR,
     ).order_by("-league_year")
 
     # Then get the distinct leagues with the most recent year per league_id
@@ -594,7 +435,7 @@ def get_cached_league(league_id: int, league_year: int) -> League:
     if not league_obj:
         league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
         league_obj = fetch_league(league_id=league_id, year=league_year, swid=league_info.swid, espn_s2=league_info.espn_s2)
-        cache.set(cache_key, league_obj, timeout=60 * 60)  # cache for 1 hour
+        cache.set(cache_key, league_obj, timeout=CACHE_DURATION)
 
     return league_obj
 
@@ -611,7 +452,7 @@ def get_league_endpoint(
     request,
     league_id: int,
     league_year: int,
-) -> str:
+) -> JsonResponse:
     """
     Returns the endpoint for the given league.
     """
@@ -624,7 +465,7 @@ def get_current_week(
     request,
     league_id: int,
     league_year: int,
-) -> int:
+) -> JsonResponse:
     """
     Returns the current week for the given league.
     """
@@ -638,7 +479,7 @@ def box_scores_view(
     league_id: int,
     league_year: int,
     week: int,
-) -> League:
+) -> JsonResponse:
     """
     Fetches the box scores for the given week.
     """
@@ -664,13 +505,14 @@ def box_scores_view(
         )
     return JsonResponse(formatted_box_scores, safe=False)
 
+
 @require_GET
 def weekly_awards_view(
     request,
     league_id: int,
     league_year: int,
     week: int,
-) -> League:
+) -> JsonResponse:
     """
     Fetches the weekly awards for the given week.
     """
@@ -685,13 +527,14 @@ def weekly_awards_view(
 
     return JsonResponse(response_data, safe=False)
 
+
 @require_GET
 def power_rankings_view(
     request,
     league_id: int,
     league_year: int,
     week: int,
-) -> League:
+) -> JsonResponse:
     """
     Fetches the power rankings for the given week.
     """
@@ -700,13 +543,14 @@ def power_rankings_view(
 
     return JsonResponse(power_rankings, safe=False)
 
+
 @require_GET
 def luck_index_view(
     request,
     league_id: int,
     league_year: int,
     week: int,
-) -> League:
+) -> JsonResponse:
     """
     Fetches the luck index for the given week.
     """
@@ -715,13 +559,14 @@ def luck_index_view(
 
     return JsonResponse(luck_index, safe=False)
 
+
 @require_GET
 def naughty_list_view(
     request,
     league_id: int,
     league_year: int,
     week: int,
-) -> League:
+) -> JsonResponse:
     """
     Fetches the naughty list for the given week.
     """
@@ -760,7 +605,7 @@ def standings_view(
     league_id: int,
     league_year: int,
     week: int,
-) -> League:
+) -> JsonResponse:
     """
     Fetches the standings for the given week.
     """
@@ -771,7 +616,7 @@ def standings_view(
 
 
 @require_GET
-def check_league_status(request, league_year: int, league_id: int):
+def check_league_status(request, league_year: int, league_id: int) -> JsonResponse:
     """
     Checks if the week is 0 or if the league draft has not occurred.
     """
@@ -781,3 +626,168 @@ def check_league_status(request, league_year: int, league_id: int):
     if not league.draft:
         return JsonResponse({"status": "too_soon", "message": "League draft has not occurred."}, status=400)
     return JsonResponse({"status": "ok", "message": "League is ready."})
+
+
+@require_GET
+def league_settings(
+    request,
+    league_id: int,
+    league_year: int,
+) -> JsonResponse:
+    """
+    Fetches the various settings for the league
+    """
+    league = get_cached_league(league_id=league_id, league_year=league_year)
+
+    return JsonResponse(
+        {
+            "n_playoff_spots": league.settings.playoff_team_count,
+            "n_teams": league.settings.team_count,
+            "n_regular_season_weeks": league.settings.reg_season_count,
+            "regular_season_complete": league.current_week
+            > league.settings.reg_season_count,
+            "playoffs_complete": league.current_week
+            >= len(league.settings.matchup_periods),
+            "season_complete": league.is_season_complete,
+        }
+    )
+
+
+@require_GET
+def simulate_playoff_odds_view(
+    request,
+    league_id: int,
+    league_year: int,
+) -> JsonResponse:
+    # Validate and process the parameters
+    try:
+        n_simulations = int(request.GET.get("n_simulations", N_SIMULATIONS))
+        week = request.GET.get("week", None)
+        if week is not None:
+            week = int(week)
+    except ValueError:
+        return JsonResponse({"error": "Invalid parameters."}, status=400)
+
+    # Limit maximum number of simulations to protect server
+    n_simulations = min(n_simulations, MAX_SIMULATIONS)
+
+    # Fetch the league
+    league = get_cached_league(league_id=league_id, league_year=league_year)
+
+    # Set default week to display on page
+    if week is None:
+        week = get_default_week(league)
+
+    # If the week is less than the minimum week to display, display the "too soon" page
+    if week < MIN_WEEK_TO_DISPLAY:
+        return JsonResponse(
+            {
+                "error": f"Playoff simulations are not available until after Week {MIN_WEEK_TO_DISPLAY}. Please try again later.",
+                "type": "too_soon",
+            },
+            status=400,
+        )
+
+    # Generate a cache key based on league_id, league_year, week, and n_simulations
+    cache_key = (
+        f"playoff_odds_{league_id}_{league_year}_week_{week}_sim_{n_simulations}"
+    )
+    cached_result = cache.get(cache_key)
+
+    if cached_result:
+        return JsonResponse(cached_result, safe=False)
+
+    # Perform the simulation if no cached result is found
+    playoff_odds, rank_dist, seeding_outcomes = django_simulation(
+        league=league, n_simulations=n_simulations, week=week
+    )
+
+    result = {
+        "playoff_odds": playoff_odds,
+        "rank_distribution": rank_dist,
+        "seeding_outcomes": seeding_outcomes,
+        "n_simulations": n_simulations,
+    }
+
+    # Cache the result for 1 hour
+    cache.set(cache_key, result, timeout=CACHE_DURATION)
+
+    return JsonResponse(result, safe=False)
+
+
+@require_GET
+def remaining_strength_of_schedule_view(
+    request,
+    league_id: int,
+    league_year: int,
+) -> JsonResponse:
+    # Validate and process the parameters
+    try:
+        week = request.GET.get("week", None)
+        if week is not None:
+            week = int(week)
+    except ValueError:
+        return JsonResponse({"error": "Invalid parameters."}, status=400)
+
+    # Generate a cache key based on league_id, league_year, week
+    cache_key = f"remaining_sos_{league_id}_{league_year}_week_{week}"
+    cached_result = cache.get(cache_key)
+
+    # Fetch the league
+    league = get_cached_league(league_id=league_id, league_year=league_year)
+
+    if cached_result:
+        return JsonResponse(cached_result, safe=False)
+
+    strength_of_schedule, schedule_period = django_strength_of_schedule(
+        league=league, week=week
+    )
+
+    result = {
+        "remaining_strength_of_schedule": strength_of_schedule,
+        "min_week": schedule_period[0],
+        "max_week": schedule_period[1],
+    }
+
+    # Cache the result
+    cache.set(cache_key, result, timeout=CACHE_DURATION)
+
+    return JsonResponse(result, safe=False)
+
+
+@require_GET
+def season_records(
+    request,
+    league_id: int,
+    league_year: int,
+) -> JsonResponse:
+
+    # Generate a cache key based on league_id, league_year, week
+    cache_key = f"season_records_{league_id}_{league_year}"
+    cached_result = cache.get(cache_key)
+
+    if cached_result:
+        return JsonResponse(cached_result, safe=False)
+
+    # Fetch the league
+    league = get_cached_league(league_id=league_id, league_year=league_year)
+
+    # Get the season records
+    (
+        best_team_stats_list,
+        worst_team_stats_list,
+        best_position_stats_list,
+        worst_position_stats_list,
+    ) = django_season_stats(league=league)
+
+    result = {
+        "best_team_stats": best_team_stats_list,
+        "worst_team_stats": worst_team_stats_list,
+        "best_position_stats": best_position_stats_list,
+        "worst_position_stats": worst_position_stats_list,
+    }
+
+    # Cache the result
+    cache.set(cache_key, result, timeout=CACHE_DURATION)
+
+    return JsonResponse(result, safe=True)

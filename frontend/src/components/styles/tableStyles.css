@@ -1,11 +1,10 @@
 .wrapper-wide {
   margin: 0 auto;
-  padding: 40px;
+  padding: 10px;
   max-width: 1200px;
 }
 
-.table {
-  margin: 0 0 40px 0;
+.table, .table-with-bottom-caption {
   width: 80%;
   border-collapse: collapse;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -15,98 +14,104 @@
   table-layout: auto; /* Allow columns to adjust width based on content */
 }
 
-.table th.team-name-column, .table td.team-name-column {
+.table {
+  margin: 0 0 40px 0;
+}
+
+.table-with-bottom-caption {
+  margin: 0;
+  padding: 0;
+}
+
+.table th.team-name-column, .table-with-bottom-caption th.team-name-column,
+.table td.team-name-column, .table-with-bottom-caption td.team-name-column {
   white-space: nowrap; /* Prevent wrapping of text */
   width: 1%; /* Shrink to fit the content */
 }
 
-.table th{
+.table th, .table-with-bottom-caption th {
   padding: 10px;
   text-align: center;
-  border: 1px solid #ddd;
-  background-color: #000000; /* Light gray for odd rows */
-  color: #ffffff; /* White for even rows */
+  background-color: #000000;
+  color: #ffffff;
 }
 
-.table th, .table td {
-  padding: 5px 5px 5px 20px; /* Add 10px left padding */
-  text-align: center; /* Center align all text */
-  border: 1px solid #ddd;
-}
-
-.table .score-column {
-  font-family: 'Courier New', Courier, monospace; /* Monospaced font for the score column */
-  font-weight: bold; /* Make the font bolder */
-}
-
-.table .odd-row {
-  background-color: #d6ded3; /* Light gray for odd rows */
+.table td, .table-with-bottom-caption td {
+  padding: 5px 5px 5px 20px;
   text-align: center;
-  padding-left: 10px; /* Add 10px left padding */
 }
 
-.table .even-row {
-  background-color: #ffffff; /* White for even rows */
+.table .score-column, .table-with-bottom-caption .score-column {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+}
+
+.table .odd-row, .table-with-bottom-caption .odd-row {
+  background-color: #d6ded3;
   text-align: center;
-  padding-left: 10px; /* Add 10px left padding */
+  padding-left: 10px;
 }
 
-.table tr:hover {
-  background-color: #f1f1f1; /* Highlight row on hover */
+.table .even-row, .table-with-bottom-caption .even-row {
+  background-color: #ffffff;
+  text-align: center;
+  padding-left: 10px;
 }
 
-@media screen and (max-width: 580px) {
-  .table {
-    display: block;
-    margin: 0 auto 40px auto;
-    width: 80%;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  }
+.table tr:hover, .table-with-bottom-caption tr:hover {
+  background-color: #f1f1f1;
 }
 
-.row {
+.table .row, .table-with-bottom-caption .row {
   display: table-row;
   background: #f6f6f6;
 }
 
-.row:nth-of-type(odd) {
+.table .row:nth-of-type(odd), .table-with-bottom-caption .row:nth-of-type(odd) {
   background: #d7e0d2;
 }
 
-.row.header {
+.table .row.header, .table-with-bottom-caption .row.header {
   font-weight: 900;
   color: #ffffff;
   background: #333b36;
 }
 
-.row.green {
+.table .row.green, .table-with-bottom-caption .row.green {
   background: #27ae60;
 }
 
-.row.blue {
+.table .row.blue, .table-with-bottom-caption .row.blue {
   background: #2980b9;
 }
 
 @media screen and (max-width: 580px) {
-  .row {
+  .table, .table-with-bottom-caption {
+    display: block;
+    margin: 0 auto 40px auto;
+    width: 80%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .table .row, .table-with-bottom-caption .row {
     padding: 14px 0 7px;
     display: block;
   }
 
-  .row.header {
+  .table .row.header, .table-with-bottom-caption .row.header {
     padding: 0;
     height: 6px;
   }
 
-  .row.header .cell {
+  .table .row.header .cell, .table-with-bottom-caption .row.header .cell {
     display: none;
   }
 
-  .row .cell {
+  .table .row .cell, .table-with-bottom-caption .row .cell {
     margin-bottom: 10px;
   }
 
-  .row .cell:before {
+  .table .row .cell:before, .table-with-bottom-caption .row .cell:before {
     margin-bottom: 3px;
     content: attr(data-title);
     min-width: 98px;
@@ -129,4 +134,8 @@
     padding: 2px 16px;
     display: block;
   }
+}
+
+.thick-border-top {
+  border-top: 4px solid #000000; /* Thick black border */
 }

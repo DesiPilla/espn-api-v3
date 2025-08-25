@@ -23,10 +23,6 @@ urlpatterns = [
         "api/box-scores/<int:league_year>/<int:league_id>/<int:week>/",
         views.box_scores_view,
     ),
-    # path(
-    #     "api/league/<int:league_year>/<int:league_id>/endpoint/",
-    #     views.get_league_endpoint,
-    # ),
     path(
         "api/league/<int:league_year>/<int:league_id>/current-week/",
         views.get_current_week,
@@ -56,7 +52,31 @@ urlpatterns = [
         views.standings_view,
         name="standings",
     ),
-    path('api/check-league-status/<int:league_year>/<int:league_id>', views.check_league_status, name='check_league_status'),
+    path(
+        "api/simulate-playoff-odds/<int:league_year>/<int:league_id>/",
+        views.simulate_playoff_odds_view,
+        name="simulate-playoff-odds",
+    ),
+    path(
+        "api/remaining-strength-of-schedule/<int:league_year>/<int:league_id>/",
+        views.remaining_strength_of_schedule_view,
+        name="remaining-strength-of-schedule",
+    ),
+    path(
+        "api/season-records/<int:league_year>/<int:league_id>/",
+        views.season_records,
+        name="season-records",
+    ),
+    path(
+        "api/check-league-status/<int:league_year>/<int:league_id>",
+        views.check_league_status,
+        name="check_league_status",
+    ),
+    path(
+        "api/league-settings/<int:league_year>/<int:league_id>/",
+        views.league_settings,
+        name="league-settings",
+    ),
     # Add this last, after all other routes
     path("api/get-csrf-token/", views.get_csrf_token, name="get_csrf_token"),
     path("", views.react_app_view, name="react_app"),

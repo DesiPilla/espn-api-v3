@@ -28,7 +28,7 @@ html, body, #root {
 
 .wrapper-wide {
   margin: 0 auto;
-  padding: 40px;
+  padding: 10px;
   max-width: 1200px;
 }
 
@@ -159,4 +159,11 @@ html, body, #root {
 
 .league-content {
   flex: 1; /* Allow the content to grow and push the footer down */
+}
+
+.button-container {
+  display: flex;
+  gap: 10px; /* Add spacing between buttons */
+  justify-content: left; /* Center the buttons horizontally */
+  margin: 20px 0; /* Add some vertical spacing */
 }

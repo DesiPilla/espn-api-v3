@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'; // Import Link for navigation
 import WeekSelector from '../components/WeekSelector'; // Adjust path as needed
 import ReturnToHomePageButton from '../components/ReturnToHomePageButton';
 import BoxScoresTable from '../components/BoxScoresTable'; // Adjust path as needed
@@ -9,6 +9,8 @@ import LuckIndexTable from '../components/LuckIndexTable'; // Import the new tab
 import StandingsTable from '../components/StandingsTable'; // Import the StandingsTable component
 import NaughtyList from "../components/NaughtyList"; // Update import to NaughtyList
 import Footer from '../components/Footer'; // Import the Footer component
+import SimulatePlayoffOddsButton from '../components/SimulatePlayoffOddsButton'; // Import the renamed component
+import LeagueRecordsButton from '../components/LeagueRecordsButton'; // Import the new component
 
 import '../components/styles/league.css';
 
@@ -123,7 +125,13 @@ const LeaguePage = () => {
         currentWeek={currentWeek} // Always use currentWeek for WeekSelector
         onWeekChange={handleWeekChange} // Pass the handler to WeekSelector
       />
-      <ReturnToHomePageButton />
+
+      {/* Add a container for horizontal alignment */}
+      <div className="button-container">
+        <ReturnToHomePageButton />
+        <SimulatePlayoffOddsButton leagueYear={leagueYear} leagueId={leagueId} />
+        <LeagueRecordsButton leagueYear={leagueYear} leagueId={leagueId} /> {/* Use the new component */}
+      </div>
 
       <BoxScoresTable
         leagueYear={leagueYear}

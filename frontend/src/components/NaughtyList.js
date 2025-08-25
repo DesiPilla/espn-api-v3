@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LoadingRow from "./LoadingRow";
 import "./styles/tableStyles.css"; // Adjust the path as needed
 import "./styles/spinner.css"; // Import spinner styles
 
@@ -41,10 +42,7 @@ const NaughtyList = ({ leagueYear, leagueId, week }) => {
         </em>
       </p>
       {loading ? (
-        <div className="spinner-container">
-          <div className="spinner"></div>
-          <p>Loading Naughty List...</p>
-        </div>
+        <LoadingRow text="Loading Naughty List..." colSpan="3" />
       ) : naughtyList.length === 0 ? (
         <p>🎉 No teams started any inactive players!</p>
       ) : (

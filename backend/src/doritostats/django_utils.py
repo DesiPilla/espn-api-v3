@@ -420,7 +420,9 @@ def django_strength_of_schedule(
             * For example, if the SOS for Week 6 and beyond is desired, this tuple would be (6, regular_season_length)
     """
     # Get strength of schedule for the current week
-    sos_df, _, schedule_period = get_remaining_schedule_difficulty_df(league, week)
+    sos_df, _, schedule_period = get_remaining_schedule_difficulty_df(
+        league=league, week=week
+    )
 
     # Add the strength of schedule for each team
     django_sos = []
@@ -441,12 +443,15 @@ def django_strength_of_schedule(
     return django_sos, schedule_period
 
 
-def django_simulation(league: League, n_simulations: int):
-    if league.current_week > league.settings.reg_season_count:
-        n_simulations = 1
+def django_simulation(league: League, n_simulations: int, week: Optional[int] = None):
+    # Disallow simulations after the regular season has ended
+    # if league.current_week > league.settings.reg_season_count:
+    #     n_simulations = 1
 
     # Get power rankings for the current week
-    playoff_odds, rank_dist, seeding_outcomes = simulate_season(league, n=n_simulations)
+    playoff_odds, rank_dist, seeding_outcomes = simulate_season(
+        league, n=n_simulations, first_week_to_simulate=week
+    )
 
     # Add the playoff offs and final rank distribution for each team
     django_playoff_odds = []
