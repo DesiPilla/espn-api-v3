@@ -10,11 +10,18 @@ import UhOhTooEarlyPage from './pages/UhOhTooEarlyPage';
 import LeagueRecordsPage from './pages/LeagueRecordsPage'; // Import the new page
 import { initGoogleAnalytics } from './utils/google_analytics';
 import Layout from './components/Layout';
+import favicon from "./assets/img/favicon.png";
 
 
 const App = () => {
   useEffect(() => {
     initGoogleAnalytics();
+
+    // Dynamically set the favicon
+    const link = document.createElement("link");
+    link.rel = "icon";
+    link.href = favicon;
+    document.head.appendChild(link);
   }, []);
 
   return (

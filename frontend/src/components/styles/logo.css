@@ -3,7 +3,7 @@
 }
 
 .logo {
-    width: 20%; /* Adjust the percentage as needed */
+    width: 100%;
     max-width: 250px; /* Set a maximum width to ensure it doesn't get too large */
     margin: 0 auto;
 }

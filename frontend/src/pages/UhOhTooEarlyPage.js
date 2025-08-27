@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import DoritoStatsLogo from '../components/DoritoStatsLogo';
 import ReturnToHomePageButton from '../components/ReturnToHomePageButton';
 import styles from './UhOhTooEarlyPage.module.css';
 
@@ -48,13 +49,8 @@ const UhOhTooEarlyPage = () => {
       <Header />
       <div className={styles.container}>
         <div className={styles.logoContainer}>
-          <img
-            className={styles.logo}
-            src="/img/logo2.png"
-            alt="Dorito Stats Logo"
-            />
+          <DoritoStatsLogo />
         </div>
-
         <div className={styles.hero}>
           <h1>
             You're a bit early!{' '}

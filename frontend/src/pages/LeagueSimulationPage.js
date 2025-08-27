@@ -167,7 +167,7 @@ const LeagueSimulationPage = () => {
             <p>League ID: {leagueId}</p>
 
             <WeekSelector
-                currentWeek={currentWeek?? 4}
+                currentWeek={currentWeek?? 18}
                 onWeekChange={handleWeekChange}
                 minWeek={4}
                 maxWeek={leagueSettings?.n_regular_season_weeks}

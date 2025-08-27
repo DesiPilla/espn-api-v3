@@ -1,7 +1,6 @@
 import datetime
 import json
 import logging
-from typing import Optional
 from django.core.cache import cache
 
 import pytz
@@ -10,11 +9,9 @@ from django.db.models import OuterRef, Subquery
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template import RequestContext
 from django.views.decorators.http import require_GET, require_POST
-from rest_framework.response import Response
+from django.views.generic import View
 from rest_framework.decorators import api_view
-from django.urls import path
 
-import espn_api
 from espn_api.football import League
 from espn_api.requests.espn_requests import (
     ESPNInvalidLeague,
@@ -39,7 +36,6 @@ from backend.src.doritostats.django_utils import (
     django_weekly_stats,
     get_leagues_current_year,
     get_leagues_previous_year,
-    ordinal,
 )
 from backend.src.doritostats.exceptions import InactiveLeagueError
 from backend.src.doritostats.fetch_utils import fetch_league
@@ -73,11 +69,6 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 @ensure_csrf_cookie
 def get_csrf_token(request):
     return JsonResponse({"detail": "CSRF cookie set"})
-
-
-@ensure_csrf_cookie
-def react_app_view(request):
-    return render(request, "index.html")
 
 
 @require_POST
@@ -245,12 +236,10 @@ def handler404(request, *args, **argv):
     response.status_code = 404
     return response
 
-
-from django.views.generic import View
-
-
 class ReactAppView(View):
-    template_name = "index.html"
+
+    def get(self, request):
+        return render(request, "index.html")  # served from frontend/build
 
 
 def leagues_data(request):

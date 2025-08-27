@@ -46,7 +46,7 @@ The main website for this project is [here](https://doritostats.up.railway.app/f
 If your league is public, you don't need any credentials to pull data. The `fetch_league()` function will create a `League` object for your league that is populated with information about your league.
 
 ```python
->>> from src.doritostats.fetch_utils import fetch_league
+>>> from backend.src.doritostats.fetch_utils import fetch_league
 >>> league_id = 1234
 >>> year = 2022
 >>> league = fetch_league(league_id, year)
@@ -256,7 +256,7 @@ a lower (or more 'unlucky') score. Over the course of the season, the luck score
 If a league has been around for more than one season, historical records can be easily fetched. A row will exist for each team's matchup.
 
 ```python
-from src.doritostats.fetch_utils import get_historical_stats
+from backend.src.doritostats.fetch_utils import get_historical_stats
 
 historical_df = get_historical_stats(league_id, start_year, end_year, swid, espn_s2)
 ```
@@ -314,7 +314,7 @@ The list of fields available for each record includes:
 To see if any records were broken during a given week
 
 ```python
->>> from src.doritostats.analytic_utils import weekly_stats_analysis
+>>> from backend.src.doritostats.analytic_utils import weekly_stats_analysis
 
 >>> weekly_stats_analysis(records_df, year=2022, week=1)
 
@@ -351,7 +351,7 @@ Gianna Selleck had the 1st lowest TE_pts (0.00 pts) in franchise history
 To see the records for a given season
 
 ```python
->>> from src.doritostats.analytic_utils import season_stats_analysis
+>>> from backend.src.doritostats.analytic_utils import season_stats_analysis
 
 >>> season_stats_analysis(league, records_df)
 
@@ -425,6 +425,16 @@ A standout feature is the ability to simulate the remaining season. Run 100-1000
 (Only available after Week 4 to collect enough data).
 
 <a name="credits"></a>
+
+## Running locally
+Create a shell that runs the Django API
+```shell
+python backend/manage.py runserver 8000
+```
+Then create a shell that runs the React frontend
+```shell
+cd frontend && npm start
+```
 
 ## Credits
 

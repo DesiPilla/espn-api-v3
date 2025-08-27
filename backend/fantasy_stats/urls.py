@@ -79,7 +79,8 @@ urlpatterns = [
     ),
     # Add this last, after all other routes
     path("api/get-csrf-token/", views.get_csrf_token, name="get_csrf_token"),
-    path("", views.react_app_view, name="react_app"),
+    # Catch-all: serve React index.html for any path
+    re_path("", views.ReactAppView.as_view(), name="react-app"),
     re_path(r"^(?:.*)/?$", views.ReactAppView.as_view(), name="react-app"),
 ]
 # urlpatterns = [

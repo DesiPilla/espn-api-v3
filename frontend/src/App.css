@@ -14,7 +14,7 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  /* background-color: #282c34; */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -37,12 +37,6 @@
   }
 }
 
-/* html, body {
-  background: #95f56fb9;
-  height: 100%;
-} */
-
-/* App.css */
 .page-container {
   margin: 0 auto;
   padding: 2rem;

@@ -5,7 +5,7 @@ html, body, #root {
   line-height: 20px;
   font-weight: 400;
   color: #3b3b3b;
-  background: #95f56fb9;
+  background: #b4fb98; /*This is the master background color*/
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
@@ -118,43 +118,29 @@ html, body, #root {
   }
 }
 
-/* Create a class for an error message text */
 .error-message {
   color: red;
   font-weight: bold;
 }
 
-
-/* Add this to your CSS file, such as 'fantasy_stats/css/league.css' */
-/* Styling for the simulation button */
 .simulation-button {
   display: inline-block;
   padding: 10px 20px;
   background-color: #2264ff;
-  /* Choose a suitable button color */
   color: #fff;
-  /* Text color */
   border: none;
   border-radius: 5px;
-  /* Rounded corners */
   text-align: center;
   text-decoration: none;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
-  /* Smooth color transition on hover */
-
-  /* Optional: Add a box shadow for depth */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-
-  /* Optional: Make it more apparent, e.g., by adding a border or underline */
   border: 2px solid #1c54d9;
 }
 
-/* Hover effect to change the background color on hover */
 .simulation-button:hover {
   background-color: #1c54d9;
-  /* Adjust the color for hover effect */
 }
 
 .league-content {
@@ -163,7 +149,7 @@ html, body, #root {
 
 .button-container {
   display: flex;
-  gap: 10px; /* Add spacing between buttons */
-  justify-content: left; /* Center the buttons horizontally */
-  margin: 20px 0; /* Add some vertical spacing */
+  gap: 10px;
+  justify-content: left;
+  margin: 20px 0;
 }
