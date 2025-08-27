@@ -426,15 +426,17 @@ A standout feature is the ability to simulate the remaining season. Run 100-1000
 
 <a name="credits"></a>
 
-## Running locally
-Create a shell that runs the Django API
+## Local setup
+To launch the web app
 ```shell
-python backend/manage.py runserver 8000
+python manage.py runserver 8001
 ```
-Then create a shell that runs the React frontend
+Then navigate to that port in Chrome. Whenever changes are made, first run
 ```shell
-cd frontend && npm start
+npm run build
 ```
+And then refresh the page.
+
 
 ## Credits
 
