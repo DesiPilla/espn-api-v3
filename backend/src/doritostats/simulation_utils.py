@@ -4,10 +4,10 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from src.doritostats.analytic_utils import get_team
+from backend.src.doritostats.analytic_utils import get_team
 from espn_api.football import League, Team, Matchup
-from src.doritostats.PseudoMatchup import PseudoMatchup
-from src.doritostats.PseudoTeam import PseudoTeam
+from backend.src.doritostats.PseudoMatchup import PseudoMatchup
+from backend.src.doritostats.PseudoTeam import PseudoTeam
 
 
 logger = logging.getLogger(__name__)

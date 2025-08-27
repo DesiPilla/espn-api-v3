@@ -22,14 +22,13 @@ from espn_api.requests.espn_requests import (
     ESPNUnknownError,
 )
 
-from fantasy_stats.email_notifications.email import send_new_league_added_alert
+from backend.fantasy_stats.email_notifications.email import send_new_league_added_alert
 from .models import LeagueInfo
-from src.doritostats.analytic_utils import (
-    get_naughty_list_str,
+from backend.src.doritostats.analytic_utils import (
     get_naughty_players,
     get_lineup,
 )
-from src.doritostats.django_utils import (
+from backend.src.doritostats.django_utils import (
     CURRENT_YEAR,
     django_luck_index,
     django_power_rankings,
@@ -42,8 +41,8 @@ from src.doritostats.django_utils import (
     get_leagues_previous_year,
     ordinal,
 )
-from src.doritostats.exceptions import InactiveLeagueError
-from src.doritostats.fetch_utils import fetch_league
+from backend.src.doritostats.exceptions import InactiveLeagueError
+from backend.src.doritostats.fetch_utils import fetch_league
 
 logger = logging.getLogger(__name__)
 

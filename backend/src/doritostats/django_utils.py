@@ -2,8 +2,8 @@ import datetime
 from typing import Dict, List, Optional, Tuple, Union
 from espn_api.football import League
 
-from fantasy_stats.models import LeagueInfo
-from src.doritostats.analytic_utils import (
+from backend.fantasy_stats.models import LeagueInfo
+from backend.src.doritostats.analytic_utils import (
     avg_slot_score,
     get_best_lineup,
     get_best_trio,
@@ -16,12 +16,12 @@ from src.doritostats.analytic_utils import (
     sort_lineups_by_func,
     sum_bench_points,
 )
-from src.doritostats.luck_index import get_weekly_luck_index
-from src.doritostats.scrape_team_stats import (
+from backend.src.doritostats.luck_index import get_weekly_luck_index
+from backend.src.doritostats.scrape_team_stats import (
     append_streaks,
     get_stats_by_matchup,
 )
-from src.doritostats.simulation_utils import simulate_season
+from backend.src.doritostats.simulation_utils import simulate_season
 
 CURRENT_YEAR = (
     datetime.datetime.now().year

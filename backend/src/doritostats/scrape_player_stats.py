@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 from espn_api.football import League, Team, Player
-from src.doritostats.fetch_utils import fetch_league
+from backend.src.doritostats.fetch_utils import fetch_league
 
 logger = logging.getLogger(__name__)
 

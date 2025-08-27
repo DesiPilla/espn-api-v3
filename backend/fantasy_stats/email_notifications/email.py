@@ -5,8 +5,8 @@ from email.mime.multipart import MIMEMultipart
 
 import pandas as pd
 
-from src.doritostats.fetch_utils import get_postgres_conn
-from fantasy_stats.models import LeagueInfo
+from backend.src.doritostats.fetch_utils import get_postgres_conn
+from backend.fantasy_stats.models import LeagueInfo
 
 
 def send_new_league_added_alert(league_info: LeagueInfo):

@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 from django.contrib.sitemaps.views import sitemap
-from fantasy_stats.sitemaps import (
+from backend.fantasy_stats.sitemaps import (
     LeagueHomeSitemap,
     LeagueSimulationsSitemap,
     StaticViewSitemap,
@@ -31,8 +31,11 @@ sitemaps = {
 }
 
 urlpatterns = [
-    path("", include("fantasy_stats.urls"), name="index"),
-    path("fantasy_stats/", include("fantasy_stats.urls", namespace="fantasy_stats")),
+    path("", include("backend.fantasy_stats.urls"), name="index"),
+    path(
+        "fantasy_stats/",
+        include("backend.fantasy_stats.urls", namespace="fantasy_stats"),
+    ),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}),
     path("admin/", admin.site.urls),
 ]

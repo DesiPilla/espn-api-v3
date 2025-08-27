@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 from espn_api.football import League, Team, Matchup
 from typing import Optional
-from src.doritostats.fetch_utils import fetch_league, OWNER_MAP
-from src.doritostats.PseudoMatchup import PseudoMatchup
-from src.doritostats.analytic_utils import (
+from backend.src.doritostats.fetch_utils import fetch_league, OWNER_MAP
+from backend.src.doritostats.PseudoMatchup import PseudoMatchup
+from backend.src.doritostats.analytic_utils import (
     get_weekly_finish,
     get_lineup_efficiency,
     get_best_trio,

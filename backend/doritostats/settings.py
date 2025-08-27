@@ -98,7 +98,7 @@ LOGGING = {
 # Application definition
 INSTALLED_APPS = [
     "corsheaders",
-    "fantasy_stats.apps.FantasyStatsConfig",
+    "backend.fantasy_stats.apps.FantasyStatsConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -121,13 +121,11 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
-ROOT_URLCONF = "doritostats.urls"
+ROOT_URLCONF = "backend.doritostats.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            os.path.join(BASE_DIR, "frontend/build/static"),
-        ],
+        "DIRS": [BASE_DIR / "frontend" / "build"],  # React index.html lives here
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -156,7 +154,7 @@ TEMPLATES = [
     # },
 ]
 
-WSGI_APPLICATION = "doritostats.wsgi.application"
+WSGI_APPLICATION = "backend.doritostats.wsgi.application"
 
 
 # Database
@@ -200,13 +198,12 @@ USE_TZ = True
 
 # This setting tells Django at which URL static files are going to be served to the user.
 # Here, they well be accessible at your-domain.onrender.com/static/...
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [
-    # os.path.join(BASE_DIR, "static/"),
-    os.path.join(BASE_DIR, "frontend/build/"),
-    os.path.join(BASE_DIR, "frontend/build/static/"),
+    BASE_DIR / "frontend" / "build" / "static",  # React static assets
 ]
+
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")  # for collectstatic
 
 # Following settings only make sense on production and may break development environments.
 if not DEBUG:  # Tell Django to copy statics to the `staticfiles` directory

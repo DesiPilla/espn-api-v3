@@ -6,7 +6,7 @@ from typing import Callable, List, Optional
 
 from espn_api.football import League, Team, Player
 
-from src.doritostats.fetch_utils import fetch_league
+from backend.src.doritostats.fetch_utils import fetch_league
 import src.doritostats.analytic_utils as utils  # The code to test
 
 

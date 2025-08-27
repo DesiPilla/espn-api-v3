@@ -16,7 +16,7 @@ from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
 import sqlalchemy
 from dotenv import load_dotenv
 
-from src.doritostats.exceptions import InactiveLeagueError
+from backend.src.doritostats.exceptions import InactiveLeagueError
 
 warnings.filterwarnings("ignore")
 

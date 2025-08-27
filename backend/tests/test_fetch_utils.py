@@ -4,7 +4,7 @@ import pytest
 from espn_api.football import League, Matchup
 from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
 import src.doritostats.fetch_utils as fetch  # The code to test
-from src.doritostats.PseudoMatchup import PseudoMatchup
+from backend.src.doritostats.PseudoMatchup import PseudoMatchup
 
 
 league_id = os.getenv("LEAGUE_ID")

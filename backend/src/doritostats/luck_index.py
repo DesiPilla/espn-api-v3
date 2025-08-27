@@ -2,7 +2,7 @@ import numpy as np
 from typing import Dict, List, Optional, Union
 from espn_api.football import League, Team, Player
 from espn_api.football.box_score import BoxScore
-from src.doritostats.analytic_utils import (
+from backend.src.doritostats.analytic_utils import (
     get_best_lineup,
     get_lineup,
     get_num_bye,
