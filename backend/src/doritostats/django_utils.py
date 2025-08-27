@@ -371,7 +371,12 @@ def django_luck_index(league: League, week: int):
         else:
             luck_val = "{:.1%} unluckiness this week".format(luck)
         luck_index.append(
-            {"team": team.team_name, "text": luck_val, "owner": team.owner, "value": luck}
+            {
+                "team": team.team_name,
+                "text": luck_val,
+                "owner": team.owner,
+                "value": luck,
+            }
         )
 
     return sorted(luck_index, key=lambda x: x["value"], reverse=True)

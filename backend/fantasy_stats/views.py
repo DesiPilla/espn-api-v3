@@ -8,6 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template import RequestContext
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import View
 from rest_framework.decorators import api_view
@@ -19,8 +20,8 @@ from espn_api.requests.espn_requests import (
     ESPNUnknownError,
 )
 
-from backend.fantasy_stats.email_notifications.email import send_new_league_added_alert
 from .models import LeagueInfo
+from backend.fantasy_stats.email_notifications.email import send_new_league_added_alert
 from backend.src.doritostats.analytic_utils import (
     get_naughty_players,
     get_lineup,
@@ -61,9 +62,6 @@ def get_default_week(league_obj: League):
         return current_matchup_period - 1
     else:
         return current_matchup_period
-
-
-from django.views.decorators.csrf import ensure_csrf_cookie
 
 
 @ensure_csrf_cookie
@@ -236,6 +234,7 @@ def handler404(request, *args, **argv):
     response.status_code = 404
     return response
 
+
 class ReactAppView(View):
 
     def get(self, request):
@@ -379,7 +378,9 @@ def copy_old_league(request, league_id: int):
                 status=400,
             )
         except Exception as e:
-            return JsonResponse({"error": f"Failed to fetch league: {str(e)}"}, status=500)
+            return JsonResponse(
+                {"error": f"Failed to fetch league: {str(e)}"}, status=500
+            )
 
     # Save new league info
     try:
@@ -421,13 +422,21 @@ def get_cached_league(league_id: int, league_year: int) -> League:
     league_obj = cache.get(cache_key)
 
     if not league_obj:
-        league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
-        league_obj = fetch_league(league_id=league_id, year=league_year, swid=league_info.swid, espn_s2=league_info.espn_s2)
+        league_info = LeagueInfo.objects.get(
+            league_id=league_id, league_year=league_year
+        )
+        league_obj = fetch_league(
+            league_id=league_id,
+            year=league_year,
+            swid=league_info.swid,
+            espn_s2=league_info.espn_s2,
+        )
         cache.set(cache_key, league_obj, timeout=CACHE_DURATION)
 
     return league_obj
 
-def preload_league(request, league_id: int, league_year: int):
+
+def preload_league(request, league_id: int, league_year: int) -> JsonResponse:
     """
     Preloads the league data and caches it for faster access.
     """
@@ -610,9 +619,14 @@ def check_league_status(request, league_year: int, league_id: int) -> JsonRespon
     """
     league = get_cached_league(league_id=league_id, league_year=league_year)
     if league.current_week <= 1:
-        return JsonResponse({"status": "too_soon", "message": "League has not started yet."}, status=400)
+        return JsonResponse(
+            {"status": "too_soon", "message": "League has not started yet."}, status=400
+        )
     if not league.draft:
-        return JsonResponse({"status": "too_soon", "message": "League draft has not occurred."}, status=400)
+        return JsonResponse(
+            {"status": "too_soon", "message": "League draft has not occurred."},
+            status=400,
+        )
     return JsonResponse({"status": "ok", "message": "League is ready."})
 
 
