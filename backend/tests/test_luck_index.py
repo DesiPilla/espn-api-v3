@@ -1,5 +1,3 @@
-import datetime
-import os
 import pytest
 import src.doritostats.luck_index as luck  # The code to test
 from typing import List
