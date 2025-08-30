@@ -3,6 +3,6 @@
         "buildCommand": "./build.sh"
     },
     "deploy": {
-        "startCommand": "poetry run gunicorn projectRoot.wsgi:application --bind 0.0.0.0:$PORT"
+        "startCommand": "gunicorn projectRoot.wsgi:application --bind 0.0.0.0:$PORT"
     }
 }

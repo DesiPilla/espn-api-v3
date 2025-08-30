@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 set -e  # Exit on any error
 
-echo "=== Installing Poetry ==="
-# Install Poetry if not available
-if ! command -v poetry &> /dev/null
-then
-    curl -sSL https://install.python-poetry.org | python3 -
-    export PATH="$HOME/.local/bin:$PATH"
-fi
+echo "=== Installing Poetry 1.8.5 ==="
+# Install Poetry version 1.8.5
+export POETRY_VERSION=1.8.5
+curl -sSL https://install.python-poetry.org | python3 -
+export PATH="$HOME/.local/bin:$PATH"
 
 echo "=== Setting up Python environment with Poetry ==="
 # Install Python dependencies without installing the project itself
