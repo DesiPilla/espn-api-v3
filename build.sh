@@ -23,11 +23,6 @@ npm install
 npm run build
 cd ..
 
-echo "=== Linking React build into Django static folder ==="
-DJANGO_STATIC_ROOT="projectRoot/static"
-rm -rf $DJANGO_STATIC_ROOT/frontend
-cp -r frontend/build $DJANGO_STATIC_ROOT/frontend
-
 echo "=== Collecting Django static files ==="
 poetry run python manage.py collectstatic --noinput
 
