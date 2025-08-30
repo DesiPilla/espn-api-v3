@@ -1,11 +1,19 @@
-#!/bin/bash
-set -e  # exit on any error
+#!/usr/bin/env bash
+set -e  # Exit on any error
 
-# Build frontend
+echo "=== Setting up Python environment with Poetry ==="
+# Install dependencies
+poetry install --no-root
+
+echo "=== Building React frontend ==="
+# Navigate to frontend folder and install dependencies
 cd frontend
-npm ci
+npm install
 npm run build
 cd ..
 
-# Collect static files for Django
-python manage.py collectstatic --noinput
+echo "=== Collecting static files for Django ==="
+# Make sure Django knows where static files are
+poetry run python manage.py collectstatic --noinput
+
+echo "=== Build complete ==="
