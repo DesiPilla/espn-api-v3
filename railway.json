@@ -3,6 +3,6 @@
         "buildCommand": "./build.sh"
     },
     "deploy": {
-        "startCommand": "cd backend && gunicorn doritostats.wsgi:application --bind 0.0.0.0:$PORT"
+        "startCommand": "PYTHONPATH=backend gunicorn doritostats.wsgi:application --bind 0.0.0.0:$PORT"
     }
 }
