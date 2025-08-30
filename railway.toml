@@ -1,0 +1,7 @@
+[build]
+# Custom command to build your app
+buildCommand = "./build.sh"
+
+[start]
+# Command to start your app
+startCommand = "gunicorn backend.doritostats.wsgi"
