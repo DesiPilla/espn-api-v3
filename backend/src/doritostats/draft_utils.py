@@ -69,7 +69,7 @@ def get_draft_details(league: League) -> pd.DataFrame:
     ) + draft.round_pick
 
     # Add the value associated with each pick
-    draft_pick_values = pd.read_csv("./src/doritostats/pick_value.csv")
+    draft_pick_values = pd.read_csv("./backend/src/doritostats/pick_value.csv")
     draft = pd.merge(
         draft, draft_pick_values, left_on="pick_num", right_on="pick", how="left"
     ).drop(columns=["pick"])

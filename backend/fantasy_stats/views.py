@@ -71,7 +71,6 @@ def get_csrf_token(request):
 
 @require_POST
 def league_input(request):
-
     data = json.loads(request.body)
 
     league_year = int(data.get("league_year"))
@@ -236,7 +235,6 @@ def handler404(request, *args, **argv):
 
 
 class ReactAppView(View):
-
     def get(self, request):
         return render(request, "index.html")  # served from frontend/build
 
@@ -763,7 +761,6 @@ def season_records(
     league_id: int,
     league_year: int,
 ) -> JsonResponse:
-
     # Generate a cache key based on league_id, league_year, week
     cache_key = f"season_records_{league_id}_{league_year}"
     cached_result = cache.get(cache_key)

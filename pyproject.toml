@@ -5,7 +5,7 @@ description = "This project aims to make ESPN Fantasy Football statistics easily
 authors = ["Desi Pilla <desi.m.pilla@gmail.com>"]
 license = "https://github.com/DesiPilla/espn-api-v3/blob/master/LICENSE"
 readme = "README.md"
-packages = [{include = "backend/src"}, { from = "backend/src", include = "doritostats" }]
+packages = [{ from = "backend/src", include = "doritostats" }]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"

@@ -437,6 +437,11 @@ npm run build
 ```
 And then refresh the page.
 
+Before making PRs, run the following checks locally to better ensure that all Github Actions will pass
+```shell
+poetry run pytest
+black . --check --diff
+```
 
 ## Credits
 
