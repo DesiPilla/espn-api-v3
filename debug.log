@@ -1,0 +1,534 @@
+ERROR 2025-04-21 21:34:54,292 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:34:54,293 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:54,293 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:54,313 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:34:54,314 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:54,314 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:57,592 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:34:57,595 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:57,595 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:57,609 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:34:57,610 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:57,610 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:58,613 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:34:58,614 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:58,614 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:58,632 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:34:58,632 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:34:58,632 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:35:02,736 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:35:02,740 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:35:02,740 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:35:02,755 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:35:02,755 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:35:02,755 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:35:06,449 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:35:06,456 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:35:06,457 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 82202
+ERROR 2025-04-21 21:35:06,457 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 82202
+ERROR 2025-04-21 21:35:06,457 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 82202
+ERROR 2025-04-21 21:35:06,457 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 82202
+ERROR 2025-04-21 21:36:02,440 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:36:02,441 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81613
+ERROR 2025-04-21 21:36:02,441 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81613
+ERROR 2025-04-21 21:36:08,873 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:36:08,874 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:36:08,874 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:36:08,888 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got an unexpected keyword argument 'league_year'
+ERROR 2025-04-21 21:36:08,888 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:36:08,888 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81937
+ERROR 2025-04-21 21:36:47,850 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got multiple values for argument 'league_id'
+ERROR 2025-04-21 21:36:47,851 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81734
+ERROR 2025-04-21 21:36:47,851 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81734
+ERROR 2025-04-21 21:37:31,369 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_current_week() got multiple values for argument 'league_id'
+ERROR 2025-04-21 21:37:31,370 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81862
+ERROR 2025-04-21 21:37:31,370 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 81862
+ERROR 2025-04-21 21:38:16,003 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 593, in get_current_week
+    league = get_cached_league(league_id, league_year)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 559, in get_cached_league
+    cache.set(cache_key, league_obj, timeout=60 * 60)  # cache for 1 hour
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/cache/backends/locmem.py", line 53, in set
+    pickled = pickle.dumps(value, self.pickle_protocol)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_pickle.PicklingError: Can't pickle <functools._lru_cache_wrapper object at 0x11ca0fd70>: it's not the same object as espn_api.football.league.League.box_scores
+ERROR 2025-04-21 21:38:16,009 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 593, in get_current_week
+    league = get_cached_league(league_id, league_year)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 559, in get_cached_league
+    cache.set(cache_key, league_obj, timeout=60 * 60)  # cache for 1 hour
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/cache/backends/locmem.py", line 53, in set
+    pickled = pickle.dumps(value, self.pickle_protocol)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_pickle.PicklingError: Can't pickle <functools._lru_cache_wrapper object at 0x11ca0f740>: it's not the same object as espn_api.football.league.League.box_scores
+ERROR 2025-04-21 21:38:16,010 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 95443
+ERROR 2025-04-21 21:38:16,010 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 95443
+ERROR 2025-04-21 21:38:16,010 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 95443
+ERROR 2025-04-21 21:38:16,010 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 95443
+ERROR 2025-04-21 21:38:22,162 log Internal Server Error: /api/league/2024/1086064/currentWeek/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 593, in get_current_week
+    league = get_cached_league(league_id, league_year)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 559, in get_cached_league
+    cache.set(cache_key, league_obj, timeout=60 * 60)  # cache for 1 hour
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/cache/backends/locmem.py", line 53, in set
+    pickled = pickle.dumps(value, self.pickle_protocol)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_pickle.PicklingError: Can't pickle <functools._lru_cache_wrapper object at 0x11ca0fab0>: it's not the same object as espn_api.football.league.League.box_scores
+ERROR 2025-04-21 21:38:22,162 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 94991
+ERROR 2025-04-21 21:38:22,162 basehttp "GET /api/league/2024/1086064/currentWeek/ HTTP/1.1" 500 94991
+ERROR 2025-04-21 21:42:56,836 log Internal Server Error: /api/league/2024/1086064/box-scores/5/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 611, in box_scores_view
+    "home_team_score": box_score.home_team.score,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Team' object has no attribute 'score'. Did you mean: 'scores'?
+ERROR 2025-04-21 21:42:56,837 basehttp "GET /api/league/2024/1086064/box-scores/5/ HTTP/1.1" 500 86102
+ERROR 2025-04-21 21:42:56,837 basehttp "GET /api/league/2024/1086064/box-scores/5/ HTTP/1.1" 500 86102
+ERROR 2025-04-21 22:00:53,287 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:00:53,289 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:00:53,289 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:09,191 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:09,192 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:09,192 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:09,645 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:09,646 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:09,646 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:28,158 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:28,159 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:28,159 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:28,602 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:28,604 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:28,604 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:30,730 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:30,732 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:30,732 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:31,270 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:31,272 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:31,272 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:33,687 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:33,689 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:33,689 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:34,137 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:34,138 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:34,138 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:39,189 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:39,191 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:39,191 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:39,646 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:39,648 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:39,648 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:40,822 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:40,824 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:40,824 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:41,289 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:01:41,290 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:01:41,290 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 86194
+ERROR 2025-04-21 22:02:43,044 log Internal Server Error: /api/league/2024/1086064/box-scores/17/
+Traceback (most recent call last):
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/.pyenv/versions/doritostats312/lib/python3.12/site-packages/django/views/decorators/http.py", line 64, in inner
+    return func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/pillades/Library/CloudStorage/OneDrive-Paramount/GitHub/espn-api-v3/backend/fantasy_stats/views.py", line 612, in box_scores_view
+    "away_team_name": box_score.away_team.team_name,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'team_name'
+ERROR 2025-04-21 22:02:43,047 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 85870
+ERROR 2025-04-21 22:02:43,047 basehttp "GET /api/league/2024/1086064/box-scores/17/ HTTP/1.1" 500 85870

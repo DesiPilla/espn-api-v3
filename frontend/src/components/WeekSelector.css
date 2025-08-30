@@ -1,0 +1,12 @@
+/* App.css */
+.select {
+  margin-top: 1rem;
+}
+
+.select select {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  background-color: white;
+  border: 1px solid #ccc;
+}

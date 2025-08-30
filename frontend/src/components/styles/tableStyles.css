@@ -1,0 +1,141 @@
+.wrapper-wide {
+  margin: 0 auto;
+  padding: 10px;
+  max-width: 1200px;
+}
+
+.table, .table-with-bottom-caption {
+  width: 80%;
+  border-collapse: collapse;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  display: table;
+  text-align: center;
+  font-family: Arial, sans-serif; /* Default font for the table */
+  table-layout: auto; /* Allow columns to adjust width based on content */
+}
+
+.table {
+  margin: 0 0 40px 0;
+}
+
+.table-with-bottom-caption {
+  margin: 0;
+  padding: 0;
+}
+
+.table th.team-name-column, .table-with-bottom-caption th.team-name-column,
+.table td.team-name-column, .table-with-bottom-caption td.team-name-column {
+  white-space: nowrap; /* Prevent wrapping of text */
+  width: 1%; /* Shrink to fit the content */
+}
+
+.table th, .table-with-bottom-caption th {
+  padding: 10px;
+  text-align: center;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.table td, .table-with-bottom-caption td {
+  padding: 5px 5px 5px 20px;
+  text-align: center;
+}
+
+.table .score-column, .table-with-bottom-caption .score-column {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+}
+
+.table .odd-row, .table-with-bottom-caption .odd-row {
+  background-color: #d6ded3;
+  text-align: center;
+  padding-left: 10px;
+}
+
+.table .even-row, .table-with-bottom-caption .even-row {
+  background-color: #ffffff;
+  text-align: center;
+  padding-left: 10px;
+}
+
+.table tr:hover, .table-with-bottom-caption tr:hover {
+  background-color: #f1f1f1;
+}
+
+.table .row, .table-with-bottom-caption .row {
+  display: table-row;
+  background: #f6f6f6;
+}
+
+.table .row:nth-of-type(odd), .table-with-bottom-caption .row:nth-of-type(odd) {
+  background: #d7e0d2;
+}
+
+.table .row.header, .table-with-bottom-caption .row.header {
+  font-weight: 900;
+  color: #ffffff;
+  background: #333b36;
+}
+
+.table .row.green, .table-with-bottom-caption .row.green {
+  background: #27ae60;
+}
+
+.table .row.blue, .table-with-bottom-caption .row.blue {
+  background: #2980b9;
+}
+
+@media screen and (max-width: 580px) {
+  .table, .table-with-bottom-caption {
+    display: block;
+    margin: 0 auto 40px auto;
+    width: 80%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .table .row, .table-with-bottom-caption .row {
+    padding: 14px 0 7px;
+    display: block;
+  }
+
+  .table .row.header, .table-with-bottom-caption .row.header {
+    padding: 0;
+    height: 6px;
+  }
+
+  .table .row.header .cell, .table-with-bottom-caption .row.header .cell {
+    display: none;
+  }
+
+  .table .row .cell, .table-with-bottom-caption .row .cell {
+    margin-bottom: 10px;
+  }
+
+  .table .row .cell:before, .table-with-bottom-caption .row .cell:before {
+    margin-bottom: 3px;
+    content: attr(data-title);
+    min-width: 98px;
+    font-size: 10px;
+    line-height: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #969696;
+    display: block;
+  }
+}
+
+.cell {
+  padding: 6px 12px;
+  display: table-cell;
+}
+
+@media screen and (max-width: 580px) {
+  .cell {
+    padding: 2px 16px;
+    display: block;
+  }
+}
+
+.thick-border-top {
+  border-top: 4px solid #000000; /* Thick black border */
+}

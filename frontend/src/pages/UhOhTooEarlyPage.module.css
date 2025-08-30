@@ -1,0 +1,69 @@
+/* UhOhTooEarlyPage.module.css */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem; /* adds consistent spacing between children */
+  padding: 2rem;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 20px;
+  text-align: center;
+  background-color: #f2f2f2;
+}
+
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.5rem; /* Reduced margin to decrease space */
+}
+
+.logoContainer img {
+  width: 100%; /* Adjust the width to make the logo smaller */
+  max-width: 250px;
+  height: auto; /* Maintain aspect ratio */
+}
+
+.hero {
+  background-color: #fff;
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1rem;
+}
+
+.messageBox {
+  background-color: #fff;
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-top: 0;
+}
+
+.btn {
+  background-color: #007bff;
+  color: #fff;
+  padding: 10px 20px;
+  margin: 10px;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: #0056b3;
+}

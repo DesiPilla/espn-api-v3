@@ -1,0 +1,9 @@
+.logo-container {
+    text-align: center; /* Center the content horizontally */
+}
+
+.logo {
+    width: 100%;
+    max-width: 250px; /* Set a maximum width to ensure it doesn't get too large */
+    margin: 0 auto;
+}
