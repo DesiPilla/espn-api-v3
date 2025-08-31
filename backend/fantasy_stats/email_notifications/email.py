@@ -16,11 +16,10 @@ def send_new_league_added_alert(league_info: LeagueInfo):
     sender_password = os.getenv("EMAIL_PASSWORD")
 
     # Read in the email template
-    email_template_file = open(
+    with open(
         "fantasy_stats/email_notifications/new_league_added.txt", "r"
-    )
-    email_template = email_template_file.read()
-    email_template_file.close()
+    ) as email_template_file:
+        email_template = email_template_file.read()
 
     # Turn these into plain/html MIMEText objects
     league_name = league_info.league_name
