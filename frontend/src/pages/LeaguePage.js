@@ -71,10 +71,14 @@ const LeaguePage = () => {
   // Set the default current week and selected week
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const weekFromUrl = queryParams.get('week');
+    const weekFromUrl = (() => {
+      const week = queryParams.get('week');
+      return week && !isNaN(parseInt(week)) ? parseInt(week) : null;
+    })();
+
     if (weekFromUrl) {
       console.log("Setting selected week from URL:", weekFromUrl);
-      setSelectedWeek(parseInt(weekFromUrl, 10)); // Initialize selectedWeek from the URL
+      setSelectedWeek(weekFromUrl);
     }
 
     const fetchCurrentWeek = async () => {
@@ -85,33 +89,37 @@ const LeaguePage = () => {
           throw new Error(`Failed to fetch current week (status ${result.status})`);
         }
         const data = await result.json();
-        setCurrentWeek(data.current_week); // Always set the current week
+        setCurrentWeek(data.current_week);
         if (!weekFromUrl) {
           setSelectedWeek(data.current_week); // Only set selectedWeek if not already defined
         }
-        console.log("Current week set to:", data.current_week);
       } catch (error) {
         console.error("Error fetching current week:", error);
-        if (!retry) {
-          console.log("Retrying current week fetch...");
-          setRetry(true); // Trigger a retry
-        }
       }
     };
 
-    fetchCurrentWeek(); // Call the async function
-  }, [location.search, leagueYear, leagueId, retry]);
+    fetchCurrentWeek();
+
+    // Ensure selectedWeek is never undefined
+    if (selectedWeek === undefined) {
+      console.log("selectedWeek is undefined, setting it to currentWeek:", currentWeek);
+      setSelectedWeek(currentWeek);
+    }
+  }, [location.search, leagueYear, leagueId, selectedWeek, currentWeek]);
 
   const handleWeekChange = (newWeek) => {
-    setSelectedWeek(newWeek); // Update the selected week
+    // Ensure selectedWeek is never undefined
+    const validWeek = newWeek ?? currentWeek;
+    setSelectedWeek(validWeek);
     const queryParams = new URLSearchParams(location.search);
-    queryParams.set('week', newWeek); // Update the URL query parameter
+    queryParams.set('week', validWeek); // Update the URL query parameter with a valid week
     window.history.replaceState(null, '', `${location.pathname}?${queryParams.toString()}`);
   };
 
   if (!leagueData || currentWeek === null) {
     return <div>Loading...</div>;
   }
+
   console.log("Selected week:", selectedWeek);
   console.log("Current week:", currentWeek);
 
@@ -123,13 +131,15 @@ const LeaguePage = () => {
 
       <WeekSelector
         currentWeek={currentWeek} // Always use currentWeek for WeekSelector
+        minWeek={1}
+        maxWeek={currentWeek}
         onWeekChange={handleWeekChange} // Pass the handler to WeekSelector
       />
 
       {/* Add a container for horizontal alignment */}
       <div className="button-container">
         <ReturnToHomePageButton />
-        <SimulatePlayoffOddsButton leagueYear={leagueYear} leagueId={leagueId} />
+        <SimulatePlayoffOddsButton leagueYear={leagueYear} leagueId={leagueId}/>
         <LeagueRecordsButton leagueYear={leagueYear} leagueId={leagueId} /> {/* Use the new component */}
       </div>
 
@@ -175,3 +185,4 @@ const LeaguePage = () => {
 };
 
 export default LeaguePage;
+

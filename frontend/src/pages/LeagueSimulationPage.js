@@ -46,42 +46,6 @@ const LeagueSimulationPage = () => {
         checkLeagueStatus();
     }, [leagueYear, leagueId, navigate]);
 
-    // Set the default current week and selected week
-    useEffect(() => {
-        const weekFromUrl = queryParams.get('week');
-        const fetchCurrentWeek = async () => {
-            try {
-                console.log("Fetching current week...");
-                const result = await fetch(`/api/league/${leagueYear}/${leagueId}/current-week/`);
-                if (!result.ok) {
-                    throw new Error(`Failed to fetch current week (status ${result.status})`);
-                }
-                const data = await result.json();
-                setCurrentWeek(data.current_week);
-                if (weekFromUrl) {
-                    console.log("Setting selected week from URL:", weekFromUrl);
-                    setSelectedWeek(parseInt(weekFromUrl, null));
-                } else {
-                    setSelectedWeek(data.current_week);
-                }
-                console.log("Current week set to:", data.current_week);
-            } catch (error) {
-                console.error("Error fetching current week:", error);
-            }
-        };
-
-        fetchCurrentWeek();
-    }, [leagueYear, leagueId, queryParams]);
-
-    // Redirect to "uh-oh-too-early" page if selectedWeek or currentWeek is less than 4
-    useEffect(() => {
-        if (selectedWeek !== null && currentWeek !== null) {
-            if (selectedWeek < 4 || currentWeek < 4) {
-                navigate(`/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`);
-            }
-        }
-    }, [selectedWeek, currentWeek, leagueYear, leagueId, navigate]);
-
     // Fetch the number of playoff teams
     useEffect(() => {
         const fetchLeagueSettings = async () => {
@@ -100,6 +64,67 @@ const LeagueSimulationPage = () => {
 
         fetchLeagueSettings();
     }, [leagueYear, leagueId]);
+
+    // Set the default current week and selected week
+    useEffect(() => {
+        const queryParams = new URLSearchParams(location.search);
+        const weekFromUrl = queryParams.get('week');
+
+        console.log("weekFromUrl:", weekFromUrl); // Debugging step
+
+        const validWeekFromUrl = weekFromUrl && !isNaN(parseInt(weekFromUrl, 10)) ? parseInt(weekFromUrl, 10) : null;
+
+        if (validWeekFromUrl !== null) {
+            console.log("Setting selected week from URL:", validWeekFromUrl);
+            setSelectedWeek(validWeekFromUrl);
+        }
+
+        const fetchCurrentWeek = async () => {
+            try {
+                console.log("Fetching current week...");
+                const result = await fetch(`/api/league/${leagueYear}/${leagueId}/current-week/`);
+                if (!result.ok) {
+                    throw new Error(`Failed to fetch current week (status ${result.status})`);
+                }
+                const data = await result.json();
+                console.log("Fetched current week:", data.current_week); // Debugging step
+
+                const validCurrentWeek = !isNaN(data.current_week) ? data.current_week : null; // Remove default value
+                const validMaxWeek = !isNaN(leagueSettings?.n_regular_season_weeks)
+                    ? leagueSettings.n_regular_season_weeks
+                    : validCurrentWeek;
+
+                setCurrentWeek(validCurrentWeek !== null ? Math.min(validMaxWeek, validCurrentWeek) : null);
+
+                if (validWeekFromUrl === null && validCurrentWeek !== null) {
+                    setSelectedWeek(Math.min(validMaxWeek, validCurrentWeek)); // Only set selectedWeek if not already defined
+                }
+            } catch (error) {
+                console.error("Error fetching current week:", error);
+            }
+        };
+
+        fetchCurrentWeek();
+
+        // Ensure selectedWeek is never undefined
+        if (selectedWeek === undefined) {
+            console.log("selectedWeek is undefined, setting it to currentWeek:", currentWeek);
+            setSelectedWeek(currentWeek);
+        }
+    }, [location.search, leagueYear, leagueId, selectedWeek, currentWeek]);
+
+    // Redirect to "uh-oh-too-early" page if selectedWeek or currentWeek is less than 4
+    useEffect(() => {
+        if (selectedWeek === undefined) {
+            console.log("selectedWeek is undefined, setting it to currentWeek:", currentWeek);
+            setSelectedWeek(currentWeek);
+        }
+        if (selectedWeek !== null && currentWeek !== null) {
+            if (selectedWeek < 4 || currentWeek < 4) {
+                navigate(`/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`);
+            }
+        }
+    }, [selectedWeek, currentWeek, leagueYear, leagueId, navigate]);
 
     // Fetch simulation data
     const fetchSimulationData = async (week, simulations) => {
@@ -141,11 +166,17 @@ const LeagueSimulationPage = () => {
     }, [selectedWeek, nSimulations, leagueYear, leagueId, navigate]);
 
     const handleWeekChange = (newWeek) => {
-        setSelectedWeek(newWeek);
-        setSimulationData(null); // Reset simulationData to show the spinner
-        const queryParams = new URLSearchParams(location.search);
-        queryParams.set('week', newWeek);
-        window.history.replaceState(null, '', `${location.pathname}?${queryParams.toString()}`);
+        console.log("handleWeekChange called with newWeek:", newWeek); // Debugging step
+        // Ensure selectedWeek is never undefined
+        const validWeek = newWeek && !isNaN(newWeek) ? newWeek : currentWeek;
+        console.log("Valid week determined in handleWeekChange:", validWeek); // Debugging step
+        if (validWeek !== undefined && !isNaN(validWeek)) {
+            setSelectedWeek(validWeek);
+            setSimulationData(null); // Reset simulationData to show the spinner
+            const queryParams = new URLSearchParams(location.search);
+            queryParams.set('week', validWeek); // Update the URL query parameter with a valid week
+            window.history.replaceState(null, '', `${location.pathname}?${queryParams.toString()}`);
+        }
     };
 
     const handleSimulationsChange = (newSimulations) => {
@@ -167,10 +198,10 @@ const LeagueSimulationPage = () => {
             <p>League ID: {leagueId}</p>
 
             <WeekSelector
-                currentWeek={currentWeek?? 18}
+                currentWeek={currentWeek ?? 18}
                 onWeekChange={handleWeekChange}
                 minWeek={4}
-                maxWeek={leagueSettings?.n_regular_season_weeks}
+                maxWeek={Math.min(leagueSettings?.n_regular_season_weeks, currentWeek)}
                 disable={leagueSettings?.season_complete}
             />
 
