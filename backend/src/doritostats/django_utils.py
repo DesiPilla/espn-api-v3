@@ -1,5 +1,6 @@
 import datetime
 from typing import Dict, List, Optional, Tuple, Union
+
 from espn_api.football import League
 
 from backend.fantasy_stats.models import LeagueInfo
