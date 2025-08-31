@@ -16,7 +16,7 @@ const SimulationSelector = ({ nSimulations, setNSimulations }) => {
         id="simulation-select"
         value={nSimulations || "--"}
         onChange={handleChange}
-        style={{ marginLeft: '8px' }} // Add left margin
+        style={{ marginLeft: '8px' }}
       >
         <option value="--"> -- </option>
         <option value="100">100</option>

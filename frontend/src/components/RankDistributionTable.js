@@ -12,7 +12,7 @@ const RankDistributionTable = ({ data, numColumns, playoffTeams }) => {
 
     return (
         <div className="wrapper-wide">
-            <h2>Final position distribution</h2>
+            <h2>Final position distribution odds</h2>
             <table className="table-with-bottom-caption">
                 <thead>
                     <tr>
