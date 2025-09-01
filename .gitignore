@@ -5,6 +5,7 @@
 .vscode*
 dist/*
 node_modules/*
+staticfiles/*
 
 # Notebooks
 *.ipynb_checkpoints*

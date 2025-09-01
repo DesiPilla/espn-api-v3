@@ -4,14 +4,12 @@ import logging
 from django.core.cache import cache
 
 import pytz
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import render, redirect, get_object_or_404
-from django.template import RequestContext
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import View
-from rest_framework.decorators import api_view
 
 from espn_api.football import League
 from espn_api.requests.espn_requests import (
@@ -45,8 +43,8 @@ logger = logging.getLogger(__name__)
 
 
 MIN_WEEK_TO_DISPLAY = 4  # Only run simulations after Week 4 has completed
-N_SIMULATIONS = 500  # Default number of simulations to run
-MAX_SIMULATIONS = 500  # Maximum number of simulations to run
+N_SIMULATIONS = 100  # Default number of simulations to run
+MAX_SIMULATIONS = 250  # Maximum number of simulations to run
 CACHE_DURATION = 10 * 60
 
 
@@ -62,6 +60,11 @@ def get_default_week(league_obj: League):
         return current_matchup_period - 1
     else:
         return current_matchup_period
+
+
+class ReactAppView(View):
+    def get(self, request):
+        return render(request, "index.html")  # served from frontend/build
 
 
 @ensure_csrf_cookie
@@ -178,68 +181,7 @@ def league_input(request):
         )
 
 
-def season_stats(
-    request,
-    league_id: int,
-    league_year: int,
-):
-    # Fetch the league
-    league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
-    league_obj = fetch_league(
-        league_info.league_id,
-        league_info.league_year,
-        league_info.swid,
-        league_info.espn_s2,
-    )
-
-    (
-        best_team_stats_list,
-        worst_team_stats_list,
-        best_position_stats_list,
-        worst_position_stats_list,
-    ) = django_season_stats(league=league_obj)
-
-    context = {
-        "league_info": league_info,
-        "scores_are_finalized": league_obj.is_season_complete,
-        "best_team_stats": best_team_stats_list,
-        "worst_team_stats": worst_team_stats_list,
-        "best_position_stats": best_position_stats_list,
-        "worst_position_stats": worst_position_stats_list,
-    }
-    return HttpResponse(render(request, "fantasy_stats/season_stats.html", context))
-
-
-#############################################################
-## VIEWS THAT DO NOT WORK YET AND ARE IN THE TESTING PHASE ##
-#############################################################
-
-
-def test(request):
-    return render(request, "fantasy_stats/test.html")
-
-
-@api_view(["GET"])
-def test_react(request):
-    return render(request, "fantasy_stats/test-react.html")
-
-
-def index_gpt(request):
-    return render(request, "fantasy_stats/index_gpt.html")
-
-
-def handler404(request, *args, **argv):
-    response = render("errors/404.html", {}, context_instance=RequestContext(request))
-    response.status_code = 404
-    return response
-
-
-class ReactAppView(View):
-    def get(self, request):
-        return render(request, "index.html")  # served from frontend/build
-
-
-def leagues_data(request):
+def leagues_data(request) -> JsonResponse:
     league_info_current_year = get_leagues_current_year()
     league_info_previous_year = get_leagues_previous_year()
 
@@ -791,3 +733,13 @@ def season_records(
     cache.set(cache_key, result, timeout=CACHE_DURATION)
 
     return JsonResponse(result, safe=True)
+
+#############################################################
+## VIEWS THAT DO NOT WORK YET AND ARE IN THE TESTING PHASE ##
+#############################################################
+
+
+# def handler404(request, *args, **argv):
+#     response = render("errors/404.html", {}, context_instance=RequestContext(request))
+#     response.status_code = 404
+#     return response
