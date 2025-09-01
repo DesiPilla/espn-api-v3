@@ -6,6 +6,7 @@
 dist/*
 node_modules/*
 staticfiles/*
+static/*
 
 # Notebooks
 *.ipynb_checkpoints*
