@@ -638,19 +638,20 @@ def league_settings(
     Fetches the various settings for the league
     """
     league = get_cached_league(league_id=league_id, league_year=league_year)
-
-    return JsonResponse(
-        {
-            "n_playoff_spots": league.settings.playoff_team_count,
-            "n_teams": league.settings.team_count,
-            "n_regular_season_weeks": league.settings.reg_season_count,
-            "regular_season_complete": league.current_week
-            > league.settings.reg_season_count,
-            "playoffs_complete": league.current_week
-            >= len(league.settings.matchup_periods),
-            "season_complete": league.is_season_complete,
-        }
+    result = {
+        "n_playoff_spots": league.settings.playoff_team_count,
+        "n_teams": league.settings.team_count,
+        "n_regular_season_weeks": league.settings.reg_season_count,
+        "regular_season_complete": league.current_week
+        > league.settings.reg_season_count,
+        "playoffs_complete": league.current_week
+        >= len(league.settings.matchup_periods),
+    }
+    result["season_complete"] = (
+        result["regular_season_complete"] and result["playoffs_complete"]
     )
+
+    return JsonResponse(result)
 
 
 @require_GET

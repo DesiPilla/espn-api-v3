@@ -19,9 +19,9 @@ const SimulationSelector = ({ nSimulations, setNSimulations }) => {
         style={{ marginLeft: '8px' }}
       >
         <option value="--"> -- </option>
+        <option value="50">50</option>
         <option value="100">100</option>
         <option value="250">250</option>
-        <option value="500">500</option>
       </select>
       <br />
         You can also edit the <em>n_simulations=</em> value in the URL. However, the more simulations that are run, the longer the page will take to load.

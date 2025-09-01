@@ -22,6 +22,7 @@ const LeaguePage = () => {
   const [selectedWeek, setSelectedWeek] = useState(null);
   const [currentWeek, setCurrentWeek] = useState(null); // Track the current week separately
   const [retry, setRetry] = useState(false); // Track if a retry is needed
+  const [leagueSettings, setLeagueSettings] = useState(null);
 
   // Preload the league data for faster loading later on
   useEffect(() => {
@@ -116,6 +117,26 @@ const LeaguePage = () => {
     window.history.replaceState(null, '', `${location.pathname}?${queryParams.toString()}`);
   };
 
+  // Fetch the number of playoff teams and update the simulation count if the league is complete
+  useEffect(() => {
+    const fetchLeagueSettings = async () => {
+      try {
+        const response = await fetch(`/api/league-settings/${leagueYear}/${leagueId}/`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch league settings (status ${response.status})`);
+        }
+        const data = await response.json();
+        console.log("Is season complete?", data.regular_season_complete);
+        setLeagueSettings(data);
+        console.log(leagueSettings?.regular_season_complete ? 1 : 100)
+      } catch (error) {
+        console.error("Error fetching league settings:", error);
+      }
+    };
+
+    fetchLeagueSettings();
+  }, [leagueYear, leagueId]);
+
   if (!leagueData || currentWeek === null) {
     return <div>Loading...</div>;
   }
@@ -139,8 +160,12 @@ const LeaguePage = () => {
       {/* Add a container for horizontal alignment */}
       <div className="button-container">
         <ReturnToHomePageButton />
-        <SimulatePlayoffOddsButton leagueYear={leagueYear} leagueId={leagueId}/>
-        <LeagueRecordsButton leagueYear={leagueYear} leagueId={leagueId} /> {/* Use the new component */}
+        <SimulatePlayoffOddsButton
+          leagueYear={leagueYear}
+          leagueId={leagueId}
+          n_simulations={leagueSettings?.regular_season_complete ? 99 : 100} // Use less simulations if the season is over
+        />
+        <LeagueRecordsButton leagueYear={leagueYear} leagueId={leagueId} />
       </div>
 
       <BoxScoresTable

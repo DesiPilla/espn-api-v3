@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import LoadingRow from "./LoadingRow";
 import './styles/tableStyles.css';
 
-const RankDistributionTable = ({ data, numColumns, playoffTeams }) => {
+const RankDistributionTable = ({ data, numColumns, playoffTeams, selectedWeek }) => {
     const ordinalSuffix = (num) => {
         const suffixes = ["th", "st", "nd", "rd"];
         const value = num % 100;
@@ -12,7 +12,7 @@ const RankDistributionTable = ({ data, numColumns, playoffTeams }) => {
 
     return (
         <div className="wrapper-wide">
-            <h2>Final position distribution odds</h2>
+            <h2>Final position distribution odds (prior to Week {selectedWeek} matchups)</h2>
             <table className="table-with-bottom-caption">
                 <thead>
                     <tr>

@@ -202,7 +202,7 @@ const LeagueSimulationPage = () => {
                 onWeekChange={handleWeekChange}
                 minWeek={4}
                 maxWeek={Math.min(leagueSettings?.n_regular_season_weeks, currentWeek)}
-                disable={leagueSettings?.season_complete}
+                disable={leagueSettings?.regular_season_complete}
             />
 
             <div className="button-container">
