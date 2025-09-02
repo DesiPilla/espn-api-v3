@@ -36,7 +36,14 @@ const NewLeagueForm = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.redirect_url) {
+      console.log("Response status:", data.status);
+      console.log("Response type:", data.type);
+      console.log("Data:", data);
+
+
+      if (response.status === 400 && data.type === "too_soon") {
+        navigate(`/fantasy_stats/uh-oh-too-early/league-homepage/${formData.league_year}/${formData.league_id}`);
+      } else if (response.ok && data.redirect_url) {
         navigate(data.redirect_url);
       } else {
         setError(data.error || "Failed to create league.");

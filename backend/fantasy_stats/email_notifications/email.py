@@ -17,7 +17,7 @@ def send_new_league_added_alert(league_info: LeagueInfo):
 
     # Read in the email template
     with open(
-        "fantasy_stats/email_notifications/new_league_added.txt", "r"
+        "backend/fantasy_stats/email_notifications/new_league_added.txt", "r"
     ) as email_template_file:
         email_template = email_template_file.read()
 

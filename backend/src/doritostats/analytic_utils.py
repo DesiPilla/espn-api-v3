@@ -631,7 +631,7 @@ def print_records(
     # Print out any records
     superlative = "highest" if high_first else "lowest"
     for row in records_df.iterrows():
-        logger.info(
+        print(
             "{} had the {} {} {} ({:.2f} {}) in league history".format(
                 row.team_owner,
                 make_ordinal(row["rank"]),
@@ -682,7 +682,7 @@ def print_franchise_records(
         # Print out any records
         superlative = "highest" if high_first else "lowest"
         for _, row in records_df.iterrows():
-            logger.info(
+            print(
                 "{} had the {} {} {} ({:.2f} {}) in franchise history".format(
                     row.team_owner,
                     make_ordinal(row["rank"]),
@@ -829,27 +829,25 @@ def game_of_the_week_stats(
     ]
     gow_df.sort_values(["year", "week"], ascending=True, inplace=True)
 
-    logger.info(
+    print(
         "{} has won {} / {} matchups.".format(
             owner1, len(gow_df[gow_df["outcome"] == "win"]), len(gow_df)
         )
     )
-    logger.info(
+    print(
         "{} has won {} / {} matchups.".format(
             owner2, len(gow_df[gow_df["outcome"] == "lose"]), len(gow_df)
         )
     )
-    logger.info(
-        "There have been {} ties".format(len(gow_df[gow_df["outcome"] == "tie"]))
-    )
+    print("There have been {} ties".format(len(gow_df[gow_df["outcome"] == "tie"])))
 
     last_matchup = gow_df.iloc[-1]
-    logger.info(
+    print(
         "\nMost recent game: {:.0f} Week {:.0f}".format(
             last_matchup.year, last_matchup.week
         )
     )
-    logger.info(
+    print(
         "{} {:.2f} - {:.2f} {}".format(
             last_matchup.team_owner,
             last_matchup.team_score,
@@ -861,9 +859,9 @@ def game_of_the_week_stats(
     team1 = get_team(league, team_owner=owner1)
     team2 = get_team(league, team_owner=owner2)
     division_standings = get_division_standings(league)
-    logger.info("\nThis season:\n-----------------------")
-    logger.info(f"{owner1} has a record of {team1.wins}-{team1.losses}-{team1.ties}")
-    logger.info(
+    print("\nThis season:\n-----------------------")
+    print(f"{owner1} has a record of {team1.wins}-{team1.losses}-{team1.ties}")
+    print(
         "They have averaged {:.2f} points per game.".format(
             df[
                 (df["team_owner"] == owner1)
@@ -872,7 +870,7 @@ def game_of_the_week_stats(
             ].team_score.mean()
         )
     )
-    logger.info(
+    print(
         "{} is currently {}/{} in the {} division.".format(
             team1.team_name,
             division_standings[team1.division_name].index(team1) + 1,
@@ -880,8 +878,8 @@ def game_of_the_week_stats(
             team1.division_name,
         )
     )
-    logger.info(f"{owner2} has a record of {team2.wins}-{team2.losses}-{team2.ties}")
-    logger.info(
+    print(f"{owner2} has a record of {team2.wins}-{team2.losses}-{team2.ties}")
+    print(
         "They have averaged {:.2f} points per game.".format(
             df[
                 (df["team_owner"] == owner2)
@@ -890,7 +888,7 @@ def game_of_the_week_stats(
             ].team_score.mean()
         )
     )
-    logger.info(
+    print(
         "{} is currently {}/{} in the {} division.".format(
             team2.team_name,
             division_standings[team2.division_name].index(team2) + 1,
@@ -986,15 +984,15 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
         {"stat": "team_projection_beat", "units": "pts", "high_first": False, "n": 3},
     ]
 
-    logger.info("----------------------------------------------------------------")
-    logger.info(
+    print("----------------------------------------------------------------")
+    print(
         "|                        Week {:2.0f} Analysis                            |".format(
             week
         )
     )
-    logger.info("----------------------------------------------------------------")
+    print("----------------------------------------------------------------")
 
-    logger.info("League-wide POSITIVE stats\n--------------------------")
+    print("League-wide POSITIVE stats\n--------------------------")
     for stat in league_positive_stats_to_check:
         print_records(
             df,
@@ -1007,7 +1005,7 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
         )
 
     # Good franchise awards
-    logger.info("\n\nFranchise POSITIVE stats\n--------------------------")
+    print("\n\nFranchise POSITIVE stats\n--------------------------")
     for stat in franchise_positive_stats_to_check:
         print_franchise_records(
             df,
@@ -1019,7 +1017,7 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
             n=stat["n"],
         )
 
-    logger.info("\n\nLeague-wide NEGATIVE stats\n--------------------------")
+    print("\n\nLeague-wide NEGATIVE stats\n--------------------------")
     for stat in league_negative_stats_to_check:
         print_records(
             df,
@@ -1032,7 +1030,7 @@ def weekly_stats_analysis(df: pd.DataFrame, year: int, week: int) -> None:
         )
 
     # Bad franchise records
-    logger.info("\n\nFranchise NEGATIVE stats\n--------------------------")
+    print("\n\nFranchise NEGATIVE stats\n--------------------------")
     for stat in franchise_negative_stats_to_check:
         print_franchise_records(
             df,
@@ -1621,56 +1619,56 @@ def season_stats_analysis(
     season_stats_dict["lowest_single_game_pts_surprise"]["val"] *= -1
 
     # Print good team awards
-    logger.info("----------------------------------------------------------------")
-    logger.info(
+    print("----------------------------------------------------------------")
+    print(
         "|             Season {:2.0f} Analysis                          |".format(
             league.year
         )
     )
-    logger.info("----------------------------------------------------------------")
-    logger.info(
+    print("----------------------------------------------------------------")
+    print(
         "Most wins this season              - {:.0f} {} - {}".format(
             float(season_stats_dict["most_wins"]["val"]),
             season_stats_dict["most_wins"]["val_units"],
             season_stats_dict["most_wins"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Highest single game score          - {:.0f} {} - {}".format(
             float(season_stats_dict["highest_single_game_score"]["val"]),
             season_stats_dict["highest_single_game_score"]["val_units"],
             season_stats_dict["highest_single_game_score"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Longest win streak this season     - {:.0f} {} - {}".format(
             float(season_stats_dict["longest_win_streak"]["val"]),
             season_stats_dict["longest_win_streak"]["val_units"],
             season_stats_dict["longest_win_streak"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Most PPG this season               - {:.1f} {} - {}".format(
             float(season_stats_dict["highest_avg_pts"]["val"]),
             season_stats_dict["highest_avg_pts"]["val_units"],
             season_stats_dict["highest_avg_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Most PAPG this season              - {:.1f} {} - {}".format(
             float(season_stats_dict["highest_avg_pts_against"]["val"]),
             season_stats_dict["highest_avg_pts_against"]["val_units"],
             season_stats_dict["highest_avg_pts_against"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Highest score diff                 - {:.1f} {} - {}".format(
             float(season_stats_dict["highest_single_game_score_dif"]["val"]),
             season_stats_dict["highest_single_game_score_dif"]["val_units"],
             season_stats_dict["highest_single_game_score_dif"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Highest lineup efficiency          - {:.1%} - {}".format(
             float(season_stats_dict["highest_avg_lineup_efficiency"]["val"]),
             season_stats_dict["highest_avg_lineup_efficiency"]["owners"],
@@ -1678,49 +1676,49 @@ def season_stats_analysis(
     )
 
     # Bad team awards
-    logger.info(
+    print(
         "Most losses this season           - {:.0f} {} - {}".format(
             float(season_stats_dict["most_losses"]["val"]),
             season_stats_dict["most_losses"]["val_units"],
             season_stats_dict["most_losses"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Lowest single game score          - {:.0f} {} - {}".format(
             float(season_stats_dict["lowest_single_game_score"]["val"]),
             season_stats_dict["lowest_single_game_score"]["val_units"],
             season_stats_dict["lowest_single_game_score"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Longest loss streak this season   - {:.0f} {} - {}".format(
             float(season_stats_dict["longest_loss_streak"]["val"]),
             season_stats_dict["longest_loss_streak"]["val_units"],
             season_stats_dict["longest_loss_streak"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Lowest PPG this season            - {:.1f} {} - {}".format(
             float(season_stats_dict["lowest_avg_pts"]["val"]),
             season_stats_dict["lowest_avg_pts"]["val_units"],
             season_stats_dict["lowest_avg_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Lowest PAPG this season           - {:.1f} {} - {}".format(
             float(season_stats_dict["lowest_avg_pts_against"]["val"]),
             season_stats_dict["lowest_avg_pts_against"]["val_units"],
             season_stats_dict["lowest_avg_pts_against"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Lowest score diff                 - {:.1f} {} - {}".format(
             float(season_stats_dict["lowest_single_game_score_dif"]["val"]),
             season_stats_dict["lowest_single_game_score_dif"]["val_units"],
             season_stats_dict["lowest_single_game_score_dif"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Lowest lineup efficiency          - {:.1%} - {}".format(
             float(season_stats_dict["lowest_avg_lineup_efficiency"]["val"]),
             season_stats_dict["lowest_avg_lineup_efficiency"]["owners"],
@@ -1728,56 +1726,56 @@ def season_stats_analysis(
     )
 
     # Print good position awards
-    logger.info(
+    print(
         "Most QB pts this season           - {:.1f} {} - {}".format(
             float(season_stats_dict["most_QB_pts"]["val"]),
             season_stats_dict["most_QB_pts"]["val_units"],
             season_stats_dict["most_QB_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Most RB pts this season           - {:.1f} {} - {}".format(
             float(season_stats_dict["most_RB_pts"]["val"]),
             season_stats_dict["most_RB_pts"]["val_units"],
             season_stats_dict["most_RB_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Most WR pts this season           - {:.1f} {} - {}".format(
             float(season_stats_dict["most_WR_pts"]["val"]),
             season_stats_dict["most_WR_pts"]["val_units"],
             season_stats_dict["most_WR_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Most TE pts this season           - {:.1f} {} - {}".format(
             float(season_stats_dict["most_TE_pts"]["val"]),
             season_stats_dict["most_TE_pts"]["val_units"],
             season_stats_dict["most_TE_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Most RB/WR/TE pts this season     - {:.1f} {} - {}".format(
             float(season_stats_dict["most_RB_WR_TE_pts"]["val"]),
             season_stats_dict["most_RB_WR_TE_pts"]["val_units"],
             season_stats_dict["most_RB_WR_TE_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Most D/ST pts this season         - {:.1f} {} - {}".format(
             float(season_stats_dict["most_D_ST_pts"]["val"]),
             season_stats_dict["most_D_ST_pts"]["val_units"],
             season_stats_dict["most_D_ST_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Most K pts this season            - {:.1f} {} - {}".format(
             float(season_stats_dict["most_K_pts"]["val"]),
             season_stats_dict["most_K_pts"]["val_units"],
             season_stats_dict["most_K_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Most bench pts this season        - {:.1f} {} - {}".format(
             float(season_stats_dict["most_bench_points"]["val"]),
             season_stats_dict["most_bench_points"]["val_units"],
@@ -1785,56 +1783,56 @@ def season_stats_analysis(
         )
     )
 
-    logger.info(
+    print(
         "Fewest QB pts this season         - {:.1f} {} - {}".format(
             float(season_stats_dict["least_QB_pts"]["val"]),
             season_stats_dict["least_QB_pts"]["val_units"],
             season_stats_dict["least_QB_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Fewest RB pts this season         - {:.1f} {} - {}".format(
             float(season_stats_dict["least_RB_pts"]["val"]),
             season_stats_dict["least_RB_pts"]["val_units"],
             season_stats_dict["least_RB_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Fewest WR pts this season         - {:.1f} {} - {}".format(
             float(season_stats_dict["least_WR_pts"]["val"]),
             season_stats_dict["least_WR_pts"]["val_units"],
             season_stats_dict["least_WR_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Fewest TE pts this season         - {:.1f} {} - {}".format(
             float(season_stats_dict["least_TE_pts"]["val"]),
             season_stats_dict["least_TE_pts"]["val_units"],
             season_stats_dict["least_TE_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Fewest RB/WR/TE pts this season   - {:.1f} {} - {}".format(
             float(season_stats_dict["least_RB_WR_TE_pts"]["val"]),
             season_stats_dict["least_RB_WR_TE_pts"]["val_units"],
             season_stats_dict["least_RB_WR_TE_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Fewest D/ST pts this season       - {:.1f} {} - {}".format(
             float(season_stats_dict["least_D_ST_pts"]["val"]),
             season_stats_dict["least_D_ST_pts"]["val_units"],
             season_stats_dict["least_D_ST_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Fewest K pts this season          - {:.1f} {} - {}".format(
             float(season_stats_dict["least_K_pts"]["val"]),
             season_stats_dict["least_K_pts"]["val_units"],
             season_stats_dict["least_K_pts"]["owners"],
         )
     )
-    logger.info(
+    print(
         "Fewest bench pts this season      - {:.1f} {} - {}".format(
             float(season_stats_dict["least_bench_points"]["val"]),
             season_stats_dict["least_bench_points"]["val_units"],

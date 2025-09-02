@@ -6,7 +6,7 @@ from django.core.cache import cache
 import pytz
 from django.http import JsonResponse
 from django.db.models import OuterRef, Subquery
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import View
@@ -77,6 +77,7 @@ def get_csrf_token(request):
 
 
 @require_POST
+@error_email_on_failure
 def league_input(request):
     data = json.loads(request.body)
 
@@ -85,9 +86,7 @@ def league_input(request):
     swid = data.get("swid", None)
     espn_s2 = data.get("espn_s2", None)
 
-    logger.info(
-        "Checking for League {} ({}) in database...".format(league_id, league_year)
-    )
+    print("Checking for League {} ({}) in database...".format(league_id, league_year))
     league_info_objs = LeagueInfo.objects.filter(
         league_id=league_id, league_year=league_year
     )
@@ -95,14 +94,14 @@ def league_input(request):
         if league_info_objs:
             league_info = league_info_objs[0]
             league_obj = fetch_league(league_id, league_year, swid, espn_s2)
-            logger.info(
+            print(
                 "League {} ({}) already exists in the database.".format(
                     league_id, league_year
                 )
             )
 
         else:
-            logger.info(
+            print(
                 "League {} ({}) NOT FOUND! Fetching league from ESPN...".format(
                     league_id, league_year
                 )
@@ -116,7 +115,7 @@ def league_input(request):
                 league_name=league_obj.name,
             )
             league_info.save()
-            logger.info(
+            print(
                 "League {} ({}) fetched and saved to the databse.".format(
                     league_id, league_year
                 )
@@ -126,7 +125,7 @@ def league_input(request):
             send_new_league_added_alert(league_info)
 
     except ESPNInvalidLeague as e:
-        logger.info(
+        print(
             "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
                 league_id, league_year, e
             )
@@ -138,7 +137,7 @@ def league_input(request):
             status=400,
         )
     except ESPNAccessDenied as e:
-        logger.info(
+        print(
             "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
                 league_id, league_year, e
             )
@@ -148,7 +147,7 @@ def league_input(request):
             status=400,
         )
     except InactiveLeagueError as e:
-        logger.info(
+        print(
             "League {} ({}) IS NOT ACTIVE YET! ESPN returned an error: {}".format(
                 league_id, league_year, e
             )
@@ -160,7 +159,7 @@ def league_input(request):
             status=400,
         )
     except ESPNUnknownError as e:
-        logger.info(
+        print(
             "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
                 league_id, league_year, e
             )
@@ -174,7 +173,14 @@ def league_input(request):
 
     if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
         # If the league hasn't started yet, display the "too soon" page
-        return redirect(f"/too-early/league_homepage")
+        return JsonResponse(
+            {
+                "status": "error",
+                "type": "too_soon",
+                "message": "League season hasn't started yet. Please try again later.",
+            },
+            status=400,
+        )
 
     else:
         return JsonResponse(
@@ -308,9 +314,11 @@ def copy_old_league(request, league_id: int):
 
     except LeagueInfo.DoesNotExist:
         try:
-            league_obj = fetch_league(league_id, current_year, swid, espn_s2)
+            league_obj = fetch_league(
+                league_id=league_id, year=current_year, swid=swid, espn_s2=espn_s2
+            )
         except InactiveLeagueError as e:
-            logger.info(
+            print(
                 "League {} ({}) IS NOT ACTIVE YET! ESPN returned an error: {}".format(
                     league_id, current_year, e
                 )
@@ -344,8 +352,9 @@ def copy_old_league(request, league_id: int):
     if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
         return JsonResponse(
             {
-                "error": "League season hasn't started yet. Please try again later.",
+                "status": "error",
                 "type": "too_soon",
+                "message": "League season hasn't started yet. Please try again later.",
             },
             status=400,
         )
@@ -564,11 +573,20 @@ def check_league_status(request, league_year: int, league_id: int) -> JsonRespon
     league = get_cached_league(league_id=league_id, league_year=league_year)
     if league.current_week <= 1:
         return JsonResponse(
-            {"status": "too_soon", "message": "League has not started yet."}, status=400
+            {
+                "status": "error",
+                "type": "too_soon",
+                "message": "League has not started yet.",
+            },
+            status=400,
         )
     if not league.draft:
         return JsonResponse(
-            {"status": "too_soon", "message": "League draft has not occurred."},
+            {
+                "status": "error",
+                "type": "too_soon",
+                "message": "League draft has not occurred.",
+            },
             status=400,
         )
     return JsonResponse({"status": "ok", "message": "League is ready."})
@@ -629,8 +647,9 @@ def simulate_playoff_odds_view(
     if week < MIN_WEEK_TO_DISPLAY:
         return JsonResponse(
             {
-                "error": f"Playoff simulations are not available until after Week {MIN_WEEK_TO_DISPLAY}. Please try again later.",
+                "status": "error",
                 "type": "too_soon",
+                "message": f"Playoff simulations are not available until after Week {MIN_WEEK_TO_DISPLAY}. Please try again later.",
             },
             status=400,
         )

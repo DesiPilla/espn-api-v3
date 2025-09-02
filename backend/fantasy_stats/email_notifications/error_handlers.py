@@ -23,16 +23,27 @@ def error_email_on_failure(view_func):
 
             # Check if response is an error (for DRF Response or HttpResponse)
             if hasattr(response, "status_code") and response.status_code >= 400:
-                send_error_email(request, response)
+                # Check if the response contains a specific error code
+                if hasattr(response, "content"):
+                    try:
+                        content = json.loads(response.content.decode("utf-8"))
+                        if content.get("type") == "too_soon":
+                            print("Error: League is not ready yet (too soon).")
+                    except json.JSONDecodeError:
+                        print("Error: Unable to parse response content.")
 
-            return response
+                print("Sending email notification...")
+                send_error_email(request, response)
+                print("Email sent successfully.")
 
         except Exception as exc:
             # If the view raises an exception, send email with traceback
+            print("Sending email notification...")
             send_error_email(request, exc, is_exception=True)
+            print("Email sent successfully.")
 
-            # Return a generic 500 response
-            return JsonResponse({"error": "Internal Server Error"}, status=500)
+        finally:
+            return response
 
     return _wrapped_view
 
@@ -83,3 +94,9 @@ POST data: {request.POST.dict()}
     except Exception as e:
         # Fail silently but log
         print(f"Failed to send error email: {e}")
+
+    finally:
+        return JsonResponse(
+            {"error": "An unexpected error occurred. Please try again later."},
+            status=500,
+        )

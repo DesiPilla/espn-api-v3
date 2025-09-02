@@ -48,13 +48,13 @@ def get_draft_details(league: League) -> pd.DataFrame:
                 slot for slot in player.eligibleSlots if slot in primary_slots
             ][0]
         except AttributeError:
-            logger.info("Pick {} missing.".format(i + 1))
+            print("Pick {} missing.".format(i + 1))
             draft.loc[i, "player_name"] = ""
             draft.loc[i, "player_id"] = ""
             draft.loc[i, "round_num"] = 99
             draft.loc[i, "round_pick"] = 99
         except Exception:
-            logger.info(i, player, league.draft[i - 2 : i + 2])
+            print(i, player, league.draft[i - 2 : i + 2])
             draft.loc[i, "position"] = player.eligibleSlots[0]
 
     # Map owners of previous/co-owned teams to current owners to preserve "franchise"
@@ -97,7 +97,7 @@ def get_multiple_drafts(
     """
     draft = pd.DataFrame()
     for year in range(start_year, end_year + 1):
-        logger.info("Fetching {} draft...".format(year), end="")
+        print("Fetching {} draft...".format(year), end="")
         try:
             draft_league = fetch_league(
                 league_id=league_id, year=year, swid=swid, espn_s2=espn_s2

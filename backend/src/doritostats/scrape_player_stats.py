@@ -30,9 +30,7 @@ def extract_player_stats(
         }
 
         # Add stat to player_data
-        logger.info(
-            player_data["player_name"], week, player_data["player_active_status"]
-        )
+        print(player_data["player_name"], week, player_data["player_active_status"])
         if week in player.stats.keys() and player.active_status != "bye":
             player_data["player_points_week"] = player.stats[week]["points"]
             player_data["player_percent_owned"] = player.percent_owned

@@ -89,7 +89,7 @@ def set_league_endpoint(league: League) -> None:
         league.endpoint = f"{FANTASY_BASE_ENDPOINT}ffl/leagueHistory/{league.league_id}?seasonId={league.year}&"
     print(f"LOGGER NAME: {logger.name}")
 
-    logger.info("[BUILDING LEAGUE] League endpoint set to: {}".format(league.endpoint))
+    print("[BUILDING LEAGUE] League endpoint set to: {}".format(league.endpoint))
 
 
 def verify_league_is_active(league: League) -> None:
@@ -110,7 +110,7 @@ def verify_league_is_active(league: League) -> None:
                 league.league_id
             )
         )
-    logger.info("[BUILDING LEAGUE] League is active.")
+    print("[BUILDING LEAGUE] League is active.")
 
 
 def verify_league_is_active(league: League) -> None:
@@ -141,7 +141,7 @@ def get_roster_settings(league: League) -> None:
     - Creates a dictionary starting_roster_slots{} that is a subset of roster_slots{} and only includes slotIds that are on the starting roster
     - Add roster_slots{} and starting_roster_slots{} to the League attribute League.rosterSettings
     """
-    logger.info("[BUILDING LEAGUE] Gathering roster settings information...")
+    print("[BUILDING LEAGUE] Gathering roster settings information...")
 
     # This dictionary maps each slotId to the position it represents
     rosterMap = {
@@ -254,7 +254,7 @@ def fetch_league(
         - Set the roster for the current week
     """
 
-    logger.info("[BUILDING LEAGUE] Fetching league data...")
+    print("[BUILDING LEAGUE] Fetching league data...")
     league = League(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)
 
     # Set cookies
@@ -277,7 +277,7 @@ def fetch_league(
     # league.box_scores = functools.cache(league.box_scores)
 
     # Load current league data
-    logger.info("[BUILDING LEAGUE] Loading current league details...")
+    print("[BUILDING LEAGUE] Loading current league details...")
     league.current_week = max(league.current_week, 1)
     current_matchup_period = league.settings.week_to_matchup_period[league.current_week]
     league.load_roster_week(current_matchup_period)

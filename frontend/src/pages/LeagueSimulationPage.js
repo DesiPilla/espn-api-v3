@@ -35,7 +35,7 @@ const LeagueSimulationPage = () => {
             try {
                 const response = await fetch(`/api/check-league-status/${leagueYear}/${leagueId}`);
                 const data = await response.json();
-                if (response.status === 400 && data.status === "too_soon") {
+                if (response.status === 400 && data.type === "too_soon") {
                     navigate(`/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`);
                 }
             } catch (error) {
@@ -143,7 +143,7 @@ const LeagueSimulationPage = () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                if (response.status === 400 && errorData.status === "too_soon") {
+                if (response.status === 400 && errorData.type === "too_soon") {
                     navigate(`/fantasy_stats/uh-oh-too-early/playoff-simulations/${leagueYear}/${leagueId}`);
                 }
                 console.error("Backend error:", errorData);
