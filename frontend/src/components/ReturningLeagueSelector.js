@@ -55,7 +55,7 @@ const ReturningLeagueSelector = ({ dropdownClassName }) => {
 
   return (
     <>
-      <h3>Returning for the new season? Select your old league and easily add it for the 2024-25 season.</h3>
+      <h3>Returning for the new season? Select your old league and easily add it for the 2025-26 season.</h3>
       <div className="select" style={{ display: 'inline-block' }}>
         <select className={dropdownClassName} defaultValue="" onChange={handleSelect}>
           <option value=""> - Select your historical league - </option>

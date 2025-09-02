@@ -5,7 +5,7 @@ import { getCookie } from "../utils/csrf";
 const NewLeagueForm = () => {
   const [formData, setFormData] = useState({
     league_id: '',
-    league_year: 2024,
+    league_year: 2025,
     swid: '',
     espn_s2: '',
   });
