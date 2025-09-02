@@ -76,6 +76,7 @@ urlpatterns = [
         views.league_settings,
         name="league-settings",
     ),
+    path("api/test-error-email/", views.test_error_email, name="test_error_email"),
     # Add this last, after all other routes
     path("api/get-csrf-token/", views.get_csrf_token, name="get_csrf_token"),
     # Catch-all: serve React index.html for any path

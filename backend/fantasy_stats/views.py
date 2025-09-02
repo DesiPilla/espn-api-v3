@@ -7,7 +7,7 @@ import pytz
 from django.http import JsonResponse
 from django.db.models import OuterRef, Subquery
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import View
 
@@ -16,6 +16,10 @@ from espn_api.requests.espn_requests import (
     ESPNInvalidLeague,
     ESPNAccessDenied,
     ESPNUnknownError,
+)
+
+from backend.fantasy_stats.email_notifications.error_handlers import (
+    error_email_on_failure,
 )
 
 from .models import LeagueInfo
@@ -743,3 +747,8 @@ def season_records(
 #     response = render("errors/404.html", {}, context_instance=RequestContext(request))
 #     response.status_code = 404
 #     return response
+
+
+@error_email_on_failure
+def test_error_email(request):
+    raise Exception("Error message")
