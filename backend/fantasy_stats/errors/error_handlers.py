@@ -9,6 +9,12 @@ from django.http import JsonResponse
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+from backend.fantasy_stats.errors.error_codes import JsonErrorCodes
+
+ERROR_MESSAGES_TO_SKIP_EMAIL = [
+    JsonErrorCodes.TOO_SOON.value,
+    JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+]
 
 def error_email_on_failure(view_func):
     """
@@ -23,24 +29,17 @@ def error_email_on_failure(view_func):
 
             # Check if response is an error (for DRF Response or HttpResponse)
             if hasattr(response, "status_code") and response.status_code >= 400:
-                # Check if the response contains a specific error code
-                if hasattr(response, "content"):
-                    try:
-                        content = json.loads(response.content.decode("utf-8"))
-                        if content.get("type") == "too_soon":
-                            print("Error: League is not ready yet (too soon).")
-                    except json.JSONDecodeError:
-                        print("Error: Unable to parse response content.")
-
-                print("Sending email notification...")
-                send_error_email(request, response)
-                print("Email sent successfully.")
+                data = json.loads(response.content)
+                if data.get("code") in ERROR_MESSAGES_TO_SKIP_EMAIL:
+                    print(
+                        f"No need to send an email, this is just a '{data.get('code')}' error."
+                    )
+                else:
+                    send_error_email(request, response)
 
         except Exception as exc:
             # If the view raises an exception, send email with traceback
-            print("Sending email notification...")
             send_error_email(request, exc, is_exception=True)
-            print("Email sent successfully.")
 
         finally:
             return response
@@ -52,6 +51,7 @@ def send_error_email(request, info, is_exception=False):
     """
     Sends an email with error details.
     """
+    print("Sending email notification...")
     try:
         sender_email = os.getenv("EMAIL_USER")
         sender_password = os.getenv("EMAIL_PASSWORD")
@@ -63,21 +63,22 @@ def send_error_email(request, info, is_exception=False):
 HTTP Method: {request.method}
 User URL: {request.META.get('HTTP_REFERER', 'N/A')}
 API URL: {request.build_absolute_uri()}
-GET params: {request.GET.dict()}
-POST data: {request.POST.dict()}
-
+GET params: {json.dumps(request.GET.dict(), indent=4)}
+POST data: {json.dumps(request.POST.dict(), indent=4)}
 """
+
         if is_exception:
             body += f"Exception: {str(info)}\n\nTraceback:\n{traceback.format_exc()}"
         else:
             # info is an HttpResponse
             try:
                 if "application/json" in info.get("Content-Type", ""):
-                    body += f"Error message: {json.loads(info.content.decode('utf-8'))}"
+                    response_data = json.loads(info.content.decode("utf-8"))
+                    body += f"Response Body: {json.dumps(response_data, indent=4)}\n\n"
                 else:
-                    body += f"Error message: {info.content.decode('utf-8')}"
+                    body += f"Response Body: {info.content.decode('utf-8')}\n\n"
             except Exception:
-                body += f"Error message: Unable to parse response content"
+                body += "Response Body: Unable to parse response content\n\n"
 
         message = MIMEMultipart("alternative")
         message["From"] = sender_email
@@ -90,6 +91,7 @@ POST data: {request.POST.dict()}
         with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, sender_email, message.as_string())
+        print("Email sent successfully.")
 
     except Exception as e:
         # Fail silently but log

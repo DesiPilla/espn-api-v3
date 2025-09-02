@@ -15,12 +15,6 @@ def send_new_league_added_alert(league_info: LeagueInfo):
     sender_email = os.getenv("EMAIL_USER")
     sender_password = os.getenv("EMAIL_PASSWORD")
 
-    # Read in the email template
-    with open(
-        "backend/fantasy_stats/email_notifications/new_league_added.txt", "r"
-    ) as email_template_file:
-        email_template = email_template_file.read()
-
     # Turn these into plain/html MIMEText objects
     league_name = league_info.league_name
     league_id = league_info.league_id
@@ -41,18 +35,23 @@ def send_new_league_added_alert(league_info: LeagueInfo):
     ).values[0][0]
 
     # Fill in the placeholders in the email template
-    email_body = MIMEText(
-        email_template.format(
-            league_name,
-            league_id,
-            year,
-            pd.Timestamp.now(tz="US/Eastern").strftime("%B %d, %Y @ %I:%M %p"),
-            n_leagues_2025,
-            n_leagues_added_this_year,
-            n_leagues_added_all_time,
-        ),
-        "html",
-    )
+    email_template = f"""
+<html>
+  <body>
+    <p>🎉🎉 A new league was added! 🎉🎉<br>
+        <br>
+        League name: {league_name} ({league_id})<br>
+        League year: {year}<br>
+        Date added:  {pd.Timestamp.now(tz='US/Eastern').strftime('%B %d, %Y @ %I:%M %p')}<br>
+        <br>
+        Total 2025 season leagues added: {n_leagues_2025}<br>
+        Total leagues added this year:   {n_leagues_added_this_year}<br>
+        Total leagues added all time:    {n_leagues_added_all_time}
+    </p>
+  </body>
+</html>
+    """
+    email_body = MIMEText(email_template, "html")
 
     # Create a secure SSL context
     context = ssl.create_default_context()

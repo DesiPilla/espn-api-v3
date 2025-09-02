@@ -35,7 +35,7 @@ const LeaguePage = () => {
       try {
         const response = await fetch(`/api/check-league-status/${leagueYear}/${leagueId}`);
         const data = await response.json();
-        if (response.status === 400 && data.type === "too_soon") {
+        if (response.status === 409 && data.code === "too_soon") {
           navigate(`/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`);
         }
       } catch (error) {

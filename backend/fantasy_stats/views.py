@@ -18,12 +18,13 @@ from espn_api.requests.espn_requests import (
     ESPNUnknownError,
 )
 
-from backend.fantasy_stats.email_notifications.error_handlers import (
+from backend.fantasy_stats.errors.error_codes import JsonErrorCodes
+from backend.fantasy_stats.errors.error_handlers import (
     error_email_on_failure,
 )
 
 from .models import LeagueInfo
-from backend.fantasy_stats.email_notifications.email import send_new_league_added_alert
+from backend.fantasy_stats.errors.email import send_new_league_added_alert
 from backend.src.doritostats.analytic_utils import (
     get_naughty_players,
     get_lineup,
@@ -132,7 +133,9 @@ def league_input(request):
         )
         return JsonResponse(
             {
-                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID."
+                "status": "error",
+                "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID.",
             },
             status=400,
         )
@@ -143,7 +146,11 @@ def league_input(request):
             )
         )
         return JsonResponse(
-            {"error": f"SWID or espn_s2 is incorrect. Please try again."},
+            {
+                "status": "error",
+                "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+                "error": f"SWID or espn_s2 is incorrect. Please try again.",
+            },
             status=400,
         )
     except InactiveLeagueError as e:
@@ -154,7 +161,9 @@ def league_input(request):
         )
         return JsonResponse(
             {
-                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID."
+                "status": "error",
+                "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID.",
             },
             status=400,
         )
@@ -166,7 +175,9 @@ def league_input(request):
         )
         return JsonResponse(
             {
-                "error": f"An unknown error has occurred. Please check that you have entered the correct league ID, SWID, and espn_s2. "
+                "status": "error",
+                "code": JsonErrorCodes.UNKNOWN_ERROR.value,
+                "error": f"An unknown error has occurred. Please check that you have entered the correct league ID, SWID, and espn_s2. ",
             },
             status=400,
         )
@@ -176,10 +187,10 @@ def league_input(request):
         return JsonResponse(
             {
                 "status": "error",
-                "type": "too_soon",
+                "code": JsonErrorCodes.TOO_SOON.value,
                 "message": "League season hasn't started yet. Please try again later.",
             },
-            status=400,
+            status=409,
         )
 
     else:
@@ -353,10 +364,10 @@ def copy_old_league(request, league_id: int):
         return JsonResponse(
             {
                 "status": "error",
-                "type": "too_soon",
+                "code": JsonErrorCodes.TOO_SOON.value,
                 "message": "League season hasn't started yet. Please try again later.",
             },
-            status=400,
+            status=409,
         )
 
     return JsonResponse(
@@ -575,19 +586,19 @@ def check_league_status(request, league_year: int, league_id: int) -> JsonRespon
         return JsonResponse(
             {
                 "status": "error",
-                "type": "too_soon",
+                "code": JsonErrorCodes.TOO_SOON.value,
                 "message": "League has not started yet.",
             },
-            status=400,
+            status=409,
         )
     if not league.draft:
         return JsonResponse(
             {
                 "status": "error",
-                "type": "too_soon",
+                "code": JsonErrorCodes.TOO_SOON.value,
                 "message": "League draft has not occurred.",
             },
-            status=400,
+            status=409,
         )
     return JsonResponse({"status": "ok", "message": "League is ready."})
 
@@ -648,10 +659,10 @@ def simulate_playoff_odds_view(
         return JsonResponse(
             {
                 "status": "error",
-                "type": "too_soon",
+                "code": JsonErrorCodes.TOO_SOON.value,
                 "message": f"Playoff simulations are not available until after Week {MIN_WEEK_TO_DISPLAY}. Please try again later.",
             },
-            status=400,
+            status=409,
         )
 
     # Generate a cache key based on league_id, league_year, week, and n_simulations
@@ -768,6 +779,15 @@ def season_records(
 #     return response
 
 
+@csrf_exempt
 @error_email_on_failure
 def test_error_email(request):
-    raise Exception("Error message")
+    # raise Exception("Error message")
+    return JsonResponse(
+        {
+            "status": "error",
+            "code": JsonErrorCodes.UNKNOWN_ERROR.value,
+            "message": f"unknown error",
+        },
+        status=400,
+    )

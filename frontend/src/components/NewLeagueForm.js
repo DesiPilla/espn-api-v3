@@ -37,11 +37,11 @@ const NewLeagueForm = () => {
       const data = await response.json();
 
       console.log("Response status:", data.status);
-      console.log("Response type:", data.type);
+      console.log("Response type:", data.code);
       console.log("Data:", data);
 
 
-      if (response.status === 400 && data.type === "too_soon") {
+      if (response.status === 409 && data.code === "too_soon") {
         navigate(`/fantasy_stats/uh-oh-too-early/league-homepage/${formData.league_year}/${formData.league_id}`);
       } else if (response.ok && data.redirect_url) {
         navigate(data.redirect_url);
