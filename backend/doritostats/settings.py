@@ -138,6 +138,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "backend.fantasy_stats.errors.error_middleware.ErrorStatusEmailMiddleware",
 ]
 
 ROOT_URLCONF = "backend.doritostats.urls"

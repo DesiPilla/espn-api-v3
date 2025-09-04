@@ -1,8 +1,9 @@
+import json
 import os
+import traceback
 
 import resend
 import pandas as pd
-from django.http import JsonResponse
 
 from backend.src.doritostats.fetch_utils import get_postgres_conn
 from backend.fantasy_stats.models import LeagueInfo
@@ -65,5 +66,84 @@ def send_new_league_added_alert(league_info: LeagueInfo):
         print("Email sent successfully.")
 
     except Exception as e:
+        # Fail silently but log
+        print(f"Failed to send error email: {e}")
+
+
+def send_error_email(request, info, is_exception=False):
+    """
+    Sends an email with error details.
+    """
+    # Load environment variables
+    sender_email = os.getenv("SENDER_EMAIL")
+    recipient_email = os.getenv("RECIPIENT_EMAIL")
+    resend.api_key = os.getenv("RESEND_API_KEY")
+
+    # Build message
+    body = f"""
+<html>
+<body>
+<h3>API Error Notification</h3>
+<pre>
+HTTP Method: {request.method}
+User URL: {request.META.get('HTTP_REFERER', 'N/A')}
+API URL: {request.build_absolute_uri()}
+
+GET params:
+{json.dumps(request.GET.dict(), indent=4)}
+
+POST data:
+{json.dumps(request.POST.dict(), indent=4)}
+</pre>
+"""
+
+    if is_exception:
+        body += f"""
+        <b>Exception:</b>
+        <pre>{str(info)}
+
+    Traceback:
+    {traceback.format_exc()}</pre>
+        """
+    else:
+        # info is an HttpResponse
+        try:
+            if "application/json" in info.get("Content-Type", ""):
+                response_data = json.loads(info.content.decode("utf-8"))
+                body += f"""
+        <b>Response Body:</b>
+        <pre>{json.dumps(response_data, indent=4)}</pre>
+                """
+            else:
+                body += f"""
+        <b>Response Body:</b>
+        <pre>{info.content.decode('utf-8')}</pre>
+                """
+        except Exception:
+            body += """
+        <b>Response Body:</b>
+        <pre>Unable to parse response content</pre>
+            """
+
+    body += """
+    </body>
+    </html>
+    """
+
+    try:
+        print("Sending email notification...")
+        response = resend.Emails.send(
+            {
+                "from": sender_email,
+                "to": [recipient_email],
+                "subject": f"[Django] Error Notification",
+                "html": body,
+            }
+        )
+        print(response)
+        print("Email sent successfully.")
+
+    except Exception as e:
+
         # Fail silently but log
         print(f"Failed to send error email: {e}")

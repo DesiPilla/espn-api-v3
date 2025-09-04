@@ -1,5 +1,4 @@
 import datetime
-import functools
 import logging
 import os
 import re
@@ -9,14 +8,12 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-import datetime
-from typing import Optional
-from espn_api.football import League
-from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
 import sqlalchemy
 from dotenv import load_dotenv
+from espn_api.football import League
+from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
+from espn_api.requests.espn_requests import ESPNInvalidLeague
 
-from backend.src.doritostats.exceptions import InactiveLeagueError
 
 warnings.filterwarnings("ignore")
 
@@ -100,33 +97,21 @@ def verify_league_is_active(league: League) -> None:
     """
     # Check if the league is active
     r = requests.get(league.endpoint, cookies=league.cookies).json()
+
+    # Check if r has a key called "messages" and if that value is "Not Found"
+    if (r.get("messages") is not None) and r["messages"] == "Not Found":
+        raise ESPNInvalidLeague(
+            "League {} was not found. Please check that the credentials are valid.".format(
+                league.league_id
+            )
+        )
+
     if type(r) == list:
         r = r[0]
 
     # Check if the league is active
     if not r["status"]["isActive"]:
         raise Exception(
-            "League {} is not active. The league must be activated on ESPN to use.".format(
-                league.league_id
-            )
-        )
-    print("[BUILDING LEAGUE] League is active.")
-
-
-def verify_league_is_active(league: League) -> None:
-    """Verify that the league is active and not in the offseason.
-
-    Args:
-        league (League): ESPN League object
-    """
-    # Check if the league is active
-    r = requests.get(league.endpoint, cookies=league.cookies).json()
-    if type(r) == list:
-        r = r[0]
-
-    # Check if the league is active
-    if not r["status"]["isActive"]:
-        raise InactiveLeagueError(
             "League {} is not active. The league must be activated on ESPN to use.".format(
                 league.league_id
             )

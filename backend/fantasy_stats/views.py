@@ -18,13 +18,10 @@ from espn_api.requests.espn_requests import (
     ESPNUnknownError,
 )
 
-from backend.fantasy_stats.errors.error_codes import JsonErrorCodes
-from backend.fantasy_stats.errors.error_handlers import (
-    error_email_on_failure,
-)
 
 from .models import LeagueInfo
-from backend.fantasy_stats.errors.email import send_new_league_added_alert
+from .errors.email import send_new_league_added_alert
+from .errors.error_codes import JsonErrorCodes
 from backend.src.doritostats.analytic_utils import (
     get_naughty_players,
     get_lineup,
@@ -78,7 +75,6 @@ def get_csrf_token(request):
 
 
 @require_POST
-@error_email_on_failure
 def league_input(request):
     data = json.loads(request.body)
 
@@ -135,7 +131,7 @@ def league_input(request):
             {
                 "status": "error",
                 "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
-                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID.",
+                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID and year.",
             },
             status=400,
         )
@@ -781,7 +777,6 @@ def season_records(
 
 
 @csrf_exempt
-@error_email_on_failure
 def test_error_email(request):
     # raise Exception("Error message")
     return JsonResponse(
