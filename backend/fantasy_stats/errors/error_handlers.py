@@ -1,13 +1,10 @@
 import json
 import os
-import smtplib
-import ssl
 import traceback
 from functools import wraps
 
+import resend
 from django.http import JsonResponse
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 from backend.fantasy_stats.errors.error_codes import JsonErrorCodes
 
@@ -58,56 +55,84 @@ def send_error_email(request, info, is_exception=False):
     """
     print("Sending email notification...")
     try:
-        sender_email = os.getenv("EMAIL_USER")
-        sender_password = os.getenv("EMAIL_PASSWORD")
-        port = int(os.getenv("EMAIL_PORT", "465"))
+        # Load environment variables
+        sender_email = os.getenv("SENDER_EMAIL")
+        recipient_email = os.getenv("RECIPIENT_EMAIL")
+        resend.api_key = os.getenv("RESEND_API_KEY")
         print("Using email configs:")
-        print(f"  port={port}")
         print(f"  sender_email={sender_email}")
-        print(f"  sender_password={sender_password}")
+        print(f"  recipient_email={recipient_email}")
 
         # Build message
-        subject = f"[Django] Error Notification"
         body = f"""
+<html>
+  <body>
+    <h3>API Error Notification</h3>
+    <pre>
 HTTP Method: {request.method}
 User URL: {request.META.get('HTTP_REFERER', 'N/A')}
 API URL: {request.build_absolute_uri()}
-GET params: {json.dumps(request.GET.dict(), indent=4)}
-POST data: {json.dumps(request.POST.dict(), indent=4)}
+
+GET params:
+{json.dumps(request.GET.dict(), indent=4)}
+
+POST data:
+{json.dumps(request.POST.dict(), indent=4)}
+    </pre>
 """
 
         if is_exception:
-            body += f"Exception: {str(info)}\n\nTraceback:\n{traceback.format_exc()}"
+            body += f"""
+            <b>Exception:</b>
+            <pre>{str(info)}
+
+        Traceback:
+        {traceback.format_exc()}</pre>
+            """
         else:
             # info is an HttpResponse
             try:
                 if "application/json" in info.get("Content-Type", ""):
                     response_data = json.loads(info.content.decode("utf-8"))
-                    body += f"Response Body: {json.dumps(response_data, indent=4)}\n\n"
+                    body += f"""
+            <b>Response Body:</b>
+            <pre>{json.dumps(response_data, indent=4)}</pre>
+                    """
                 else:
-                    body += f"Response Body: {info.content.decode('utf-8')}\n\n"
+                    body += f"""
+            <b>Response Body:</b>
+            <pre>{info.content.decode('utf-8')}</pre>
+                    """
             except Exception:
-                body += "Response Body: Unable to parse response content\n\n"
+                body += """
+            <b>Response Body:</b>
+            <pre>Unable to parse response content</pre>
+                """
 
-        message = MIMEMultipart("alternative")
-        message["From"] = sender_email
-        message["To"] = sender_email
-        message["Subject"] = subject
-        message.attach(MIMEText(body, "plain"))
+        body += """
+        </body>
+        </html>
+        """
 
-        # Send email via SSL
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, sender_email, message.as_string())
+        response = resend.Emails.send(
+            {
+                "from": sender_email,
+                "to": [recipient_email],
+                "subject": f"[Django] Error Notification",
+                "html": body,
+            }
+        )
+        print(response)
         print("Email sent successfully.")
 
     except Exception as e:
+        response = JsonResponse(
+            {"error": "An unexpected error occurred. Please try again later."},
+            status=500,
+        )
+
         # Fail silently but log
         print(f"Failed to send error email: {e}")
 
     finally:
-        return JsonResponse(
-            {"error": "An unexpected error occurred. Please try again later."},
-            status=500,
-        )
+        return response

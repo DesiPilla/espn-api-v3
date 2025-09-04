@@ -1,8 +1,6 @@
 import os
-import smtplib, ssl
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
+import resend
 import pandas as pd
 from django.http import JsonResponse
 
@@ -14,20 +12,19 @@ def send_new_league_added_alert(league_info: LeagueInfo):
     print("Sending email notification...")
     try:
         # Load environment variables
-        port = os.getenv("EMAIL_PORT")
-        sender_email = os.getenv("EMAIL_USER")
-        sender_password = os.getenv("EMAIL_PASSWORD")
+        sender_email = os.getenv("SENDER_EMAIL")
+        recipient_email = os.getenv("RECIPIENT_EMAIL")
+        resend.api_key = os.getenv("RESEND_API_KEY")
         print("Using email configs:")
-        print(f"  port={port}")
         print(f"  sender_email={sender_email}")
-        print(f"  sender_password={sender_password}")
+        print(f"  recipient_email={recipient_email}")
 
         # Turn these into plain/html MIMEText objects
         league_name = league_info.league_name
         league_id = league_info.league_id
         year = league_info.league_year
 
-        # Get the number of new leagues added
+        # Build message
         conn = get_postgres_conn()
         n_leagues_2025 = pd.read_sql(
             "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo WHERE league_year = 2025",
@@ -42,7 +39,7 @@ def send_new_league_added_alert(league_info: LeagueInfo):
         ).values[0][0]
 
         # Fill in the placeholders in the email template
-        email_template = f"""
+        body = f"""
     <html>
     <body>
         <p>🎉🎉 A new league was added! 🎉🎉<br>
@@ -58,27 +55,17 @@ def send_new_league_added_alert(league_info: LeagueInfo):
     </body>
     </html>
         """
-        email_body = MIMEText(email_template, "html")
 
-        # Create a secure SSL context
-        context = ssl.create_default_context()
-
-        # Create the email message
-        message = MIMEMultipart("alternative")
-        message["From"] = sender_email
-        message["To"] = sender_email
-
-        # Add HTML/plain-text parts to MIMEMultipart message
-        # The email client will try to render the last part first
-        # message.attach(part1)
-        message.attach(email_body)
-        message["Subject"] = "New League Added: {} ({})".format(league_name, year)
-
-        # Create secure connection with server and send email
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, sender_email, message.as_string())
+        response = resend.Emails.send(
+            {
+                "from": sender_email,
+                "to": [recipient_email],
+                "subject": "New League Added: {} ({})".format(league_name, year),
+                "html": body,
+            }
+        )
+        print(response)
+        print("Email sent successfully.")
 
     except Exception as e:
         # Fail silently but log
