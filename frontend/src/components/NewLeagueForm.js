@@ -11,9 +11,6 @@ const NewLeagueForm = () => {
     espn_s2: '',
   });
   const navigate = useNavigate();
-  
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
