@@ -768,6 +768,7 @@ def season_records(
 
     return JsonResponse(result, safe=True)
 
+
 #############################################################
 ## VIEWS THAT DO NOT WORK YET AND ARE IN THE TESTING PHASE ##
 #############################################################
