@@ -145,67 +145,73 @@ const LeaguePage = () => {
   console.log("Current week:", currentWeek);
 
   return (
-    <div>
-      <h1>{leagueData.league_name}</h1>
-      <p>Year: {leagueData.league_year}</p>
-      <p>League ID: {leagueData.league_id}</p>
+      <div>
+          <div className="league-content">
+              <h1>{leagueData.league_name}</h1>
+              <p>Year: {leagueData.league_year}</p>
+              <p>League ID: {leagueData.league_id}</p>
 
-      <WeekSelector
-        currentWeek={currentWeek} // Always use currentWeek for WeekSelector
-        minWeek={1}
-        maxWeek={currentWeek}
-        onWeekChange={handleWeekChange} // Pass the handler to WeekSelector
-      />
+              <WeekSelector
+                  currentWeek={currentWeek} // Always use currentWeek for WeekSelector
+                  minWeek={1}
+                  maxWeek={currentWeek}
+                  onWeekChange={handleWeekChange} // Pass the handler to WeekSelector
+              />
 
-      {/* Add a container for horizontal alignment */}
-      <div className="button-container">
-        <ReturnToHomePageButton />
-        <SimulatePlayoffOddsButton
-          leagueYear={leagueYear}
-          leagueId={leagueId}
-          n_simulations={leagueSettings?.regular_season_complete ? 99 : 100} // Use less simulations if the season is over
-        />
-        <LeagueRecordsButton leagueYear={leagueYear} leagueId={leagueId} />
+              {/* Add a container for horizontal alignment */}
+              <div className="button-container">
+                  <ReturnToHomePageButton />
+                  <SimulatePlayoffOddsButton
+                      leagueYear={leagueYear}
+                      leagueId={leagueId}
+                      n_simulations={
+                          leagueSettings?.regular_season_complete ? 99 : 100
+                      } // Use less simulations if the season is over
+                  />
+                  <LeagueRecordsButton
+                      leagueYear={leagueYear}
+                      leagueId={leagueId}
+                  />
+              </div>
+
+              <BoxScoresTable
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+
+              <WeeklyAwardsTable
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+
+              <PowerRankingsTable
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+
+              <LuckIndexTable
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+
+              <NaughtyList
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+
+              <StandingsTable
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+          </div>
+          <Footer />
       </div>
-
-      <BoxScoresTable
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <WeeklyAwardsTable
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <PowerRankingsTable
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <LuckIndexTable
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <NaughtyList
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <StandingsTable
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <Footer />
-    </div>
   );
 };
 

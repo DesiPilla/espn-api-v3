@@ -38,6 +38,11 @@ def error_email_on_failure(view_func):
                     send_error_email(request, response)
 
         except Exception as exc:
+            response = JsonResponse(
+                {"error": "An unexpected server error occurred."},
+                status=500,
+            )
+
             # If the view raises an exception, send email with traceback
             send_error_email(request, exc, is_exception=True)
 
@@ -56,6 +61,10 @@ def send_error_email(request, info, is_exception=False):
         sender_email = os.getenv("EMAIL_USER")
         sender_password = os.getenv("EMAIL_PASSWORD")
         port = int(os.getenv("EMAIL_PORT", "465"))
+        print("Using email configs:")
+        print(f"  port={port}")
+        print(f"  sender_email={sender_email}")
+        print(f"  sender_password={sender_password}")
 
         # Build message
         subject = f"[Django] Error Notification"
