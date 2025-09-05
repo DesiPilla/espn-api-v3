@@ -98,6 +98,9 @@ def verify_league_is_active(league: League) -> None:
     # Check if the league is active
     r = requests.get(league.endpoint, cookies=league.cookies).json()
 
+    if type(r) == list:
+        r = r[0]
+
     # Check if r has a key called "messages" and if that value is "Not Found"
     if (r.get("messages") is not None) and r["messages"] == "Not Found":
         raise ESPNInvalidLeague(
@@ -105,9 +108,6 @@ def verify_league_is_active(league: League) -> None:
                 league.league_id
             )
         )
-
-    if type(r) == list:
-        r = r[0]
 
     # Check if the league is active
     if not r["status"]["isActive"]:
