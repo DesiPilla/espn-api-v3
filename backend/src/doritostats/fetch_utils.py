@@ -12,7 +12,7 @@ import sqlalchemy
 from dotenv import load_dotenv
 from espn_api.football import League
 from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
-from espn_api.requests.espn_requests import ESPNInvalidLeague
+from espn_api.requests.espn_requests import ESPNInvalidLeague, ESPNUnknownError
 
 
 warnings.filterwarnings("ignore")
@@ -101,22 +101,35 @@ def verify_league_is_active(league: League) -> None:
     if type(r) == list:
         r = r[0]
 
-    # Check if r has a key called "messages" and if that value is "Not Found"
-    if (r.get("messages") is not None) and r["messages"] == "Not Found":
-        raise ESPNInvalidLeague(
-            "League {} was not found. Please check that the credentials are valid.".format(
-                league.league_id
-            )
-        )
-
     # Check if the league is active
-    if not r["status"]["isActive"]:
+    if (r.get("status") is not None) and (r.get("status").get("isActive")):
+        print("[BUILDING LEAGUE] League is active.")
+    elif (r.get("status") is not None) and (not r.get("status").get("isActive")):
+        print("[BUILDING LEAGUE] League is either not active.")
         raise Exception(
             "League {} is not active. The league must be activated on ESPN to use.".format(
                 league.league_id
             )
         )
-    print("[BUILDING LEAGUE] League is active.")
+    # Check if r has a key called "messages" and if that value is "Not Found"
+    elif r.get("messages") is not None:
+        if r["messages"] == ["Not Found"]:
+            print("[BUILDING LEAGUE] League was not found.")
+            raise ESPNInvalidLeague(
+                "League {} was not found. Please check that the credentials are valid.".format(
+                    league.league_id
+                )
+            )
+        else:
+            print("[BUILDING LEAGUE] League endpoint does not work. Error unknown.")
+            raise ESPNUnknownError(
+                "An error has occurred fetching league {}.".format(league.league_id)
+            )
+    else:
+        print("[BUILDING LEAGUE] League endpoint does not work. Error unknown.")
+        raise ESPNUnknownError(
+            "An error has occurred fetching league {}.".format(league.league_id)
+        )
 
 
 def get_roster_settings(league: League) -> None:
@@ -262,8 +275,9 @@ def fetch_league(
     # league.box_scores = functools.cache(league.box_scores)
 
     # Use `matchup period` as `week` throughout the code
-    current_week = max(league.current_week, 1)
-    current_matchup_period = league.settings.week_to_matchup_period[league.current_week]
+    current_matchup_period = league.settings.week_to_matchup_period[
+        max(league.current_week, 1)
+    ]
 
     # Load current league data
     print("[BUILDING LEAGUE] Loading current league details...")

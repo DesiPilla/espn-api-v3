@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import LeagueSelector from "./LeagueSelector";
-import NewLeagueForm from './NewLeagueForm';
-import ReturningLeagueSelector from '../components/ReturningLeagueSelector';
+import NewLeagueForm from "./NewLeagueForm";
+import ReturningLeagueSelector from "../components/ReturningLeagueSelector";
 import "./styles/league.css";
 
 const HomePage = () => {
@@ -42,8 +42,8 @@ const HomePage = () => {
     const handleLeagueSelect = (event) => {
         const url = event.target.value;
         if (url) {
-            console.log("Navigating to:", url); // Debugging line
-            navigate(url); // Use navigate for route change
+            console.log("Navigating to:", url);
+            navigate(url);
         }
     };
 

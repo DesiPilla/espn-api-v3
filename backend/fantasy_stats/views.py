@@ -21,7 +21,7 @@ from espn_api.requests.espn_requests import (
 
 from .models import LeagueInfo
 from .errors.email import send_new_league_added_alert
-from .errors.error_codes import JsonErrorCodes
+from .errors.error_codes import InvalidLeagueError, JsonErrorCodes
 from backend.src.doritostats.analytic_utils import (
     get_naughty_players,
     get_lineup,
@@ -382,16 +382,19 @@ def get_cached_league(league_id: int, league_year: int) -> League:
     league_obj = cache.get(cache_key)
 
     if not league_obj:
-        league_info = LeagueInfo.objects.get(
-            league_id=league_id, league_year=league_year
-        )
-        league_obj = fetch_league(
-            league_id=league_id,
-            year=league_year,
-            swid=league_info.swid,
-            espn_s2=league_info.espn_s2,
-        )
-        cache.set(cache_key, league_obj, timeout=CACHE_DURATION)
+        try:
+            league_info = LeagueInfo.objects.get(
+                league_id=league_id, league_year=league_year
+            )
+            league_obj = fetch_league(
+                league_id=league_id,
+                year=league_year,
+                swid=league_info.swid,
+                espn_s2=league_info.espn_s2,
+            )
+            cache.set(cache_key, league_obj, timeout=CACHE_DURATION)
+        except Exception as e:
+            raise InvalidLeagueError(f"League {league_id} ({league_year}) failed: {e}")
 
     return league_obj
 

@@ -31,110 +31,144 @@ const LeaguePage = () => {
 
   // Check if the league season has begun
   useEffect(() => {
-    const checkLeagueStatus = async () => {
-      try {
-        const response = await fetch(`/api/check-league-status/${leagueYear}/${leagueId}`);
-        const data = await response.json();
-        if (response.status === 409 && data.code === "too_soon") {
-          navigate(`/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`);
-        }
-      } catch (error) {
-        console.error("Error checking league status:", error);
-      }
-    };
+      const checkLeagueStatus = async () => {
+          try {
+              const response = await fetch(
+                  `/api/check-league-status/${leagueYear}/${leagueId}`
+              );
+              const data = await response.json();
+              if (response.status === 409 && data.code === "too_soon") {
+                  navigate(
+                      `/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`
+                  );
+              } else if (
+                  response.status === 400 &&
+                  data.code === "invalid_league"
+              ) {
+                  navigate(`/fantasy_stats/invalid-league`);
+              }
+          } catch (error) {
+              console.error("Error checking league status:", error);
+          }
+      };
 
-    checkLeagueStatus();
+      checkLeagueStatus();
   }, [leagueId, leagueYear, selectedWeek, navigate]);
 
   // Fetch the league data from the backend using the leagueId and leagueYear
   useEffect(() => {
-    const fetchLeagueData = async () => {
-      try {
-        const response = await fetch(`/api/league/${leagueYear}/${leagueId}/`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch league data (status ${response.status})`);
-        }
-        const data = await response.json();
-        setLeagueData(data);
-        console.log("League data fetched:", data);
-      } catch (error) {
-        console.error("Error fetching league data:", error);
-        if (!retry) {
-          console.log("Retrying league data fetch...");
-          setRetry(true); // Trigger a retry
-        }
-      }
-    };
+      const fetchLeagueData = async () => {
+          try {
+              const response = await fetch(
+                  `/api/league/${leagueYear}/${leagueId}/`
+              );
+              if (response.status === 400 && data.code === "invalid_league") {
+                  navigate(`/fantasy_stats/invalid-league`);
+              } else if (!response.ok) {
+                  throw new Error(
+                      `Failed to fetch league data (status ${response.status})`
+                  );
+              }
+              const data = await response.json();
+              setLeagueData(data);
+              console.log("League data fetched:", data);
+          } catch (error) {
+              console.error("Error fetching league data:", error);
+              if (!retry) {
+                  console.log("Retrying league data fetch...");
+                  setRetry(true); // Trigger a retry
+              }
+          }
+      };
 
-    fetchLeagueData();
+      fetchLeagueData();
   }, [leagueYear, leagueId, retry, navigate]); // Re-fetch if the URL parameters or retry state changes
 
   // Set the default current week and selected week
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const weekFromUrl = (() => {
-      const week = queryParams.get('week');
-      return week && !isNaN(parseInt(week)) ? parseInt(week) : null;
-    })();
+      const queryParams = new URLSearchParams(location.search);
+      const weekFromUrl = (() => {
+          const week = queryParams.get("week");
+          return week && !isNaN(parseInt(week)) ? parseInt(week) : null;
+      })();
 
-    if (weekFromUrl) {
-      console.log("Setting selected week from URL:", weekFromUrl);
-      setSelectedWeek(weekFromUrl);
-    }
-
-    const fetchCurrentWeek = async () => {
-      try {
-        console.log("Fetching current week...");
-        const result = await fetch(`/api/league/${leagueYear}/${leagueId}/current-week/`);
-        if (!result.ok) {
-          throw new Error(`Failed to fetch current week (status ${result.status})`);
-        }
-        const data = await result.json();
-        setCurrentWeek(data.current_week);
-        if (!weekFromUrl) {
-          setSelectedWeek(data.current_week); // Only set selectedWeek if not already defined
-        }
-      } catch (error) {
-        console.error("Error fetching current week:", error);
+      if (weekFromUrl) {
+          console.log("Setting selected week from URL:", weekFromUrl);
+          setSelectedWeek(weekFromUrl);
       }
-    };
 
-    fetchCurrentWeek();
+      const fetchCurrentWeek = async () => {
+          try {
+              console.log("Fetching current week...");
+              const response = await fetch(
+                  `/api/league/${leagueYear}/${leagueId}/current-week/`
+              );
+              const data = await response.json();
+              if (response.status === 400 && data.code === "invalid_league") {
+                  navigate(`/fantasy_stats/invalid-league`);
+              } else if (!response.ok) {
+                  throw new Error(
+                      `Failed to fetch current week (status ${response.status})`
+                  );
+              }
+              setCurrentWeek(data.current_week);
+              if (!weekFromUrl) {
+                  setSelectedWeek(data.current_week); // Only set selectedWeek if not already defined
+              }
+          } catch (error) {
+              console.error("Error fetching current week:", error);
+          }
+      };
 
-    // Ensure selectedWeek is never undefined
-    if (selectedWeek === undefined) {
-      console.log("selectedWeek is undefined, setting it to currentWeek:", currentWeek);
-      setSelectedWeek(currentWeek);
-    }
+      fetchCurrentWeek();
+
+      // Ensure selectedWeek is never undefined
+      if (selectedWeek === undefined) {
+          console.log(
+              "selectedWeek is undefined, setting it to currentWeek:",
+              currentWeek
+          );
+          setSelectedWeek(currentWeek);
+      }
   }, [location.search, leagueYear, leagueId, selectedWeek, currentWeek]);
 
   const handleWeekChange = (newWeek) => {
-    // Ensure selectedWeek is never undefined
-    const validWeek = newWeek ?? currentWeek;
-    setSelectedWeek(validWeek);
-    const queryParams = new URLSearchParams(location.search);
-    queryParams.set('week', validWeek); // Update the URL query parameter with a valid week
-    window.history.replaceState(null, '', `${location.pathname}?${queryParams.toString()}`);
+      // Ensure selectedWeek is never undefined
+      const validWeek = newWeek ?? currentWeek;
+      setSelectedWeek(validWeek);
+      const queryParams = new URLSearchParams(location.search);
+      queryParams.set("week", validWeek); // Update the URL query parameter with a valid week
+      window.history.replaceState(
+          null,
+          "",
+          `${location.pathname}?${queryParams.toString()}`
+      );
   };
 
   // Fetch the number of playoff teams and update the simulation count if the league is complete
   useEffect(() => {
-    const fetchLeagueSettings = async () => {
-      try {
-        const response = await fetch(`/api/league-settings/${leagueYear}/${leagueId}/`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch league settings (status ${response.status})`);
-        }
-        const data = await response.json();
-        console.log("Is season complete?", data.regular_season_complete);
-        setLeagueSettings(data);
-        console.log(leagueSettings?.regular_season_complete ? 1 : 100)
-      } catch (error) {
-        console.error("Error fetching league settings:", error);
-      }
-    };
+      const fetchLeagueSettings = async () => {
+          try {
+              const response = await fetch(
+                  `/api/league-settings/${leagueYear}/${leagueId}/`
+              );
+              const data = await response.json();
+              if (response.status === 400 && data.code === "invalid_league") {
+                  navigate(`/fantasy_stats/invalid-league`);
+              } else if (!response.ok) {
+                  throw new Error(
+                      `Failed to fetch league settings (status ${response.status})`
+                  );
+              }
+              console.log("Is season complete?", data.regular_season_complete);
+              setLeagueSettings(data);
+              console.log(leagueSettings?.regular_season_complete ? 1 : 100);
+          } catch (error) {
+              console.error("Error fetching league settings:", error);
+          }
+      };
 
-    fetchLeagueSettings();
+      fetchLeagueSettings();
   }, [leagueYear, leagueId]);
 
   if (!leagueData || currentWeek === null) {
