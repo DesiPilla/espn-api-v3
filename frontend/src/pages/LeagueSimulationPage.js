@@ -9,8 +9,8 @@ import RankDistributionTable from '../components/RankDistributionTable';
 import SeedingOutcomesTable from '../components/SeedingOutcomesTable';
 import RemainingStrengthOfScheduleTable from '../components/RemainingStrengthOfScheduleTable';
 import '../components/styles/league.css';
-import ReturnToLeaguePageButton from '../components/ReturnToLeaguePageButton'; // Import the new component
-import LeagueRecordsButton from '../components/LeagueRecordsButton';
+import ReturnToLeaguePageButton from "../components/ReturnToLeaguePageButton";
+import LeagueRecordsButton from "../components/LeagueRecordsButton";
 
 const LeagueSimulationPage = () => {
     const { leagueYear, leagueId } = useParams();
@@ -22,7 +22,9 @@ const LeagueSimulationPage = () => {
     const [leagueSettings, setLeagueSettings] = useState(null);
 
     const queryParams = new URLSearchParams(location.search);
-    const [nSimulations, setNSimulations] = useState(queryParams.get('n_simulations') || null);
+    const [nSimulations, setNSimulations] = useState(
+        queryParams.get("n_simulations") || null
+    );
 
     // Preload the league data for faster loading later on
     useEffect(() => {
@@ -33,10 +35,19 @@ const LeagueSimulationPage = () => {
     useEffect(() => {
         const checkLeagueStatus = async () => {
             try {
-                const response = await fetch(`/api/check-league-status/${leagueYear}/${leagueId}`);
+                const response = await fetch(
+                    `/api/check-league-status/${leagueYear}/${leagueId}`
+                );
                 const data = await response.json();
                 if (response.status === 409 && data.code === "too_soon") {
-                    navigate(`/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`);
+                    navigate(
+                        `/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`
+                    );
+                } else if (
+                    response.status === 400 &&
+                    data.code === "invalid_league"
+                ) {
+                    navigate(`/fantasy_stats/invalid-league`);
                 }
             } catch (error) {
                 console.error("Error checking league status:", error);
@@ -50,12 +61,19 @@ const LeagueSimulationPage = () => {
     useEffect(() => {
         const fetchLeagueSettings = async () => {
             try {
-                const response = await fetch(`/api/league-settings/${leagueYear}/${leagueId}/`);
+                const response = await fetch(
+                    `/api/league-settings/${leagueYear}/${leagueId}/`
+                );
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch league settings (status ${response.status})`);
+                    throw new Error(
+                        `Failed to fetch league settings (status ${response.status})`
+                    );
                 }
                 const data = await response.json();
-                console.log("Number of playoff teams fetched:", data.playoff_teams);
+                console.log(
+                    "Number of playoff teams fetched:",
+                    data.playoff_teams
+                );
                 setLeagueSettings(data);
             } catch (error) {
                 console.error("Error fetching playoff teams:", error);
@@ -68,11 +86,14 @@ const LeagueSimulationPage = () => {
     // Set the default current week and selected week
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
-        const weekFromUrl = queryParams.get('week');
+        const weekFromUrl = queryParams.get("week");
 
         console.log("weekFromUrl:", weekFromUrl); // Debugging step
 
-        const validWeekFromUrl = weekFromUrl && !isNaN(parseInt(weekFromUrl, 10)) ? parseInt(weekFromUrl, 10) : null;
+        const validWeekFromUrl =
+            weekFromUrl && !isNaN(parseInt(weekFromUrl, 10))
+                ? parseInt(weekFromUrl, 10)
+                : null;
 
         if (validWeekFromUrl !== null) {
             console.log("Setting selected week from URL:", validWeekFromUrl);
@@ -82,19 +103,31 @@ const LeagueSimulationPage = () => {
         const fetchCurrentWeek = async () => {
             try {
                 console.log("Fetching current week...");
-                const result = await fetch(`/api/league/${leagueYear}/${leagueId}/current-week/`);
+                const result = await fetch(
+                    `/api/league/${leagueYear}/${leagueId}/current-week/`
+                );
                 if (!result.ok) {
-                    throw new Error(`Failed to fetch current week (status ${result.status})`);
+                    throw new Error(
+                        `Failed to fetch current week (status ${result.status})`
+                    );
                 }
                 const data = await result.json();
                 console.log("Fetched current week:", data.current_week); // Debugging step
 
-                const validCurrentWeek = !isNaN(data.current_week) ? data.current_week : null; // Remove default value
-                const validMaxWeek = !isNaN(leagueSettings?.n_regular_season_weeks)
+                const validCurrentWeek = !isNaN(data.current_week)
+                    ? data.current_week
+                    : null; // Remove default value
+                const validMaxWeek = !isNaN(
+                    leagueSettings?.n_regular_season_weeks
+                )
                     ? leagueSettings.n_regular_season_weeks
                     : validCurrentWeek;
 
-                setCurrentWeek(validCurrentWeek !== null ? Math.min(validMaxWeek, validCurrentWeek) : null);
+                setCurrentWeek(
+                    validCurrentWeek !== null
+                        ? Math.min(validMaxWeek, validCurrentWeek)
+                        : null
+                );
 
                 if (validWeekFromUrl === null && validCurrentWeek !== null) {
                     setSelectedWeek(Math.min(validMaxWeek, validCurrentWeek)); // Only set selectedWeek if not already defined
@@ -108,7 +141,10 @@ const LeagueSimulationPage = () => {
 
         // Ensure selectedWeek is never undefined
         if (selectedWeek === undefined) {
-            console.log("selectedWeek is undefined, setting it to currentWeek:", currentWeek);
+            console.log(
+                "selectedWeek is undefined, setting it to currentWeek:",
+                currentWeek
+            );
             setSelectedWeek(currentWeek);
         }
     }, [location.search, leagueYear, leagueId, selectedWeek, currentWeek]);
@@ -116,12 +152,17 @@ const LeagueSimulationPage = () => {
     // Redirect to "uh-oh-too-early" page if selectedWeek or currentWeek is less than 4
     useEffect(() => {
         if (selectedWeek === undefined) {
-            console.log("selectedWeek is undefined, setting it to currentWeek:", currentWeek);
+            console.log(
+                "selectedWeek is undefined, setting it to currentWeek:",
+                currentWeek
+            );
             setSelectedWeek(currentWeek);
         }
         if (selectedWeek !== null && currentWeek !== null) {
             if (selectedWeek < 4 || currentWeek < 4) {
-                navigate(`/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`);
+                navigate(
+                    `/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`
+                );
             }
         }
     }, [selectedWeek, currentWeek, leagueYear, leagueId, navigate]);
@@ -143,11 +184,20 @@ const LeagueSimulationPage = () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                if (response.status === 409 && errorData.code === "too_soon") {
-                    navigate(`/fantasy_stats/uh-oh-too-early/playoff-simulations/${leagueYear}/${leagueId}`);
+                if (response.status === 409 && data.code === "too_soon") {
+                    navigate(
+                        `/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`
+                    );
+                } else if (
+                    response.status === 400 &&
+                    data.code === "invalid_league"
+                ) {
+                    navigate(`/fantasy_stats/invalid-league`);
                 }
                 console.error("Backend error:", errorData);
-                throw new Error(`Failed to fetch simulation data (status ${response.status})`);
+                throw new Error(
+                    `Failed to fetch simulation data (status ${response.status})`
+                );
             }
 
             const data = await response.json();
@@ -174,8 +224,12 @@ const LeagueSimulationPage = () => {
             setSelectedWeek(validWeek);
             setSimulationData(null); // Reset simulationData to show the spinner
             const queryParams = new URLSearchParams(location.search);
-            queryParams.set('week', validWeek); // Update the URL query parameter with a valid week
-            window.history.replaceState(null, '', `${location.pathname}?${queryParams.toString()}`);
+            queryParams.set("week", validWeek); // Update the URL query parameter with a valid week
+            window.history.replaceState(
+                null,
+                "",
+                `${location.pathname}?${queryParams.toString()}`
+            );
         }
     };
 
@@ -183,8 +237,12 @@ const LeagueSimulationPage = () => {
         setNSimulations(newSimulations);
         setSimulationData(null); // Reset simulationData to show the spinner
         const queryParams = new URLSearchParams(location.search);
-        queryParams.set('n_simulations', newSimulations);
-        window.history.replaceState(null, '', `${location.pathname}?${queryParams.toString()}`);
+        queryParams.set("n_simulations", newSimulations);
+        window.history.replaceState(
+            null,
+            "",
+            `${location.pathname}?${queryParams.toString()}`
+        );
     };
 
     console.log("Selected week:", selectedWeek);
@@ -201,23 +259,32 @@ const LeagueSimulationPage = () => {
                 currentWeek={currentWeek ?? 18}
                 onWeekChange={handleWeekChange}
                 minWeek={4}
-                maxWeek={Math.min(leagueSettings?.n_regular_season_weeks, currentWeek)}
+                maxWeek={Math.min(
+                    leagueSettings?.n_regular_season_weeks,
+                    currentWeek
+                )}
                 disable={leagueSettings?.regular_season_complete}
             />
 
             <div className="button-container">
                 <ReturnToHomePageButton />
-                <ReturnToLeaguePageButton leagueYear={leagueYear} leagueId={leagueId} />
-                <LeagueRecordsButton leagueYear={leagueYear} leagueId={leagueId} />
+                <ReturnToLeaguePageButton
+                    leagueYear={leagueYear}
+                    leagueId={leagueId}
+                />
+                <LeagueRecordsButton
+                    leagueYear={leagueYear}
+                    leagueId={leagueId}
+                />
             </div>
 
-            <SimulationSelector 
-                nSimulations={nSimulations} 
-                setNSimulations={handleSimulationsChange} 
+            <SimulationSelector
+                nSimulations={nSimulations}
+                setNSimulations={handleSimulationsChange}
             />
 
-            <PlayoffOddsTable 
-                data={simulationData?.playoff_odds || null} 
+            <PlayoffOddsTable
+                data={simulationData?.playoff_odds || null}
                 playoffTeams={leagueSettings?.n_playoff_spots}
                 selectedWeek={selectedWeek}
             />
@@ -228,7 +295,7 @@ const LeagueSimulationPage = () => {
                 playoffTeams={leagueSettings?.n_playoff_spots}
             />
 
-            <SeedingOutcomesTable 
+            <SeedingOutcomesTable
                 data={simulationData?.seeding_outcomes || null}
                 playoffTeams={leagueSettings?.n_playoff_spots}
             />

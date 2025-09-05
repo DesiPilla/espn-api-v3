@@ -1,3 +1,4 @@
+import html
 import json
 import os
 import traceback
@@ -63,7 +64,10 @@ def send_new_league_added_alert(league_info: LeagueInfo):
             }
         )
         print(response)
-        print("Email sent successfully.")
+        if response.get("id"):
+            print("Email sent successfully.")
+        else:
+            print("WARNING: email not sent.")
 
     except Exception as e:
         # Fail silently but log
@@ -72,19 +76,30 @@ def send_new_league_added_alert(league_info: LeagueInfo):
 
 def send_error_email(request, info, is_exception=False):
     """
-    Sends an email with error details.
+    Sends an email with error details via Resend.
+    Handles both per-request and batched errors.
     """
-    # Load environment variables
     sender_email = os.getenv("SENDER_EMAIL")
     recipient_email = os.getenv("RECIPIENT_EMAIL")
     resend.api_key = os.getenv("RESEND_API_KEY")
 
-    # Build message
-    body = f"""
+    # Start HTML body
+    body = """
 <html>
-<body>
-<h3>API Error Notification</h3>
-<pre>
+  <body>
+    <h3>API Error Notification</h3>
+"""
+
+    # Case 1: no request (batched errors)
+    if request is None:
+        body += f"""
+    <b>Batched Errors:</b>
+    <pre>{html.escape(str(info))}</pre>
+        """
+    else:
+        # Add request details
+        body += f"""
+    <pre>
 HTTP Method: {request.method}
 User URL: {request.META.get('HTTP_REFERER', 'N/A')}
 API URL: {request.build_absolute_uri()}
@@ -94,41 +109,42 @@ GET params:
 
 POST data:
 {json.dumps(request.POST.dict(), indent=4)}
-</pre>
-"""
-
-    if is_exception:
-        body += f"""
-        <b>Exception:</b>
-        <pre>{str(info)}
-
-    Traceback:
-    {traceback.format_exc()}</pre>
+    </pre>
         """
-    else:
-        # info is an HttpResponse
-        try:
-            if "application/json" in info.get("Content-Type", ""):
-                response_data = json.loads(info.content.decode("utf-8"))
-                body += f"""
-        <b>Response Body:</b>
-        <pre>{json.dumps(response_data, indent=4)}</pre>
-                """
-            else:
-                body += f"""
-        <b>Response Body:</b>
-        <pre>{info.content.decode('utf-8')}</pre>
-                """
-        except Exception:
-            body += """
-        <b>Response Body:</b>
-        <pre>Unable to parse response content</pre>
-            """
 
+        if is_exception:
+            body += f"""
+    <b>Exception:</b>
+    <pre>{html.escape(str(info))}</pre>
+
+    <b>Traceback:</b>
+    <pre>{html.escape(traceback.format_exc())}</pre>
+            """
+        else:
+            # info is an HttpResponse
+            try:
+                if "application/json" in info.get("Content-Type", ""):
+                    response_data = json.loads(info.content.decode("utf-8"))
+                    body += f"""
+    <b>Response Body:</b>
+    <pre>{html.escape(json.dumps(response_data, indent=4))}</pre>
+                    """
+                else:
+                    body += f"""
+    <b>Response Body:</b>
+    <pre>{html.escape(info.content.decode("utf-8"))}</pre>
+                    """
+            except Exception:
+                body += """
+    <b>Response Body:</b>
+    <pre>Unable to parse response content</pre>
+                """
+
+    # Close HTML
     body += """
-    </body>
-    </html>
-    """
+  </body>
+</html>
+"""
 
     try:
         print("Sending email notification...")
@@ -136,13 +152,11 @@ POST data:
             {
                 "from": sender_email,
                 "to": [recipient_email],
-                "subject": f"[Django] Error Notification",
+                "subject": "[Django] Error Notification",
                 "html": body,
             }
         )
         print(response)
         print("Email sent successfully.")
-
     except Exception as e:
-        # Fail silently but log
         print(f"Failed to send error email: {e}")
