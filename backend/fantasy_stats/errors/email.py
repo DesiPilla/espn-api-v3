@@ -144,6 +144,5 @@ POST data:
         print("Email sent successfully.")
 
     except Exception as e:
-
         # Fail silently but log
         print(f"Failed to send error email: {e}")
