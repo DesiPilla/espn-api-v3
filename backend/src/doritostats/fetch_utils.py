@@ -261,10 +261,13 @@ def fetch_league(
     # # Cache this function to speed up processing
     # league.box_scores = functools.cache(league.box_scores)
 
+    # Use `matchup period` as `week` throughout the code
+    current_week = max(league.current_week, 1)
+    current_matchup_period = league.settings.week_to_matchup_period[league.current_week]
+
     # Load current league data
     print("[BUILDING LEAGUE] Loading current league details...")
-    league.current_week = max(league.current_week, 1)
-    current_matchup_period = league.settings.week_to_matchup_period[league.current_week]
+    league.current_week = current_matchup_period
     league.load_roster_week(current_matchup_period)
 
     return league
