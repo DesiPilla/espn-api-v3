@@ -451,9 +451,7 @@ def scrape_team_stats(
 
     # Fetch data for each year and append it to the dataframe
     for year in range(start_year, end_year + 1):
-        logger.info(
-            "\n[BUILDING LEAGUE] Fetching historical stats for {}...".format(year)
-        )
+        print("\n[BUILDING LEAGUE] Fetching historical stats for {}...".format(year))
         if year < 2019:
             # BoxScore information is not available for years prior to 2019
             # Build the data from Team information
@@ -599,7 +597,7 @@ def add_newest_season_to_stats(
                     espn_s2=espn_s2,
                 )
             else:
-                logger.info("Exiting process without updating the dataframe.")
+                print("Exiting process without updating the dataframe.")
 
     # Re-build the dataframe for the new season
     return scrape_team_stats(

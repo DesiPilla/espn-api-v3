@@ -22,6 +22,7 @@ const LeaguePage = () => {
   const [selectedWeek, setSelectedWeek] = useState(null);
   const [currentWeek, setCurrentWeek] = useState(null); // Track the current week separately
   const [retry, setRetry] = useState(false); // Track if a retry is needed
+  const [leagueSettings, setLeagueSettings] = useState(null);
 
   // Preload the league data for faster loading later on
   useEffect(() => {
@@ -34,7 +35,7 @@ const LeaguePage = () => {
       try {
         const response = await fetch(`/api/check-league-status/${leagueYear}/${leagueId}`);
         const data = await response.json();
-        if (response.status === 400 && data.status === "too_soon") {
+        if (response.status === 409 && data.code === "too_soon") {
           navigate(`/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`);
         }
       } catch (error) {
@@ -71,10 +72,14 @@ const LeaguePage = () => {
   // Set the default current week and selected week
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const weekFromUrl = queryParams.get('week');
+    const weekFromUrl = (() => {
+      const week = queryParams.get('week');
+      return week && !isNaN(parseInt(week)) ? parseInt(week) : null;
+    })();
+
     if (weekFromUrl) {
       console.log("Setting selected week from URL:", weekFromUrl);
-      setSelectedWeek(parseInt(weekFromUrl, 10)); // Initialize selectedWeek from the URL
+      setSelectedWeek(weekFromUrl);
     }
 
     const fetchCurrentWeek = async () => {
@@ -85,93 +90,130 @@ const LeaguePage = () => {
           throw new Error(`Failed to fetch current week (status ${result.status})`);
         }
         const data = await result.json();
-        setCurrentWeek(data.current_week); // Always set the current week
+        setCurrentWeek(data.current_week);
         if (!weekFromUrl) {
           setSelectedWeek(data.current_week); // Only set selectedWeek if not already defined
         }
-        console.log("Current week set to:", data.current_week);
       } catch (error) {
         console.error("Error fetching current week:", error);
-        if (!retry) {
-          console.log("Retrying current week fetch...");
-          setRetry(true); // Trigger a retry
-        }
       }
     };
 
-    fetchCurrentWeek(); // Call the async function
-  }, [location.search, leagueYear, leagueId, retry]);
+    fetchCurrentWeek();
+
+    // Ensure selectedWeek is never undefined
+    if (selectedWeek === undefined) {
+      console.log("selectedWeek is undefined, setting it to currentWeek:", currentWeek);
+      setSelectedWeek(currentWeek);
+    }
+  }, [location.search, leagueYear, leagueId, selectedWeek, currentWeek]);
 
   const handleWeekChange = (newWeek) => {
-    setSelectedWeek(newWeek); // Update the selected week
+    // Ensure selectedWeek is never undefined
+    const validWeek = newWeek ?? currentWeek;
+    setSelectedWeek(validWeek);
     const queryParams = new URLSearchParams(location.search);
-    queryParams.set('week', newWeek); // Update the URL query parameter
+    queryParams.set('week', validWeek); // Update the URL query parameter with a valid week
     window.history.replaceState(null, '', `${location.pathname}?${queryParams.toString()}`);
   };
+
+  // Fetch the number of playoff teams and update the simulation count if the league is complete
+  useEffect(() => {
+    const fetchLeagueSettings = async () => {
+      try {
+        const response = await fetch(`/api/league-settings/${leagueYear}/${leagueId}/`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch league settings (status ${response.status})`);
+        }
+        const data = await response.json();
+        console.log("Is season complete?", data.regular_season_complete);
+        setLeagueSettings(data);
+        console.log(leagueSettings?.regular_season_complete ? 1 : 100)
+      } catch (error) {
+        console.error("Error fetching league settings:", error);
+      }
+    };
+
+    fetchLeagueSettings();
+  }, [leagueYear, leagueId]);
 
   if (!leagueData || currentWeek === null) {
     return <div>Loading...</div>;
   }
+
   console.log("Selected week:", selectedWeek);
   console.log("Current week:", currentWeek);
 
   return (
-    <div>
-      <h1>{leagueData.league_name}</h1>
-      <p>Year: {leagueData.league_year}</p>
-      <p>League ID: {leagueData.league_id}</p>
+      <div>
+          <div className="league-content">
+              <h1>{leagueData.league_name}</h1>
+              <p>Year: {leagueData.league_year}</p>
+              <p>League ID: {leagueData.league_id}</p>
 
-      <WeekSelector
-        currentWeek={currentWeek} // Always use currentWeek for WeekSelector
-        onWeekChange={handleWeekChange} // Pass the handler to WeekSelector
-      />
+              <WeekSelector
+                  currentWeek={currentWeek} // Always use currentWeek for WeekSelector
+                  minWeek={1}
+                  maxWeek={currentWeek}
+                  onWeekChange={handleWeekChange} // Pass the handler to WeekSelector
+              />
 
-      {/* Add a container for horizontal alignment */}
-      <div className="button-container">
-        <ReturnToHomePageButton />
-        <SimulatePlayoffOddsButton leagueYear={leagueYear} leagueId={leagueId} />
-        <LeagueRecordsButton leagueYear={leagueYear} leagueId={leagueId} /> {/* Use the new component */}
+              {/* Add a container for horizontal alignment */}
+              <div className="button-container">
+                  <ReturnToHomePageButton />
+                  <SimulatePlayoffOddsButton
+                      leagueYear={leagueYear}
+                      leagueId={leagueId}
+                      n_simulations={
+                          leagueSettings?.regular_season_complete ? 99 : 100
+                      } // Use less simulations if the season is over
+                  />
+                  <LeagueRecordsButton
+                      leagueYear={leagueYear}
+                      leagueId={leagueId}
+                  />
+              </div>
+
+              <BoxScoresTable
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+
+              <WeeklyAwardsTable
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+
+              <PowerRankingsTable
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+
+              <LuckIndexTable
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+
+              <NaughtyList
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+
+              <StandingsTable
+                  leagueYear={leagueYear}
+                  leagueId={leagueId}
+                  week={selectedWeek}
+              />
+          </div>
+          <Footer />
       </div>
-
-      <BoxScoresTable
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <WeeklyAwardsTable
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <PowerRankingsTable
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <LuckIndexTable
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <NaughtyList
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <StandingsTable
-        leagueYear={leagueYear}
-        leagueId={leagueId}
-        week={selectedWeek}
-      />
-
-      <Footer />
-    </div>
   );
 };
 
 export default LeaguePage;
+

@@ -6,7 +6,6 @@ Created on Wed Sep  8 20:38:57 2021
 """
 
 from django.urls import path, re_path
-from django.views.generic import TemplateView
 
 from . import views
 
@@ -77,73 +76,10 @@ urlpatterns = [
         views.league_settings,
         name="league-settings",
     ),
+    path("api/test-error-email/", views.test_error_email, name="test_error_email"),
     # Add this last, after all other routes
     path("api/get-csrf-token/", views.get_csrf_token, name="get_csrf_token"),
     # Catch-all: serve React index.html for any path
     re_path("", views.ReactAppView.as_view(), name="react-app"),
     re_path(r"^(?:.*)/?$", views.ReactAppView.as_view(), name="react-app"),
 ]
-# urlpatterns = [
-#     # ex: /fantasy_stats/
-#     path("", views.index, name="index"),
-#     # ex: fantasy_stats/league_input
-#     path("league_input/", views.league_input, name="league_input"),
-#     # ex: /fantasy_stats/league/1086064
-#     path(
-#         "league/<int:league_year>/<int:league_id>/",
-#         views.league,
-#         {"week": None},
-#         name="league",
-#     ),
-#     path(
-#         "league/<int:league_year>/<int:league_id>/week=<int:week>/",
-#         views.league,
-#         name="league",
-#     ),
-#     path(
-#         "copy_old_league/<int:league_id>",
-#         views.copy_old_league,
-#         name="copy_old_league",
-#     ),
-#     # path('league/<int:league_year>/<int:league_id>/', views.league, {'week':None}, name='league'),
-#     # ex: fantasy_stats/all_leagues
-#     path("all_leagues/", views.all_leagues, name="all_leagues"),
-#     path(
-#         "simulation/<int:league_year>/<int:league_id>/",
-#         views.simulation,
-#         {"n_simulations": None},
-#         name="simulation",
-#     ),
-#     path(
-#         "simulation/<int:league_year>/<int:league_id>/n_simulations=<int:n_simulations>",
-#         views.simulation,
-#         name="simulation",
-#     ),
-#     path(
-#         "season_stats/<int:league_year>/<int:league_id>/",
-#         views.season_stats,
-#         name="season_stats",
-#     ),
-#     #
-#     #
-#     #
-#     # URLS THAT DO NOT WORK YET ARE IN THE TESTING PHASE
-#     path("index_gpt/", views.index_gpt, name="index_gpt"),
-#     path("test/", views.test, name="test"),
-#     path("test-react/", views.test, name="test-react"),
-#     path(
-#         "simulation/<int:league_year>/<int:league_id>/week=<int:week>/",
-#         views.simulation,
-#         name="simulation",
-#     ),
-#     # Backend URLs for React
-#     path("api/leagues/", views.leagues_data, name="leagues_data"),
-#     path("api/league/<int:year>/<int:league_id>/", views.get_league_details),
-#     # path("error404/", views.error404, name="error404"),
-#     # # ex: /fantasy_stats/5/
-#     # path('<int:question_id>/', views.detail, name='detail'),
-#     # # ex: /fantasy_stats/5/results
-#     # path('<int:question_id>/results', views.results, name='results'),
-#     # # ex: /fantasy_stats/5/vote
-#     # path('<int:question_id>/vote/', views.vote, name='vote')
-# ]

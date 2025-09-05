@@ -6,7 +6,7 @@ import './styles/tableStyles.css';
 const PlayoffOddsTable = ({ data, playoffTeams, selectedWeek }) => {
     return (
         <div className="wrapper-wide">
-            <h2>Playoff Odds (as of Week {selectedWeek})</h2>
+            <h2>Playoff Odds (prior to Week {selectedWeek} matchups)</h2>
             <table className="table-with-bottom-caption">
                 <thead>
                     <tr>

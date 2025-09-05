@@ -5,6 +5,8 @@
 .vscode*
 dist/*
 node_modules/*
+staticfiles/*
+static/*
 
 # Notebooks
 *.ipynb_checkpoints*
@@ -19,3 +21,5 @@ draft_history.csv
 *historical_stats.csv
 historical_stats_all_teams.csv
 league_info_backup.csv
+*copy.csv
+tmp.csv

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from './Button.module.css';
 
-const SimulatePlayoffOddsButton = ({ leagueYear, leagueId, n_simulations = 250 }) => {
+const SimulatePlayoffOddsButton = ({ leagueYear, leagueId, n_simulations = 100 }) => {
   return (
     <div>
       <Link

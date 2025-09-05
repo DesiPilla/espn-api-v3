@@ -4,14 +4,12 @@ import logging
 from django.core.cache import cache
 
 import pytz
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.db.models import OuterRef, Subquery
-from django.shortcuts import render, redirect, get_object_or_404
-from django.template import RequestContext
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import View
-from rest_framework.decorators import api_view
 
 from espn_api.football import League
 from espn_api.requests.espn_requests import (
@@ -20,8 +18,10 @@ from espn_api.requests.espn_requests import (
     ESPNUnknownError,
 )
 
+
 from .models import LeagueInfo
-from backend.fantasy_stats.email_notifications.email import send_new_league_added_alert
+from .errors.email import send_new_league_added_alert
+from .errors.error_codes import JsonErrorCodes
 from backend.src.doritostats.analytic_utils import (
     get_naughty_players,
     get_lineup,
@@ -45,8 +45,8 @@ logger = logging.getLogger(__name__)
 
 
 MIN_WEEK_TO_DISPLAY = 4  # Only run simulations after Week 4 has completed
-N_SIMULATIONS = 500  # Default number of simulations to run
-MAX_SIMULATIONS = 500  # Maximum number of simulations to run
+N_SIMULATIONS = 100  # Default number of simulations to run
+MAX_SIMULATIONS = 250  # Maximum number of simulations to run
 CACHE_DURATION = 10 * 60
 
 
@@ -64,6 +64,11 @@ def get_default_week(league_obj: League):
         return current_matchup_period
 
 
+class ReactAppView(View):
+    def get(self, request):
+        return render(request, "index.html")  # served from frontend/build
+
+
 @ensure_csrf_cookie
 def get_csrf_token(request):
     return JsonResponse({"detail": "CSRF cookie set"})
@@ -78,9 +83,7 @@ def league_input(request):
     swid = data.get("swid", None)
     espn_s2 = data.get("espn_s2", None)
 
-    logger.info(
-        "Checking for League {} ({}) in database...".format(league_id, league_year)
-    )
+    print("Checking for League {} ({}) in database...".format(league_id, league_year))
     league_info_objs = LeagueInfo.objects.filter(
         league_id=league_id, league_year=league_year
     )
@@ -88,14 +91,14 @@ def league_input(request):
         if league_info_objs:
             league_info = league_info_objs[0]
             league_obj = fetch_league(league_id, league_year, swid, espn_s2)
-            logger.info(
+            print(
                 "League {} ({}) already exists in the database.".format(
                     league_id, league_year
                 )
             )
 
         else:
-            logger.info(
+            print(
                 "League {} ({}) NOT FOUND! Fetching league from ESPN...".format(
                     league_id, league_year
                 )
@@ -109,7 +112,7 @@ def league_input(request):
                 league_name=league_obj.name,
             )
             league_info.save()
-            logger.info(
+            print(
                 "League {} ({}) fetched and saved to the databse.".format(
                     league_id, league_year
                 )
@@ -119,55 +122,72 @@ def league_input(request):
             send_new_league_added_alert(league_info)
 
     except ESPNInvalidLeague as e:
-        logger.info(
+        print(
             "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
                 league_id, league_year, e
             )
         )
         return JsonResponse(
             {
-                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID."
+                "status": "error",
+                "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID and year.",
             },
             status=400,
         )
     except ESPNAccessDenied as e:
-        logger.info(
+        print(
             "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
                 league_id, league_year, e
             )
         )
         return JsonResponse(
-            {"error": f"SWID or espn_s2 is incorrect. Please try again."},
+            {
+                "status": "error",
+                "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+                "error": f"SWID or espn_s2 is incorrect. Please try again.",
+            },
             status=400,
         )
     except InactiveLeagueError as e:
-        logger.info(
+        print(
             "League {} ({}) IS NOT ACTIVE YET! ESPN returned an error: {}".format(
                 league_id, league_year, e
             )
         )
         return JsonResponse(
             {
-                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID."
+                "status": "error",
+                "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID.",
             },
             status=400,
         )
     except ESPNUnknownError as e:
-        logger.info(
+        print(
             "League {} ({}) NOT FOUND! ESPN returned an error: {}".format(
                 league_id, league_year, e
             )
         )
         return JsonResponse(
             {
-                "error": f"An unknown error has occurred. Please check that you have entered the correct league ID, SWID, and espn_s2. "
+                "status": "error",
+                "code": JsonErrorCodes.UNKNOWN_ERROR.value,
+                "error": f"An unknown error has occurred. Please check that you have entered the correct league ID, SWID, and espn_s2. ",
             },
             status=400,
         )
 
     if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
         # If the league hasn't started yet, display the "too soon" page
-        return redirect(f"/too-early/league_homepage")
+        return JsonResponse(
+            {
+                "status": "error",
+                "code": JsonErrorCodes.TOO_SOON.value,
+                "message": "League season hasn't started yet. Please try again later.",
+            },
+            status=409,
+        )
 
     else:
         return JsonResponse(
@@ -178,68 +198,7 @@ def league_input(request):
         )
 
 
-def season_stats(
-    request,
-    league_id: int,
-    league_year: int,
-):
-    # Fetch the league
-    league_info = LeagueInfo.objects.get(league_id=league_id, league_year=league_year)
-    league_obj = fetch_league(
-        league_info.league_id,
-        league_info.league_year,
-        league_info.swid,
-        league_info.espn_s2,
-    )
-
-    (
-        best_team_stats_list,
-        worst_team_stats_list,
-        best_position_stats_list,
-        worst_position_stats_list,
-    ) = django_season_stats(league=league_obj)
-
-    context = {
-        "league_info": league_info,
-        "scores_are_finalized": league_obj.is_season_complete,
-        "best_team_stats": best_team_stats_list,
-        "worst_team_stats": worst_team_stats_list,
-        "best_position_stats": best_position_stats_list,
-        "worst_position_stats": worst_position_stats_list,
-    }
-    return HttpResponse(render(request, "fantasy_stats/season_stats.html", context))
-
-
-#############################################################
-## VIEWS THAT DO NOT WORK YET AND ARE IN THE TESTING PHASE ##
-#############################################################
-
-
-def test(request):
-    return render(request, "fantasy_stats/test.html")
-
-
-@api_view(["GET"])
-def test_react(request):
-    return render(request, "fantasy_stats/test-react.html")
-
-
-def index_gpt(request):
-    return render(request, "fantasy_stats/index_gpt.html")
-
-
-def handler404(request, *args, **argv):
-    response = render("errors/404.html", {}, context_instance=RequestContext(request))
-    response.status_code = 404
-    return response
-
-
-class ReactAppView(View):
-    def get(self, request):
-        return render(request, "index.html")  # served from frontend/build
-
-
-def leagues_data(request):
+def leagues_data(request) -> JsonResponse:
     league_info_current_year = get_leagues_current_year()
     league_info_previous_year = get_leagues_previous_year()
 
@@ -362,9 +321,11 @@ def copy_old_league(request, league_id: int):
 
     except LeagueInfo.DoesNotExist:
         try:
-            league_obj = fetch_league(league_id, current_year, swid, espn_s2)
+            league_obj = fetch_league(
+                league_id=league_id, year=current_year, swid=swid, espn_s2=espn_s2
+            )
         except InactiveLeagueError as e:
-            logger.info(
+            print(
                 "League {} ({}) IS NOT ACTIVE YET! ESPN returned an error: {}".format(
                     league_id, current_year, e
                 )
@@ -398,10 +359,11 @@ def copy_old_league(request, league_id: int):
     if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
         return JsonResponse(
             {
-                "error": "League season hasn't started yet. Please try again later.",
-                "type": "too_soon",
+                "status": "error",
+                "code": JsonErrorCodes.TOO_SOON.value,
+                "message": "League season hasn't started yet. Please try again later.",
             },
-            status=400,
+            status=409,
         )
 
     return JsonResponse(
@@ -618,12 +580,21 @@ def check_league_status(request, league_year: int, league_id: int) -> JsonRespon
     league = get_cached_league(league_id=league_id, league_year=league_year)
     if league.current_week <= 1:
         return JsonResponse(
-            {"status": "too_soon", "message": "League has not started yet."}, status=400
+            {
+                "status": "error",
+                "code": JsonErrorCodes.TOO_SOON.value,
+                "message": "League has not started yet.",
+            },
+            status=409,
         )
     if not league.draft:
         return JsonResponse(
-            {"status": "too_soon", "message": "League draft has not occurred."},
-            status=400,
+            {
+                "status": "error",
+                "code": JsonErrorCodes.TOO_SOON.value,
+                "message": "League draft has not occurred.",
+            },
+            status=409,
         )
     return JsonResponse({"status": "ok", "message": "League is ready."})
 
@@ -638,19 +609,20 @@ def league_settings(
     Fetches the various settings for the league
     """
     league = get_cached_league(league_id=league_id, league_year=league_year)
-
-    return JsonResponse(
-        {
-            "n_playoff_spots": league.settings.playoff_team_count,
-            "n_teams": league.settings.team_count,
-            "n_regular_season_weeks": league.settings.reg_season_count,
-            "regular_season_complete": league.current_week
-            > league.settings.reg_season_count,
-            "playoffs_complete": league.current_week
-            >= len(league.settings.matchup_periods),
-            "season_complete": league.is_season_complete,
-        }
+    result = {
+        "n_playoff_spots": league.settings.playoff_team_count,
+        "n_teams": league.settings.team_count,
+        "n_regular_season_weeks": league.settings.reg_season_count,
+        "regular_season_complete": league.current_week
+        > league.settings.reg_season_count,
+        "playoffs_complete": league.current_week
+        >= len(league.settings.matchup_periods),
+    }
+    result["season_complete"] = (
+        result["regular_season_complete"] and result["playoffs_complete"]
     )
+
+    return JsonResponse(result)
 
 
 @require_GET
@@ -682,10 +654,11 @@ def simulate_playoff_odds_view(
     if week < MIN_WEEK_TO_DISPLAY:
         return JsonResponse(
             {
-                "error": f"Playoff simulations are not available until after Week {MIN_WEEK_TO_DISPLAY}. Please try again later.",
-                "type": "too_soon",
+                "status": "error",
+                "code": JsonErrorCodes.TOO_SOON.value,
+                "message": f"Playoff simulations are not available until after Week {MIN_WEEK_TO_DISPLAY}. Please try again later.",
             },
-            status=400,
+            status=409,
         )
 
     # Generate a cache key based on league_id, league_year, week, and n_simulations
@@ -790,3 +763,27 @@ def season_records(
     cache.set(cache_key, result, timeout=CACHE_DURATION)
 
     return JsonResponse(result, safe=True)
+
+
+#############################################################
+## VIEWS THAT DO NOT WORK YET AND ARE IN THE TESTING PHASE ##
+#############################################################
+
+
+# def handler404(request, *args, **argv):
+#     response = render("errors/404.html", {}, context_instance=RequestContext(request))
+#     response.status_code = 404
+#     return response
+
+
+@csrf_exempt
+def test_error_email(request):
+    # raise Exception("Error message")
+    return JsonResponse(
+        {
+            "status": "error",
+            "code": JsonErrorCodes.UNKNOWN_ERROR.value,
+            "message": f"unknown error",
+        },
+        status=400,
+    )

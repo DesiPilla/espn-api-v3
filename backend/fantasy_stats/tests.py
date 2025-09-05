@@ -5,4 +5,4 @@ from django.test import TestCase
 import django
 
 logger = logging.getLogger(__name__)
-logger.info(django.get_version())
+print(django.get_version())

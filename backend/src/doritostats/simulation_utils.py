@@ -540,11 +540,11 @@ def simulate_season(
         matchups_to_exclude = {}
 
     if first_week_to_simulate is not None:
-        logger.info(
+        print(
             f"""Simulating from week {first_week_to_simulate} to {league.settings.reg_season_count}"""
         )
     else:
-        logger.info(
+        print(
             f"""Simulating from week {standings[["wins", "ties", "losses"]].sum(axis=1).iloc[0] + 1} to {league.settings.reg_season_count}"""
         )
 

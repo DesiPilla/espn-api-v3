@@ -1,0 +1,8 @@
+{
+    "build": {
+        "buildCommand": "./build.sh"
+    },
+    "deploy": {
+        "startCommand": "PYTHONPATH=backend gunicorn doritostats.wsgi:application --bind 0.0.0.0:$PORT"
+    }
+}

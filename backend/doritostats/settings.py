@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 import os
 from pathlib import Path
+from distutils.util import strtobool
 
 import dj_database_url
 
@@ -29,8 +30,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
+# List of admin emails to notify
+ADMINS = [
+    ("Desi Pilla", os.getenv("EMAIL_USER")),
+]
+
+# Email backend configuration (example with SMTP)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD")
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(strtobool(os.getenv("DJANGO_DEBUG", "True")))
 
 ALLOWED_HOSTS = ["*"]
 CORS_ALLOW_CREDENTIALS = True
@@ -38,10 +52,15 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React dev server
     "http://127.0.0.1:3000",  # Localhost with IP
+    "http://localhost:8001",  # Django server
+    "http://127.0.0.1:8001",  # Django server
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://doritostats.up.railway.app",
+    "https://doritostats-dev.up.railway.app",
     "http://localhost:3000",
+    "http://127.0.0.1:8001",  # Django server
+    "http://localhost:8001",  # Django server
 ]
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_HTTPONLY = False  # Set to False so the cookie can be read by JavaScript
@@ -119,6 +138,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "backend.fantasy_stats.errors.error_middleware.ErrorStatusEmailMiddleware",
 ]
 
 ROOT_URLCONF = "backend.doritostats.urls"
@@ -202,16 +222,7 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [
     BASE_DIR / "frontend" / "build" / "static",  # React static assets
 ]
-
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")  # for collectstatic
-
-# Following settings only make sense on production and may break development environments.
-if not DEBUG:  # Tell Django to copy statics to the `staticfiles` directory
-    # in your application directory on Render.
-    STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
-    # Turn on WhiteNoise storage backend that takes care of compressing static files
-    # and creating unique names for each version so they can safely be cached forever.
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATIC_ROOT = BASE_DIR / "static"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

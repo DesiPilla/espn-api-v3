@@ -1,5 +1,4 @@
 import datetime
-import functools
 import logging
 import os
 import re
@@ -9,14 +8,12 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-import datetime
-from typing import Optional
-from espn_api.football import League
-from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
 import sqlalchemy
 from dotenv import load_dotenv
+from espn_api.football import League
+from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
+from espn_api.requests.espn_requests import ESPNInvalidLeague
 
-from backend.src.doritostats.exceptions import InactiveLeagueError
 
 warnings.filterwarnings("ignore")
 
@@ -89,7 +86,7 @@ def set_league_endpoint(league: League) -> None:
         league.endpoint = f"{FANTASY_BASE_ENDPOINT}ffl/leagueHistory/{league.league_id}?seasonId={league.year}&"
     print(f"LOGGER NAME: {logger.name}")
 
-    logger.info("[BUILDING LEAGUE] League endpoint set to: {}".format(league.endpoint))
+    print("[BUILDING LEAGUE] League endpoint set to: {}".format(league.endpoint))
 
 
 def verify_league_is_active(league: League) -> None:
@@ -100,33 +97,21 @@ def verify_league_is_active(league: League) -> None:
     """
     # Check if the league is active
     r = requests.get(league.endpoint, cookies=league.cookies).json()
+
     if type(r) == list:
         r = r[0]
+
+    # Check if r has a key called "messages" and if that value is "Not Found"
+    if (r.get("messages") is not None) and r["messages"] == "Not Found":
+        raise ESPNInvalidLeague(
+            "League {} was not found. Please check that the credentials are valid.".format(
+                league.league_id
+            )
+        )
 
     # Check if the league is active
     if not r["status"]["isActive"]:
         raise Exception(
-            "League {} is not active. The league must be activated on ESPN to use.".format(
-                league.league_id
-            )
-        )
-    logger.info("[BUILDING LEAGUE] League is active.")
-
-
-def verify_league_is_active(league: League) -> None:
-    """Verify that the league is active and not in the offseason.
-
-    Args:
-        league (League): ESPN League object
-    """
-    # Check if the league is active
-    r = requests.get(league.endpoint, cookies=league.cookies).json()
-    if type(r) == list:
-        r = r[0]
-
-    # Check if the league is active
-    if not r["status"]["isActive"]:
-        raise InactiveLeagueError(
             "League {} is not active. The league must be activated on ESPN to use.".format(
                 league.league_id
             )
@@ -141,7 +126,7 @@ def get_roster_settings(league: League) -> None:
     - Creates a dictionary starting_roster_slots{} that is a subset of roster_slots{} and only includes slotIds that are on the starting roster
     - Add roster_slots{} and starting_roster_slots{} to the League attribute League.rosterSettings
     """
-    logger.info("[BUILDING LEAGUE] Gathering roster settings information...")
+    print("[BUILDING LEAGUE] Gathering roster settings information...")
 
     # This dictionary maps each slotId to the position it represents
     rosterMap = {
@@ -254,7 +239,7 @@ def fetch_league(
         - Set the roster for the current week
     """
 
-    logger.info("[BUILDING LEAGUE] Fetching league data...")
+    print("[BUILDING LEAGUE] Fetching league data...")
     league = League(league_id=league_id, year=year, swid=swid, espn_s2=espn_s2)
 
     # Set cookies
@@ -277,7 +262,7 @@ def fetch_league(
     # league.box_scores = functools.cache(league.box_scores)
 
     # Load current league data
-    logger.info("[BUILDING LEAGUE] Loading current league details...")
+    print("[BUILDING LEAGUE] Loading current league details...")
     league.current_week = max(league.current_week, 1)
     current_matchup_period = league.settings.week_to_matchup_period[league.current_week]
     league.load_roster_week(current_matchup_period)

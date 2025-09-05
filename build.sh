@@ -1,30 +1,27 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -e  # Exit on any error
 
-# Exit on error
-set -o errexit  
+echo "=== Installing Poetry 1.8.5 ==="
+# Install Poetry version 1.8.5
+export POETRY_VERSION=1.8.5
+curl -sSL https://install.python-poetry.org | python3 -
+export PATH="$HOME/.local/bin:$PATH"
 
-# Upgrade pip and install Poetry
-python -m pip install --upgrade pip
-pip install poetry
+echo "=== Setting up Python environment with Poetry ==="
+# Install Python dependencies without installing the project itself
+poetry install --no-root
 
-# Export dependencies to requirements.txt for Railway
-poetry export -f requirements.txt --without-hashes -o requirements.txt
+echo "=== Installing Node.js ==="
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt-get install -y nodejs
 
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Build React frontend
-echo "Building React frontend..."
+echo "=== Building React frontend ==="
 cd frontend
 npm install
 npm run build
 cd ..
 
-# Copy React build files to Django static folder
-cp -r frontend/build/* backend/static/
+echo "=== Collecting Django static files ==="
+poetry run python manage.py collectstatic --noinput
 
-# Run Django collectstatic
-python manage.py collectstatic --noinput
-
-# Run migrations
-python manage.py migrate
+echo "=== Build complete ==="
