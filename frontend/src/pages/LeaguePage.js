@@ -23,6 +23,7 @@ const LeaguePage = () => {
     const [currentWeek, setCurrentWeek] = useState(null);
     const [leagueSettings, setLeagueSettings] = useState(null);
     const [fetchError, setFetchError] = useState(null);
+    const [loading, setLoading] = useState(false); // Add loading state
     const navigate = useNavigate();
 
     if (fetchError) {
@@ -145,14 +146,31 @@ const LeaguePage = () => {
         // Ensure selectedWeek is never undefined
         const validWeek = newWeek ?? currentWeek;
         setSelectedWeek(validWeek);
+        setLoading(true); // Set loading to true when week changes
         const queryParams = new URLSearchParams(location.search);
-        queryParams.set("week", validWeek); // Update the URL query parameter with a valid week
+        queryParams.set("week", validWeek);
         window.history.replaceState(
             null,
             "",
             `${location.pathname}?${queryParams.toString()}`
         );
     };
+
+    useEffect(() => {
+        if (selectedWeek !== null) {
+            // Simulate data fetching for the new week
+            setLoading(true);
+            const fetchData = async () => {
+                try {
+                    // Simulate a delay for fetching data
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                } finally {
+                    setLoading(false); // Set loading to false after data is fetched
+                }
+            };
+            fetchData();
+        }
+    }, [selectedWeek]);
 
     // Fetch the number of playoff teams and update the simulation count if the league is complete
     useEffect(() => {
@@ -200,7 +218,8 @@ const LeaguePage = () => {
                 <p>League ID: {leagueData.league_id}</p>
 
                 <WeekSelector
-                    currentWeek={currentWeek - 1} // Always use currentWeek for WeekSelector
+                    currentWeek={currentWeek} // Always use currentWeek for WeekSelector
+                    selectedWeek={selectedWeek}
                     minWeek={1}
                     maxWeek={currentWeek}
                     onWeekChange={handleWeekChange}
@@ -226,36 +245,42 @@ const LeaguePage = () => {
                     leagueYear={leagueYear}
                     leagueId={leagueId}
                     week={selectedWeek}
+                    loading={loading} // Pass loading state
                 />
 
                 <WeeklyAwardsTable
                     leagueYear={leagueYear}
                     leagueId={leagueId}
                     week={selectedWeek}
+                    loading={loading} // Pass loading state
                 />
 
                 <PowerRankingsTable
                     leagueYear={leagueYear}
                     leagueId={leagueId}
                     week={selectedWeek}
+                    loading={loading} // Pass loading state
                 />
 
                 <LuckIndexTable
                     leagueYear={leagueYear}
                     leagueId={leagueId}
                     week={selectedWeek}
+                    loading={loading} // Pass loading state
                 />
 
                 <NaughtyList
                     leagueYear={leagueYear}
                     leagueId={leagueId}
                     week={selectedWeek}
+                    loading={loading} // Pass loading state
                 />
 
                 <StandingsTable
                     leagueYear={leagueYear}
                     leagueId={leagueId}
                     week={selectedWeek}
+                    loading={loading} // Pass loading state
                 />
             </div>
             <Footer />

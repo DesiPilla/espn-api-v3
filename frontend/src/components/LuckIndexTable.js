@@ -4,10 +4,15 @@ import LoadingRow from "./LoadingRow";
 import { safeFetch } from "../utils/api";
 import "./styles/tableStyles.css";
 
-const LuckIndexTable = ({ leagueYear, leagueId, week }) => {
+const LuckIndexTable = ({
+    leagueYear,
+    leagueId,
+    week,
+    loading: globalLoading,
+}) => {
     const [luckIndex, setLuckIndex] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState(null);
+    const [loading, setLoading] = useState(false); // Internal loading state
     const navigate = useNavigate();
 
     if (fetchError) {
@@ -16,6 +21,7 @@ const LuckIndexTable = ({ leagueYear, leagueId, week }) => {
 
     useEffect(() => {
         const fetchLuckIndex = () => {
+            setLoading(true); // Set internal loading to true
             safeFetch(
                 `/api/luck-index/${leagueYear}/${leagueId}/${week}/`,
                 {},
@@ -40,7 +46,7 @@ const LuckIndexTable = ({ leagueYear, leagueId, week }) => {
                     setFetchError(err);
                 })
                 .finally(() => {
-                    setLoading(false);
+                    setLoading(false); // Set internal loading to false
                 });
         };
 
@@ -71,7 +77,7 @@ const LuckIndexTable = ({ leagueYear, leagueId, week }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {loading ? (
+                    {globalLoading || loading ? ( // Show spinner if global or internal loading is true
                         <LoadingRow
                             text="Calculating Luck Index..."
                             colSpan="3"
