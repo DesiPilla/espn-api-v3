@@ -36,7 +36,7 @@ def flush_errors():
 
 
 class ErrorStatusEmailMiddleware(MiddlewareMixin):
-    ERROR_STATUSES = [400, 401, 403, 404, 500]
+    ERROR_STATUSES = [400, 401, 403, 404, 409, 500]
 
     def process_exception(self, request, exception):
         """

@@ -17,15 +17,16 @@ const UhOhTooEarlyPage = () => {
           begun. Please check back later for the information you're looking for.
         </p>
       );
-    } else if (page === 'playoff-simulations') {
-      return (
-        <p>
-          We're sorry, but playoff simulations are not accessible until Week 4 has
-          completed. Please check back later for the information you're looking for.
-        </p>
-      );
+    } else if (page === "playoff-simulations") {
+        return (
+            <p>
+                We're sorry, but playoff simulations are not accessible until
+                Week 4 has completed. Please check back later for the
+                information you're looking for.
+            </p>
+        );
     } else {
-      return <p>This page is not available yet. Please check back later.</p>;
+        return <p>This page is not available yet. Please check back later.</p>;
     }
   };
 

@@ -18,7 +18,6 @@ from espn_api.requests.espn_requests import (
     ESPNUnknownError,
 )
 
-
 from .models import LeagueInfo
 from .errors.email import send_new_league_added_alert
 from .errors.error_codes import InvalidLeagueError, JsonErrorCodes
@@ -62,6 +61,37 @@ def get_default_week(league_obj: League):
         return current_matchup_period - 1
     else:
         return current_matchup_period
+
+
+TEST_ERROR = JsonResponse(
+    {
+        "status": "error",
+        "code": JsonErrorCodes.UNKNOWN_ERROR.value,
+        "message": "This is a test error.",
+    },
+    status=400,
+)
+
+TEST_TOO_SOON = JsonResponse(
+    {
+        "status": "error",
+        "code": JsonErrorCodes.TOO_SOON_LEAGUE.value,
+        "message": "This is a test error.",
+        "leagueYear": 2025,
+        "leagueId": 1086064,
+    },
+    status=409,
+)
+TEST_TOO_SOON_SIMULATIONS = JsonResponse(
+    {
+        "status": "error",
+        "code": JsonErrorCodes.TOO_SOON_SIMULATIONS.value,
+        "message": "This is a test error.",
+        "leagueYear": 2025,
+        "leagueId": 1086064,
+    },
+    status=409,
+)
 
 
 class ReactAppView(View):
@@ -183,8 +213,10 @@ def league_input(request):
         return JsonResponse(
             {
                 "status": "error",
-                "code": JsonErrorCodes.TOO_SOON.value,
+                "code": JsonErrorCodes.TOO_SOON_LEAGUE.value,
                 "message": "League season hasn't started yet. Please try again later.",
+                "leagueYear": league_year,
+                "leagueId": league_id,
             },
             status=409,
         )
@@ -354,17 +386,6 @@ def copy_old_league(request, league_id: int):
         send_new_league_added_alert(league_info)
     except Exception as e:
         return JsonResponse({"error": f"Failed to save league: {str(e)}"}, status=500)
-
-    # Handle early season case
-    if league_obj.currentMatchupPeriod <= league_obj.firstScoringPeriod:
-        return JsonResponse(
-            {
-                "status": "error",
-                "code": JsonErrorCodes.TOO_SOON.value,
-                "message": "League season hasn't started yet. Please try again later.",
-            },
-            status=409,
-        )
 
     return JsonResponse(
         {
@@ -585,8 +606,10 @@ def check_league_status(request, league_year: int, league_id: int) -> JsonRespon
         return JsonResponse(
             {
                 "status": "error",
-                "code": JsonErrorCodes.TOO_SOON.value,
+                "code": JsonErrorCodes.TOO_SOON_LEAGUE.value,
                 "message": "League has not started yet.",
+                "leagueYear": league_year,
+                "leagueId": league_id,
             },
             status=409,
         )
@@ -594,8 +617,10 @@ def check_league_status(request, league_year: int, league_id: int) -> JsonRespon
         return JsonResponse(
             {
                 "status": "error",
-                "code": JsonErrorCodes.TOO_SOON.value,
+                "code": JsonErrorCodes.TOO_SOON_LEAGUE.value,
                 "message": "League draft has not occurred.",
+                "leagueYear": league_year,
+                "leagueId": league_id,
             },
             status=409,
         )
@@ -658,8 +683,10 @@ def simulate_playoff_odds_view(
         return JsonResponse(
             {
                 "status": "error",
-                "code": JsonErrorCodes.TOO_SOON.value,
+                "code": JsonErrorCodes.TOO_SOON_SIMULATIONS.value,
                 "message": f"Playoff simulations are not available until after Week {MIN_WEEK_TO_DISPLAY}. Please try again later.",
+                "leagueYear": league_year,
+                "leagueId": league_id,
             },
             status=409,
         )
@@ -768,6 +795,44 @@ def season_records(
     return JsonResponse(result, safe=True)
 
 
+@csrf_exempt
+def test_error_email(request):
+    return JsonResponse(
+        {
+            "status": "error",
+            "code": JsonErrorCodes.UNKNOWN_ERROR.value,
+            "message": "This is a test error.",
+        },
+        status=400,
+    )
+
+
+@csrf_exempt
+def test_uh_oh_too_soon_error(request):
+    return JsonResponse(
+        {
+            "status": "error",
+            "code": JsonErrorCodes.TOO_SOON_LEAGUE.value,
+            "message": "League season hasn't started yet. Please try again later.",
+            "leagueId": 123,
+            "leagueYear": 1999,
+        },
+        status=409,
+    )
+
+
+@csrf_exempt
+def test_invalid_league_error(request):
+    return JsonResponse(
+        {
+            "status": "error",
+            "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+            "error": f"League ID 123 not found. Please check that you have entered the correct league ID and year.",
+        },
+        status=400,
+    )
+
+
 #############################################################
 ## VIEWS THAT DO NOT WORK YET AND ARE IN THE TESTING PHASE ##
 #############################################################
@@ -777,16 +842,3 @@ def season_records(
 #     response = render("errors/404.html", {}, context_instance=RequestContext(request))
 #     response.status_code = 404
 #     return response
-
-
-@csrf_exempt
-def test_error_email(request):
-    # raise Exception("Error message")
-    return JsonResponse(
-        {
-            "status": "error",
-            "code": JsonErrorCodes.UNKNOWN_ERROR.value,
-            "message": f"unknown error",
-        },
-        status=400,
-    )

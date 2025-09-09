@@ -41,7 +41,7 @@ const ReturningLeagueSelector = ({ dropdownClassName }) => {
       const data = await response.json();
 
       if (response.ok && data.redirect_url) {
-        navigate(data.redirect_url); // React router navigation
+        navigate(data.redirect_url);
       } else {
         setError(data.error || 'Failed to copy league.');
       }
