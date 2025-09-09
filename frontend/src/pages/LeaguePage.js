@@ -23,7 +23,7 @@ const LeaguePage = () => {
     const [currentWeek, setCurrentWeek] = useState(null);
     const [leagueSettings, setLeagueSettings] = useState(null);
     const [fetchError, setFetchError] = useState(null);
-    const navigate = useNavigate(); // Add navigation hook
+    const navigate = useNavigate();
 
     if (fetchError) {
         throw fetchError;
@@ -114,7 +114,7 @@ const LeaguePage = () => {
                     } else {
                         setCurrentWeek(data.current_week);
                         if (!weekFromUrl) {
-                            setSelectedWeek(data.current_week); // Only set selectedWeek if not already defined
+                            setSelectedWeek(data.current_week - 1); // Only set selectedWeek if not already defined
                         }
                         console.log("Current week:", currentWeek);
                         console.log("Selected week:", selectedWeek);
@@ -137,7 +137,7 @@ const LeaguePage = () => {
                 "selectedWeek is undefined, setting it to currentWeek:",
                 currentWeek
             );
-            setSelectedWeek(currentWeek);
+            setSelectedWeek(currentWeek - 1);
         }
     }, [location.search, leagueYear, leagueId, selectedWeek, currentWeek]);
 
@@ -196,7 +196,7 @@ const LeaguePage = () => {
                 <p>League ID: {leagueData.league_id}</p>
 
                 <WeekSelector
-                    currentWeek={currentWeek} // Always use currentWeek for WeekSelector
+                    currentWeek={currentWeek - 1} // Always use currentWeek for WeekSelector
                     minWeek={1}
                     maxWeek={currentWeek}
                     onWeekChange={handleWeekChange}

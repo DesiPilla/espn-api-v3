@@ -87,7 +87,11 @@ const PowerRankingsTable = ({ leagueYear, leagueId, week }) => {
                             >
                                 <td>{team.team}</td>
                                 <td>{team.owner}</td>
-                                <td>{team.value}</td>
+                                <td>
+                                    {typeof team.value === "number"
+                                        ? team.value.toFixed(2)
+                                        : team.value}
+                                </td>
                             </tr>
                         ))
                     )}

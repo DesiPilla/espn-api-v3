@@ -16,7 +16,12 @@ const NaughtyList = ({ leagueYear, leagueId, week }) => {
 
     useEffect(() => {
         const fetchNaughtyList = () => {
-            safeFetch(`/api/naughty-list/${leagueYear}/${leagueId}/${week}/`)
+            safeFetch(
+                `/api/naughty-list/${leagueYear}/${leagueId}/${week}/`,
+                {},
+                false,
+                2
+            )
                 .then((data) => {
                     if (data?.redirect) {
                         navigate(data.redirect);

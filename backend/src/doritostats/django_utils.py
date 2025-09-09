@@ -350,7 +350,7 @@ def django_power_rankings(league: League, week: int):
         power_rankings.append(
             {
                 "team": league_power_rankings[i][1].team_name,
-                "value": league_power_rankings[i][0],
+                "value": float(league_power_rankings[i][0]),
                 "owner": league_power_rankings[i][1].owner,
             }
         )

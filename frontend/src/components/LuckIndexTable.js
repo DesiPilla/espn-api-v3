@@ -16,7 +16,12 @@ const LuckIndexTable = ({ leagueYear, leagueId, week }) => {
 
     useEffect(() => {
         const fetchLuckIndex = () => {
-            safeFetch(`/api/luck-index/${leagueYear}/${leagueId}/${week}/`)
+            safeFetch(
+                `/api/luck-index/${leagueYear}/${leagueId}/${week}/`,
+                {},
+                false,
+                2
+            )
                 .then((data) => {
                     if (data?.redirect) {
                         navigate(data.redirect);
