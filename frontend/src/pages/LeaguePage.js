@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import WeekSelector from "../components/WeekSelector";
 import ReturnToHomePageButton from "../components/ReturnToHomePageButton";
@@ -180,9 +180,13 @@ const LeaguePage = () => {
 
         fetchLeagueSettings();
     }, [leagueYear, leagueId]);
-
     if (!leagueData || currentWeek === null) {
-        return <div>Loading...</div>;
+        return (
+            <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <span className="loading-text">Loading league data...</span>
+            </div>
+        );
     }
 
     console.log("Selected week:", selectedWeek);
@@ -260,4 +264,3 @@ const LeaguePage = () => {
 };
 
 export default LeaguePage;
-
