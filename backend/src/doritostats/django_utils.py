@@ -389,7 +389,12 @@ def django_standings(league: League, week: int):
         # ZeroDivisionError if no games have meen completed yet
         league_standings = league.standings()
     else:
-        league_standings = league.standings_weekly(week)
+        try:
+            league_standings = league.standings_weekly(week)
+        except (
+            ZeroDivisionError
+        ):  # Known error in espn-api<=0.45.1 for leagues with byes in Week 1
+            league_standings = league.standings()
 
     # Add the power rankings for each team
     standings = []
