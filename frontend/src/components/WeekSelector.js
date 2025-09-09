@@ -6,7 +6,7 @@ import './WeekSelector.css';
 const WeekSelector = ({ onWeekChange, minWeek, maxWeek, disable = false }) => {
   const navigate = useNavigate();
 
-  const selectedWeek = maxWeek;
+  const selectedWeek = maxWeek - 1;
 
   const handleChange = (event) => {
     const newWeek = event.target.value;
