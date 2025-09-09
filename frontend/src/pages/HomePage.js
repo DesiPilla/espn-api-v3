@@ -1,13 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "./Header";
-import Footer from "./Footer";
-import LeagueSelector from "./LeagueSelector";
-import NewLeagueForm from "./NewLeagueForm";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import LeagueSelector from "../components/LeagueSelector";
+import NewLeagueForm from "../components/NewLeagueForm";
 import ReturningLeagueSelector from "../components/ReturningLeagueSelector";
-import "./styles/league.css";
+import { safeFetch, handleApiCall } from "../utils/api";
+import "../components/styles/league.css";
 
 const HomePage = () => {
+    const [leaguesCurrent, setLeaguesCurrent] = useState([]);
+    const [leaguesPrevious, setLeaguesPrevious] = useState([]);
+    const [season, setSeason] = useState("current");
+    const [fetchError, setFetchError] = useState(null);
+    const navigate = useNavigate();
+
+    if (fetchError) {
+        throw fetchError;
+    }
+
     useEffect(() => {
         fetch(`${process.env.REACT_APP_API_BASE_URL}/api/get-csrf-token/`, {
             credentials: "include",
@@ -23,20 +34,16 @@ const HomePage = () => {
             });
     }, []);
 
-    const [leaguesCurrent, setLeaguesCurrent] = useState([]);
-    const [leaguesPrevious, setLeaguesPrevious] = useState([]);
-    const [season, setSeason] = useState("current");
-
-    const navigate = useNavigate(); // Create navigate function
-
     useEffect(() => {
-        fetch("/api/leagues/")
-            .then((res) => res.json())
+        safeFetch("/api/leagues/")
             .then((data) => {
                 setLeaguesCurrent(data.leagues_current_year);
                 setLeaguesPrevious(data.leagues_previous_year);
             })
-            .catch((error) => console.error("Error fetching leagues:", error));
+            .catch((error) => {
+                console.error("Error fetching leagues:", error);
+                setFetchError(error);
+            });
     }, []);
 
     const handleLeagueSelect = (event) => {
@@ -47,7 +54,7 @@ const HomePage = () => {
         }
     };
 
-    const dropdownClassName = "league-dropdown"; // Common dropdown class
+    const dropdownClassName = "league-dropdown";
 
     return (
         <div>

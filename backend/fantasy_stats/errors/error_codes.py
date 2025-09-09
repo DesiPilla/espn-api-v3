@@ -2,7 +2,8 @@ from enum import Enum
 
 
 class JsonErrorCodes(Enum):
-    TOO_SOON = "too_soon"
+    TOO_SOON_LEAGUE = "too_soon_league"
+    TOO_SOON_SIMULATIONS = "too_soon_simulations"
     LEAGUE_SIGNUP_FAILURE = "invalid_league"
     UNKNOWN_ERROR = "unknown_error"
 

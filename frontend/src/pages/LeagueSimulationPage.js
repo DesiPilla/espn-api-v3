@@ -1,25 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
-import WeekSelector from '../components/WeekSelector';
-import ReturnToHomePageButton from '../components/ReturnToHomePageButton';
-import Footer from '../components/Footer';
-import SimulationSelector from '../components/SimulationSelector';
-import PlayoffOddsTable from '../components/PlayoffOddsTable';
-import RankDistributionTable from '../components/RankDistributionTable';
-import SeedingOutcomesTable from '../components/SeedingOutcomesTable';
-import RemainingStrengthOfScheduleTable from '../components/RemainingStrengthOfScheduleTable';
-import '../components/styles/league.css';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import WeekSelector from "../components/WeekSelector";
+import ReturnToHomePageButton from "../components/ReturnToHomePageButton";
+import Footer from "../components/Footer";
+import SimulationSelector from "../components/SimulationSelector";
+import PlayoffOddsTable from "../components/PlayoffOddsTable";
+import RankDistributionTable from "../components/RankDistributionTable";
+import SeedingOutcomesTable from "../components/SeedingOutcomesTable";
+import RemainingStrengthOfScheduleTable from "../components/RemainingStrengthOfScheduleTable";
 import ReturnToLeaguePageButton from "../components/ReturnToLeaguePageButton";
 import LeagueRecordsButton from "../components/LeagueRecordsButton";
+import { safeFetch } from "../utils/api";
+import "../components/styles/league.css";
 
 const LeagueSimulationPage = () => {
     const { leagueYear, leagueId } = useParams();
     const location = useLocation();
-    const navigate = useNavigate();
     const [simulationData, setSimulationData] = useState(null);
     const [selectedWeek, setSelectedWeek] = useState(null);
     const [currentWeek, setCurrentWeek] = useState(null);
     const [leagueSettings, setLeagueSettings] = useState(null);
+    const [fetchError, setFetchError] = useState(null);
+    const navigate = useNavigate();
+
+    if (fetchError) {
+        throw fetchError;
+    }
 
     const queryParams = new URLSearchParams(location.search);
     const [nSimulations, setNSimulations] = useState(
@@ -28,60 +34,78 @@ const LeagueSimulationPage = () => {
 
     // Preload the league data for faster loading later on
     useEffect(() => {
-        fetch(`/api/league/${leagueYear}/${leagueId}/`);
-    }, [leagueYear, leagueId]);
+        safeFetch(`/api/league/${leagueYear}/${leagueId}/`)
+            .then((data) => {
+                if (data?.redirect) {
+                    navigate(data.redirect);
+                } else {
+                    console.log(
+                        `League ${leagueId} is active for the year ${leagueYear}`
+                    );
+                }
+            })
+            .catch((err) => {
+                console.error(`ERROR: /api/league/${leagueYear}/${leagueId}/`);
+                setFetchError(err);
+            });
+    }, []);
 
     // Check if the league season has begun
     useEffect(() => {
-        const checkLeagueStatus = async () => {
-            try {
-                const response = await fetch(
-                    `/api/check-league-status/${leagueYear}/${leagueId}`
-                );
-                const data = await response.json();
-                if (response.status === 409 && data.code === "too_soon") {
-                    navigate(
-                        `/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`
+        const checkLeagueStatus = () => {
+            safeFetch(`/api/check-league-status/${leagueYear}/${leagueId}/`)
+                .then((data) => {
+                    if (data?.redirect) {
+                        console.log(`Redirecting to: ${data.redirect}`);
+                        navigate(data.redirect);
+                    } else {
+                        console.log("League status data:", data);
+                        // Optionally set state here if you need any data from the response
+                    }
+                })
+                .catch((err) => {
+                    console.error(
+                        `ERROR: /api/check-league-status/${leagueYear}/${leagueId}/`,
+                        err
                     );
-                } else if (
-                    response.status === 400 &&
-                    data.code === "invalid_league"
-                ) {
-                    navigate(`/fantasy_stats/invalid-league`);
-                }
-            } catch (error) {
-                console.error("Error checking league status:", error);
-            }
+                    setFetchError(err);
+                });
         };
 
-        checkLeagueStatus();
+        if (leagueYear && leagueId) {
+            checkLeagueStatus();
+        }
     }, [leagueYear, leagueId, navigate]);
 
     // Fetch the number of playoff teams
     useEffect(() => {
-        const fetchLeagueSettings = async () => {
-            try {
-                const response = await fetch(
-                    `/api/league-settings/${leagueYear}/${leagueId}/`
-                );
-                if (!response.ok) {
-                    throw new Error(
-                        `Failed to fetch league settings (status ${response.status})`
+        const fetchLeagueSettings = () => {
+            safeFetch(`/api/league-settings/${leagueYear}/${leagueId}/`)
+                .then((data) => {
+                    if (data?.redirect) {
+                        console.log(`Redirecting to: ${data.redirect}`);
+                        navigate(data.redirect);
+                    } else {
+                        console.log(
+                            "Number of playoff teams fetched:",
+                            data.playoff_teams
+                        );
+                        setLeagueSettings(data);
+                    }
+                })
+                .catch((err) => {
+                    console.error(
+                        `ERROR: /api/league-settings/${leagueYear}/${leagueId}/`,
+                        err
                     );
-                }
-                const data = await response.json();
-                console.log(
-                    "Number of playoff teams fetched:",
-                    data.playoff_teams
-                );
-                setLeagueSettings(data);
-            } catch (error) {
-                console.error("Error fetching playoff teams:", error);
-            }
+                    setFetchError(err);
+                });
         };
 
-        fetchLeagueSettings();
-    }, [leagueYear, leagueId]);
+        if (leagueYear && leagueId) {
+            fetchLeagueSettings();
+        }
+    }, [leagueYear, leagueId, navigate]);
 
     // Set the default current week and selected week
     useEffect(() => {
@@ -100,44 +124,53 @@ const LeagueSimulationPage = () => {
             setSelectedWeek(validWeekFromUrl);
         }
 
-        const fetchCurrentWeek = async () => {
-            try {
-                console.log("Fetching current week...");
-                const result = await fetch(
-                    `/api/league/${leagueYear}/${leagueId}/current-week/`
-                );
-                if (!result.ok) {
-                    throw new Error(
-                        `Failed to fetch current week (status ${result.status})`
+        const fetchCurrentWeek = () => {
+            console.log("Fetching current week...");
+            safeFetch(`/api/league/${leagueYear}/${leagueId}/current-week/`)
+                .then((data) => {
+                    if (data?.redirect) {
+                        console.log(`Redirecting to: ${data.redirect}`);
+                        navigate(data.redirect);
+                        return; // Stop further processing if redirect
+                    }
+
+                    console.log("Fetched current week:", data.current_week); // Debugging step
+
+                    const validCurrentWeek = !isNaN(data.current_week)
+                        ? data.current_week
+                        : null;
+                    const validMaxWeek = !isNaN(
+                        leagueSettings?.n_regular_season_weeks
+                    )
+                        ? leagueSettings.n_regular_season_weeks
+                        : validCurrentWeek;
+
+                    const adjustedWeek =
+                        validCurrentWeek !== null
+                            ? Math.min(validMaxWeek, validCurrentWeek)
+                            : null;
+
+                    setCurrentWeek(adjustedWeek);
+
+                    if (
+                        validWeekFromUrl === null &&
+                        validCurrentWeek !== null
+                    ) {
+                        setSelectedWeek(adjustedWeek); // Only set selectedWeek if not defined by URL
+                    }
+                })
+                .catch((err) => {
+                    console.error(
+                        `ERROR: /api/league/${leagueYear}/${leagueId}/current-week/`,
+                        err
                     );
-                }
-                const data = await result.json();
-                console.log("Fetched current week:", data.current_week); // Debugging step
-
-                const validCurrentWeek = !isNaN(data.current_week)
-                    ? data.current_week
-                    : null; // Remove default value
-                const validMaxWeek = !isNaN(
-                    leagueSettings?.n_regular_season_weeks
-                )
-                    ? leagueSettings.n_regular_season_weeks
-                    : validCurrentWeek;
-
-                setCurrentWeek(
-                    validCurrentWeek !== null
-                        ? Math.min(validMaxWeek, validCurrentWeek)
-                        : null
-                );
-
-                if (validWeekFromUrl === null && validCurrentWeek !== null) {
-                    setSelectedWeek(Math.min(validMaxWeek, validCurrentWeek)); // Only set selectedWeek if not already defined
-                }
-            } catch (error) {
-                console.error("Error fetching current week:", error);
-            }
+                    setFetchError(err);
+                });
         };
 
-        fetchCurrentWeek();
+        if (leagueYear && leagueId) {
+            fetchCurrentWeek();
+        }
 
         // Ensure selectedWeek is never undefined
         if (selectedWeek === undefined) {
@@ -151,6 +184,9 @@ const LeagueSimulationPage = () => {
 
     // Redirect to "uh-oh-too-early" page if selectedWeek or currentWeek is less than 4
     useEffect(() => {
+        console.log("selectedWeek:", selectedWeek, "currentWeek:", currentWeek);
+
+        // Ensure selectedWeek is defined
         if (selectedWeek === undefined) {
             console.log(
                 "selectedWeek is undefined, setting it to currentWeek:",
@@ -158,17 +194,21 @@ const LeagueSimulationPage = () => {
             );
             setSelectedWeek(currentWeek);
         }
+
+        // Perform redirect if both weeks are valid
         if (selectedWeek !== null && currentWeek !== null) {
             if (selectedWeek < 4 || currentWeek < 4) {
-                navigate(
-                    `/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`
-                );
+                const redirectUrl = `/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`;
+                console.log(`Redirecting to: ${redirectUrl}`);
+                navigate(redirectUrl);
+            } else {
+                console.log("No redirect needed, weeks are valid");
             }
         }
     }, [selectedWeek, currentWeek, leagueYear, leagueId, navigate]);
 
     // Fetch simulation data
-    const fetchSimulationData = async (week, simulations) => {
+    const fetchSimulationData = (week, simulations) => {
         const queryParams = new URLSearchParams();
         if (simulations !== null) {
             queryParams.set("n_simulations", simulations);
@@ -177,35 +217,22 @@ const LeagueSimulationPage = () => {
             queryParams.set("week", week);
         }
 
-        try {
-            const response = await fetch(
-                `/api/simulate-playoff-odds/${leagueYear}/${leagueId}/?${queryParams.toString()}`
-            );
+        const endpoint = `/api/simulate-playoff-odds/${leagueYear}/${leagueId}/?${queryParams.toString()}`;
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                if (response.status === 409 && data.code === "too_soon") {
-                    navigate(
-                        `/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`
-                    );
-                } else if (
-                    response.status === 400 &&
-                    data.code === "invalid_league"
-                ) {
-                    navigate(`/fantasy_stats/invalid-league`);
+        safeFetch(endpoint)
+            .then((data) => {
+                if (data?.redirect) {
+                    console.log(`Redirecting to: ${data.redirect}`);
+                    navigate(data.redirect);
+                } else {
+                    setSimulationData(data);
+                    console.log("Simulation data fetched:", data);
                 }
-                console.error("Backend error:", errorData);
-                throw new Error(
-                    `Failed to fetch simulation data (status ${response.status})`
-                );
-            }
-
-            const data = await response.json();
-            setSimulationData(data);
-            console.log("Simulation data fetched:", data);
-        } catch (error) {
-            console.error("Error fetching simulation data:", error);
-        }
+            })
+            .catch((err) => {
+                console.error(`ERROR: ${endpoint}`, err);
+                setFetchError(err);
+            });
     };
 
     // Fetch simulation data on initial load and when dependencies change

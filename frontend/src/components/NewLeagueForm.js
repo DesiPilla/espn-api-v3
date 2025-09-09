@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getCookie } from "../utils/csrf";
 import "./styles/league.css";
 
@@ -22,8 +22,10 @@ const NewLeagueForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        setLoading(true);
 
         try {
+            // Don't need to use safeFetch here because errors are handled differently
             const csrftoken = getCookie("csrftoken");
             const response = await fetch("/api/league-input/", {
                 method: "POST",
@@ -41,7 +43,7 @@ const NewLeagueForm = () => {
             console.log("Response type:", data.code);
             console.log("Data:", data);
 
-            if (response.status === 409 && data.code === "too_soon") {
+            if (response.status === 409 && data.code === "too_soon_league") {
                 navigate(
                     `/fantasy_stats/uh-oh-too-early/league-homepage/${formData.league_year}/${formData.league_id}`
                 );
@@ -53,6 +55,8 @@ const NewLeagueForm = () => {
         } catch (err) {
             setError("An unexpected error occurred.");
             console.error("Submission error:", err);
+        } finally {
+            setLoading(false);
         }
     };
 

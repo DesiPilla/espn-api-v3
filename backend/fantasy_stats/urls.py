@@ -67,7 +67,7 @@ urlpatterns = [
         name="season-records",
     ),
     path(
-        "api/check-league-status/<int:league_year>/<int:league_id>",
+        "api/check-league-status/<int:league_year>/<int:league_id>/",
         views.check_league_status,
         name="check_league_status",
     ),
@@ -77,6 +77,16 @@ urlpatterns = [
         name="league-settings",
     ),
     path("api/test-error-email/", views.test_error_email, name="test_error_email"),
+    path(
+        "api/test-uh-oh-too-soon-error/",
+        views.test_uh_oh_too_soon_error,
+        name="test_uh_oh_too_soon_error",
+    ),
+    path(
+        "api/test-invalid-league-error/",
+        views.test_invalid_league_error,
+        name="test_invalid_league_error",
+    ),
     # Add this last, after all other routes
     path("api/get-csrf-token/", views.get_csrf_token, name="get_csrf_token"),
     # Catch-all: serve React index.html for any path
