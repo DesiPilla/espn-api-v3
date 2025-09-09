@@ -4,10 +4,15 @@ import { safeFetch } from "../utils/api";
 import "./styles/tableStyles.css";
 import "./styles/spinner.css";
 
-const NaughtyList = ({ leagueYear, leagueId, week }) => {
+const NaughtyList = ({
+    leagueYear,
+    leagueId,
+    week,
+    loading: globalLoading,
+}) => {
     const [naughtyList, setNaughtyList] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState(null);
+    const [loading, setLoading] = useState(false); // Internal loading state
     const navigate = useNavigate();
 
     if (fetchError) {
@@ -16,6 +21,7 @@ const NaughtyList = ({ leagueYear, leagueId, week }) => {
 
     useEffect(() => {
         const fetchNaughtyList = () => {
+            setLoading(true); // Set internal loading to true
             safeFetch(
                 `/api/naughty-list/${leagueYear}/${leagueId}/${week}/`,
                 {},
@@ -40,7 +46,7 @@ const NaughtyList = ({ leagueYear, leagueId, week }) => {
                     setFetchError(err);
                 })
                 .finally(() => {
-                    setLoading(false);
+                    setLoading(false); // Set internal loading to false
                 });
         };
 
@@ -62,7 +68,7 @@ const NaughtyList = ({ leagueYear, leagueId, week }) => {
                     Please check back on Tuesday morning for the final results.
                 </em>
             </p>
-            {loading ? (
+            {globalLoading || loading ? ( // Show spinner if global or internal loading is true
                 <div className="spinner-container">
                     <div className="spinner"></div>
                     <p>Loading Naughty List...</p>

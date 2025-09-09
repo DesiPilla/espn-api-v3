@@ -4,10 +4,15 @@ import LoadingRow from "./LoadingRow";
 import { safeFetch } from "../utils/api";
 import "./styles/tableStyles.css";
 
-const BoxScoresTable = ({ leagueYear, leagueId, week }) => {
+const BoxScoresTable = ({
+    leagueYear,
+    leagueId,
+    week,
+    loading: globalLoading,
+}) => {
     const [boxScores, setBoxScores] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState(null);
+    const [loading, setLoading] = useState(false); // Internal loading state
     const navigate = useNavigate();
 
     if (fetchError) {
@@ -16,7 +21,13 @@ const BoxScoresTable = ({ leagueYear, leagueId, week }) => {
 
     useEffect(() => {
         const fetchBoxScores = async () => {
-            safeFetch(`/api/box-scores/${leagueYear}/${leagueId}/${week}/`)
+            setLoading(true); // Set internal loading to true
+            safeFetch(
+                `/api/box-scores/${leagueYear}/${leagueId}/${week}/`,
+                {},
+                false,
+                2
+            )
                 .then((data) => {
                     if (data?.redirect) {
                         navigate(data.redirect);
@@ -35,7 +46,7 @@ const BoxScoresTable = ({ leagueYear, leagueId, week }) => {
                     setFetchError(err);
                 })
                 .finally(() => {
-                    setLoading(false);
+                    setLoading(false); // Set internal loading to false
                 });
         };
 
@@ -58,7 +69,7 @@ const BoxScoresTable = ({ leagueYear, leagueId, week }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {loading ? (
+                    {globalLoading || loading ? ( // Show spinner if global or internal loading is true
                         <LoadingRow text="Loading Box Scores..." colSpan="3" />
                     ) : boxScores.length === 0 ? (
                         <tr>
