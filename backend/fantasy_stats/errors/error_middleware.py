@@ -36,7 +36,7 @@ def flush_errors():
 
 
 class ErrorStatusEmailMiddleware(MiddlewareMixin):
-    ERROR_STATUSES = [400, 401, 403, 404, 409, 500]
+    ERROR_STATUSES = [400, 401, 403, 404, 500]
 
     def process_exception(self, request, exception):
         """
@@ -63,6 +63,15 @@ class ErrorStatusEmailMiddleware(MiddlewareMixin):
         Called after a view returns a response.
         """
         if response.status_code in self.ERROR_STATUSES:
+            # try:
+            #     response_json = json.loads(response.content)
+            #     if (
+            #         response_json.get("code")
+            #         == JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value
+            #     ):
+            #         return response
+            # except Exception as e:
+            #     print("Error while parsing response: ", e)
             try:
                 error_message = None
                 if hasattr(response, "content") and "application/json" in response.get(
