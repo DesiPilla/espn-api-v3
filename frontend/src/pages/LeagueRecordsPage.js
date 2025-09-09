@@ -34,7 +34,7 @@ const LeagueRecordsPage = () => {
                     }
                 })
                 .catch((err) => {
-                    console.error(`ERROR: ${endpoint}`, err);
+                    console.error("ERROR: %s", endpoint, err);
                     setFetchError(err);
                 });
         };

@@ -26,7 +26,10 @@ const LuckIndexTable = ({ leagueYear, leagueId, week }) => {
                 })
                 .catch((err) => {
                     console.error(
-                        `ERROR: /api/luck-index/${leagueYear}/${leagueId}/${week}/`,
+                        "ERROR: /api/luck-index/%s/%s/%s/",
+                        leagueYear,
+                        leagueId,
+                        week,
                         err
                     );
                     setFetchError(err);

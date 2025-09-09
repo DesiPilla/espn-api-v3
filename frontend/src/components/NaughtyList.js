@@ -26,7 +26,10 @@ const NaughtyList = ({ leagueYear, leagueId, week }) => {
                 })
                 .catch((err) => {
                     console.error(
-                        `ERROR: /api/naughty-list/${leagueYear}/${leagueId}/${week}/`,
+                        "ERROR: /api/naughty-list/%s/%s/%s/",
+                        leagueYear,
+                        leagueId,
+                        week,
                         err
                     );
                     setFetchError(err);

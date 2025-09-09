@@ -65,7 +65,9 @@ const LeagueSimulationPage = () => {
                 })
                 .catch((err) => {
                     console.error(
-                        `ERROR: /api/check-league-status/${leagueYear}/${leagueId}/`,
+                        "ERROR: /api/check-league-status/%s/%s/",
+                        leagueYear,
+                        leagueId,
                         err
                     );
                     setFetchError(err);
@@ -95,7 +97,9 @@ const LeagueSimulationPage = () => {
                 })
                 .catch((err) => {
                     console.error(
-                        `ERROR: /api/league-settings/${leagueYear}/${leagueId}/`,
+                        "ERROR: /api/league-settings/%s/%s/",
+                        leagueYear,
+                        leagueId,
                         err
                     );
                     setFetchError(err);
@@ -161,7 +165,9 @@ const LeagueSimulationPage = () => {
                 })
                 .catch((err) => {
                     console.error(
-                        `ERROR: /api/league/${leagueYear}/${leagueId}/current-week/`,
+                        "ERROR: /api/league/%s/%s/current-week/",
+                        leagueYear,
+                        leagueId,
                         err
                     );
                     setFetchError(err);
@@ -230,7 +236,8 @@ const LeagueSimulationPage = () => {
                 }
             })
             .catch((err) => {
-                console.error(`ERROR: ${endpoint}`, err);
+                console.error("ERROR: %s", endpoint, err);
+
                 setFetchError(err);
             });
     };

@@ -26,7 +26,10 @@ const BoxScoresTable = ({ leagueYear, leagueId, week }) => {
                 })
                 .catch((err) => {
                     console.error(
-                        `ERROR: /api/box-scores/${leagueYear}/${leagueId}/${week}/`,
+                        "ERROR: /api/box-scores/%s/%s/%s/",
+                        leagueYear,
+                        leagueId,
+                        week,
                         err
                     );
                     setFetchError(err);

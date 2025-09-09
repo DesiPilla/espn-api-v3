@@ -26,7 +26,10 @@ const PowerRankingsTable = ({ leagueYear, leagueId, week }) => {
                 })
                 .catch((err) => {
                     console.error(
-                        `ERROR: /api/power-rankings/${leagueYear}/${leagueId}/${week}/`,
+                        "ERROR: /api/power-rankings/%s/%s/%s/",
+                        leagueYear,
+                        leagueId,
+                        week,
                         err
                     );
                     setFetchError(err);

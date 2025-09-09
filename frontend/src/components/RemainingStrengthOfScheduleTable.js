@@ -42,7 +42,7 @@ const RemainingStrengthOfScheduleTable = ({ leagueId, leagueYear, week }) => {
                     }
                 })
                 .catch((err) => {
-                    console.error(`ERROR: ${endpoint}`, err);
+                    console.error("ERROR:", endpoint, err);
                     setFetchError(err);
                 });
         };
