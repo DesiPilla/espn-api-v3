@@ -631,9 +631,10 @@ def print_records(
     # Print out any records
     superlative = "highest" if high_first else "lowest"
     for row in records_df.iterrows():
+        row = row[1]
         print(
             "{} had the {} {} {} ({:.2f} {}) in league history".format(
-                row.team_owner,
+                row["team_owner"],
                 make_ordinal(row["rank"]),
                 superlative,
                 stat,

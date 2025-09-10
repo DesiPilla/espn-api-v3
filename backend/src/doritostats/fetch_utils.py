@@ -222,8 +222,9 @@ def set_owner_names(league: League) -> None:
         else:
             team.owner = "Unknown Owner"
 
-        # Map owners of previous/co-owned teams to current owners to preserve "franchise"
-        team.owner = OWNER_MAP.get(team.owner, team.owner)
+        if league.league_id == 1086064:
+            # Map owners of previous/co-owned teams to current owners to preserve "franchise"
+            team.owner = OWNER_MAP.get(team.owner, team.owner)
 
 
 def set_additional_settings(league: League) -> None:
