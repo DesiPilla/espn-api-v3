@@ -34,7 +34,7 @@ const LeagueSimulationPage = () => {
 
     // Preload the league data for faster loading later on
     useEffect(() => {
-        safeFetch(`/api/league/${leagueYear}/${leagueId}/`)
+        safeFetch(`/api/league/${leagueYear}/${leagueId}/`, {}, false, 2)
             .then((data) => {
                 if (data?.redirect) {
                     navigate(data.redirect);
@@ -53,7 +53,12 @@ const LeagueSimulationPage = () => {
     // Check if the league season has begun
     useEffect(() => {
         const checkLeagueStatus = () => {
-            safeFetch(`/api/check-league-status/${leagueYear}/${leagueId}/`)
+            safeFetch(
+                `/api/check-league-status/${leagueYear}/${leagueId}/`,
+                {},
+                false,
+                2
+            )
                 .then((data) => {
                     if (data?.redirect) {
                         console.log(`Redirecting to: ${data.redirect}`);
@@ -82,7 +87,12 @@ const LeagueSimulationPage = () => {
     // Fetch the number of playoff teams
     useEffect(() => {
         const fetchLeagueSettings = () => {
-            safeFetch(`/api/league-settings/${leagueYear}/${leagueId}/`)
+            safeFetch(
+                `/api/league-settings/${leagueYear}/${leagueId}/`,
+                {},
+                false,
+                2
+            )
                 .then((data) => {
                     if (data?.redirect) {
                         console.log(`Redirecting to: ${data.redirect}`);
@@ -130,7 +140,12 @@ const LeagueSimulationPage = () => {
 
         const fetchCurrentWeek = () => {
             console.log("Fetching current week...");
-            safeFetch(`/api/league/${leagueYear}/${leagueId}/current-week/`)
+            safeFetch(
+                `/api/league/${leagueYear}/${leagueId}/current-week/`,
+                {},
+                false,
+                2
+            )
                 .then((data) => {
                     if (data?.redirect) {
                         console.log(`Redirecting to: ${data.redirect}`);
@@ -225,7 +240,7 @@ const LeagueSimulationPage = () => {
 
         const endpoint = `/api/simulate-playoff-odds/${leagueYear}/${leagueId}/?${queryParams.toString()}`;
 
-        safeFetch(endpoint)
+        safeFetch(endpoint, {}, false, 2)
             .then((data) => {
                 if (data?.redirect) {
                     console.log(`Redirecting to: ${data.redirect}`);

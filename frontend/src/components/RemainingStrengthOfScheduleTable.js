@@ -24,7 +24,7 @@ const RemainingStrengthOfScheduleTable = ({ leagueId, leagueYear, week }) => {
         const fetchRemainingStrengthOfScheduleData = (week) => {
             const endpoint = `/api/remaining-strength-of-schedule/${leagueYear}/${leagueId}/?week=${week}`;
 
-            safeFetch(endpoint)
+            safeFetch(endpoint, {}, false, 2)
                 .then((data) => {
                     if (data?.redirect) {
                         console.log(`Redirecting to: ${data.redirect}`);

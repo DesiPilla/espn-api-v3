@@ -22,7 +22,12 @@ const StandingsTable = ({
     useEffect(() => {
         const fetchStandings = () => {
             setLoading(true); // Set internal loading to true
-            safeFetch(`/api/standings/${leagueYear}/${leagueId}/${week}/`)
+            safeFetch(
+                `/api/standings/${leagueYear}/${leagueId}/${week}/`,
+                {},
+                false,
+                2
+            )
                 .then((data) => {
                     if (data?.redirect) {
                         navigate(data.redirect);
