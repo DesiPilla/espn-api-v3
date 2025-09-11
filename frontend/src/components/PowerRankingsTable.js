@@ -9,6 +9,7 @@ const PowerRankingsTable = ({
     leagueId,
     week,
     loading: globalLoading,
+    nCompletedWeeks,
 }) => {
     const [powerRankings, setPowerRankings] = useState([]);
     const [fetchError, setFetchError] = useState(null);
@@ -60,14 +61,17 @@ const PowerRankingsTable = ({
             <h2 className="text-xl font-semibold mb-4">
                 Power Rankings - Week {week}
             </h2>
-            <p>
-                <em>
-                    Note that scores have not yet been finalized for this week
-                    and the Power Rankings are likely to change.
-                    <br />
-                    Please check back on Tuesday morning for the final results.
-                </em>
-            </p>
+            {week > nCompletedWeeks && ( // Only display note if week > nCompletedWeeks
+                <p>
+                    <em>
+                        Note that scores have not yet been finalized for this
+                        week and the Power Rankings are likely to change.
+                        <br />
+                        Please check back on Tuesday morning for the final
+                        results.
+                    </em>
+                </p>
+            )}
             <table className="table">
                 <thead>
                     <tr>

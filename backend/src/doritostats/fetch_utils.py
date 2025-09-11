@@ -241,6 +241,22 @@ def set_additional_settings(league: League) -> None:
             league.settings.week_to_matchup_period[week] = int(matchup_period)
 
 
+def set_completed_games(league: League):
+    """This function identifies how many weeks in a season are completed.
+    We must check each team's number of matchups completed, since some teams
+    could have had a bye.
+
+    Args:
+        league (League): The league
+    """
+    n_completed_weeks = 0
+    for team in league.teams:
+        n_completed_weeks = max(
+            n_completed_weeks, sum([1 if o != "U" else 0 for o in team.outcomes])
+        )
+    league.n_completed_weeks = n_completed_weeks
+
+
 def fetch_league(
     league_id: int, year: int, swid: Optional[str] = None, espn_s2: Optional[str] = None
 ) -> League:
@@ -269,6 +285,7 @@ def fetch_league(
 
     # Set additinoal settings
     set_additional_settings(league)
+    set_completed_games(league)
 
     # Set the owners for each team
     set_owner_names(league)
