@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import LeagueSelector from "../components/LeagueSelector";
 import NewLeagueForm from "../components/NewLeagueForm";
 import ReturningLeagueSelector from "../components/ReturningLeagueSelector";
+import CookiesInstructionsBox from "../components/CookiesInstructionsBox";
 import { safeFetch, handleApiCall } from "../utils/api";
 import "../components/styles/league.css";
 
@@ -75,6 +76,7 @@ const HomePage = () => {
                     dropdownClassName={dropdownClassName} // Pass common dropdown class
                 />
                 <NewLeagueForm />
+                <CookiesInstructionsBox />
                 <br></br>
             </div>
             <Footer />

@@ -429,7 +429,7 @@ A standout feature is the ability to simulate the remaining season. Run 100-1000
 ## Local setup
 To launch the web app
 ```shell
-python manage.py runserver 8001
+python manage.py collectstatic --no-input && python manage.py runserver 8001
 ```
 Then navigate to that port in Chrome. Whenever changes are made, first run
 ```shell
