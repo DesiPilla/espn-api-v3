@@ -33,7 +33,7 @@ const LeaguePage = () => {
 
     // Preload the league data for faster loading later on
     useEffect(() => {
-        safeFetch(`/api/league/${leagueYear}/${leagueId}/`)
+        safeFetch(`/api/league/${leagueYear}/${leagueId}/`, {}, false, 2)
             .then((data) => {
                 if (data?.redirect) {
                     navigate(data.redirect);
@@ -52,7 +52,12 @@ const LeaguePage = () => {
     // Check if the league season has begun
     useEffect(() => {
         const checkLeagueStatus = async () => {
-            safeFetch(`/api/check-league-status/${leagueYear}/${leagueId}/`)
+            safeFetch(
+                `/api/check-league-status/${leagueYear}/${leagueId}/`,
+                {},
+                false,
+                2
+            )
                 .then((data) => {
                     if (data?.redirect) {
                         navigate(data.redirect);
@@ -74,7 +79,7 @@ const LeaguePage = () => {
     // Fetch the league data from the backend using the leagueId and leagueYear
     useEffect(() => {
         const fetchLeagueData = async () => {
-            safeFetch(`/api/league/${leagueYear}/${leagueId}/`)
+            safeFetch(`/api/league/${leagueYear}/${leagueId}/`, {}, false, 2)
                 .then((data) => {
                     if (data?.redirect) {
                         navigate(data.redirect);
@@ -109,7 +114,12 @@ const LeaguePage = () => {
         }
 
         const fetchCurrentWeek = async () => {
-            safeFetch(`/api/league/${leagueYear}/${leagueId}/current-week/`)
+            safeFetch(
+                `/api/league/${leagueYear}/${leagueId}/current-week/`,
+                {},
+                false,
+                2
+            )
                 .then((data) => {
                     if (data?.redirect) {
                         navigate(data.redirect);
@@ -181,7 +191,12 @@ const LeaguePage = () => {
     // Fetch the number of playoff teams and update the simulation count if the league is complete
     useEffect(() => {
         const fetchLeagueSettings = async () => {
-            safeFetch(`/api/league-settings/${leagueYear}/${leagueId}/`)
+            safeFetch(
+                `/api/league-settings/${leagueYear}/${leagueId}/`,
+                {},
+                false,
+                2
+            )
                 .then((data) => {
                     if (data?.redirect) {
                         navigate(data.redirect);

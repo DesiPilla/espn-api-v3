@@ -23,7 +23,7 @@ const LeagueRecordsPage = () => {
         const fetchRecords = () => {
             const endpoint = `/api/season-records/${leagueYear}/${leagueId}/`;
 
-            safeFetch(endpoint)
+            safeFetch(endpoint, {}, false, 2)
                 .then((data) => {
                     if (data?.redirect) {
                         console.log(`Redirecting to: ${data.redirect}`);

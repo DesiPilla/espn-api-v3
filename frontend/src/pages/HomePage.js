@@ -36,7 +36,7 @@ const HomePage = () => {
     }, []);
 
     useEffect(() => {
-        safeFetch("/api/leagues/")
+        safeFetch("/api/leagues/", {}, false, 2)
             .then((data) => {
                 setLeaguesCurrent(data.leagues_current_year);
                 setLeaguesPrevious(data.leagues_previous_year);
