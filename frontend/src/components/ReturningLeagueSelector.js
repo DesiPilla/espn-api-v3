@@ -1,32 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCookie } from "../utils/csrf";
+import { fetchWithRetry } from "../utils/api";
 
 const ReturningLeagueSelector = ({ dropdownClassName }) => {
     const [leaguesPreviousDistinct, setLeaguesPreviousDistinct] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const navigate = useNavigate();
-    const maxRetries = 2;
-
-    const fetchWithRetry = async (url, options, retries) => {
-        for (let i = 0; i <= retries; i++) {
-            try {
-                const response = await fetch(url, options);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response;
-            } catch (err) {
-                if (i === retries) {
-                    throw err;
-                }
-            }
-        }
-    };
 
     useEffect(() => {
-        fetchWithRetry("/api/distinct-leagues-previous/", {}, maxRetries)
+        const retries = 3; // Configurable number of retries
+        fetchWithRetry("/api/distinct-leagues-previous/", {}, retries)
             .then((res) => res.json())
             .then((data) => {
                 setLeaguesPreviousDistinct(data);
@@ -43,6 +28,8 @@ const ReturningLeagueSelector = ({ dropdownClassName }) => {
         setLoading(true);
         setError("");
 
+        const retries = 2;
+
         try {
             const csrftoken = getCookie("csrftoken");
 
@@ -56,7 +43,7 @@ const ReturningLeagueSelector = ({ dropdownClassName }) => {
                     },
                     credentials: "include",
                 },
-                3
+                retries
             );
 
             const data = await response.json();

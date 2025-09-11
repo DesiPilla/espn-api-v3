@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCookie } from "../utils/csrf";
+import { fetchWithRetry } from "../utils/api";
 import "./styles/league.css";
 
 const NewLeagueForm = () => {
@@ -19,28 +20,12 @@ const NewLeagueForm = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const fetchWithRetry = async (url, options, retries) => {
-        for (let i = 0; i <= retries; i++) {
-            try {
-                const response = await fetch(url, options);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response;
-            } catch (err) {
-                if (i === retries) {
-                    throw err;
-                }
-            }
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
         setLoading(true);
 
-        const maxRetries = 2;
+        const retries = 2;
 
         try {
             // Don't need to use safeFetch here because errors are handled differently
@@ -56,7 +41,7 @@ const NewLeagueForm = () => {
                     credentials: "include",
                     body: JSON.stringify(formData),
                 },
-                maxRetries
+                retries
             );
 
             const data = await response.json();

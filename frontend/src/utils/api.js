@@ -112,3 +112,19 @@ export const safeFetch = async (
         }
     }
 };
+
+export const fetchWithRetry = async (url, options, retries) => {
+    for (let i = 0; i <= retries; i++) {
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response;
+        } catch (err) {
+            if (i === retries) {
+                throw err;
+            }
+        }
+    }
+};
