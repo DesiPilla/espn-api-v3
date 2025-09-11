@@ -21,9 +21,10 @@ const LeaguePage = () => {
     const [leagueData, setLeagueData] = useState(null);
     const [selectedWeek, setSelectedWeek] = useState(null);
     const [currentWeek, setCurrentWeek] = useState(null);
+    const [nCompletedWeeks, setNCompletedWeeks] = useState(null);
     const [leagueSettings, setLeagueSettings] = useState(null);
     const [fetchError, setFetchError] = useState(null);
-    const [loading, setLoading] = useState(false); // Add loading state
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     if (fetchError) {
@@ -114,11 +115,16 @@ const LeaguePage = () => {
                         navigate(data.redirect);
                     } else {
                         setCurrentWeek(data.current_week);
+                        setNCompletedWeeks(data.n_completed_weeks);
                         if (!weekFromUrl) {
                             setSelectedWeek(data.current_week - 1); // Only set selectedWeek if not already defined
                         }
                         console.log("Current week:", currentWeek);
                         console.log("Selected week:", selectedWeek);
+                        console.log(
+                            "Number of completed weeks:",
+                            data.n_completed_weeks
+                        );
                     }
                 })
                 .catch((err) => {
@@ -253,6 +259,7 @@ const LeaguePage = () => {
                     leagueId={leagueId}
                     week={selectedWeek}
                     loading={loading} // Pass loading state
+                    nCompletedWeeks={nCompletedWeeks}
                 />
 
                 <PowerRankingsTable
@@ -260,6 +267,7 @@ const LeaguePage = () => {
                     leagueId={leagueId}
                     week={selectedWeek}
                     loading={loading} // Pass loading state
+                    nCompletedWeeks={nCompletedWeeks}
                 />
 
                 <LuckIndexTable
@@ -267,6 +275,7 @@ const LeaguePage = () => {
                     leagueId={leagueId}
                     week={selectedWeek}
                     loading={loading} // Pass loading state
+                    nCompletedWeeks={nCompletedWeeks}
                 />
 
                 <NaughtyList
@@ -274,6 +283,7 @@ const LeaguePage = () => {
                     leagueId={leagueId}
                     week={selectedWeek}
                     loading={loading} // Pass loading state
+                    nCompletedWeeks={nCompletedWeeks}
                 />
 
                 <StandingsTable

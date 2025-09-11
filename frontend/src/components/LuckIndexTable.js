@@ -9,6 +9,7 @@ const LuckIndexTable = ({
     leagueId,
     week,
     loading: globalLoading,
+    nCompletedWeeks,
 }) => {
     const [luckIndex, setLuckIndex] = useState([]);
     const [fetchError, setFetchError] = useState(null);
@@ -60,14 +61,17 @@ const LuckIndexTable = ({
             <h2 className="text-xl font-semibold mb-4">
                 Luck Index - Week {week}
             </h2>
-            <p>
-                <em>
-                    Note that scores have not yet been finalized for this week
-                    and the Luck Index is likely to change.
-                    <br />
-                    Please check back on Tuesday morning for the final results.
-                </em>
-            </p>
+            {week > nCompletedWeeks && ( // Only display note if week > nCompletedWeeks
+                <p>
+                    <em>
+                        Note that scores have not yet been finalized for this
+                        week and the Luck Index is likely to change.
+                        <br />
+                        Please check back on Tuesday morning for the final
+                        results.
+                    </em>
+                </p>
+            )}
             <table className="table">
                 <thead>
                     <tr>

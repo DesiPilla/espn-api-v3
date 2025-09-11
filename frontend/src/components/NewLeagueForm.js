@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCookie } from "../utils/csrf";
+import { fetchWithRetry } from "../utils/api";
 import "./styles/league.css";
 
 const NewLeagueForm = () => {
@@ -24,18 +25,24 @@ const NewLeagueForm = () => {
         setError("");
         setLoading(true);
 
+        const retries = 2;
+
         try {
             // Don't need to use safeFetch here because errors are handled differently
             const csrftoken = getCookie("csrftoken");
-            const response = await fetch("/api/league-input/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrftoken,
+            const response = await fetchWithRetry(
+                "/api/league-input/",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken,
+                    },
+                    credentials: "include",
+                    body: JSON.stringify(formData),
                 },
-                credentials: "include",
-                body: JSON.stringify(formData),
-            });
+                retries
+            );
 
             const data = await response.json();
 

@@ -9,6 +9,7 @@ const NaughtyList = ({
     leagueId,
     week,
     loading: globalLoading,
+    nCompletedWeeks,
 }) => {
     const [naughtyList, setNaughtyList] = useState([]);
     const [fetchError, setFetchError] = useState(null);
@@ -60,14 +61,17 @@ const NaughtyList = ({
             <h2 className="text-xl font-semibold mb-4">
                 Naughty List - Week {week}
             </h2>
-            <p>
-                <em>
-                    Note that scores have not yet been finalized for this week
-                    and the Naughty List is likely to change.
-                    <br />
-                    Please check back on Tuesday morning for the final results.
-                </em>
-            </p>
+            {week > nCompletedWeeks && ( // Only display note if week > nCompletedWeeks
+                <p>
+                    <em>
+                        Note that scores have not yet been finalized for this
+                        week and the Naughty List is likely to change.
+                        <br />
+                        Please check back on Tuesday morning for the final
+                        results.
+                    </em>
+                </p>
+            )}
             {globalLoading || loading ? ( // Show spinner if global or internal loading is true
                 <div className="spinner-container">
                     <div className="spinner"></div>

@@ -9,6 +9,7 @@ const WeeklyAwardsTable = ({
     leagueId,
     week,
     loading: globalLoading,
+    nCompletedWeeks,
 }) => {
     const [weeklyAwards, setWeeklyAwards] = useState(null);
     const [fetchError, setFetchError] = useState(null);
@@ -57,14 +58,17 @@ const WeeklyAwardsTable = ({
             <h2 className="text-xl font-semibold mb-4">
                 Weekly Awards - Week {week}
             </h2>
-            <p>
-                <em>
-                    Note that scores have not yet been finalized for this week
-                    and award winners are likely to change.
-                    <br />
-                    Please check back on Tuesday morning for the final results.
-                </em>
-            </p>
+            {week > nCompletedWeeks && ( // Only display note if week > nCompletedWeeks
+                <p>
+                    <em>
+                        Note that scores have not yet been finalized for this
+                        week and award winners are likely to change.
+                        <br />
+                        Please check back on Tuesday morning for the final
+                        results.
+                    </em>
+                </p>
+            )}
             <table className="table">
                 <thead>
                     <tr>

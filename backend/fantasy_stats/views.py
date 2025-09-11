@@ -451,7 +451,12 @@ def get_current_week(
     Returns the current week for the given league.
     """
     league = get_cached_league(league_id=league_id, league_year=league_year)
-    return JsonResponse({"current_week": league.current_week})
+    return JsonResponse(
+        {
+            "current_week": league.current_week,
+            "n_completed_weeks": league.n_completed_weeks,
+        }
+    )
 
 
 @require_GET
