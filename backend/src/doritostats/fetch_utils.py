@@ -4,9 +4,9 @@ import os
 import re
 import requests
 import warnings
+from contextlib import contextmanager
 from typing import Optional
 
-import numpy as np
 import pandas as pd
 import sqlalchemy
 from dotenv import load_dotenv
@@ -23,9 +23,11 @@ OWNER_MAP = {
     "Katie Brooks": "Nikki Pilla",
     "Joseph Ricupero": "Jojo & Matt",
     "Desi Pilla": "Desi & Jane",
+    "Marc C": "Marco Chirico",
 }
 
 
+@contextmanager
 def get_postgres_conn() -> sqlalchemy.engine.base.Connection:
     """Create a postrges connection using the DATABASE_URL environment variable.
 
@@ -39,19 +41,25 @@ def get_postgres_conn() -> sqlalchemy.engine.base.Connection:
     conn_str = os.path.expandvars(os.environ.get("DATABASE_URL")).replace(
         "postgres://", "postgresql://"
     )
-
-    return sqlalchemy.create_engine(conn_str, pool_pre_ping=True)
+    engine = sqlalchemy.create_engine(conn_str, pool_pre_ping=True)
+    conn = engine.connect()
+    try:
+        yield conn
+    finally:
+        conn.close()
+        engine.dispose()
 
 
 def get_league_creds(league_id: int, year: Optional[int] = None):
     """Get the league credentials for a given league_id and year."""
-    conn = get_postgres_conn()
-
-    # Query all the league info data
-    sql = "SELECT * FROM public.fantasy_stats_leagueinfo WHERE league_id = {}".format(
-        league_id
-    )
-    league_info_df = pd.read_sql(sql, conn)
+    with get_postgres_conn() as conn:
+        # Query all the league info data
+        sql = (
+            "SELECT * FROM public.fantasy_stats_leagueinfo WHERE league_id = {}".format(
+                league_id
+            )
+        )
+        league_info_df = pd.read_sql(sql, conn)
 
     if year is None:
         return (
