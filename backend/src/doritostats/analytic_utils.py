@@ -552,14 +552,22 @@ def get_naughty_players(lineup: List[Player], week: int) -> List[Player]:
     Returns:
         List[Player]: A list of all players that were started by their owners, but were inactive or on bye.
     """
-    return [
-        player
-        for player in lineup
-        if player.active_status in ["bye", "inactive"]  # Player was on bye or inactive
-        and player.slot_position
-        not in ["IR", "BE"]  # Player was in the player's starting lineup
-        and "points" in player.stats[week].keys()  # The player is locked for the week
-    ]
+    naughty_players = []
+    for player in lineup:
+        if (
+            not player.stats  # Sometimes D/ST on bye will show player.stats = {}
+            or (
+                player.active_status
+                in ["bye", "inactive"]  # Player was on bye or inactive
+                and "points"
+                in player.stats[week].keys()  # The player is locked for the week
+            )
+        ) and player.slot_position not in [
+            "IR",
+            "BE",
+        ]:  # Player was in the player's starting lineup
+            naughty_players.append(player)
+    return naughty_players
 
 
 def get_naughty_list_str(league: League, week: int) -> List[str]:
