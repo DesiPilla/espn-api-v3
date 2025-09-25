@@ -365,6 +365,10 @@ def standings_weekly(self: League, week: int) -> List[Team]:
     return [team_data["team"] for team_data in sorted_team_data]
 
 
+# TEMPORARY: use the fixed standings function
+League.standings_weekly = standings_weekly
+
+
 def fetch_league(
     league_id: int, year: int, swid: Optional[str] = None, espn_s2: Optional[str] = None
 ) -> League:
@@ -405,11 +409,6 @@ def fetch_league(
     current_matchup_period = league.settings.week_to_matchup_period[
         max(league.current_week, 1)
     ]
-
-    # TEMPORARY: use the fixed standings function
-    import types
-
-    league.standings_weekly = types.MethodType(standings_weekly, league)
 
     # Load current league data
     print("[BUILDING LEAGUE] Loading current league details...")
