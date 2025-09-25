@@ -14,6 +14,18 @@ from espn_api.football import League
 from espn_api.requests.constant import FANTASY_BASE_ENDPOINT
 from espn_api.requests.espn_requests import ESPNInvalidLeague, ESPNUnknownError
 
+# TEMPORARY IMPORTS
+from espn_api.football import Team
+from espn_api.football.helper import (
+    sort_team_data_list,
+    sort_by_division_record,
+    sort_by_head_to_head,
+    sort_by_win_pct,
+    sort_by_points_for,
+    sort_by_points_against,
+    sort_by_coin_flip,
+)
+from typing import List
 
 warnings.filterwarnings("ignore")
 
@@ -265,6 +277,94 @@ def set_completed_games(league: League):
     league.n_completed_weeks = n_completed_weeks
 
 
+def standings_weekly(self: League, week: int) -> List[Team]:
+    """TEMPORARY FUNCTION!!
+    A PR has been submitted to the espn-api package to fix the standings_weekly() function.
+    Until that is merged, this function can be used to replace the standings_weekly() function.
+    """
+    # Return empty standings if no matchup periods have completed yet
+    if self.currentMatchupPeriod <= 1:
+        return self.standings()
+
+    # Get standings data for each team up to the given week
+    list_of_team_data = []
+    for team in self.teams:
+        team_data = {
+            "team": team,
+            "team_id": team.team_id,
+            "division_id": team.division_id,
+            "wins": sum([1 for outcome in team.outcomes[:week] if outcome == "W"]),
+            "ties": sum([1 for outcome in team.outcomes[:week] if outcome == "T"]),
+            "losses": sum([1 for outcome in team.outcomes[:week] if outcome == "L"]),
+            "points_for": sum(team.scores[:week]),
+            "points_against": sum([team.schedule[w].scores[w] for w in range(week)]),
+            "schedule": team.schedule[:week],
+            "outcomes": team.outcomes[:week],
+        }
+        team_data["win_pct"] = (team_data["wins"] + team_data["ties"] / 2) / sum(
+            [1 for outcome in team.outcomes[:week] if outcome in ["W", "T", "L"]]
+        )
+        list_of_team_data.append(team_data)
+
+    # Identify the proper tiebreaker hierarchy
+    if self.settings.playoff_seed_tie_rule == "TOTAL_POINTS_SCORED":
+        tiebreaker_hierarchy = [
+            (sort_by_win_pct, "win_pct"),
+            (sort_by_points_for, "points_for"),
+            (sort_by_head_to_head, "h2h_wins"),
+            (sort_by_division_record, "division_record"),
+            (sort_by_points_against, "points_against"),
+            (sort_by_coin_flip, "coin_flip"),
+        ]
+    elif self.settings.playoff_seed_tie_rule == "H2H_RECORD":
+        tiebreaker_hierarchy = [
+            (sort_by_win_pct, "win_pct"),
+            (sort_by_head_to_head, "h2h_wins"),
+            (sort_by_points_for, "points_for"),
+            (sort_by_division_record, "division_record"),
+            (sort_by_points_against, "points_against"),
+            (sort_by_coin_flip, "coin_flip"),
+        ]
+    elif self.settings.playoff_seed_tie_rule == "INTRA_DIVISION_RECORD":
+        tiebreaker_hierarchy = [
+            (sort_by_division_record, "division_record"),
+            (sort_by_head_to_head, "h2h_wins"),
+            (sort_by_win_pct, "win_pct"),
+            (sort_by_points_for, "points_for"),
+            (sort_by_points_against, "points_against"),
+            (sort_by_coin_flip, "coin_flip"),
+        ]
+    else:
+        raise ValueError(
+            "Unkown tiebreaker_method: Must be either 'TOTAL_POINTS_SCORED', 'H2H_RECORD', or 'INTRA_DIVISION_RECORD'"
+        )
+
+    # First assign the division winners
+    division_winners = []
+    for division_id in list(self.settings.division_map.keys()):
+        division_teams = [
+            team_data
+            for team_data in list_of_team_data
+            if team_data["division_id"] == division_id
+        ]
+        division_winner = sort_team_data_list(division_teams, tiebreaker_hierarchy)[0]
+        division_winners.append(division_winner)
+        list_of_team_data.remove(division_winner)
+
+    # Sort the division winners
+    sorted_division_winners = sort_team_data_list(
+        division_winners, tiebreaker_hierarchy
+    )
+
+    # Then sort the rest of the teams
+    sorted_rest_of_field = sort_team_data_list(list_of_team_data, tiebreaker_hierarchy)
+
+    # Combine all teams
+    sorted_team_data = sorted_division_winners + sorted_rest_of_field
+
+    return [team_data["team"] for team_data in sorted_team_data]
+
+
 def fetch_league(
     league_id: int, year: int, swid: Optional[str] = None, espn_s2: Optional[str] = None
 ) -> League:
@@ -305,6 +405,11 @@ def fetch_league(
     current_matchup_period = league.settings.week_to_matchup_period[
         max(league.current_week, 1)
     ]
+
+    # TEMPORARY: use the fixed standings function
+    import types
+
+    league.standings_weekly = types.MethodType(standings_weekly, league)
 
     # Load current league data
     print("[BUILDING LEAGUE] Loading current league details...")
