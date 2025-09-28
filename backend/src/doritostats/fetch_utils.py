@@ -36,8 +36,8 @@ OWNER_MAP = {
     "Joseph Ricupero": "Jojo & Matt",
     "Desi Pilla": "Desi & Jane",
     "Marc C": "Marco Chirico",
+    "Marc Chirico": "Marco Chirico",
 }
-
 
 @contextmanager
 def get_postgres_conn() -> sqlalchemy.engine.base.Connection:
