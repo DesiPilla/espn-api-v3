@@ -164,8 +164,7 @@ const LeagueSimulationPage = () => {
                 })
                 .catch((err) => {
                     console.error(
-                        `ERROR: /api/league/${leagueYear}/${leagueId}/current-week/`,
-                        err
+                        "ERROR: /api/league/%s/%s/current-week/", leagueYear, leagueId, err
                     );
                     setFetchError(err);
                 });
