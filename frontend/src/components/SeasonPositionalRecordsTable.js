@@ -7,7 +7,10 @@ const SeasonPositionalRecordsTable = ({ bestPositionalStats, worstPositionalStat
     return (
         <div className="wrapper-wide">
             <h2>Season Positional Records</h2>
-            <table className="table-with-bottom-caption">
+            <table
+                className="table-with-bottom-caption"
+                style={{ tableLayout: "fixed", width: "70%" }}
+            >
                 <thead>
                     <tr>
                         <th>Award</th>
@@ -17,11 +20,19 @@ const SeasonPositionalRecordsTable = ({ bestPositionalStats, worstPositionalStat
                 </thead>
                 <tbody>
                     {!bestPositionalStats || !worstPositionalStats ? (
-                        <LoadingRow text="Loading positional records..." colSpan="3" />
+                        <LoadingRow
+                            text="Loading positional records..."
+                            colSpan="3"
+                        />
                     ) : (
                         <>
                             {bestPositionalStats.map((stat, index) => (
-                                <tr key={`best-${index}`} className={index % 2 === 0 ? "even-row" : "odd-row"}>
+                                <tr
+                                    key={`best-${index}`}
+                                    className={
+                                        index % 2 === 0 ? "even-row" : "odd-row"
+                                    }
+                                >
                                     <td>{stat.label}</td>
                                     <td>{stat.owner}</td>
                                     <td>{stat.value}</td>
@@ -30,7 +41,9 @@ const SeasonPositionalRecordsTable = ({ bestPositionalStats, worstPositionalStat
                             {worstPositionalStats.map((stat, index) => (
                                 <tr
                                     key={`worst-${index}`}
-                                    className={`${index === 0 ? "thick-border-top" : ""} ${
+                                    className={`${
+                                        index === 0 ? "thick-border-top" : ""
+                                    } ${
                                         index % 2 === 0 ? "even-row" : "odd-row"
                                     }`}
                                 >

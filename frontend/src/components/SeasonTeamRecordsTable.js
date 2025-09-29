@@ -7,7 +7,10 @@ const SeasonTeamRecordsTable = ({ bestTeamStats, worstTeamStats }) => {
     return (
         <div className="wrapper-wide">
             <h2>Season Team Records</h2>
-            <table className="table-with-bottom-caption">
+            <table
+                className="table-with-bottom-caption"
+                style={{ tableLayout: "fixed", width: "70%" }}
+            >
                 <thead>
                     <tr>
                         <th>Award</th>
@@ -17,11 +20,19 @@ const SeasonTeamRecordsTable = ({ bestTeamStats, worstTeamStats }) => {
                 </thead>
                 <tbody>
                     {!bestTeamStats || !worstTeamStats ? (
-                        <LoadingRow text="Loading team records..." colSpan="3" />
+                        <LoadingRow
+                            text="Loading team records..."
+                            colSpan="3"
+                        />
                     ) : (
                         <>
                             {bestTeamStats.map((stat, index) => (
-                                <tr key={`best-${index}`} className={index % 2 === 0 ? "even-row" : "odd-row"}>
+                                <tr
+                                    key={`best-${index}`}
+                                    className={
+                                        index % 2 === 0 ? "even-row" : "odd-row"
+                                    }
+                                >
                                     <td>{stat.label}</td>
                                     <td>{stat.owner}</td>
                                     <td>{stat.value}</td>
@@ -30,7 +41,9 @@ const SeasonTeamRecordsTable = ({ bestTeamStats, worstTeamStats }) => {
                             {worstTeamStats.map((stat, index) => (
                                 <tr
                                     key={`worst-${index}`}
-                                    className={`${index === 0 ? "thick-border-top" : ""} ${
+                                    className={`${
+                                        index === 0 ? "thick-border-top" : ""
+                                    } ${
                                         index % 2 === 0 ? "even-row" : "odd-row"
                                     }`}
                                 >
