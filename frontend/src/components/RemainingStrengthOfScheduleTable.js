@@ -5,7 +5,12 @@ import LoadingRow from "./LoadingRow";
 import { safeFetch } from "../utils/api";
 import "./styles/tableStyles.css";
 
-const RemainingStrengthOfScheduleTable = ({ leagueId, leagueYear, week }) => {
+const RemainingStrengthOfScheduleTable = ({
+    leagueId,
+    leagueYear,
+    week,
+    nCompletedWeeks,
+}) => {
     const [
         remainingStrengthOfScheduleData,
         setRemainingStrengthOfScheduleData,
@@ -65,6 +70,18 @@ const RemainingStrengthOfScheduleTable = ({ leagueId, leagueYear, week }) => {
                         : ` for Weeks ${minWeek}-${maxWeek}` // Show range if minWeek and maxWeek are different
                     : ""}
             </h2>
+            {minWeek > nCompletedWeeks && ( // Only display note if minWeek > nCompletedWeeks
+                <p>
+                    <em>
+                        Note that scores have not yet been finalized for this
+                        week and the Remaining Strengths of Schedule are likely
+                        to change.
+                        <br />
+                        Please check back on Tuesday morning for the final
+                        results.
+                    </em>
+                </p>
+            )}
             <table className="table-with-bottom-caption">
                 <thead>
                     <tr>
@@ -96,10 +113,10 @@ const RemainingStrengthOfScheduleTable = ({ leagueId, leagueYear, week }) => {
                                 <td className="team-name-column">
                                     {team.owner}
                                 </td>
-                                <td>{team.opp_points_for}</td>
-                                <td>{team.opp_win_pct}</td>
-                                <td>{team.opp_power_rank}</td>
-                                <td>{team.overall_difficulty}</td>
+                                <td>{team.opp_points_for.toFixed(2)}</td>
+                                <td>{team.opp_win_pct.toFixed(3)}</td>
+                                <td>{team.opp_power_rank.toFixed(1)}</td>
+                                <td>{team.overall_difficulty.toFixed(1)}</td>
                             </tr>
                         ))
                     )}

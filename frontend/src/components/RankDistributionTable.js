@@ -3,16 +3,45 @@ import PropTypes from 'prop-types';
 import LoadingRow from "./LoadingRow";
 import './styles/tableStyles.css';
 
-const RankDistributionTable = ({ data, numColumns, playoffTeams, selectedWeek }) => {
+const RankDistributionTable = ({
+    data,
+    numColumns,
+    playoffTeams,
+    selectedWeek,
+    pendingData,
+}) => {
     const ordinalSuffix = (num) => {
         const suffixes = ["th", "st", "nd", "rd"];
         const value = num % 100;
-        return num + (suffixes[(value - 20) % 10] || suffixes[value] || suffixes[0]);
+        return (
+            num +
+            (suffixes[(value - 20) % 10] || suffixes[value] || suffixes[0])
+        );
     };
+
+    function formatPercent(val) {
+        const percentage = val * 100;
+        return `${percentage.toFixed(val < 0.1 ? 1 : 0)}%`;
+    }
 
     return (
         <div className="wrapper-wide">
-            <h2>Final position distribution odds (prior to Week {selectedWeek} matchups)</h2>
+            <h2>
+                Final position distribution odds (prior to Week {selectedWeek}{" "}
+                matchups)
+            </h2>
+            {pendingData && ( // Only display note if week > nCompletedWeeks
+                <p>
+                    <em>
+                        Note that scores have not yet been finalized for this
+                        week and the final position distributions are likely to
+                        change.
+                        <br />
+                        Please check back on Tuesday morning for the final
+                        results.
+                    </em>
+                </p>
+            )}
             <table className="table-with-bottom-caption">
                 <thead>
                     <tr>
@@ -26,28 +55,45 @@ const RankDistributionTable = ({ data, numColumns, playoffTeams, selectedWeek })
                 </thead>
                 <tbody>
                     {data === null ? (
-                        <LoadingRow text="Calculating rank distribution..." colSpan={numColumns + 3} />
+                        <LoadingRow
+                            text="Calculating rank distribution..."
+                            colSpan={numColumns + 3}
+                        />
                     ) : (
                         data.map((team, index) => (
-                            <tr key={index} className={index % 2 === 0 ? "even-row" : "odd-row"}>
-                                <td className="team-name-column">{team.team}</td>
-                                <td className="team-name-column">{team.owner}</td>
-                                {team.position_odds.slice(0, numColumns).map((odds, i) => (
-                                    <td key={i}>{odds}</td>
-                                ))}
-                                <td>{team.playoff_odds}</td>
+                            <tr
+                                key={index}
+                                className={
+                                    index % 2 === 0 ? "even-row" : "odd-row"
+                                }
+                            >
+                                <td className="team-name-column">
+                                    {team.team}
+                                </td>
+                                <td className="team-name-column">
+                                    {team.owner}
+                                </td>
+                                {team.position_odds
+                                    .slice(0, numColumns)
+                                    .map((odds, i) => (
+                                        <td key={i}>{formatPercent(odds)}</td>
+                                    ))}
+                                <td>{formatPercent(team.playoff_odds)}</td>
                             </tr>
                         ))
                     )}
                 </tbody>
             </table>
             <p>
-                <strong>Note that for this league, {playoffTeams} teams make the playoffs.</strong>
+                <strong>
+                    Note that for this league, {playoffTeams} teams make the
+                    playoffs.
+                </strong>
                 <br />
                 <em>
-                All percentages are based on simulation results alone.
-                Values of 0% or 100% do not necessarily mean that a team
-                has been mathematically eliminated or clinched a playoff spot.
+                    All percentages are based on simulation results alone.
+                    Values of 0% or 100% do not necessarily mean that a team has
+                    been mathematically eliminated or clinched a playoff spot.
                 </em>
             </p>
         </div>
