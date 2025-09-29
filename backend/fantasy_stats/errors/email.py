@@ -24,15 +24,16 @@ def send_new_league_added_alert(league_info: LeagueInfo):
     # Build message
     with get_postgres_conn() as conn:
         n_leagues_2025 = pd.read_sql(
-            "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo WHERE league_year = 2025",
+            "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo WHERE league_year = 2025 and not deleted",
             conn,
         ).values[0][0]
         n_leagues_added_this_year = pd.read_sql(
-            "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo WHERE created_date > '2025-03-15'",
+            "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo WHERE not deleted and created_date > '2025-03-15'",
             conn,
         ).values[0][0]
         n_leagues_added_all_time = pd.read_sql(
-            "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo", conn
+            "SELECT COUNT(*) FROM public.fantasy_stats_leagueinfo WHERE not deleted",
+            conn,
         ).values[0][0]
 
     # Fill in the placeholders in the email template
