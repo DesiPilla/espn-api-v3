@@ -19,9 +19,13 @@ const LeagueSimulationPage = () => {
     const [simulationData, setSimulationData] = useState(null);
     const [selectedWeek, setSelectedWeek] = useState(null);
     const [currentWeek, setCurrentWeek] = useState(null);
+    const [nCompletedWeeks, setNCompletedWeeks] = useState(null);
     const [leagueSettings, setLeagueSettings] = useState(null);
     const [fetchError, setFetchError] = useState(null);
+    const [loading, setLoading] = useState(false); // Add loading state
     const navigate = useNavigate();
+
+    const MIN_WEEK_TO_SIMULATE = 4; // Minimum week required to run simulations
 
     if (fetchError) {
         throw fetchError;
@@ -124,22 +128,17 @@ const LeagueSimulationPage = () => {
     // Set the default current week and selected week
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
-        const weekFromUrl = queryParams.get("week");
+        const weekFromUrl = (() => {
+            const week = queryParams.get("week");
+            return week && !isNaN(parseInt(week)) ? parseInt(week) : null;
+        })();
 
-        console.log("weekFromUrl:", weekFromUrl); // Debugging step
-
-        const validWeekFromUrl =
-            weekFromUrl && !isNaN(parseInt(weekFromUrl, 10))
-                ? parseInt(weekFromUrl, 10)
-                : null;
-
-        if (validWeekFromUrl !== null) {
-            console.log("Setting selected week from URL:", validWeekFromUrl);
-            setSelectedWeek(validWeekFromUrl);
+        if (weekFromUrl) {
+            console.log("Setting selected week from URL:", weekFromUrl);
+            setSelectedWeek(weekFromUrl);
         }
 
-        const fetchCurrentWeek = () => {
-            console.log("Fetching current week...");
+        const fetchCurrentWeek = async () => {
             safeFetch(
                 `/api/league/${leagueYear}/${leagueId}/current-week/`,
                 {},
@@ -148,50 +147,30 @@ const LeagueSimulationPage = () => {
             )
                 .then((data) => {
                     if (data?.redirect) {
-                        console.log(`Redirecting to: ${data.redirect}`);
                         navigate(data.redirect);
-                        return; // Stop further processing if redirect
-                    }
-
-                    console.log("Fetched current week:", data.current_week); // Debugging step
-
-                    const validCurrentWeek = !isNaN(data.current_week)
-                        ? data.current_week
-                        : null;
-                    const validMaxWeek = !isNaN(
-                        leagueSettings?.n_regular_season_weeks
-                    )
-                        ? leagueSettings.n_regular_season_weeks
-                        : validCurrentWeek;
-
-                    const adjustedWeek =
-                        validCurrentWeek !== null
-                            ? Math.min(validMaxWeek, validCurrentWeek)
-                            : null;
-
-                    setCurrentWeek(adjustedWeek);
-
-                    if (
-                        validWeekFromUrl === null &&
-                        validCurrentWeek !== null
-                    ) {
-                        setSelectedWeek(adjustedWeek); // Only set selectedWeek if not defined by URL
+                    } else {
+                        setCurrentWeek(data.current_week);
+                        setNCompletedWeeks(data.n_completed_weeks);
+                        if (!weekFromUrl) {
+                            setSelectedWeek(data.current_week - 1); // Only set selectedWeek if not already defined
+                        }
+                        console.log("Current week:", currentWeek);
+                        console.log("Selected week:", selectedWeek);
+                        console.log(
+                            "Number of completed weeks:",
+                            data.n_completed_weeks
+                        );
                     }
                 })
                 .catch((err) => {
                     console.error(
-                        "ERROR: /api/league/%s/%s/current-week/",
-                        leagueYear,
-                        leagueId,
-                        err
+                        "ERROR: /api/league/%s/%s/current-week/", leagueYear, leagueId, err
                     );
                     setFetchError(err);
                 });
         };
 
-        if (leagueYear && leagueId) {
-            fetchCurrentWeek();
-        }
+        fetchCurrentWeek();
 
         // Ensure selectedWeek is never undefined
         if (selectedWeek === undefined) {
@@ -199,11 +178,11 @@ const LeagueSimulationPage = () => {
                 "selectedWeek is undefined, setting it to currentWeek:",
                 currentWeek
             );
-            setSelectedWeek(currentWeek);
+            setSelectedWeek(currentWeek - 1);
         }
     }, [location.search, leagueYear, leagueId, selectedWeek, currentWeek]);
 
-    // Redirect to "uh-oh-too-early" page if selectedWeek or currentWeek is less than 4
+    // Redirect to "uh-oh-too-early" page if selectedWeek or currentWeek is less than MIN_WEEK_TO_SIMULATE
     useEffect(() => {
         console.log("selectedWeek:", selectedWeek, "currentWeek:", currentWeek);
 
@@ -218,7 +197,10 @@ const LeagueSimulationPage = () => {
 
         // Perform redirect if both weeks are valid
         if (selectedWeek !== null && currentWeek !== null) {
-            if (selectedWeek < 4 || currentWeek < 4) {
+            if (
+                selectedWeek < MIN_WEEK_TO_SIMULATE ||
+                currentWeek < MIN_WEEK_TO_SIMULATE
+            ) {
                 const redirectUrl = `/fantasy_stats/uh-oh-too-early/league-homepage/${leagueYear}/${leagueId}`;
                 console.log(`Redirecting to: ${redirectUrl}`);
                 navigate(redirectUrl);
@@ -269,6 +251,7 @@ const LeagueSimulationPage = () => {
         // Ensure selectedWeek is never undefined
         const validWeek = newWeek && !isNaN(newWeek) ? newWeek : currentWeek;
         console.log("Valid week determined in handleWeekChange:", validWeek); // Debugging step
+
         if (validWeek !== undefined && !isNaN(validWeek)) {
             setSelectedWeek(validWeek);
             setSimulationData(null); // Reset simulationData to show the spinner
@@ -294,9 +277,34 @@ const LeagueSimulationPage = () => {
         );
     };
 
+    useEffect(() => {
+        if (selectedWeek !== null) {
+            // Simulate data fetching for the new week
+            setLoading(true);
+            const fetchData = async () => {
+                try {
+                    // Simulate a delay for fetching data
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                } finally {
+                    setLoading(false); // Set loading to false after data is fetched
+                }
+            };
+            fetchData();
+        }
+    }, [selectedWeek]);
+
     console.log("Selected week:", selectedWeek);
     console.log("Current week:", currentWeek);
     console.log("Number of simulations:", nSimulations);
+
+    if (!leagueSettings || currentWeek === null) {
+        return (
+            <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <span className="loading-text">Loading league data...</span>
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -305,13 +313,14 @@ const LeagueSimulationPage = () => {
             <p>League ID: {leagueId}</p>
 
             <WeekSelector
-                currentWeek={currentWeek ?? 18}
-                onWeekChange={handleWeekChange}
-                minWeek={4}
+                currentWeek={currentWeek}
+                selectedWeek={selectedWeek}
+                minWeek={MIN_WEEK_TO_SIMULATE}
                 maxWeek={Math.min(
                     leagueSettings?.n_regular_season_weeks,
                     currentWeek
                 )}
+                onWeekChange={handleWeekChange}
                 disable={leagueSettings?.regular_season_complete}
             />
 
@@ -336,23 +345,27 @@ const LeagueSimulationPage = () => {
                 data={simulationData?.playoff_odds || null}
                 playoffTeams={leagueSettings?.n_playoff_spots}
                 selectedWeek={selectedWeek}
+                pendingData={selectedWeek >= nCompletedWeeks}
             />
 
             <RankDistributionTable
                 data={simulationData?.rank_distribution || null}
                 numColumns={leagueSettings?.n_teams}
                 playoffTeams={leagueSettings?.n_playoff_spots}
+                pendingData={selectedWeek >= nCompletedWeeks}
             />
 
             <SeedingOutcomesTable
                 data={simulationData?.seeding_outcomes || null}
                 playoffTeams={leagueSettings?.n_playoff_spots}
+                pendingData={selectedWeek >= nCompletedWeeks}
             />
 
             <RemainingStrengthOfScheduleTable
                 leagueYear={leagueYear}
                 leagueId={leagueId}
                 week={selectedWeek}
+                nCompletedWeeks={nCompletedWeeks}
             />
 
             <Footer />

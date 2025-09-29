@@ -36,6 +36,7 @@ OWNER_MAP = {
     "Joseph Ricupero": "Jojo & Matt",
     "Desi Pilla": "Desi & Jane",
     "Marc C": "Marco Chirico",
+    "Marc Chirico": "Marco Chirico",
 }
 
 

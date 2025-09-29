@@ -14,6 +14,7 @@ def extract_player_stats(
     df = pd.DataFrame()
     for i, player in enumerate(team_lineup):
         player_data = {
+            "week": week,
             "team_owner": team.owner,
             "team_name": team.team_name,
             "team_division": team.division_name,
@@ -30,7 +31,6 @@ def extract_player_stats(
         }
 
         # Add stat to player_data
-        print(player_data["player_name"], week, player_data["player_active_status"])
         if week in player.stats.keys() and player.active_status != "bye":
             player_data["player_points_week"] = player.stats[week]["points"]
             player_data["player_percent_owned"] = player.percent_owned
@@ -53,7 +53,7 @@ def extract_player_stats(
         else:
             player_data["player_points_season"] = 0
 
-        df = df.append(pd.Series(player_data), ignore_index=True)
+        df = pd.concat([df, pd.Series(player_data).to_frame().T])
 
     return df
 
@@ -110,10 +110,9 @@ def get_stats_by_matchup(
             )
 
             # Append to week data frame
-            df_week = df_week.append(df_home_team)
-            df_week = df_week.append(df_away_team)
+            df_week = pd.concat([df_week, df_home_team, df_away_team])
 
-        df = df.append(df_week)
+        df = pd.concat([df, df_week])
 
     df["league_id"] = league_id
     df["year"] = year

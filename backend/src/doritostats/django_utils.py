@@ -441,12 +441,10 @@ def django_strength_of_schedule(
         django_sos.append(
             {
                 "team": sos_df.iloc[i].name.team_name,
-                "opp_points_for": "{:.1f}".format(sos_df.iloc[i].opp_points_for),
-                "opp_win_pct": "{:.3f}".format(sos_df.iloc[i].opp_win_pct),
-                "opp_power_rank": "{:.1f}".format(sos_df.iloc[i].opp_power_rank),
-                "overall_difficulty": "{:.1f}".format(
-                    sos_df.iloc[i].overall_difficulty
-                ),
+                "opp_points_for": sos_df.iloc[i].opp_points_for,
+                "opp_win_pct": sos_df.iloc[i].opp_win_pct,
+                "opp_power_rank": sos_df.iloc[i].opp_power_rank,
+                "overall_difficulty": sos_df.iloc[i].overall_difficulty,
                 "owner": sos_df.iloc[i].name.owner,
             }
         )
@@ -477,10 +475,8 @@ def django_simulation(league: League, n_simulations: int, week: Optional[int] = 
                 "projected_wins": playoff_odds.iloc[i].wins,
                 "projected_losses": playoff_odds.iloc[i].losses,
                 "projected_ties": playoff_odds.iloc[i].ties,
-                "projected_points_for": "{:.1f}".format(
-                    playoff_odds.iloc[i].points_for
-                ),
-                "playoff_odds": "{:.1f}%".format(playoff_odds.iloc[i].playoff_odds),
+                "projected_points_for": playoff_odds.iloc[i].points_for,
+                "playoff_odds": playoff_odds.iloc[i].playoff_odds / 100,
             }
         )
 
@@ -490,10 +486,8 @@ def django_simulation(league: League, n_simulations: int, week: Optional[int] = 
             {
                 "team": rank_dist.iloc[i].team_name,
                 "owner": rank_dist.iloc[i].team_owner,
-                "position_odds": [
-                    "{:.1%}".format(rank_dist.iloc[i][c] / 100) for c in rank_cols
-                ],
-                "playoff_odds": "{:.1f}%".format(rank_dist.iloc[i].playoff_odds),
+                "position_odds": [rank_dist.iloc[i][c] / 100 for c in rank_cols],
+                "playoff_odds": rank_dist.iloc[i].playoff_odds / 100,
             }
         )
 
@@ -502,21 +496,11 @@ def django_simulation(league: League, n_simulations: int, week: Optional[int] = 
             {
                 "team": seeding_outcomes.iloc[i].team_name,
                 "owner": seeding_outcomes.iloc[i].team_owner,
-                "first_in_league": "{:.1%}".format(
-                    seeding_outcomes.iloc[i].first_in_league / 100
-                ),
-                "first_in_division": "{:.1%}".format(
-                    seeding_outcomes.iloc[i].first_in_division / 100
-                ),
-                "make_playoffs": "{:.1f}%".format(
-                    seeding_outcomes.iloc[i].make_playoffs
-                ),
-                "last_in_division": "{:.1%}".format(
-                    seeding_outcomes.iloc[i].last_in_division / 100
-                ),
-                "last_in_league": "{:.1%}".format(
-                    seeding_outcomes.iloc[i].last_in_league / 100
-                ),
+                "first_in_league": seeding_outcomes.iloc[i].first_in_league / 100,
+                "first_in_division": seeding_outcomes.iloc[i].first_in_division / 100,
+                "make_playoffs": seeding_outcomes.iloc[i].make_playoffs / 100,
+                "last_in_division": seeding_outcomes.iloc[i].last_in_division / 100,
+                "last_in_league": seeding_outcomes.iloc[i].last_in_league / 100,
             }
         )
 
