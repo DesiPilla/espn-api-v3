@@ -27,7 +27,7 @@ setuptools = "^75.2.0"
 sqlalchemy = "^2.0.36"
 urllib3 = "^2.2.3"
 whitenoise = { extras = ["brotli"], version = "^6.7.0" }
-Django = "^5.1.2"
+Django = "^5.1.13"
 psycopg2-binary = "^2.9.10"
 pytz = "^2024.2"
 djangorestframework = "^3.15.2"
