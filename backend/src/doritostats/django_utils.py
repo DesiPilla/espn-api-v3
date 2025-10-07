@@ -31,24 +31,6 @@ CURRENT_YEAR = (
 )
 
 
-def ordinal(n: int) -> str:
-    """This function returns the ordinal of a number.
-
-    Ex: 1 -> 1st, 2 -> 2nd, 3 -> 3rd, 4 -> 4th, 5 -> 5th, etc.
-
-    Args:
-        n (int): The number to get the ordinal of.
-
-    Returns:
-        str: The ordinal of the number.
-    """
-    if 11 <= (n % 100) <= 13:
-        suffix = "th"
-    else:
-        suffix = ["th", "st", "nd", "rd", "th"][min(n % 10, 4)]
-    return str(n) + suffix
-
-
 def get_leagues_current_year():
     return (
         LeagueInfo.objects.filter(league_year=CURRENT_YEAR)
