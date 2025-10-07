@@ -11,6 +11,7 @@ from backend.src.doritostats.analytic_utils import (
     get_score_surprise,
     get_weekly_finish,
 )
+from backend.src.doritostats.analytic_utils import make_ordinal
 
 
 def calculate_scheduling_factor(league: League, team: Team, week: int) -> float:
@@ -95,7 +96,7 @@ def calculate_margin_of_victory_factor(team_score: float, opp_score: float) -> f
     """Calculate the margin of victory factor for a team in a given week.
 
     The luck factor ranges from -1 to 1, where -1 is the most unlucky and 1 is the most lucky.
-    MOVs that are 20% (max_pct) or more of the lower team's score have the maximum effect.
+    MOVs that are 20% (max_pct) or more of the lower team's score have the minimum effect.
 
     Args:
         team_score (float): The team's score in the given week
@@ -310,6 +311,7 @@ def get_weekly_luck_index(
     week: int,
     box_scores: Optional[List[BoxScore]] = None,
     return_factors: bool = False,
+    explain: bool = False,
 ) -> Union[float, Dict[str, float]]:
     """This function calculates the weekly luck index for a team in a given week.
     It does so by blending in many different factors.
@@ -326,6 +328,7 @@ def get_weekly_luck_index(
         week (int): The week to calculate the luck index for
         box_scores (Optional[List[BoxScore]]): A list of ESPN BoxScore objects for the given week. Defaults to None.
         return_factors (bool): Whether to return the individual factors that make up the luck index. Defaults to False.
+        explain (bool): Whether to print out an explanation of the luck index. Defaults to False.
 
     Returns:
         float: The luck index for the given team in the given week
@@ -345,9 +348,11 @@ def get_weekly_luck_index(
 
     # Get the team's outcome for the given week
     outcome = team.outcomes[week - 1]
+    team_scores = np.array(team.scores)[np.array(team.outcomes) != "U"]
 
     #  Get the team's opponent for the given week
     opp = team.schedule[week - 1]
+    opp_scores = np.array(opp.scores)[np.array(opp.outcomes) != "U"]
 
     # Calculate the scheduling factor
     scheduling_factor = calculate_scheduling_factor(league, team, week)
@@ -355,11 +360,11 @@ def get_weekly_luck_index(
     # Calculate the performance factors
     team_performance_factor = calculate_performance_vs_historical_average(
         team.scores[week - 1],
-        team.scores,
+        team_scores,
     )
     opp_performance_factor = -1 * calculate_performance_vs_historical_average(
         opp.scores[week - 1],
-        opp.scores,
+        opp_scores,
     )
 
     # Calculate the margin of victory factor
@@ -428,9 +433,9 @@ def get_weekly_luck_index(
     }
     projection_factor -= factor_weight_adjustments["performance_vs_projection"]
     injury_bye_factor -= factor_weight_adjustments["injuries_byes"][week]
-    opp_injury_bye_factor -= factor_weight_adjustments["injuries_byes"][week]
+    opp_injury_bye_factor += factor_weight_adjustments["injuries_byes"][week]
     optimal_vs_actual_factor -= factor_weight_adjustments["optimal_vs_actual"]
-    opp_optimal_vs_actual_factor -= factor_weight_adjustments["opp_optimal_vs_actual"]
+    opp_optimal_vs_actual_factor += factor_weight_adjustments["opp_optimal_vs_actual"]
 
     # Combine the factors
     luck_index = (
@@ -446,6 +451,183 @@ def get_weekly_luck_index(
         + factor_weights["optimal_vs_optimal"] * optimal_vs_optimal_factor
     )
 
+    if explain:
+        owner = team.owner
+        print(f"Luck index for {owner} in week {week}: {luck_index:.2f}")
+        print(
+            f"\n  Scheduling: {scheduling_factor:0.2f} (weight={factor_weights['scheduling']:0.0%})"
+        )
+        print(
+            f"      {owner} finished in {make_ordinal(get_weekly_finish(league, team, week))} / {len(league.teams)} place"
+        )
+
+        print(
+            f"\n  Performance vs Historical Average: {team_performance_factor:0.2f} (weight={factor_weights['performance_vs_historical'] * 2/3:0.0%})"
+        )
+        print(
+            f"      {owner} scored {team.scores[week - 1]:.1f} points vs a historical average of {np.mean(team_scores):.1f} points"
+        )
+        print(
+            f"      This value is {team_performance_factor * 2:.1f} standard deviations away from the mean"
+        )
+        print(
+            f"\n  Opponent Performance vs Historical Average: {opp_performance_factor:0.2f} (weight={factor_weights['performance_vs_historical'] * 1/3:0.0%})"
+        )
+        print(
+            f"      {opp.owner} scored {opp.scores[week - 1]:.1f} points vs a historical average of {np.mean(opp_scores):.1f} points"
+        )
+        print(
+            f"      This value is {opp_performance_factor * -2:.1f} standard deviations away from the mean"
+        )
+        print(
+            f"\n  Margin of Victory: {margin_of_victory_factor:0.2f} (weight={factor_weights['margin_of_victory']:0.0%})"
+        )
+        mov = team.scores[week - 1] - opp.scores[week - 1]
+        print(f"      {owner} had a margin of victory of {mov:.1f} points")
+        if not margin_of_victory_factor:
+            print(
+                "      This margin of victory had no impact on the luck index because it was so large"
+            )
+        print(
+            f"\n  Performance vs Projection: {projection_factor:0.2f} (weight={factor_weights['performance_vs_projection']:0.0%})"
+        )
+        projected_score = get_projected_score(None, team_lineup)
+        score_surprise = get_score_surprise(None, team_lineup)
+        print(
+            f"      {owner} had a score surprise of {score_surprise/projected_score:0.0%} of their projected score"
+        )
+        print("      Luck only considers projection surprises up to +/- 25%")
+        print(
+            f"      {owner} acheives {projection_factor + factor_weight_adjustments['performance_vs_projection']:0.2%} of the max surprise factor"
+        )
+        print(
+            f"      Teams average score surprise is {factor_weight_adjustments['performance_vs_projection']:0.2%} and is subtracted from the factor"
+        )
+        print(
+            f"\n  Injuries/Byes: {injury_bye_factor:0.2f} (weight={factor_weights['injuries_byes'] * 2/3:0.0%})"
+        )
+        num_injured = get_num_inactive(None, team_lineup)
+        num_bye = get_num_bye(None, team_lineup)
+        print(
+            f"      {owner} had {num_injured} injured players and {num_bye} players on bye"
+        )
+        print(
+            f"      That is {-injury_bye_factor - factor_weight_adjustments['injuries_byes'][week]:0.1%} of {owner}'s roster size"
+        )
+        print(
+            f"      Teams average {-factor_weight_adjustments['injuries_byes'][week]:0.1%} injuries in Week {week} and is subtracted from the factor"
+        )
+        print(
+            f"\n  Opponent Injuries/Byes: {opp_injury_bye_factor:0.2f} (weight={factor_weights['injuries_byes'] * 1/3:0.0%})"
+        )
+        opp_num_injured = get_num_inactive(None, opp_lineup)
+        opp_num_bye = get_num_bye(None, opp_lineup)
+        print(
+            f"      {opp.owner} had {opp_num_injured} injured players and {opp_num_bye} players on bye"
+        )
+        print(
+            f"      That is {opp_injury_bye_factor - factor_weight_adjustments['injuries_byes'][week]:0.1%} of {opp.owner}'s roster size"
+        )
+        print(
+            f"      Teams average {-factor_weight_adjustments['injuries_byes'][week]:0.1%} injuries in Week {week} and is subtracted from the factor"
+        )
+        print(
+            f"\n  Optimal vs Actual: {optimal_vs_actual_factor:0.2f} (weight={factor_weights['optimal_vs_actual'] * 2/3:0.0%})"
+        )
+        optimal_score = get_best_lineup(league, team_lineup)
+        if optimal_score > opp.scores[week - 1]:
+            if team.outcomes[week - 1] == "W":
+                print(
+                    f"      {owner}'s would have still won if they had played their optimal lineup.\n      Therefore, they have an optimal vs actual factor of 0"
+                )
+            else:
+                print(
+                    f"      {owner}'s would have won if they had played their optimal lineup.\n      Therefore, they are unlucky and has an optimal vs actual factor of -1"
+                )
+        elif optimal_score < opp.scores[week - 1]:
+            if team.outcomes[week - 1] == "L":
+                print(
+                    f"      {owner}'s would have still lost if they had played their optimal lineup.\n     Therefore, they have an optimal vs actual factor of 0"
+                )
+            else:
+                print(
+                    f"      {owner}'s would have lost if they had played their optimal lineup.\n      Therefore, they are lucky and has an optimal vs actual factor of 0"
+                )
+        else:
+            pass
+
+        print(
+            f"      The average value of this factor is {factor_weight_adjustments['optimal_vs_actual']:0.2f} and is subtracted from the factor"
+        )
+
+        print(
+            f"\n  Opponent Optimal vs Actual: {opp_optimal_vs_actual_factor:0.2f} (weight={factor_weights['optimal_vs_actual'] * 1/3:0.0%})"
+        )
+        opp_optimal_score = get_best_lineup(league, opp_lineup)
+        if opp_optimal_score > team.scores[week - 1]:
+            if opp.outcomes[week - 1] == "W":
+                print(
+                    f"      {opp.owner}'s would have still won if they had played their optimal lineup.\n      Therefore, they have an optimal vs actual factor of 0"
+                )
+            else:
+                print(
+                    f"      {opp.owner}'s would have won if they had played their optimal lineup.\n      Therefore, they are unlucky and has an optimal vs actual factor of -1"
+                )
+        elif opp_optimal_score < team.scores[week - 1]:
+            if opp.outcomes[week - 1] == "L":
+                print(
+                    f"      {opp.owner}'s would have still lost if they had played their optimal lineup.\n     Therefore, they have an optimal vs actual factor of 0"
+                )
+            else:
+                print(
+                    f"      {opp.owner}'s would have lost if they had played their optimal lineup.\n      Therefore, they are lucky and has an optimal vs actual factor of 0"
+                )
+        else:
+            pass
+        print(
+            f"      The average value of this factor is {factor_weight_adjustments['opp_optimal_vs_actual']:0.2f} and is subtracted from the factor"
+        )
+
+        print(
+            f"\n  Optimal vs Optimal: {optimal_vs_optimal_factor:0.2f} (weight={factor_weights['optimal_vs_optimal']:0.0%})"
+        )
+        if optimal_score > opp_optimal_score:
+            if team.outcomes[week - 1] == "W":
+                print(
+                    f"      {owner} would have still won if both teams had played their optimal lineup.\n      Therefore, they have an optimal vs optimal factor of 0"
+                )
+            else:
+                print(
+                    f"      {owner} would have won if both teams had played their optimal lineup.\n      Therefore, they are unlucky and has an optimal vs optimal factor of -1"
+                )
+        elif optimal_score < opp_optimal_score:
+            if team.outcomes[week - 1] == "L":
+                print(
+                    f"      {owner} would have still lost if both teams had played their optimal lineup.\n     Therefore, they have an optimal vs optimal factor of 0"
+                )
+            else:
+                print(
+                    f"      {owner} would have lost if both teams had played their optimal lineup.\n      Therefore, they are lucky and has an optimal vs optimal factor of 0.5"
+                )
+        else:
+            pass
+        print("      The average value of this factor is 0 and is not adjusted")
+
+        # Write the formula for the luck index
+        print("\nOverall Luck Index Calculation:")
+        print(
+            f"  Luck Index = ({factor_weights['scheduling']:0.0%} * {scheduling_factor:.2f}) + "
+            f"({factor_weights['performance_vs_historical'] * 2/3:0.0%} * {team_performance_factor:.2f}) + "
+            f"({factor_weights['performance_vs_historical'] * 1/3:0.0%} * {opp_performance_factor:.2f})\n    + "
+            f"({factor_weights['margin_of_victory']:0.0%} * {margin_of_victory_factor:.2f}) + "
+            f"({factor_weights['performance_vs_projection']:0.0%} * {projection_factor:.2f}) + "
+            f"({factor_weights['injuries_byes'] * 2/3:0.0%} * {injury_bye_factor:.2f}) + "
+            f"({factor_weights['injuries_byes'] * 1/3:0.0%} * {opp_injury_bye_factor:.2f})\n    + "
+            f"({factor_weights['optimal_vs_actual'] * 2/3:0.0%} * {optimal_vs_actual_factor:.2f}) + "
+            f"({factor_weights['optimal_vs_actual'] * 1/3:0.0%} * {opp_optimal_vs_actual_factor:.2f}) + "
+            f"({factor_weights['optimal_vs_optimal']:0.0%} * {optimal_vs_optimal_factor:.2f})\n  = "
+            f"{luck_index:.2%}"
+        )
     if return_factors:
         return {
             "scheduling": scheduling_factor,
