@@ -51,54 +51,58 @@ const CopyableContainer = ({
         // Store original styles to restore later
         const originalStyle = containerRef.current.style.cssText;
 
+        // Get the table element
+        const tableElement = containerRef.current.querySelector("table");
+        let originalTableStyle = null;
+
+        if (tableElement) {
+            // Store original table styles
+            originalTableStyle = tableElement.style.cssText;
+
+            // Determine if this is a wide table that needs special handling
+            const columnCount =
+                tableElement.querySelectorAll("thead th").length;
+
+            // Apply special handling for wide tables (like RankDistributionTable)
+            if (columnCount > 5) {
+                tableElement.style.width = "auto";
+                tableElement.style.tableLayout = "auto";
+
+                // Make sure text doesn't wrap
+                const cells = tableElement.querySelectorAll("th, td");
+                cells.forEach((cell) => {
+                    cell.style.whiteSpace = "nowrap";
+                    cell.style.padding = "5px";
+                });
+            }
+        }
+
         // Apply inline styles for the image capture
         containerRef.current.style.margin = "0";
         containerRef.current.style.paddingLeft = "10px";
         containerRef.current.style.paddingRight = "10px";
         containerRef.current.style.paddingTop = "0";
-        containerRef.current.style.paddingBottom = "15px"; // Increased padding at bottom
-        containerRef.current.style.maxWidth = "none"; // Remove max-width constraints
-        
-        // Get table element and ensure it's fully visible
-        const tableElement = containerRef.current.querySelector("table");
-        if (tableElement) {
-            // Store original table styles
-            const originalTableStyles = tableElement.style.cssText;
-            
-            // Make sure the table is fully visible
-            tableElement.style.width = "auto"; // Let it adjust to content
-            tableElement.style.minWidth = "auto"; // Override min-width constraints
-            tableElement.style.maxWidth = "none"; // No max width constraints
-            tableElement.style.tableLayout = "auto"; // Let columns adjust to their content
-            
-            // Fix to prevent columns from being squeezed
-            const tableCells = tableElement.querySelectorAll('th, td');
-            tableCells.forEach(cell => {
-                cell.style.whiteSpace = "nowrap"; // Prevent text wrapping
-            });
-        }
+        containerRef.current.style.paddingBottom = "0"; // Increased bottom padding
+        containerRef.current.style.maxWidth = "none";
+
+        // Calculate the actual width needed
+        let captureWidth = containerRef.current.scrollWidth + 20; // Add padding
 
         // create PNG data URL from the element with higher resolution
         const dataUrl = await htmlToImage.toPng(containerRef.current, {
             pixelRatio: 2.0, // Increase resolution - use 2.0 for double resolution
             quality: 1.0, // Highest quality
-            width: containerRef.current.scrollWidth + 20, // Add extra width to prevent cutoff
-            height: containerRef.current.scrollHeight + 20, // Add extra height
-            style: {
-                // Ensure content is fully visible
-                overflow: "visible",
-                maxWidth: "none",
-                width: "auto",
-            }
+            width: captureWidth,
+            height: containerRef.current.scrollHeight + 20,
         });
-        
-        // Restore table styles if modified
-        if (tableElement && originalTableStyles) {
-            tableElement.style.cssText = originalTableStyles;
-        }
 
         // Restore the original styles
         containerRef.current.style.cssText = originalStyle;
+
+        // Restore table styles if modified
+        if (tableElement && originalTableStyle) {
+            tableElement.style.cssText = originalTableStyle;
+        }
 
         // Restore the button display
         if (copyBtn) {
