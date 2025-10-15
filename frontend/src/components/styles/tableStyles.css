@@ -23,13 +23,6 @@
     min-width: 700px;
 }
 
-/* .wrapper-wide {
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
- */
-
 .table,
 .table-with-bottom-caption {
     border-collapse: collapse;
@@ -40,7 +33,27 @@
     white-space: nowrap; /* prevent wrapping */
     margin-left: 10px;
     margin-right: 10px;
+    margin-bottom: 10px; /* Add bottom margin to tables */
     min-width: 700px;
+}
+
+/* Style for the pending data notice */
+.pending-data-notice {
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    text-align: left;
+    color: #555;
+}
+
+/* Content wrapper with padding to ensure space at the bottom when copied */
+.content-with-padding {
+    padding-bottom: 10px; /* Default padding */
+}
+
+/* When capturing as image, ensure enough space at the bottom */
+.copyable-content {
+    position: relative;
 }
 
 .table th.team-name-column,
@@ -53,7 +66,7 @@
 
 .table th,
 .table-with-bottom-caption th {
-    padding: 10px;
+    padding: 5px;
     text-align: center;
     background-color: #000000;
     color: #ffffff;

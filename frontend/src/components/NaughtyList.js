@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { safeFetch } from "../utils/api";
+import CopyableContainer from "./CopyableContainer";
+import PendingDataNotice from "./PendingDataNotice";
 import "./styles/tableStyles.css";
 import "./styles/spinner.css";
 
@@ -57,21 +59,14 @@ const NaughtyList = ({
     }, [leagueYear, leagueId, week]);
 
     return (
-        <div className="wrapper-wide">
-            <h2 className="text-xl font-semibold mb-4">
-                Naughty List - Week {week}
-            </h2>
-            {week > nCompletedWeeks && ( // Only display note if week > nCompletedWeeks
-                <p>
-                    <em>
-                        Note that scores have not yet been finalized for this
-                        week and the Naughty List is likely to change.
-                        <br />
-                        Please check back on Tuesday morning for the final
-                        results.
-                    </em>
-                </p>
-            )}
+        <CopyableContainer
+            title={`Naughty List - Week ${week}`}
+            fileName={`naughty-list-week-${week}`}
+        >
+            <PendingDataNotice
+                dataType="Naughty List"
+                isPending={week > nCompletedWeeks}
+            />
             {globalLoading || loading ? ( // Show spinner if global or internal loading is true
                 <div className="spinner-container">
                     <div className="spinner"></div>
@@ -89,7 +84,7 @@ const NaughtyList = ({
                     ))}
                 </ul>
             )}
-        </div>
+        </CopyableContainer>
     );
 };
 
