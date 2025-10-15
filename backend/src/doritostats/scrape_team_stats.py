@@ -6,6 +6,8 @@ from typing import Optional
 from backend.src.doritostats.fetch_utils import fetch_league, OWNER_MAP
 from backend.src.doritostats.PseudoMatchup import PseudoMatchup
 from backend.src.doritostats.analytic_utils import (
+    get_num_bye,
+    get_num_inactive,
     get_weekly_finish,
     get_lineup_efficiency,
     get_best_trio,
@@ -253,6 +255,8 @@ def get_stats_by_matchup(
             df_week.loc[i * 2, "team_projection_beat"] = get_score_surprise(
                 league, home_lineup
             )
+            df_week.loc[i * 2, "n_bye"] = get_num_bye(league, home_lineup)
+            df_week.loc[i * 2, "n_inactive"] = get_num_inactive(league, home_lineup)
 
             for slot in ["QB", "RB", "WR", "TE", "RB/WR/TE", "D/ST", "K"]:
                 df_week.loc[  # type: ignore
@@ -314,6 +318,8 @@ def get_stats_by_matchup(
             df_week.loc[i * 2 + 1, "team_projection_beat"] = get_score_surprise(
                 league, away_lineup
             )
+            df_week.loc[i * 2 + 1, "n_bye"] = get_num_bye(league, away_lineup)
+            df_week.loc[i * 2 + 1, "n_inactive"] = get_num_inactive(league, away_lineup)
             for slot in ["QB", "RB", "WR", "TE", "RB/WR/TE", "D/ST", "K"]:
                 df_week.loc[  # type: ignore
                     i * 2 + 1, "{}_pts".format(slot.replace("/", "_"))
