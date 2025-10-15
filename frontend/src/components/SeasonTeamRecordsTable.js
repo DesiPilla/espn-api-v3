@@ -1,12 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import LoadingRow from "./LoadingRow";
+import CopyableContainer from "./CopyableContainer";
 import './styles/tableStyles.css';
 
 const SeasonTeamRecordsTable = ({ bestTeamStats, worstTeamStats }) => {
     return (
-        <div className="wrapper-wide">
-            <h2>Season Team Records</h2>
+        <CopyableContainer
+            title="Season Team Records"
+            fileName="season-team-records"
+        >
             <table
                 className="table-with-bottom-caption"
                 style={{ tableLayout: "fixed", width: "70%" }}
@@ -56,7 +59,7 @@ const SeasonTeamRecordsTable = ({ bestTeamStats, worstTeamStats }) => {
                     )}
                 </tbody>
             </table>
-        </div>
+        </CopyableContainer>
     );
 };
 

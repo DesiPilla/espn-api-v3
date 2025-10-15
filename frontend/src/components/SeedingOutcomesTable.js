@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import LoadingRow from "./LoadingRow";
+import CopyableContainer from "./CopyableContainer";
+import PendingDataNotice from "./PendingDataNotice";
 import './styles/tableStyles.css';
 
 const SeedingOutcomesTable = ({ data, playoffTeams, pendingData }) => {
@@ -10,19 +12,11 @@ const SeedingOutcomesTable = ({ data, playoffTeams, pendingData }) => {
     }
 
     return (
-        <div className="wrapper-wide">
-            <h2>Seeding Outcomes</h2>
-            {pendingData && ( // Only display note if week > nCompletedWeeks
-                <p>
-                    <em>
-                        Note that scores have not yet been finalized for this
-                        week and the seeding outcomes are likely to change.
-                        <br />
-                        Please check back on Tuesday morning for the final
-                        results.
-                    </em>
-                </p>
-            )}
+        <CopyableContainer title="Seeding Outcomes" fileName="seeding-outcomes">
+            <PendingDataNotice
+                dataType="seeding outcomes"
+                isPending={pendingData}
+            />
             <table className="table-with-bottom-caption">
                 <thead>
                     <tr>
@@ -77,7 +71,7 @@ const SeedingOutcomesTable = ({ data, playoffTeams, pendingData }) => {
                     been mathematically eliminated or clinched a playoff spot.
                 </em>
             </p>
-        </div>
+        </CopyableContainer>
     );
 };
 

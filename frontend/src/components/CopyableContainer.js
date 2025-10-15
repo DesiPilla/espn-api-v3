@@ -38,73 +38,109 @@ const CopyableContainer = ({
   const handleCopyAsImage = async () => {
     if (!containerRef.current) return;
     try {
-      setCopying(true);
+        setCopying(true);
 
-      // Get reference to the copy button element
-      const copyBtn = containerRef.current.querySelector('.copy-btn');
-      // Hide button during capture
-      const originalDisplay = copyBtn ? copyBtn.style.display : null;
-      if (copyBtn) {
-        copyBtn.style.display = 'none';
-      }
-
-      // Store original styles to restore later
-      const originalStyle = containerRef.current.style.cssText;
-      
-      // Apply inline styles for the image capture
-      containerRef.current.style.margin = '0';
-      containerRef.current.style.paddingLeft = '5px';
-      containerRef.current.style.paddingRight = '5px';
-      containerRef.current.style.paddingTop = '0';
-      containerRef.current.style.paddingBottom = '5px'; // Add padding to the bottom
-      
-      // create PNG data URL from the element
-      const dataUrl = await htmlToImage.toPng(containerRef.current);
-      
-      // Restore the original styles
-      containerRef.current.style.cssText = originalStyle;
-      
-      // Restore the button display
-      if (copyBtn) {
-        copyBtn.style.display = originalDisplay || '';
-      }
-
-      // convert data URL -> Blob
-      const resp = await fetch(dataUrl);
-      const blob = await resp.blob();
-
-      // Preferred: write image to clipboard (modern Chrome/Edge)
-      if (
-        navigator.clipboard &&
-        typeof window !== "undefined" &&
-        typeof window.ClipboardItem !== "undefined"
-      ) {
-        try {
-          const item = new window.ClipboardItem({
-            "image/png": blob,
-          });
-          await navigator.clipboard.write([item]);
-          setCopySuccess(true);
-          return;
-        } catch (err) {
-          console.warn(
-            "Navigator.clipboard.write failed, falling back to download:",
-            err
-          );
-          // fallthrough to fallback download
+        // Get reference to the copy button element
+        const copyBtn = containerRef.current.querySelector(".copy-btn");
+        // Hide button during capture
+        const originalDisplay = copyBtn ? copyBtn.style.display : null;
+        if (copyBtn) {
+            copyBtn.style.display = "none";
         }
-      }
 
-      // Fallback: download the image so the user can manually copy/share it
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${fileName}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      setCopySuccess(true);
+        // Store original styles to restore later
+        const originalStyle = containerRef.current.style.cssText;
+
+        // Apply inline styles for the image capture
+        containerRef.current.style.margin = "0";
+        containerRef.current.style.paddingLeft = "10px";
+        containerRef.current.style.paddingRight = "10px";
+        containerRef.current.style.paddingTop = "0";
+        containerRef.current.style.paddingBottom = "15px"; // Increased padding at bottom
+        containerRef.current.style.maxWidth = "none"; // Remove max-width constraints
+        
+        // Get table element and ensure it's fully visible
+        const tableElement = containerRef.current.querySelector("table");
+        if (tableElement) {
+            // Store original table styles
+            const originalTableStyles = tableElement.style.cssText;
+            
+            // Make sure the table is fully visible
+            tableElement.style.width = "auto"; // Let it adjust to content
+            tableElement.style.minWidth = "auto"; // Override min-width constraints
+            tableElement.style.maxWidth = "none"; // No max width constraints
+            tableElement.style.tableLayout = "auto"; // Let columns adjust to their content
+            
+            // Fix to prevent columns from being squeezed
+            const tableCells = tableElement.querySelectorAll('th, td');
+            tableCells.forEach(cell => {
+                cell.style.whiteSpace = "nowrap"; // Prevent text wrapping
+            });
+        }
+
+        // create PNG data URL from the element with higher resolution
+        const dataUrl = await htmlToImage.toPng(containerRef.current, {
+            pixelRatio: 2.0, // Increase resolution - use 2.0 for double resolution
+            quality: 1.0, // Highest quality
+            width: containerRef.current.scrollWidth + 20, // Add extra width to prevent cutoff
+            height: containerRef.current.scrollHeight + 20, // Add extra height
+            style: {
+                // Ensure content is fully visible
+                overflow: "visible",
+                maxWidth: "none",
+                width: "auto",
+            }
+        });
+        
+        // Restore table styles if modified
+        if (tableElement && originalTableStyles) {
+            tableElement.style.cssText = originalTableStyles;
+        }
+
+        // Restore the original styles
+        containerRef.current.style.cssText = originalStyle;
+
+        // Restore the button display
+        if (copyBtn) {
+            copyBtn.style.display = originalDisplay || "";
+        }
+
+        // convert data URL -> Blob
+        const resp = await fetch(dataUrl);
+        const blob = await resp.blob();
+
+        // Preferred: write image to clipboard (modern Chrome/Edge)
+        if (
+            navigator.clipboard &&
+            typeof window !== "undefined" &&
+            typeof window.ClipboardItem !== "undefined"
+        ) {
+            try {
+                const item = new window.ClipboardItem({
+                    "image/png": blob,
+                });
+                await navigator.clipboard.write([item]);
+                setCopySuccess(true);
+                return;
+            } catch (err) {
+                console.warn(
+                    "Navigator.clipboard.write failed, falling back to download:",
+                    err
+                );
+                // fallthrough to fallback download
+            }
+        }
+
+        // Fallback: download the image so the user can manually copy/share it
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${fileName}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        setCopySuccess(true);
     } catch (err) {
       console.error("Error copying as image:", err);
     } finally {

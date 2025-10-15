@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import LoadingRow from "./LoadingRow";
+import CopyableContainer from "./CopyableContainer";
+import PendingDataNotice from "./PendingDataNotice";
 import './styles/tableStyles.css';
 
 const RankDistributionTable = ({
@@ -25,23 +27,14 @@ const RankDistributionTable = ({
     }
 
     return (
-        <div className="wrapper-wide">
-            <h2>
-                Final position distribution odds (prior to Week {selectedWeek}{" "}
-                matchups)
-            </h2>
-            {pendingData && ( // Only display note if week > nCompletedWeeks
-                <p>
-                    <em>
-                        Note that scores have not yet been finalized for this
-                        week and the final position distributions are likely to
-                        change.
-                        <br />
-                        Please check back on Tuesday morning for the final
-                        results.
-                    </em>
-                </p>
-            )}
+        <CopyableContainer
+            title={`Final position distribution odds (prior to Week ${selectedWeek} matchups)`}
+            fileName={`rank-distribution-week-${selectedWeek}`}
+        >
+            <PendingDataNotice
+                dataType="final position distributions"
+                isPending={pendingData}
+            />
             <table className="table-with-bottom-caption">
                 <thead>
                     <tr>
@@ -96,7 +89,7 @@ const RankDistributionTable = ({
                     been mathematically eliminated or clinched a playoff spot.
                 </em>
             </p>
-        </div>
+        </CopyableContainer>
     );
 };
 
