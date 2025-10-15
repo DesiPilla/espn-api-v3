@@ -26,12 +26,6 @@ body,
     max-width: 900px;
 }
 
-.wrapper-wide {
-    margin: 0 auto;
-    padding: 10px;
-    max-width: 1200px;
-}
-
 .table {
     /* margin: 0 auto 40px auto; */
     margin: 0 0 40px 0;
