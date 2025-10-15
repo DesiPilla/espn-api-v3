@@ -2,18 +2,19 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import LoadingRow from "./LoadingRow";
 import CopyableContainer from "./CopyableContainer";
-import './styles/tableStyles.css';
+import PendingDataNotice from "./PendingDataNotice";
+import "./styles/tableStyles.css";
 
 const SeasonTeamRecordsTable = ({ bestTeamStats, worstTeamStats }) => {
+    const isPending = !bestTeamStats || !worstTeamStats;
+
     return (
         <CopyableContainer
             title="Season Team Records"
             fileName="season-team-records"
         >
-            <table
-                className="table-with-bottom-caption"
-                style={{ tableLayout: "fixed", width: "70%" }}
-            >
+            <PendingDataNotice dataType="team records" isPending={isPending} />
+            <table className="table-with-bottom-caption">
                 <thead>
                     <tr>
                         <th>Award</th>

@@ -1,0 +1,39 @@
+.league-records-page {
+  margin: 0 auto;
+  padding: 2rem;
+  max-width: 1200px;
+}
+
+.league-info {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.button-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.records-tables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.table-spacer {
+  height: 1rem;
+}
+
+@media (max-width: 768px) {
+  .league-info {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .records-tables-container {
+    gap: 3rem;
+  }
+}
