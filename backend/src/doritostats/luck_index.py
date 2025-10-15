@@ -498,7 +498,7 @@ def get_weekly_luck_index(
         )
         print("      Luck only considers projection surprises up to +/- 25%")
         print(
-            f"      {owner} acheives {projection_factor + factor_weight_adjustments['performance_vs_projection']:0.2%} of the max surprise factor"
+            f"      {owner} achieves {projection_factor + factor_weight_adjustments['performance_vs_projection']:0.2%} of the max surprise factor"
         )
         print(
             f"      Teams average score surprise is {factor_weight_adjustments['performance_vs_projection']:0.2%} and is subtracted from the factor"

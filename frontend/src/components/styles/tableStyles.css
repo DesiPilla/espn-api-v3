@@ -1,8 +1,28 @@
-.wrapper-wide {
-    margin: 0 auto;
-    padding: 10px;
-    max-width: 1200px;
+.table-container {
+    align-items: center;
 }
+
+.wrapper-wide {
+    padding: 10px;
+    width: fit-content;
+    max-width: 1200px;
+    background: #b4fb98; /* Use the master background color in league.css */
+    position: relative;
+
+}
+
+/* Add styles for header controls row to match table width */
+.header-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    width: 80%; /* Must be the same width as the table */
+    min-width: 700px;
+}
+
 .table,
 .table-with-bottom-caption {
     border-collapse: collapse;
@@ -11,12 +31,29 @@
     font-family: Arial, sans-serif;
     table-layout: auto; /* columns adjust to content */
     white-space: nowrap; /* prevent wrapping */
-    margin-left: 10px; /* keep left padding */
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px; /* Add bottom margin to tables */
+    min-width: 700px;
 }
 
-.table-with-bottom-caption {
-    margin: 0;
-    padding: 0;
+/* Style for the pending data notice */
+.pending-data-notice {
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    text-align: left;
+    color: #555;
+}
+
+/* Content wrapper with padding to ensure space at the bottom when copied */
+.content-with-padding {
+    padding-bottom: 10px; /* Default padding */
+}
+
+/* When capturing as image, ensure enough space at the bottom */
+.copyable-content {
+    position: relative;
 }
 
 .table th.team-name-column,
@@ -29,7 +66,7 @@
 
 .table th,
 .table-with-bottom-caption th {
-    padding: 10px;
+    padding: 5px;
     text-align: center;
     background-color: #000000;
     color: #ffffff;
@@ -98,7 +135,7 @@
     .table,
     .table-with-bottom-caption {
         display: block;
-        margin: 0 auto 40px auto;
+        padding: 0 0 10px 0;
         width: 80%;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
@@ -153,4 +190,32 @@
 
 .thick-border-top {
     border-top: 4px solid #000000; /* Thick black border */
+}
+
+.copy-btn {
+    position: relative; /* Change from absolute to relative */
+    background: #f3f4f6;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    right: 0; /* Align to the right edge */
+}
+
+.copy-btn:hover {
+    background: #e5e7eb;
+}
+
+.copy-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Add styles for success state */
+.copy-btn.copy-success {
+    background-color: #d1fae5;
+    border-color: #34d399;
+    color: #065f46;
 }

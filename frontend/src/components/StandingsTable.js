@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingRow from "./LoadingRow";
 import { safeFetch } from "../utils/api";
+import CopyableContainer from "./CopyableContainer";
 import "./styles/tableStyles.css";
 
 const StandingsTable = ({
@@ -53,10 +54,10 @@ const StandingsTable = ({
     }, [leagueYear, leagueId, week]);
 
     return (
-        <div className="wrapper-wide">
-            <h2 className="text-xl font-semibold mb-4">
-                Standings through Week {week}
-            </h2>
+        <CopyableContainer
+            title={`Standings through Week ${week}`}
+            fileName={`standings-week-${week}`}
+        >
             <table className="table">
                 <thead>
                     <tr>
@@ -96,7 +97,7 @@ const StandingsTable = ({
                     )}
                 </tbody>
             </table>
-        </div>
+        </CopyableContainer>
     );
 };
 

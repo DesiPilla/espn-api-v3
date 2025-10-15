@@ -262,51 +262,53 @@ const LeaguePage = () => {
                     />
                 </div>
 
-                <BoxScoresTable
-                    leagueYear={leagueYear}
-                    leagueId={leagueId}
-                    week={selectedWeek}
-                    loading={loading} // Pass loading state
-                />
+                <div className="table-container">
+                    <BoxScoresTable
+                        leagueYear={leagueYear}
+                        leagueId={leagueId}
+                        week={selectedWeek}
+                        loading={loading} // Pass loading state
+                    />
 
-                <WeeklyAwardsTable
-                    leagueYear={leagueYear}
-                    leagueId={leagueId}
-                    week={selectedWeek}
-                    loading={loading} // Pass loading state
-                    nCompletedWeeks={nCompletedWeeks}
-                />
+                    <WeeklyAwardsTable
+                        leagueYear={leagueYear}
+                        leagueId={leagueId}
+                        week={selectedWeek}
+                        loading={loading} // Pass loading state
+                        nCompletedWeeks={nCompletedWeeks}
+                    />
 
-                <PowerRankingsTable
-                    leagueYear={leagueYear}
-                    leagueId={leagueId}
-                    week={selectedWeek}
-                    loading={loading} // Pass loading state
-                    nCompletedWeeks={nCompletedWeeks}
-                />
+                    <PowerRankingsTable
+                        leagueYear={leagueYear}
+                        leagueId={leagueId}
+                        week={selectedWeek}
+                        loading={loading} // Pass loading state
+                        nCompletedWeeks={nCompletedWeeks}
+                    />
 
-                <LuckIndexTable
-                    leagueYear={leagueYear}
-                    leagueId={leagueId}
-                    week={selectedWeek}
-                    loading={loading} // Pass loading state
-                    nCompletedWeeks={nCompletedWeeks}
-                />
+                    <LuckIndexTable
+                        leagueYear={leagueYear}
+                        leagueId={leagueId}
+                        week={selectedWeek}
+                        loading={loading} // Pass loading state
+                        nCompletedWeeks={nCompletedWeeks}
+                    />
 
-                <NaughtyList
-                    leagueYear={leagueYear}
-                    leagueId={leagueId}
-                    week={selectedWeek}
-                    loading={loading} // Pass loading state
-                    nCompletedWeeks={nCompletedWeeks}
-                />
+                    <NaughtyList
+                        leagueYear={leagueYear}
+                        leagueId={leagueId}
+                        week={selectedWeek}
+                        loading={loading} // Pass loading state
+                        nCompletedWeeks={nCompletedWeeks}
+                    />
 
-                <StandingsTable
-                    leagueYear={leagueYear}
-                    leagueId={leagueId}
-                    week={selectedWeek}
-                    loading={loading} // Pass loading state
-                />
+                    <StandingsTable
+                        leagueYear={leagueYear}
+                        leagueId={leagueId}
+                        week={selectedWeek}
+                        loading={loading} // Pass loading state
+                    />
+                </div>
             </div>
             <Footer />
         </div>

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingRow from "./LoadingRow";
 import { safeFetch } from "../utils/api";
+import CopyableContainer from "./CopyableContainer";
+import PendingDataNotice from "./PendingDataNotice";
 import "./styles/tableStyles.css";
 
 const PowerRankingsTable = ({
@@ -57,21 +59,14 @@ const PowerRankingsTable = ({
     }, [leagueYear, leagueId, week]);
 
     return (
-        <div className="wrapper-wide">
-            <h2 className="text-xl font-semibold mb-4">
-                Power Rankings - Week {week}
-            </h2>
-            {week > nCompletedWeeks && ( // Only display note if week > nCompletedWeeks
-                <p>
-                    <em>
-                        Note that scores have not yet been finalized for this
-                        week and the Power Rankings are likely to change.
-                        <br />
-                        Please check back on Tuesday morning for the final
-                        results.
-                    </em>
-                </p>
-            )}
+        <CopyableContainer
+            title={`Power Rankings - Week ${week}`}
+            fileName={`power-rankings-week-${week}`}
+        >
+            <PendingDataNotice
+                dataType="Power Rankings"
+                isPending={week > nCompletedWeeks}
+            />
             <table className="table">
                 <thead>
                     <tr>
@@ -112,7 +107,7 @@ const PowerRankingsTable = ({
                     )}
                 </tbody>
             </table>
-        </div>
+        </CopyableContainer>
     );
 };
 

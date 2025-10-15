@@ -1,16 +1,26 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import LoadingRow from "./LoadingRow";
-import './styles/tableStyles.css';
+import CopyableContainer from "./CopyableContainer";
+import PendingDataNotice from "./PendingDataNotice";
+import "./styles/tableStyles.css";
 
-const SeasonPositionalRecordsTable = ({ bestPositionalStats, worstPositionalStats }) => {
+const SeasonPositionalRecordsTable = ({
+    bestPositionalStats,
+    worstPositionalStats,
+}) => {
+    const isPending = !bestPositionalStats || !worstPositionalStats;
+
     return (
-        <div className="wrapper-wide">
-            <h2>Season Positional Records</h2>
-            <table
-                className="table-with-bottom-caption"
-                style={{ tableLayout: "fixed", width: "70%" }}
-            >
+        <CopyableContainer
+            title="Season Positional Records"
+            fileName="season-positional-records"
+        >
+            <PendingDataNotice
+                dataType="positional records"
+                isPending={isPending}
+            />
+            <table className="table-with-bottom-caption">
                 <thead>
                     <tr>
                         <th>Award</th>
@@ -56,7 +66,7 @@ const SeasonPositionalRecordsTable = ({ bestPositionalStats, worstPositionalStat
                     )}
                 </tbody>
             </table>
-        </div>
+        </CopyableContainer>
     );
 };
 

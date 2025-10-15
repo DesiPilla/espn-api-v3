@@ -8,6 +8,7 @@ import SimulatePlayoffOddsButton from "../components/SimulatePlayoffOddsButton";
 import SeasonTeamRecordsTable from "../components/SeasonTeamRecordsTable";
 import SeasonPositionalRecordsTable from "../components/SeasonPositionalRecordsTable";
 import { safeFetch } from "../utils/api";
+import "./LeagueRecordsPage.css";
 
 const LeagueRecordsPage = () => {
     const { leagueYear, leagueId } = useParams();
@@ -45,10 +46,12 @@ const LeagueRecordsPage = () => {
     }, [leagueYear, leagueId]);
 
     return (
-        <div>
+        <div className="league-records-page">
             <h1>League Records</h1>
-            <p>Year: {leagueYear}</p>
-            <p>League ID: {leagueId}</p>
+            <div className="league-info">
+                <p>Year: {leagueYear}</p>
+                <p>League ID: {leagueId}</p>
+            </div>
 
             <div className="button-container">
                 <ReturnToHomePageButton />
@@ -61,14 +64,20 @@ const LeagueRecordsPage = () => {
                     leagueId={leagueId}
                 />
             </div>
-            <SeasonTeamRecordsTable
-                bestTeamStats={records?.best_team_stats || null}
-                worstTeamStats={records?.worst_team_stats || null}
-            />
-            <SeasonPositionalRecordsTable
-                bestPositionalStats={records?.best_position_stats || null}
-                worstPositionalStats={records?.worst_position_stats || null}
-            />
+
+            <div className="records-tables-container">
+                <SeasonTeamRecordsTable
+                    bestTeamStats={records?.best_team_stats || null}
+                    worstTeamStats={records?.worst_team_stats || null}
+                />
+
+                <div className="table-spacer"></div>
+
+                <SeasonPositionalRecordsTable
+                    bestPositionalStats={records?.best_position_stats || null}
+                    worstPositionalStats={records?.worst_position_stats || null}
+                />
+            </div>
 
             <Footer />
         </div>

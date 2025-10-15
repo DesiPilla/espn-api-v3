@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import LoadingRow from "./LoadingRow";
 import { safeFetch } from "../utils/api";
+import CopyableContainer from "./CopyableContainer";
+import PendingDataNotice from "./PendingDataNotice";
 import "./styles/tableStyles.css";
 
 const RemainingStrengthOfScheduleTable = ({
@@ -60,28 +62,28 @@ const RemainingStrengthOfScheduleTable = ({
     console.log("minWeek:", minWeek);
     console.log("maxWeek:", maxWeek);
 
+    const title = `Remaining Strength of Schedule${
+        minWeek && maxWeek
+            ? minWeek === maxWeek
+                ? ` for Week ${minWeek}` // Show only one week if minWeek equals maxWeek
+                : ` for Weeks ${minWeek}-${maxWeek}` // Show range if minWeek and maxWeek are different
+            : ""
+    }`;
+
+    const fileName = `remaining-strength-of-schedule${
+        minWeek && maxWeek
+            ? minWeek === maxWeek
+                ? `-week-${minWeek}`
+                : `-weeks-${minWeek}-${maxWeek}`
+            : ""
+    }`;
+
     return (
-        <div className="wrapper-wide">
-            <h2>
-                Remaining Strength of Schedule
-                {minWeek && maxWeek
-                    ? minWeek === maxWeek
-                        ? ` for Week ${minWeek}` // Show only one week if minWeek equals maxWeek
-                        : ` for Weeks ${minWeek}-${maxWeek}` // Show range if minWeek and maxWeek are different
-                    : ""}
-            </h2>
-            {minWeek > nCompletedWeeks && ( // Only display note if minWeek > nCompletedWeeks
-                <p>
-                    <em>
-                        Note that scores have not yet been finalized for this
-                        week and the Remaining Strengths of Schedule are likely
-                        to change.
-                        <br />
-                        Please check back on Tuesday morning for the final
-                        results.
-                    </em>
-                </p>
-            )}
+        <CopyableContainer title={title} fileName={fileName}>
+            <PendingDataNotice
+                dataType="Remaining Strengths of Schedule"
+                isPending={minWeek > nCompletedWeeks}
+            />
             <table className="table-with-bottom-caption">
                 <thead>
                     <tr>
@@ -122,7 +124,7 @@ const RemainingStrengthOfScheduleTable = ({
                     )}
                 </tbody>
             </table>
-        </div>
+        </CopyableContainer>
     );
 };
 

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingRow from "./LoadingRow";
 import { safeFetch } from "../utils/api";
+import CopyableContainer from "./CopyableContainer";
+import PendingDataNotice from "./PendingDataNotice";
 import "./styles/tableStyles.css";
 
 const WeeklyAwardsTable = ({
@@ -54,21 +56,14 @@ const WeeklyAwardsTable = ({
     }, [leagueYear, leagueId, week]);
 
     return (
-        <div className="wrapper-wide">
-            <h2 className="text-xl font-semibold mb-4">
-                Weekly Awards - Week {week}
-            </h2>
-            {week > nCompletedWeeks && ( // Only display note if week > nCompletedWeeks
-                <p>
-                    <em>
-                        Note that scores have not yet been finalized for this
-                        week and award winners are likely to change.
-                        <br />
-                        Please check back on Tuesday morning for the final
-                        results.
-                    </em>
-                </p>
-            )}
+        <CopyableContainer
+            title={`Weekly Awards - Week ${week}`}
+            fileName={`weekly-awards-week-${week}`}
+        >
+            <PendingDataNotice
+                dataType="award winners"
+                isPending={week > nCompletedWeeks}
+            />
             <table className="table">
                 <thead>
                     <tr>
@@ -108,7 +103,7 @@ const WeeklyAwardsTable = ({
                     )}
                 </tbody>
             </table>
-        </div>
+        </CopyableContainer>
     );
 };
 

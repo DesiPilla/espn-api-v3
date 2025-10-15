@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingRow from "./LoadingRow";
 import { safeFetch } from "../utils/api";
+import CopyableContainer from "./CopyableContainer";
 import "./styles/tableStyles.css";
 
 const BoxScoresTable = ({
@@ -12,16 +13,14 @@ const BoxScoresTable = ({
 }) => {
     const [boxScores, setBoxScores] = useState([]);
     const [fetchError, setFetchError] = useState(null);
-    const [loading, setLoading] = useState(false); // Internal loading state
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    if (fetchError) {
-        throw fetchError;
-    }
+    if (fetchError) throw fetchError;
 
     useEffect(() => {
         const fetchBoxScores = async () => {
-            setLoading(true); // Set internal loading to true
+            setLoading(true);
             safeFetch(
                 `/api/box-scores/${leagueYear}/${leagueId}/${week}/`,
                 {},
@@ -45,9 +44,7 @@ const BoxScoresTable = ({
                     );
                     setFetchError(err);
                 })
-                .finally(() => {
-                    setLoading(false); // Set internal loading to false
-                });
+                .finally(() => setLoading(false));
         };
 
         if (leagueYear && leagueId && week) {
@@ -55,11 +52,13 @@ const BoxScoresTable = ({
         }
     }, [leagueYear, leagueId, week]);
 
+    // Box scores fetching logic is kept, removed the copy-to-image logic which is now in CopyableContainer
+
     return (
-        <div className="wrapper-wide">
-            <h2 className="text-xl font-semibold mb-4">
-                Box Scores - Week {week}
-            </h2>
+        <CopyableContainer
+            title={`Box Scores - Week ${week}`}
+            fileName={`boxscores-week-${week}`}
+        >
             <table className="table">
                 <thead>
                     <tr>
@@ -69,7 +68,7 @@ const BoxScoresTable = ({
                     </tr>
                 </thead>
                 <tbody>
-                    {globalLoading || loading ? ( // Show spinner if global or internal loading is true
+                    {globalLoading || loading ? (
                         <LoadingRow text="Loading Box Scores..." colSpan="3" />
                     ) : boxScores.length === 0 ? (
                         <tr>
@@ -95,7 +94,7 @@ const BoxScoresTable = ({
                     )}
                 </tbody>
             </table>
-        </div>
+        </CopyableContainer>
     );
 };
 
