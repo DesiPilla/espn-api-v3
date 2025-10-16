@@ -8,7 +8,6 @@
     max-width: 1200px;
     background: #b4fb98; /* Use the master background color in league.css */
     position: relative;
-
 }
 
 /* Add styles for header controls row to match table width */
@@ -200,6 +199,7 @@
     border-radius: 6px;
     font-size: 0.9rem;
     cursor: pointer;
+    transition: all 0.2s ease;
     transition: all 0.2s ease;
     right: 0; /* Align to the right edge */
 }
