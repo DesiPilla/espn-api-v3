@@ -6,7 +6,19 @@ import "./styles/modalStyles.css";
 import "./styles/buttonStyles.css";
 
 /**
- * A reusable component that wraps any content and provides functionality
+ * A reusable component that wraps any c  const buttonText = {
+      idle: isMobile
+          ? canShare
+              ? "📤 Share Image"
+              : "📱 View Image"
+          : "📋 Copy as Image",
+      copying: "⏳ Processing...",
+      success: isMobile
+          ? canShare
+              ? "✅ Shared!"
+              : "✅ Ready!"
+          : "✅ Copied!",
+  };ovides functionality
  * to copy that content as an image.
  * 
  * @param {Object} props
@@ -294,7 +306,7 @@ const CopyableContainer = ({
   const buttonText = {
       idle: isMobile
           ? canShare
-              ? "� Share Image"
+              ? "⌯⌲ Share Image"
               : "📱 View Image"
           : "📋 Copy as Image",
       copying: "⏳ Processing...",
