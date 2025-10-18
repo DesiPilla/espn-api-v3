@@ -1,0 +1,55 @@
+/* Additional styles for mobile devices */
+@media (max-width: 768px) {
+    .table,
+    .table-with-bottom-caption {
+        font-size: 0.9rem;
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .table th,
+    .table-with-bottom-caption th,
+    .table td,
+    .table-with-bottom-caption td {
+        padding: 0.5rem;
+    }
+    
+    .header-controls-row {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+    
+    .header-controls-row h2 {
+        margin-bottom: 0.5rem;
+    }
+    
+    .copy-btn {
+        margin-bottom: 0.5rem;
+        align-self: flex-end;
+        width: auto;
+        text-align: center;
+        font-size: 0.9rem;
+        padding: 6px 10px;
+    }
+    
+    .wrapper-wide {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 576px) {
+    .table,
+    .table-with-bottom-caption {
+        font-size: 0.85rem;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+    
+    .wrapper-wide {
+        padding: 5px;
+    }
+}
