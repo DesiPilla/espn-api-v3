@@ -6,19 +6,7 @@ import "./styles/modalStyles.css";
 import "./styles/buttonStyles.css";
 
 /**
- * A reusable component that wraps any c  const buttonText = {
-      idle: isMobile
-          ? canShare
-              ? "📤 Share Image"
-              : "📱 View Image"
-          : "📋 Copy as Image",
-      copying: "⏳ Processing...",
-      success: isMobile
-          ? canShare
-              ? "✅ Shared!"
-              : "✅ Ready!"
-          : "✅ Copied!",
-  };ovides functionality
+ * A reusable component that wraps any content and provides functionality
  * to copy that content as an image.
  * 
  * @param {Object} props
@@ -178,7 +166,6 @@ const CopyableContainer = ({
 
                       // Use Web Share API to share the image
                       await navigator.share({
-                          title: title || "Shared Image",
                           files: [file],
                       });
                       setCopySuccess(true);
@@ -224,13 +211,11 @@ const CopyableContainer = ({
                               navigator.canShare({ files: [file] })
                           ) {
                               await navigator.share({
-                                  title: title || "Shared Image",
                                   files: [file],
                               });
                           } else {
                               // Fallback to just sharing the text if file sharing not supported
                               await navigator.share({
-                                  title: title || "Shared Image",
                                   text: "Check out this table from Dorito Stats!",
                               });
                           }
