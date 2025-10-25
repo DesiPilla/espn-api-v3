@@ -34,7 +34,6 @@ logger = logging.getLogger(__name__)
 OWNER_MAP = {
     "Katie Brooks": "Nikki Pilla",
     "Joseph Ricupero": "Jojo & Matt",
-    "Desi Pilla": "Desi & Jane",
     "Marc C": "Marco Chirico",
     "Marc Chirico": "Marco Chirico",
 }
