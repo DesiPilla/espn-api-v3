@@ -518,6 +518,10 @@ def get_leader_str(
     # Sort list
     sorted_stats_list = sorted(stats_list, key=lambda x: x[1], reverse=high_first)
 
+    # Check that the list contains more than one team
+    if len(sorted_stats_list) <= 1:
+        return sorted_stats_list[0][1], "{}".format(sorted_stats_list[0][0])
+
     # Check if there is no tie
     if sorted_stats_list[0][1] != sorted_stats_list[1][1]:
         return sorted_stats_list[0][1], "{}".format(sorted_stats_list[0][0])
