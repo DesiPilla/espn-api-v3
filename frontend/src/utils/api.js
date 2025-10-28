@@ -117,14 +117,14 @@ export const fetchWithRetry = async (url, options, retries) => {
     for (let i = 0; i <= retries; i++) {
         try {
             const response = await fetch(url, options);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            // If we get a response, return it (even if it's a 400/500)
             return response;
         } catch (err) {
+            // Only retry on network errors
             if (i === retries) {
                 throw err;
             }
+            // Otherwise, continue to next retry
         }
     }
 };

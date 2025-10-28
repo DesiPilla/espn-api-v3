@@ -42,10 +42,28 @@ class ErrorStatusEmailMiddleware(MiddlewareMixin):
         """
         Called if a view raises an exception.
         """
-        # If it's an InvalidLeagueError, let LeagueErrorMiddleware handle it
+        # Some errors should be skipped
         if isinstance(exception, InvalidLeagueError):
-            return None
+            print("InvalidLeagueError, skipping email.")
+            return JsonResponse({"error": str(exception)}, status=400)
 
+        error_messages_to_skip = [
+            "LeagueInfo matching query does not exist",
+            "An existing league is now invalid",
+            "not found. Please check that you have entered the correct league ID and year.",
+        ]
+        if any(msg in str(exception) for msg in error_messages_to_skip):
+            print("Known error occurred, skipping email.")
+            return JsonResponse({"error": str(exception)}, status=400)
+
+        if (
+            hasattr(exception, "code")
+            and exception.code == JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value
+        ):
+            print("LEAGUE_SIGNUP_FAILURE, skipping email.")
+            return JsonResponse({"error": str(exception)}, status=400)
+
+        # These errors will trigger an email
         error_text = f"""
         Exception at {request.build_absolute_uri()}:
         {traceback.format_exc()}
@@ -63,15 +81,6 @@ class ErrorStatusEmailMiddleware(MiddlewareMixin):
         Called after a view returns a response.
         """
         if response.status_code in self.ERROR_STATUSES:
-            # try:
-            #     response_json = json.loads(response.content)
-            #     if (
-            #         response_json.get("code")
-            #         == JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value
-            #     ):
-            #         return response
-            # except Exception as e:
-            #     print("Error while parsing response: ", e)
             try:
                 error_message = None
                 if hasattr(response, "content") and "application/json" in response.get(
@@ -97,6 +106,16 @@ class ErrorStatusEmailMiddleware(MiddlewareMixin):
                 """
                 print(msg)
 
+                # Skip known error messages (same as process_exception)
+                error_messages_to_skip = [
+                    "LeagueInfo matching query does not exist",
+                    "An existing league is now invalid",
+                    "not found. Please check that you have entered the correct league ID and year.",
+                ]
+                if any(msg in error_message for msg in error_messages_to_skip):
+                    print("Known error occurred in response, skipping email.")
+                    return response
+
                 self._add_to_buffer(msg)
 
             except Exception as e:
@@ -118,14 +137,21 @@ class ErrorStatusEmailMiddleware(MiddlewareMixin):
 
 class LeagueErrorMiddleware(MiddlewareMixin):
     def process_exception(self, request, exception):
-        if isinstance(exception, InvalidLeagueError):
-            print("An existing league is now invalid.")
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
-                    "error": str(exception),
-                },
-                status=400,
-            )
-        return None
+        # if isinstance(exception, InvalidLeagueError):
+        #     print("An existing league is now invalid.")
+        #     return JsonResponse(
+        #         {
+        #             "status": "error",
+        #             "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+        #             "error": str(exception),
+        #         },
+        #         status=400,
+        #     )
+        return JsonResponse(
+            {
+                "status": "error",
+                "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+                "error": str(exception),
+            },
+            status=400,
+        )
