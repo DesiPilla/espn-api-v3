@@ -267,7 +267,17 @@ def leagues_data(request) -> JsonResponse:
 def get_league_details(request, year, league_id):
     if request.method == "GET":
         # Fetch the league data (for example from the League model)
-        league = get_object_or_404(LeagueInfo, league_year=year, league_id=league_id)
+        league_qs = LeagueInfo.objects.filter(league_year=year, league_id=league_id)
+        if not league_qs.exists():
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
+                    "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID and year.",
+                },
+                status=400,
+            )
+        league = league_qs.first()
 
         # Prepare the data to be returned as JSON
         data = {
