@@ -5,7 +5,7 @@ import re
 import requests
 import warnings
 from contextlib import contextmanager
-from typing import Optional
+from typing import Optional, Tuple
 
 import pandas as pd
 import sqlalchemy
@@ -62,30 +62,49 @@ def get_postgres_conn() -> sqlalchemy.engine.base.Connection:
         engine.dispose()
 
 
-def get_league_creds(league_id: int, year: Optional[int] = None):
-    """Get the league credentials for a given league_id and year."""
+def get_league_creds(
+    league_id: int, year: Optional[int] = None
+) -> Tuple[int, int, int, int]:
+    """Retrieves league credentials for a specified league ID and optional year from the database.
+
+    Queries the `fantasy_stats_leagueinfo` table for the given `league_id` and, if provided, the specified `year`.
+    Returns the most recent league credentials if multiple entries exist.
+
+        league_id (int): The unique identifier for the league.
+        year (Optional[int], optional): The year of the league season. If not provided, retrieves the most recent entry.
+
+    Returns:
+        Tuple[int, int, int, int]: A tuple containing:
+            - league_id (int): The league's unique identifier.
+            - league_year (int): The year of the league season.
+            - swid (int): The SWID credential for the league.
+            - espn_s2 (int): The ESPN S2 credential for the league.
+
+    Raises:
+        Exception: If no credentials are found for the given league_id and year.
+    league_id: int, year: Optional[int] = None
+    """
     with get_postgres_conn() as conn:
         # Query all the league info data
-        sql = (
-            "SELECT * FROM public.fantasy_stats_leagueinfo WHERE league_id = {}".format(
-                league_id
-            )
-        )
+        sql = f"""
+        SELECT league_id, league_year, swid, espn_s2
+        FROM public.fantasy_stats_leagueinfo
+        WHERE league_id = {league_id}
+        """
+        if year:
+            sql += f" AND league_year = {year}"
         league_info_df = pd.read_sql(sql, conn)
 
-    if year is None:
-        return (
-            league_info_df.sort_values(by="league_year", ascending=False).iloc[0].values
-        )
-    else:
-        league_creds = league_info_df[league_info_df.league_year == year].iloc[0]
-        if league_creds.empty:
-            raise Exception(
-                "No league credentials found for league_id {} and year {}".format(
-                    league_id, year
-                )
+    if league_info_df.empty:
+        raise Exception(
+            "No league credentials found for league_id {} and year {}".format(
+                league_id, year
             )
-        return league_creds.values
+        )
+    league_id, league_year, swid, espn_s2 = (
+        league_info_df.sort_values(by="league_year", ascending=False).iloc[0].values
+    )
+    return league_id, league_year, swid, espn_s2
 
 
 def set_league_endpoint(league: League) -> None:
