@@ -11,6 +11,7 @@ from backend.src.doritostats.filter_utils import (
     get_any_records,
     exclude_most_recent_week,
 )
+from backend.src.doritostats.PseudoPlayer import PseudoPlayer
 
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,9 @@ def get_top_players(lineup: List[Player], slot: str, n: int) -> List[Player]:
         if ("TE" in slot) and (player.name == "Taysom Hill"):
             eligible_players.append(player)
 
+    if not eligible_players:
+        return [PseudoPlayer()]
+
     return sorted(eligible_players, key=lambda x: x.points, reverse=True)[:n]
 
 
@@ -64,6 +68,9 @@ def get_best_lineup(league: League, lineup: List[Player]) -> float:
 
         # Remove selected players from consideration for other slots
         for player in best_players:
+            if isinstance(player, PseudoPlayer):
+                # Ignore PseudoPlayers
+                continue
             saved_roster.remove(player)
 
     return np.sum([player.points for player in best_lineup])
