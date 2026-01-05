@@ -741,9 +741,9 @@ def playoff_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
     return odds_diff
 
 
-def sweater_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
+def first_place_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
     """
-    This function determines how much a team's playoff odds will change based on if they win or lose their next matchup.
+    This function determines how much a team's odds of finishing in first place will change based on if they win or lose their next matchup.
 
     For each matchup, two simulations are run:
         - one where the home team wins, and
@@ -751,10 +751,130 @@ def sweater_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
 
         In each simulation, only the one matchup is pre-determined. All other matchups in that week are simulated.
 
-        The difference between the home and away teams' playoff odds in the two simulations is called the "swing".
-            - If the simulated playoff odds for a team is 75% if they win and 50% if they lose, then the "swing" is 25%
+        The difference between the home and away teams' first place odds in the two simulations is called the "swing".
+            - If the simulated first place odds for a team is 75% if they win and 50% if they lose, then the "swing" is 25%
 
-    The playoff "swings" for each team is returned as a pandas Series where "team_owner" is the index.
+    The first place "swings" for each team is returned as a pandas Series where "team_owner" is the index.
+
+    Args:
+        league (League): League
+        week (int): First week to include in the simulation.
+            - If first_week_to_simulate = 10, the function will simulate all matchups from Weeks 10 -> end of season.
+        n (int): Number of Monte Carlo simulations to run
+
+    Returns:
+        pd.DataFrame: Difference in playoff odds for each team if they win vs if they lose
+    """
+    # Get all matchups for the week.
+    matchups = league.box_scores(week)
+
+    # Instantiate the series
+    seeding_outcomes_diff = pd.DataFrame(dtype=float)
+
+    # Simulate playoff odds based on outcome of each matchup
+    for matchup in matchups:
+        # Simulate season if home team wins
+        home_team = matchup.home_team
+        outcomes_home_win = get_outcomes_if_team_wins(home_team, week, matchups)
+        (playoff_odds_home_win, _, seeding_outcomes_home_win) = simulate_season(
+            league,
+            n,
+            what_if=True,
+            outcomes=outcomes_home_win,
+            first_week_to_simulate=week,
+        )
+
+        # Simulate season if away team wins
+        away_team = matchup.away_team
+        outcomes_away_win = get_outcomes_if_team_wins(away_team, week, matchups)
+        (playoff_odds_away_win, _, seeding_outcomes_away_win) = simulate_season(
+            league,
+            n,
+            what_if=True,
+            outcomes=outcomes_away_win,
+            first_week_to_simulate=week,
+        )
+
+        # Merge team info into seeding outcomes
+        seeding_outcomes_home_win = pd.merge(
+            left=seeding_outcomes_home_win[["team_owner", "first_in_league"]],
+            right=playoff_odds_home_win[["team_owner", "wins"]],
+            on="team_owner",
+        ).set_index("team_owner")
+        seeding_outcomes_away_win = pd.merge(
+            left=seeding_outcomes_away_win[["team_owner", "first_in_league"]],
+            right=playoff_odds_away_win[["team_owner", "wins"]],
+            on="team_owner",
+        ).set_index("team_owner")
+
+        # Merge results
+        seeding_outcomes = pd.merge(
+            seeding_outcomes_home_win[["first_in_league", "wins"]],
+            seeding_outcomes_away_win[["first_in_league", "wins"]],
+            suffixes=("_if_home_win", "_if_away_win"),
+            left_index=True,
+            right_index=True,
+        )
+
+        # Calculate first place odds and expected win totals
+        (
+            seeding_outcomes["first_in_league_if_win"],
+            seeding_outcomes["first_in_league_if_lose"],
+            seeding_outcomes["expected_win_total_if_win"],
+            seeding_outcomes["expected_win_total_if_lose"],
+        ) = (
+            seeding_outcomes[
+                ["first_in_league_if_home_win", "first_in_league_if_away_win"]
+            ].max(axis=1)
+            / 100,
+            seeding_outcomes[
+                ["first_in_league_if_home_win", "first_in_league_if_away_win"]
+            ].min(axis=1)
+            / 100,
+            seeding_outcomes[["wins_if_home_win", "wins_if_away_win"]].max(axis=1),
+            seeding_outcomes[["wins_if_home_win", "wins_if_away_win"]].min(axis=1),
+        )
+
+        # Calculate difference in first place odds
+        seeding_outcomes["swing"] = (
+            seeding_outcomes["first_in_league_if_win"]
+            - seeding_outcomes["first_in_league_if_lose"]
+        )
+
+        seeding_outcomes_diff = pd.concat(
+            [
+                seeding_outcomes_diff,
+                seeding_outcomes[
+                    [
+                        "expected_win_total_if_win",
+                        "expected_win_total_if_lose",
+                        "first_in_league_if_win",
+                        "first_in_league_if_lose",
+                        "swing",
+                    ]
+                ]
+                .abs()
+                .loc[[home_team.owner, away_team.owner]],
+            ]
+        )
+
+    return seeding_outcomes_diff
+
+
+def sweater_odds_swing(league: League, week: int, n: int = 100) -> pd.DataFrame:
+    """
+    This function determines how much a team's odds of finishing in last place will change based on if they win or lose their next matchup.
+
+    For each matchup, two simulations are run:
+        - one where the home team wins, and
+        - one where the away team wins
+
+        In each simulation, only the one matchup is pre-determined. All other matchups in that week are simulated.
+
+        The difference between the home and away teams' last place odds in the two simulations is called the "swing".
+            - If the simulated last place odds for a team is 75% if they win and 50% if they lose, then the "swing" is 25%
+
+    The last place "swings" for each team is returned as a pandas Series where "team_owner" is the index.
 
     Args:
         league (League): League
