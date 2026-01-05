@@ -204,7 +204,6 @@ class ErrorStatusEmailMiddleware(MiddlewareMixin):
 
 
 class LeagueErrorMiddleware(MiddlewareMixin):
-
     def process_exception(self, request, exception):
         return JsonResponse(
             {
