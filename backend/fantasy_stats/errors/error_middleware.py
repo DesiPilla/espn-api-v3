@@ -8,7 +8,6 @@ from django.utils.deprecation import MiddlewareMixin
 
 from .email import send_error_email
 from .error_codes import InvalidLeagueError, JsonErrorCodes
-from .utils import send_error_email  # adjust import as needed
 
 # Shared state for batching
 _error_buffer = []
