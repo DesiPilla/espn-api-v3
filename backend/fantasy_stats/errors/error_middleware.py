@@ -1,12 +1,14 @@
+import re
 import json
 import traceback
 import threading
 import time
-from django.http import JsonResponse, HttpResponseNotFound
+from django.http import JsonResponse, HttpRequest, HttpResponseNotFound
 from django.utils.deprecation import MiddlewareMixin
 
 from .email import send_error_email
 from .error_codes import InvalidLeagueError, JsonErrorCodes
+from .utils import send_error_email  # adjust import as needed
 
 # Shared state for batching
 _error_buffer = []
@@ -33,11 +35,6 @@ def flush_errors():
             send_error_email(None, combined, is_exception=True)
         except Exception as e:
             print(f"Failed to send batched error email: {e}")
-
-import re
-from django.http import HttpRequest
-from django.utils.deprecation import MiddlewareMixin
-from .utils import send_error_email  # adjust import as needed
 
 
 class SecurityAlertMiddleware(MiddlewareMixin):
@@ -66,7 +63,6 @@ class SecurityAlertMiddleware(MiddlewareMixin):
     ]
 
     def process_request(self, request: HttpRequest):
-
         path = request.path.lower()
 
         # ---- Check suspicious URLs ----
