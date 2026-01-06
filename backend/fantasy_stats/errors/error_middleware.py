@@ -1,8 +1,9 @@
+import re
 import json
 import traceback
 import threading
 import time
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest, HttpResponseNotFound
 from django.utils.deprecation import MiddlewareMixin
 
 from .email import send_error_email
@@ -33,6 +34,72 @@ def flush_errors():
             send_error_email(None, combined, is_exception=True)
         except Exception as e:
             print(f"Failed to send batched error email: {e}")
+
+
+class SecurityAlertMiddleware(MiddlewareMixin):
+    """
+    Detects obvious automated attack probes.
+    Sends a security alert email and immediately stops further processing.
+    Returns a 404 so Django does NOT throw its own CSRF/403 errors.
+    """
+
+    SUSPICIOUS_PATHS = [
+        r"\.php$",
+        r"wp-admin",
+        r"wp-json",
+        r"xmlrpc\.php",
+        r"vendor/.*/profile\.php",
+        r"admin-ajax\.php",
+        r"phpmyadmin",
+    ]
+
+    SUSPICIOUS_PAYLOAD = [
+        r"select.+from",
+        r"base64",
+        r"convert_from",
+        r"shell",
+        r"cmd",
+    ]
+
+    def process_request(self, request: HttpRequest):
+        path = request.path.lower()
+
+        # ---- Check suspicious URLs ----
+        for pattern in self.SUSPICIOUS_PATHS:
+            if re.search(pattern, path):
+                self._trigger_alert(request, reason=f"path matched: {pattern}")
+                return self._block_response()  # ← STOP PIPELINE HERE
+
+        # ---- Check suspicious POST bodies ----
+        if request.method == "POST":
+            raw_body = request.body.decode(errors="ignore").lower()
+
+            for pattern in self.SUSPICIOUS_PAYLOAD:
+                if re.search(pattern, raw_body):
+                    self._trigger_alert(request, reason=f"payload matched: {pattern}")
+                    return self._block_response()  # ← STOP PIPELINE HERE
+
+        return None  # normal traffic continues
+
+    # --------------------------------------------------------------
+    #  ALERT + STOP EXECUTION
+    # --------------------------------------------------------------
+    def _trigger_alert(self, request: HttpRequest, reason: str):
+        try:
+            send_error_email(
+                "Someone tried to attack you!\nReason: " + reason,
+                request,
+                is_exception=False,
+            )
+        except Exception:
+            pass  # never break the site
+
+    def _block_response(self):
+        """
+        Return a generic 404 and DO NOT let Django process further.
+        Prevents duplicate emails from downstream CSRF/403 handlers.
+        """
+        return HttpResponseNotFound("<h1>404 Not Found</h1>")
 
 
 class ErrorStatusEmailMiddleware(MiddlewareMixin):
@@ -137,16 +204,6 @@ class ErrorStatusEmailMiddleware(MiddlewareMixin):
 
 class LeagueErrorMiddleware(MiddlewareMixin):
     def process_exception(self, request, exception):
-        # if isinstance(exception, InvalidLeagueError):
-        #     print("An existing league is now invalid.")
-        #     return JsonResponse(
-        #         {
-        #             "status": "error",
-        #             "code": JsonErrorCodes.LEAGUE_SIGNUP_FAILURE.value,
-        #             "error": str(exception),
-        #         },
-        #         status=400,
-        #     )
         return JsonResponse(
             {
                 "status": "error",

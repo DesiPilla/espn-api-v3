@@ -14,6 +14,7 @@ from backend.src.doritostats.analytic_utils import (
     sum_bench_points,
     get_score_surprise,
     get_top_players,
+    get_total_tds,
     avg_slot_score,
 )
 
@@ -257,6 +258,7 @@ def get_stats_by_matchup(
             )
             df_week.loc[i * 2, "n_bye"] = get_num_bye(league, home_lineup)
             df_week.loc[i * 2, "n_inactive"] = get_num_inactive(league, home_lineup)
+            df_week.loc[i * 2, "n_touchdowns"] = get_total_tds(league, home_lineup)
 
             for slot in ["QB", "RB", "WR", "TE", "RB/WR/TE", "D/ST", "K"]:
                 df_week.loc[  # type: ignore
@@ -320,6 +322,8 @@ def get_stats_by_matchup(
             )
             df_week.loc[i * 2 + 1, "n_bye"] = get_num_bye(league, away_lineup)
             df_week.loc[i * 2 + 1, "n_inactive"] = get_num_inactive(league, away_lineup)
+            df_week.loc[i * 2 + 1, "n_touchdowns"] = get_total_tds(league, away_lineup)
+
             for slot in ["QB", "RB", "WR", "TE", "RB/WR/TE", "D/ST", "K"]:
                 df_week.loc[  # type: ignore
                     i * 2 + 1, "{}_pts".format(slot.replace("/", "_"))
@@ -343,6 +347,7 @@ def get_stats_by_matchup(
             #         df_week.loc[i*2, 'team_projected'] = matchup.home_projected
 
         # Concatenate week's data
+        df_week["special_teams_pts"] = df_week["D_ST_pts"] + df_week["K_pts"]
         df = pd.concat([df, df_week])
 
     # Calculated fields
@@ -487,7 +492,7 @@ def scrape_team_stats(
         .groupby("year")
         .median()
         .team_score
-        / df[(df.is_meaningful_game) & (df.year == end_year - 1)].team_score.median()
+        / df[(df.is_meaningful_game) & (df.year == end_year)].team_score.median()
     ).to_dict()
 
     def get_adjusted_score(s):
