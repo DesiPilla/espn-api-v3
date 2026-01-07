@@ -32,11 +32,12 @@ sitemaps = {
 }
 
 urlpatterns = [
-    path("", include("backend.fantasy_stats.urls"), name="index"),
+    path("playoff-pool/", include("backend.playoff_pool.urls")),
     path(
         "fantasy_stats/",
         include("backend.fantasy_stats.urls", namespace="fantasy_stats"),
     ),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}),
     path("admin/", admin.site.urls),
+    path("", include("backend.fantasy_stats.urls"), name="index"),  # Catch-all last
 ]

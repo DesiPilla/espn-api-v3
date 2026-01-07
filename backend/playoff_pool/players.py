@@ -2,6 +2,7 @@ from typing import List
 
 import nflreadpy as nfl
 import pandas as pd
+import polars as pl
 
 from backend.playoff_pool.scoring import (
     RELEVANT_SCORING_STATS,
@@ -31,6 +32,10 @@ def get_all_playoff_players(
     )
 
     # ------------ Get list of individual players ------------
+    # Load rosters for the playoff teams
+    playoff_rosters = nfl.load_rosters([year]).to_pandas()
+    playoff_rosters = playoff_rosters[playoff_rosters["team"].isin(playoff_teams)]
+    
     # Load player game-level stats for multiple seasons
     player_stats = nfl.load_player_stats([year]).to_pandas()
     player_stats["fantasy_points"] = player_stats.apply(
