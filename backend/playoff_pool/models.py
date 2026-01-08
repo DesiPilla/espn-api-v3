@@ -47,17 +47,19 @@ class League(models.Model):
 
 class LeagueMembership(models.Model):
     """Users belonging to leagues with their team names"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     league = models.ForeignKey(League, on_delete=models.CASCADE, related_name='members')
     team_name = models.CharField(max_length=100)
     is_admin = models.BooleanField(default=False)
     joined_at = models.DateTimeField(default=timezone.now)
-    
+
     class Meta:
-        unique_together = ('user', 'league')
-    
+        # Remove unique_together constraint to allow multiple teams per user
+        pass
+
     def __str__(self):
-        return f"{self.user.username} - {self.team_name} ({self.league.name})"
+        username = self.user.username if self.user else "Unclaimed"
+        return f"{username} - {self.team_name} ({self.league.name})"
 
 
 class DraftedTeam(models.Model):

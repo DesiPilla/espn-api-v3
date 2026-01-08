@@ -30,6 +30,8 @@ def debug_test(request):
         'path': request.path,
         'method': request.method
     })
+
+
 from .serializers import (
     LeagueSerializer, LeagueMembershipSerializer, DraftedTeamSerializer,
     UserRegistrationSerializer, UserSerializer, DraftPlayerSerializer,
@@ -85,13 +87,13 @@ def register_user(request):
     logger.info(f"REGISTER_USER: Received {request.method} request to register_user")
     logger.info(f"REGISTER_USER: Request data: {request.data}")
     logger.info(f"REGISTER_USER: Request headers: {dict(request.headers)}")
-    
+
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
         token, created = Token.objects.get_or_create(user=user)
         profile = UserProfile.objects.get(user=user)
-        
+
         return Response({
             'token': token.key,
             'user': {
@@ -101,8 +103,44 @@ def register_user(request):
                 'display_name': profile.display_name
             }
         }, status=status.HTTP_201_CREATED)
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.AllowAny])
+def get_league_info(request, league_id):
+    """Get basic league info without authentication (for join links)"""
+    try:
+        league = League.objects.get(id=league_id)
+        members = LeagueMembership.objects.filter(league=league)
+
+        # Get unclaimed teams count
+        unclaimed_teams = members.filter(user=None).count()
+        claimed_teams = members.filter(user__isnull=False).count()
+
+        return Response(
+            {
+                "id": league.id,
+                "name": league.name,
+                "created_by": league.created_by.username if league.created_by else None,
+                "num_teams": league.num_teams,
+                "claimed_teams": claimed_teams,
+                "unclaimed_teams": unclaimed_teams,
+                "available_spots": league.num_teams - members.count(),
+                "is_draft_complete": league.is_draft_complete,
+                "unclaimed_team_list": [
+                    {
+                        "id": team.id,
+                        "team_name": team.team_name,
+                        "joined_at": team.joined_at,
+                    }
+                    for team in members.filter(user=None)
+                ],
+            }
+        )
+    except League.DoesNotExist:
+        return Response({"error": "League not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @ensure_csrf_cookie
@@ -125,7 +163,7 @@ def scoring_settings(request):
 class LeagueViewSet(viewsets.ModelViewSet):
     serializer_class = LeagueSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def dispatch(self, request, *args, **kwargs):
         """Add debugging for authentication"""
         logger.info(f"LEAGUE_VIEWSET: {request.method} request to {request.path}")
@@ -133,17 +171,18 @@ class LeagueViewSet(viewsets.ModelViewSet):
         logger.info(f"LEAGUE_VIEWSET: User: {request.user}")
         logger.info(f"LEAGUE_VIEWSET: User authenticated: {request.user.is_authenticated}")
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get_queryset(self):
-        # Only return leagues the user is a member of
-        return League.objects.filter(
-            members__user=self.request.user
-        ).distinct()
-    
+        # For list view, only return leagues the user is a member of
+        if self.action == "list":
+            return League.objects.filter(members__user=self.request.user).distinct()
+        # For other actions (join, retrieve), allow access to all leagues
+        return League.objects.all()
+
     def perform_create(self, serializer):
         # Create league with current user as creator
         league = serializer.save(created_by=self.request.user)
-        
+
         # Add creator as admin member
         LeagueMembership.objects.create(
             user=self.request.user,
@@ -151,33 +190,208 @@ class LeagueViewSet(viewsets.ModelViewSet):
             team_name=f"{self.request.user.username}'s Team",
             is_admin=True
         )
-    
+
     @action(detail=True, methods=['post'])
     def join(self, request, pk=None):
         """Join a league"""
         league = self.get_object()
         team_name = request.data.get('team_name', f"{request.user.username}'s Team")
-        
-        # Check if user is already in league
-        if LeagueMembership.objects.filter(user=request.user, league=league).exists():
-            return Response({'error': 'You are already a member of this league'}, 
-                          status=status.HTTP_400_BAD_REQUEST)
-        
+        confirm_multiple = request.data.get("confirm_multiple", False)
+
+        # Check how many teams the user already has in this league
+        existing_teams = LeagueMembership.objects.filter(
+            user=request.user, league=league
+        ).count()
+
+        # If user already has teams but hasn't confirmed, return info for confirmation
+        if existing_teams > 0 and not confirm_multiple:
+            ordinal = {1: "second", 2: "third", 3: "fourth", 4: "fifth"}.get(
+                existing_teams, f"{existing_teams + 1}th"
+            )
+
+            return Response(
+                {
+                    "requires_confirmation": True,
+                    "existing_teams": existing_teams,
+                    "ordinal": ordinal,
+                    "message": f"You are already a member of this league. Are you sure you want to create a {ordinal} team?",
+                },
+                status=status.HTTP_200_OK,
+            )
+
         # Check if league is full
         current_members = LeagueMembership.objects.filter(league=league).count()
         if current_members >= league.num_teams:
             return Response({'error': 'This league is full'}, 
                           status=status.HTTP_400_BAD_REQUEST)
-        
+
         membership = LeagueMembership.objects.create(
             user=request.user,
             league=league,
             team_name=team_name
         )
-        
+
         return Response(LeagueMembershipSerializer(membership).data, 
                        status=status.HTTP_201_CREATED)
-    
+
+    @action(detail=True, methods=["post"])
+    def create_team(self, request, pk=None):
+        """Create an unclaimed team (admin only)"""
+        league = self.get_object()
+
+        # Check if user is admin
+        user_membership = LeagueMembership.objects.filter(
+            user=request.user, league=league
+        ).first()
+        if not user_membership or not user_membership.is_admin:
+            return Response(
+                {"error": "Only league administrators can create teams"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        team_name = request.data.get("team_name")
+        if not team_name:
+            return Response(
+                {"error": "Team name is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check if league is full
+        current_members = LeagueMembership.objects.filter(league=league).count()
+        if current_members >= league.num_teams:
+            return Response(
+                {"error": "This league is full"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create unclaimed team
+        membership = LeagueMembership.objects.create(
+            user=None,  # Unclaimed team
+            league=league,
+            team_name=team_name,
+            is_admin=False,
+        )
+
+        return Response(
+            LeagueMembershipSerializer(membership).data, status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=True, methods=["post"])
+    def claim_team(self, request, pk=None):
+        """Claim an unclaimed team"""
+        league = self.get_object()
+        team_id = request.data.get("team_id")
+        confirm_multiple = request.data.get("confirm_multiple", False)
+
+        if not team_id:
+            return Response(
+                {"error": "Team ID is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Find unclaimed team
+        try:
+            team = LeagueMembership.objects.get(id=team_id, league=league, user=None)
+        except LeagueMembership.DoesNotExist:
+            return Response(
+                {"error": "Team not found or already claimed"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Check how many teams the user already has in this league
+        existing_teams = LeagueMembership.objects.filter(
+            user=request.user, league=league
+        ).count()
+
+        # If user already has teams but hasn't confirmed, return info for confirmation
+        if existing_teams > 0 and not confirm_multiple:
+            ordinal = {1: "second", 2: "third", 3: "fourth", 4: "fifth"}.get(
+                existing_teams, f"{existing_teams + 1}th"
+            )
+
+            return Response(
+                {
+                    "requires_confirmation": True,
+                    "existing_teams": existing_teams,
+                    "ordinal": ordinal,
+                    "team_name": team.team_name,
+                    "message": f"You are already a member of this league. Are you sure you want to claim a {ordinal} team?",
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        # Claim the team
+        team.user = request.user
+        team.save()
+
+        return Response(
+            LeagueMembershipSerializer(team).data, status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=["delete"], url_path="teams/(?P<team_id>[^/.]+)")
+    def remove_team(self, request, pk=None, team_id=None):
+        """Remove a team from the league (admin only)"""
+        league = self.get_object()
+
+        # Check if user is admin
+        user_membership = LeagueMembership.objects.filter(
+            user=request.user, league=league, is_admin=True
+        ).first()
+        if not user_membership:
+            return Response(
+                {"error": "Only league administrators can remove teams"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            team = LeagueMembership.objects.get(id=team_id, league=league)
+        except LeagueMembership.DoesNotExist:
+            return Response(
+                {"error": "Team not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        team.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=["post"])
+    def unclaim_team(self, request, pk=None):
+        """Unclaim a team (make it available for others to claim)"""
+        league = self.get_object()
+        team_id = request.data.get("team_id")
+
+        if not team_id:
+            return Response(
+                {"error": "Team ID is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            team = LeagueMembership.objects.get(id=team_id, league=league)
+        except LeagueMembership.DoesNotExist:
+            return Response(
+                {"error": "Team not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Check if the user owns this team or is an admin
+        user_membership = LeagueMembership.objects.filter(
+            user=request.user, league=league, is_admin=True
+        ).first()
+
+        if team.user != request.user and not user_membership:
+            return Response(
+                {
+                    "error": "You can only unclaim your own teams or you must be an admin"
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Unclaim the team
+        team.user = None
+        team.save()
+
+        return Response(
+            {
+                "message": f"Team '{team.team_name}' has been unclaimed and is now available"
+            },
+            status=status.HTTP_200_OK,
+        )
+
     @action(detail=True, methods=['get'])
     def members(self, request, pk=None):
         """Get league members"""
@@ -185,25 +399,25 @@ class LeagueViewSet(viewsets.ModelViewSet):
         members = LeagueMembership.objects.filter(league=league).select_related('user')
         serializer = LeagueMembershipSerializer(members, many=True)
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=['get'])
     def available_players(self, request, pk=None):
         """Get available players for drafting"""
         league = self.get_object()
-        
+
         try:
             # Use 2025 as the most recent complete NFL season
             # TODO: Make this configurable or automatically detect latest available year
             nfl_year = 2025
-            
+
             # Use default positions if none specified
             positions = league.positions_included if league.positions_included else ["QB", "RB", "WR", "TE", "K", "DST"]
-            
+
             available_players_df = get_all_playoff_players(
                 year=nfl_year,
                 positions_to_keep=positions
             )
-            
+
             # Convert to list of dicts
             available_players = []
             for _, player in available_players_df.iterrows():
@@ -214,7 +428,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     'team': player.get('team', 'Unknown'),
                     'fantasy_points': round(player.get('fantasy_points', 0), 2)
                 })
-            
+
             # Remove already drafted players
             drafted_player_ids = DraftedTeam.objects.filter(
                 league=league
@@ -223,80 +437,110 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 p for p in available_players 
                 if p['player_id'] not in drafted_player_ids
             ]
-            
+
             # Sort by fantasy points in descending order
             available_players.sort(key=lambda x: -x['fantasy_points'])
-            
+
             serializer = AvailablePlayerSerializer(available_players, many=True)
             return Response(serializer.data)
-            
+
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
     @action(detail=True, methods=['post'])
     def draft_player(self, request, pk=None):
         """Draft a player to a team"""
         league = self.get_object()
-        
+
         # Check if user is admin
         try:
-            membership = LeagueMembership.objects.get(user=request.user, league=league)
-            if not membership.is_admin:
+            membership = LeagueMembership.objects.filter(
+                user=request.user, league=league, is_admin=True
+            ).first()
+            if not membership:
                 return Response({'error': 'Admin access required'}, 
                               status=status.HTTP_403_FORBIDDEN)
-        except LeagueMembership.DoesNotExist:
+        except Exception:
             return Response({'error': 'You are not a member of this league'}, 
                           status=status.HTTP_403_FORBIDDEN)
-        
+
         if league.is_draft_complete:
             return Response({'error': 'Draft is already complete'}, 
                           status=status.HTTP_400_BAD_REQUEST)
-        
+
         serializer = DraftPlayerSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         player_id = serializer.validated_data['player_id']
-        user_id = serializer.validated_data['user_id']
-        
-        try:
-            target_user = User.objects.get(id=user_id)
-            target_membership = LeagueMembership.objects.get(user=target_user, league=league)
-        except (User.DoesNotExist, LeagueMembership.DoesNotExist):
-            return Response({'error': 'Invalid user or user not in league'}, 
-                          status=status.HTTP_400_BAD_REQUEST)
-        
+        team_id = serializer.validated_data.get("team_id")
+        user_id = serializer.validated_data.get("user_id")
+
+        # Handle both old format (user_id) and new format (team_id)
+        if team_id:
+            try:
+                target_membership = LeagueMembership.objects.get(
+                    id=team_id, league=league
+                )
+                target_user = target_membership.user
+            except LeagueMembership.DoesNotExist:
+                return Response(
+                    {"error": "Invalid team or team not in league"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        elif user_id:
+            try:
+                target_user = User.objects.get(id=user_id)
+                # For backward compatibility, get the first team if user has multiple
+                target_membership = LeagueMembership.objects.filter(
+                    user=target_user, league=league
+                ).first()
+                if not target_membership:
+                    return Response(
+                        {"error": "User not in league"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            except User.DoesNotExist:
+                return Response(
+                    {"error": "Invalid user"}, status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            return Response(
+                {"error": "Either team_id or user_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # Check if player is already drafted
         if DraftedTeam.objects.filter(league=league, player_id=player_id).exists():
             return Response({'error': 'Player already drafted'}, 
                           status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Get player info
         try:
             # Use 2025 as the most recent complete NFL season
             nfl_year = 2025
-            
+
             # Use default positions if none specified
             positions = league.positions_included if league.positions_included else ["QB", "RB", "WR", "TE", "K", "DST"]
-            
+
             available_players_df = get_all_playoff_players(
                 year=nfl_year,
                 positions_to_keep=positions
             )
-            
+
             player_row = None
             for _, player in available_players_df.iterrows():
                 if str(player.get('player_id', player.get('gsis_id', ''))) == player_id:
                     player_row = player
                     break
-            
+
             if player_row is None:
                 return Response({'error': 'Player not found'}, 
                               status=status.HTTP_400_BAD_REQUEST)
-            
+
             # Get next draft order
             next_draft_order = DraftedTeam.objects.filter(league=league).count() + 1
-            
+
             # Create drafted team entry
             with transaction.atomic():
                 drafted_team = DraftedTeam.objects.create(
@@ -310,48 +554,113 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     fantasy_points=player_row.get('fantasy_points', 0),
                     draft_order=next_draft_order
                 )
-                
+
                 # Start draft if this is the first pick
                 if next_draft_order == 1 and not league.draft_started_at:
                     league.draft_started_at = timezone.now()
                     league.save()
-            
+
             serializer = DraftedTeamSerializer(drafted_team)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-            
+
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
     @action(detail=True, methods=['post'])
     def complete_draft(self, request, pk=None):
         """Complete the draft"""
         league = self.get_object()
-        
+
         # Check if user is admin
         try:
-            membership = LeagueMembership.objects.get(user=request.user, league=league)
-            if not membership.is_admin:
+            membership = LeagueMembership.objects.filter(
+                user=request.user, league=league, is_admin=True
+            ).first()
+            if not membership:
                 return Response({'error': 'Admin access required'}, 
                               status=status.HTTP_403_FORBIDDEN)
-        except LeagueMembership.DoesNotExist:
+        except Exception:
             return Response({'error': 'You are not a member of this league'}, 
                           status=status.HTTP_403_FORBIDDEN)
-        
+
         league.is_draft_complete = True
         league.draft_completed_at = timezone.now()
         league.save()
-        
+
         serializer = self.get_serializer(league)
         return Response(serializer.data)
-    
+
+    @action(detail=True, methods=["post"])
+    def undo_draft(self, request, pk=None):
+        """Undo the most recent draft pick"""
+        league = self.get_object()
+
+        # Check if user is admin
+        try:
+            membership = LeagueMembership.objects.filter(
+                user=request.user, league=league, is_admin=True
+            ).first()
+            if not membership:
+                return Response(
+                    {"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN
+                )
+        except Exception:
+            return Response(
+                {"error": "You are not a member of this league"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if league.is_draft_complete:
+            return Response(
+                {"error": "Cannot undo draft after completion"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # Get the most recent draft pick
+            most_recent_pick = (
+                DraftedTeam.objects.filter(league=league)
+                .order_by("-draft_order")
+                .first()
+            )
+
+            if not most_recent_pick:
+                return Response(
+                    {"error": "No draft picks to undo"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Delete the most recent pick
+            player_name = most_recent_pick.player_name
+            team_name = most_recent_pick.team_name
+            most_recent_pick.delete()
+
+            # If this was the only pick, reset draft_started_at
+            if not DraftedTeam.objects.filter(league=league).exists():
+                league.draft_started_at = None
+                league.save()
+
+            return Response(
+                {
+                    "message": f"Undid draft of {player_name} to {team_name}",
+                    "success": True,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     @action(detail=True, methods=['get'])
     def drafted_teams(self, request, pk=None):
         """Get all drafted teams organized by user"""
         league = self.get_object()
-        
+
         # Get all drafted players
         drafted_players = DraftedTeam.objects.filter(league=league).order_by('draft_order')
-        
+
         # Group by user
         teams = {}
         for player in drafted_players:
@@ -363,15 +672,15 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     'players': [],
                     'total_points': 0
                 }
-            
+
             player_data = DraftedTeamSerializer(player).data
             teams[user_id]['players'].append(player_data)
             teams[user_id]['total_points'] += player.fantasy_points
-        
+
         # Convert to list and sort by total points
         teams_list = list(teams.values())
         teams_list.sort(key=lambda x: x['total_points'], reverse=True)
-        
+
         return Response({
             'teams': teams_list,
             'total_teams': len(teams_list),

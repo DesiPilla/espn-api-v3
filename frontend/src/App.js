@@ -20,6 +20,7 @@ import LeagueSetup from "./pages/PlayoffPool/LeagueSetup";
 import LeagueDetail from "./pages/PlayoffPool/LeagueDetail";
 import DraftInterface from "./pages/PlayoffPool/DraftInterface";
 import DraftedTeams from "./pages/PlayoffPool/DraftedTeams";
+import JoinLeague from "./pages/PlayoffPool/JoinLeague";
 
 import { initGoogleAnalytics } from "./utils/google_analytics";
 import Layout from "./components/Layout";
@@ -65,23 +66,42 @@ const App = () => {
                         path="/fantasy_stats/invalid-league/"
                         element={<InvalidLeaguePage />}
                     />
-                    
+
                     {/* Playoff Pool Routes */}
-                    <Route 
-                        path="/playoff-pool/*" 
+                    <Route
+                        path="/playoff-pool/*"
                         element={
                             <PlayoffPoolAuthProvider>
                                 <Routes>
-                                    <Route index element={<PlayoffPoolHome />} />
-                                    <Route path="create-league" element={<LeagueSetup />} />
-                                    <Route path="league/:leagueId" element={<LeagueDetail />} />
-                                    <Route path="league/:leagueId/draft" element={<DraftInterface />} />
-                                    <Route path="league/:leagueId/teams" element={<DraftedTeams />} />
+                                    <Route
+                                        index
+                                        element={<PlayoffPoolHome />}
+                                    />
+                                    <Route
+                                        path="join"
+                                        element={<JoinLeague />}
+                                    />
+                                    <Route
+                                        path="create-league"
+                                        element={<LeagueSetup />}
+                                    />
+                                    <Route
+                                        path="league/:leagueId"
+                                        element={<LeagueDetail />}
+                                    />
+                                    <Route
+                                        path="league/:leagueId/draft"
+                                        element={<DraftInterface />}
+                                    />
+                                    <Route
+                                        path="league/:leagueId/teams"
+                                        element={<DraftedTeams />}
+                                    />
                                 </Routes>
                             </PlayoffPoolAuthProvider>
-                        } 
+                        }
                     />
-                    
+
                     <Route path="/test-error" element={<TestErrorPage />} />
                     <Route path="*" element={<NotFoundPage />} />
                 </Routes>
