@@ -15,6 +15,7 @@
 - [ ] Allow for picking IDP players
 
 ## Draft
+- [ ] If a team has 0 WR but 1 Flex, WR need to be available to draft (currently not)
 - [ ] Make the "start draft" button prettier
 - [x] Bug where drafted players still appear in the available players table
 - [ ] Bug when searching for a player and then clearing the search, where the top result stays on top.
@@ -28,7 +29,10 @@
 
 - [ ] Build a page to view weekly standings
   - Must work when there are not yet any scores (all zeros)
+  - If a league's draft is complete, it automatically displays on the league home page
 
+## Team rosters page
+- [ ] Display actual scores, not the draft fantasy points
 
 
 4. In the draft we will restrict the draftable players for a team based on if they have already picked their allotment of players for that position.

@@ -12,7 +12,6 @@ const DraftedTeams = () => {
   const [teamsData, setTeamsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedTab, setSelectedTab] = useState('standings');
 
   useEffect(() => {
     if (leagueId) {
@@ -85,234 +84,326 @@ const DraftedTeams = () => {
   const teams = teamsData?.teams || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate(`/playoff-pool/league/${leagueId}`)}
-            className="mb-4 text-blue-600 hover:text-blue-800"
-          >
-            ← Back to League
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Drafted Teams</h1>
-          <p className="text-gray-600">{league?.name}</p>
-          <div className="text-sm text-gray-500 mt-2">
-            {teamsData?.total_teams} teams • {teamsData?.total_players} total players drafted
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex">
-              <button
-                onClick={() => setSelectedTab('standings')}
-                className={`mr-8 py-2 px-1 border-b-2 font-medium text-sm ${
-                  selectedTab === 'standings'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Standings
-              </button>
-              <button
-                onClick={() => setSelectedTab('rosters')}
-                className={`mr-8 py-2 px-1 border-b-2 font-medium text-sm ${
-                  selectedTab === 'rosters'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Team Rosters
-              </button>
-              <button
-                onClick={() => setSelectedTab('analysis')}
-                className={`mr-8 py-2 px-1 border-b-2 font-medium text-sm ${
-                  selectedTab === 'analysis'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Position Analysis
-              </button>
-            </nav>
-          </div>
-        </div>
-
-        {/* Standings Tab */}
-        {selectedTab === 'standings' && (
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Team Rankings</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rank
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Team
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Owner
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Points
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Players
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {teams.map((team, index) => (
-                    <tr key={`${team.user.id}-${team.team_name}`} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-                          index === 0 ? 'bg-yellow-100 text-yellow-800' :
-                          index === 1 ? 'bg-gray-100 text-gray-800' :
-                          index === 2 ? 'bg-orange-100 text-orange-800' :
-                          'bg-gray-50 text-gray-600'
-                        }`}>
-                          {index + 1}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{team.team_name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{team.user.username}</div>
-                        {team.user.id === user?.id && (
-                          <div className="text-xs text-green-600">Your team</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-medium text-gray-900">
-                          {team.total_points.toFixed(1)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm text-gray-900">{team.players.length}</div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Team Rosters Tab */}
-        {selectedTab === 'rosters' && (
-          <div className="space-y-6">
-            {teams.map((team) => (
-              <div key={`${team.user.id}-${team.team_name}`} className="bg-white shadow-md rounded-lg overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{team.team_name}</h3>
-                      <p className="text-sm text-gray-600">
-                        Owner: {team.user.username}
-                        {team.user.id === user?.id && <span className="ml-2 text-green-600">(Your team)</span>}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-gray-900">{team.total_points.toFixed(1)} pts</div>
-                      <div className="text-sm text-gray-600">{team.players.length} players</div>
-                    </div>
+      <div className="min-h-screen bg-gray-50 py-8">
+          <div className="container mx-auto px-4">
+              {/* Header */}
+              <div className="mb-6">
+                  <button
+                      onClick={() =>
+                          navigate(`/playoff-pool/league/${leagueId}`)
+                      }
+                      className="mb-4 text-blue-600 hover:text-blue-800"
+                  >
+                      ← Back to League
+                  </button>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                      Drafted Teams
+                  </h1>
+                  <p className="text-gray-600">{league?.name}</p>
+                  <div className="text-sm text-gray-500 mt-2">
+                      {teamsData?.total_teams} teams •{" "}
+                      {teamsData?.total_players} total players drafted
                   </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Player</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pos</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Team</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Points</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {team.players
-                        .sort((a, b) => b.fantasy_points - a.fantasy_points)
-                        .map((player) => (
-                          <tr key={player.id}>
-                            <td className="px-4 py-2 text-sm font-medium text-gray-900">{player.player_name}</td>
-                            <td className="px-4 py-2 text-sm text-gray-600">{player.position}</td>
-                            <td className="px-4 py-2 text-sm text-gray-600">{player.team}</td>
-                            <td className="px-4 py-2 text-sm text-gray-900 text-right">{player.fantasy_points.toFixed(1)}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* Position Analysis Tab */}
-        {selectedTab === 'analysis' && (
-          <div className="bg-white shadow-md rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Position Analysis</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Team
-                    </th>
-                    {league?.positions_included?.map(pos => (
-                      <th key={pos} className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {pos}
-                      </th>
-                    ))}
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {teams.map((team) => {
-                    const positionTotals = getPositionTotals(team.players);
-                    const positionCounts = getPositionCounts(team.players);
-                    
-                    return (
-                      <tr key={`${team.user.id}-${team.team_name}`} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-gray-900">{team.team_name}</div>
-                          <div className="text-sm text-gray-500">{team.user.username}</div>
-                        </td>
-                        {league?.positions_included?.map(pos => (
-                          <td key={pos} className="px-3 py-4 whitespace-nowrap text-center">
-                            <div className="text-sm font-medium text-gray-900">
-                              {(positionTotals[pos] || 0).toFixed(1)}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              ({positionCounts[pos] || 0} players)
-                            </div>
-                          </td>
-                        ))}
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <div className="text-sm font-medium text-gray-900">
-                            {team.total_points.toFixed(1)}
+              {/* Team Rosters Grid */}
+              <div
+                  style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                          "repeat(auto-fit, minmax(350px, 1fr))",
+                      gap: "24px",
+                  }}
+              >
+                  {teams.map((team) => (
+                      <div
+                          key={`${team.user?.id || "unclaimed"}-${
+                              team.team_name
+                          }`}
+                          style={{
+                              backgroundColor: "white",
+                              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "8px",
+                              overflow: "hidden",
+                          }}
+                      >
+                          {/* Team Header */}
+                          <div
+                              style={{
+                                  backgroundColor: "#f8fafc",
+                                  borderBottom: "1px solid #e2e8f0",
+                                  padding: "16px 20px",
+                              }}
+                          >
+                              <h3
+                                  style={{
+                                      fontSize: "18px",
+                                      fontWeight: "600",
+                                      color: "#1f2937",
+                                      margin: "0 0 4px 0",
+                                  }}
+                              >
+                                  {team.team_name}
+                              </h3>
+                              <div
+                                  style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                  }}
+                              >
+                                  <div>
+                                      <div
+                                          style={{
+                                              fontSize: "14px",
+                                              color: "#6b7280",
+                                          }}
+                                      >
+                                          {team.user?.username || "Unclaimed"}
+                                          {team.user?.id === user?.id && (
+                                              <span
+                                                  style={{
+                                                      marginLeft: "8px",
+                                                      color: "#059669",
+                                                      fontWeight: "500",
+                                                  }}
+                                              >
+                                                  (You)
+                                              </span>
+                                          )}
+                                      </div>
+                                  </div>
+                                  <div
+                                      style={{
+                                          textAlign: "right",
+                                      }}
+                                  >
+                                      <div
+                                          style={{
+                                              fontSize: "16px",
+                                              fontWeight: "600",
+                                              color: "#1f2937",
+                                          }}
+                                      >
+                                          {team.total_points.toFixed(1)} pts
+                                      </div>
+                                      <div
+                                          style={{
+                                              fontSize: "12px",
+                                              color: "#6b7280",
+                                          }}
+                                      >
+                                          {team.players.length} players
+                                      </div>
+                                  </div>
+                              </div>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+
+                          {/* Roster Table */}
+                          <div style={{ padding: "16px 20px" }}>
+                              <h4
+                                  style={{
+                                      fontSize: "14px",
+                                      fontWeight: "600",
+                                      color: "#374151",
+                                      margin: "0 0 12px 0",
+                                      borderBottom: "1px solid #e5e7eb",
+                                      paddingBottom: "8px",
+                                  }}
+                              >
+                                  Roster Breakdown
+                              </h4>
+
+                              {/* Table Headers */}
+                              <div
+                                  style={{
+                                      display: "grid",
+                                      gridTemplateColumns: "15% 55% 30%",
+                                      backgroundColor: "#f1f5f9",
+                                      borderRadius: "6px 6px 0 0",
+                                      border: "1px solid #e2e8f0",
+                                      borderBottom: "none",
+                                  }}
+                              >
+                                  <div
+                                      style={{
+                                          padding: "8px 12px",
+                                          fontSize: "12px",
+                                          fontWeight: "500",
+                                          color: "#64748b",
+                                          textTransform: "uppercase",
+                                          letterSpacing: "0.05em",
+                                          textAlign: "center",
+                                      }}
+                                  >
+                                      POS
+                                  </div>
+                                  <div
+                                      style={{
+                                          padding: "8px 12px",
+                                          fontSize: "12px",
+                                          fontWeight: "500",
+                                          color: "#64748b",
+                                          textTransform: "uppercase",
+                                          letterSpacing: "0.05em",
+                                      }}
+                                  >
+                                      PLAYER
+                                  </div>
+                                  <div
+                                      style={{
+                                          padding: "8px 12px",
+                                          fontSize: "12px",
+                                          fontWeight: "500",
+                                          color: "#64748b",
+                                          textTransform: "uppercase",
+                                          letterSpacing: "0.05em",
+                                          textAlign: "right",
+                                      }}
+                                  >
+                                      POINTS
+                                  </div>
+                              </div>
+
+                              {/* Table Rows */}
+                              <div
+                                  style={{
+                                      border: "1px solid #e2e8f0",
+                                      borderRadius: "0 0 6px 6px",
+                                      backgroundColor: "white",
+                                  }}
+                              >
+                                  {team.players
+                                      .sort(
+                                          (a, b) =>
+                                              b.fantasy_points -
+                                              a.fantasy_points
+                                      )
+                                      .map((player, index) => (
+                                          <div
+                                              key={player.id}
+                                              style={{
+                                                  display: "grid",
+                                                  gridTemplateColumns:
+                                                      "15% 55% 30%",
+                                                  borderBottom:
+                                                      index <
+                                                      team.players.length - 1
+                                                          ? "1px solid #f1f5f9"
+                                                          : "none",
+                                                  alignItems: "center",
+                                                  transition:
+                                                      "background-color 0.15s",
+                                              }}
+                                              onMouseEnter={(e) =>
+                                                  (e.currentTarget.style.backgroundColor =
+                                                      "#f8fafc")
+                                              }
+                                              onMouseLeave={(e) =>
+                                                  (e.currentTarget.style.backgroundColor =
+                                                      "transparent")
+                                              }
+                                          >
+                                              {/* Position with colored badge */}
+                                              <div
+                                                  style={{
+                                                      textAlign: "center",
+                                                      padding: "12px 8px",
+                                                  }}
+                                              >
+                                                  <span
+                                                      style={{
+                                                          display:
+                                                              "inline-block",
+                                                          padding: "4px 8px",
+                                                          borderRadius: "12px",
+                                                          fontSize: "11px",
+                                                          fontWeight: "600",
+                                                          backgroundColor:
+                                                              {
+                                                                  QB: "#dbeafe",
+                                                                  RB: "#dcfce7",
+                                                                  WR: "#fef3c7",
+                                                                  TE: "#f3e8ff",
+                                                                  K: "#fee2e2",
+                                                                  DST: "#e0f2fe",
+                                                              }[
+                                                                  player
+                                                                      .position
+                                                              ] || "#f1f5f9",
+                                                          color:
+                                                              {
+                                                                  QB: "#1e40af",
+                                                                  RB: "#166534",
+                                                                  WR: "#92400e",
+                                                                  TE: "#7c3aed",
+                                                                  K: "#dc2626",
+                                                                  DST: "#0369a1",
+                                                              }[
+                                                                  player
+                                                                      .position
+                                                              ] || "#64748b",
+                                                      }}
+                                                  >
+                                                      {player.position}
+                                                  </span>
+                                              </div>
+
+                                              {/* Player Name and NFL Team */}
+                                              <div
+                                                  style={{
+                                                      padding: "12px 8px",
+                                                  }}
+                                              >
+                                                  <div
+                                                      style={{
+                                                          fontSize: "14px",
+                                                          fontWeight: "500",
+                                                          color: "#1f2937",
+                                                          marginBottom: "2px",
+                                                      }}
+                                                  >
+                                                      {player.player_name}
+                                                  </div>
+                                                  <div
+                                                      style={{
+                                                          fontSize: "12px",
+                                                          color: "#6b7280",
+                                                      }}
+                                                  >
+                                                      {player.team}
+                                                  </div>
+                                              </div>
+
+                                              {/* Points */}
+                                              <div
+                                                  style={{
+                                                      textAlign: "right",
+                                                      padding: "12px 8px",
+                                                  }}
+                                              >
+                                                  <div
+                                                      style={{
+                                                          fontSize: "14px",
+                                                          fontWeight: "500",
+                                                          color: "#1f2937",
+                                                      }}
+                                                  >
+                                                      {player.fantasy_points.toFixed(
+                                                          1
+                                                      )}
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      ))}
+                              </div>
+                          </div>
+                      </div>
+                  ))}
+              </div>
           </div>
-        )}
       </div>
-    </div>
   );
 };
 
