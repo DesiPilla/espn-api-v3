@@ -487,19 +487,61 @@ const DraftInterface = () => {
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="container mx-auto px-4">
                 {/* Header */}
-                <div className="mb-6">
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        marginBottom: "24px",
+                    }}
+                >
+                    <div>
+                        <button
+                            onClick={() =>
+                                navigate(`/playoff-pool/league/${leagueId}`)
+                            }
+                            className="mb-4 text-blue-600 hover:text-blue-800"
+                        >
+                            ← Back to League
+                        </button>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            Draft Interface
+                        </h1>
+                        <p className="text-gray-600">{league?.name}</p>
+                    </div>
                     <button
-                        onClick={() =>
-                            navigate(`/playoff-pool/league/${leagueId}`)
-                        }
-                        className="mb-4 text-blue-600 hover:text-blue-800"
+                        onClick={handleCompleteDraft}
+                        style={{
+                            background:
+                                "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "12px",
+                            padding: "12px 24px",
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            boxShadow: "0 4px 12px rgba(220, 38, 38, 0.3)",
+                            transition: "all 0.2s ease",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            marginTop: "32px",
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.transform = "translateY(-1px)";
+                            e.target.style.boxShadow =
+                                "0 6px 16px rgba(220, 38, 38, 0.4)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = "translateY(0)";
+                            e.target.style.boxShadow =
+                                "0 4px 12px rgba(220, 38, 38, 0.3)";
+                        }}
+                        title="Finalize and close the draft"
                     >
-                        ← Back to League
+                        🏁 Complete Draft
                     </button>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                        Draft Interface
-                    </h1>
-                    <p className="text-gray-600">{league?.name}</p>
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -1318,18 +1360,11 @@ const DraftInterface = () => {
                             )}
                         </div>
                     </div>
-                    ;{/* Draft Panel */}
-                    <div className="xl:col-span-1 space-y-6">
-                        {/* Complete Draft Button */}
-                        <div className="bg-white shadow-md rounded-lg p-4">
-                            <button
-                                onClick={handleCompleteDraft}
-                                className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                            >
-                                Complete Draft
-                            </button>
-                        </div>
-
+                    {/* Draft Panel */}
+                    <div
+                        className="xl:col-span-1 space-y-6"
+                        style={{ marginTop: "24px" }}
+                    >
                         {/* Team Roster Panel */}
                         <div
                             style={{
@@ -1463,15 +1498,26 @@ const DraftInterface = () => {
                                                         gap: "8px",
                                                     }}
                                                 >
-                                                    {Object.entries(
-                                                        getTeamRosterSummary(
-                                                            selectedRosterTeam
-                                                        )
-                                                    ).map(
-                                                        ([
-                                                            position,
-                                                            counts,
-                                                        ]) => {
+                                                    {[
+                                                        "QB",
+                                                        "RB",
+                                                        "WR",
+                                                        "TE",
+                                                        "flex",
+                                                        "DST",
+                                                        "K",
+                                                    ]
+                                                        .map((position) => {
+                                                            const summary =
+                                                                getTeamRosterSummary(
+                                                                    selectedRosterTeam
+                                                                );
+                                                            const counts =
+                                                                summary[
+                                                                    position
+                                                                ];
+                                                            if (!counts)
+                                                                return null;
                                                             const isEmpty =
                                                                 counts.current ===
                                                                 0;
@@ -1520,7 +1566,11 @@ const DraftInterface = () => {
                                                                         }`,
                                                                     }}
                                                                 >
-                                                                    {position.toUpperCase()}
+                                                                    {(position ===
+                                                                    "flex"
+                                                                        ? "FLEX"
+                                                                        : position
+                                                                    ).toUpperCase()}
                                                                     <br />
                                                                     {
                                                                         counts.current
@@ -1529,8 +1579,8 @@ const DraftInterface = () => {
                                                                     {counts.max}
                                                                 </div>
                                                             );
-                                                        }
-                                                    )}
+                                                        })
+                                                        .filter(Boolean)}
                                                 </div>
                                             </div>
 
@@ -1700,6 +1750,7 @@ const DraftInterface = () => {
                                 border: "1px solid #e2e8f0",
                                 borderRadius: "8px",
                                 overflow: "hidden",
+                                marginTop: "24px",
                             }}
                         >
                             {/* Table Header */}
