@@ -9,33 +9,53 @@ from backend.playoff_pool.scoring import (
     RELEVANT_DEFENSIVE_SCORING_STATS,
     calculate_fantasy_points,
 )
+from backend.playoff_pool.models import PlayoffDraftablePlayer
+
+PLAYOFF_TEAMS = {
+    2024: [
+        "KC",
+        "BUF",
+        "BAL",
+        "HOU",
+        "LAC",
+        "PIT",
+        "DEN",
+        "DET",
+        "PHI",
+        "TB",
+        "LA",  # Rams are encoded as "LA" in nflreadpy
+        "MIN",
+        "WAS",
+        "GB",
+    ],
+    2025: [
+        "DEN",
+        "NE",
+        "JAX",
+        "PIT",
+        "HOU",
+        "BUF",
+        "LAC",
+        "SEA",
+        "CHI",
+        "PHI",
+        "CAR",
+        "LA",  # Rams are encoded as "LA" in nflreadpy
+        "SF",
+        "GB",
+    ],
+}
 
 
 def get_all_playoff_players(
     year: int, positions_to_keep: List[str] = ["QB", "RB", "WR", "TE", "K", "DST"]
 ) -> pd.DataFrame:
-    # Load the schedules for the given year
-    nfl_schedule = nfl.load_schedules(year)
-
-    # Get the game IDs for all playoff games
-    playoff_game_ids = nfl_schedule.filter(pl.col("game_type") != "REG")[
-        "game_id"
-    ].to_list()
-
-    # Get the unique playoff teams from the game IDs
-    playoff_teams = set(
-        [
-            team
-            for gid in playoff_game_ids
-            for team in (gid.split("_")[-2], gid.split("_")[-1])
-        ]
-    )
 
     # ------------ Get list of individual players ------------
     # Load rosters for the playoff teams
     playoff_rosters = nfl.load_rosters([year]).to_pandas()
-    playoff_rosters = playoff_rosters[playoff_rosters["team"].isin(playoff_teams)]
-    
+    playoff_rosters = playoff_rosters[playoff_rosters["team"].isin(PLAYOFF_TEAMS[year])]
+
     # Load player game-level stats for multiple seasons
     player_stats = nfl.load_player_stats([year]).to_pandas()
     player_stats["fantasy_points"] = player_stats.apply(
@@ -63,7 +83,8 @@ def get_all_playoff_players(
     team_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
 
     playoff_team_stats = team_stats[
-        team_stats["team"].isin(playoff_teams) & (team_stats["season_type"] == "REG")
+        team_stats["team"].isin(PLAYOFF_TEAMS[year])
+        & (team_stats["season_type"] == "REG")
     ]
 
     playoff_team_stats["fantasy_points"] = playoff_team_stats.apply(
@@ -87,4 +108,50 @@ def get_all_playoff_players(
         playoff_players["position"].isin(positions_to_keep)
     ]
 
-    return playoff_players_filtered
+    return playoff_players_filtered[
+        ["gsis_id", "player_id", "full_name", "team", "position", "fantasy_points"]
+    ]
+
+
+def upload_playoff_players_to_db(
+    year: int, positions_to_keep=["QB", "RB", "WR", "TE", "K", "DST"]
+):
+    """
+    Uploads the output of get_all_playoff_players() to the PlayoffDraftablePlayer table for the given year.
+    Overwrites existing records for that year.
+    """
+    df = get_all_playoff_players(year, positions_to_keep)
+    # Remove existing records for this year
+    PlayoffDraftablePlayer.objects.filter(year=year).delete()
+    # Bulk create new records
+    players = [
+        PlayoffDraftablePlayer(
+            year=year,
+            gsis_id=row["gsis_id"],
+            player_id=row["player_id"],
+            full_name=row["full_name"],
+            team=row["team"],
+            position=row["position"],
+            fantasy_points=row["fantasy_points"],
+        )
+        for _, row in df.iterrows()
+    ]
+    PlayoffDraftablePlayer.objects.bulk_create(players)
+    return len(players)
+
+
+def query_playoff_players_from_db(
+    year: int, positions_to_keep=["QB", "RB", "WR", "TE", "K", "DST"]
+):
+    """
+    Query playoff players from the PlayoffDraftablePlayer table for the given year and positions.
+    Returns a list of dicts matching the original get_all_playoff_players() output.
+    """
+    qs = PlayoffDraftablePlayer.objects.filter(
+        year=year, position__in=positions_to_keep
+    )
+    return list(
+        qs.values(
+            "gsis_id", "player_id", "full_name", "team", "position", "fantasy_points"
+        )
+    )

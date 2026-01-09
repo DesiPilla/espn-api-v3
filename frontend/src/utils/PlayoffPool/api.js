@@ -169,9 +169,9 @@ class PlayoffPoolAPI {
         return response.data;
     }
 
-    async draftPlayer(leagueId, playerId, userId, teamId = null) {
+    async draftPlayer(leagueId, gsisId, userId, teamId = null) {
         const payload = {
-            player_id: playerId,
+            gsis_id: gsisId,
         };
 
         // Prefer team_id over user_id for specificity

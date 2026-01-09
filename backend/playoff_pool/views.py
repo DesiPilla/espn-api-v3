@@ -16,71 +16,82 @@ import pandas as pd
 import logging
 
 from .models import League, LeagueMembership, DraftedTeam, UserProfile
+from backend.playoff_pool.players import query_playoff_players_from_db
+from backend.playoff_pool.scoring import SCORING_MULTIPLIERS
 
 logger = logging.getLogger(__name__)
 
 
-@api_view(['GET', 'POST'])
+@api_view(["GET", "POST"])
 @permission_classes([permissions.AllowAny])
 def debug_test(request):
     """Debug endpoint to test routing"""
     logger.info(f"DEBUG_TEST: Received {request.method} request")
-    return Response({
-        'message': f'Debug endpoint reached with {request.method} method',
-        'path': request.path,
-        'method': request.method
-    })
+    return Response(
+        {
+            "message": f"Debug endpoint reached with {request.method} method",
+            "path": request.path,
+            "method": request.method,
+        }
+    )
 
 
 from .serializers import (
-    LeagueSerializer, LeagueMembershipSerializer, DraftedTeamSerializer,
-    UserRegistrationSerializer, UserSerializer, DraftPlayerSerializer,
-    AvailablePlayerSerializer
+    LeagueSerializer,
+    LeagueMembershipSerializer,
+    DraftedTeamSerializer,
+    UserRegistrationSerializer,
+    UserSerializer,
+    DraftPlayerSerializer,
+    AvailablePlayerSerializer,
 )
-from backend.playoff_pool.players import get_all_playoff_players
-from backend.playoff_pool.scoring import SCORING_MULTIPLIERS
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 def login_user(request):
     """Login user and return auth token"""
     logger.info(f"LOGIN_USER: Received {request.method} request to login_user")
     logger.info(f"LOGIN_USER: Request data: {request.data}")
     logger.info(f"LOGIN_USER: Request headers: {dict(request.headers)}")
-    
-    username = request.data.get('username')
-    password = request.data.get('password')
-    
-    logger.info(f"LOGIN_USER: Username: {username}, Password length: {len(password) if password else 0}")
-    
+
+    username = request.data.get("username")
+    password = request.data.get("password")
+
+    logger.info(
+        f"LOGIN_USER: Username: {username}, Password length: {len(password) if password else 0}"
+    )
+
     if not username or not password:
-        return Response({
-            'error': 'Username and password are required'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
+        return Response(
+            {"error": "Username and password are required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     user = authenticate(username=username, password=password)
     if user:
         token, created = Token.objects.get_or_create(user=user)
         # Get or create user profile
         profile, _ = UserProfile.objects.get_or_create(user=user)
-        
-        return Response({
-            'token': token.key,
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'display_name': profile.display_name
+
+        return Response(
+            {
+                "token": token.key,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "display_name": profile.display_name,
+                },
             }
-        })
+        )
     else:
-        return Response({
-            'error': 'Invalid credentials'
-        }, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(
+            {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
+        )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 def register_user(request):
     """Register a new user"""
@@ -94,15 +105,18 @@ def register_user(request):
         token, created = Token.objects.get_or_create(user=user)
         profile = UserProfile.objects.get(user=user)
 
-        return Response({
-            'token': token.key,
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'display_name': profile.display_name
-            }
-        }, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                "token": token.key,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "display_name": profile.display_name,
+                },
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -144,20 +158,22 @@ def get_league_info(request, league_id):
 
 
 @ensure_csrf_cookie
-@api_view(['GET'])
+@api_view(["GET"])
 def scoring_settings(request):
     """Get default scoring settings"""
-    return Response({
-        'scoring_multipliers': SCORING_MULTIPLIERS,
-        'position_choices': [
-            {'value': 'QB', 'label': 'Quarterback'},
-            {'value': 'RB', 'label': 'Running Back'},
-            {'value': 'WR', 'label': 'Wide Receiver'},
-            {'value': 'TE', 'label': 'Tight End'},
-            {'value': 'K', 'label': 'Kicker'},
-            {'value': 'DST', 'label': 'Defense/Special Teams'},
-        ]
-    })
+    return Response(
+        {
+            "scoring_multipliers": SCORING_MULTIPLIERS,
+            "position_choices": [
+                {"value": "QB", "label": "Quarterback"},
+                {"value": "RB", "label": "Running Back"},
+                {"value": "WR", "label": "Wide Receiver"},
+                {"value": "TE", "label": "Tight End"},
+                {"value": "K", "label": "Kicker"},
+                {"value": "DST", "label": "Defense/Special Teams"},
+            ],
+        }
+    )
 
 
 class LeagueViewSet(viewsets.ModelViewSet):
@@ -169,7 +185,9 @@ class LeagueViewSet(viewsets.ModelViewSet):
         logger.info(f"LEAGUE_VIEWSET: {request.method} request to {request.path}")
         logger.info(f"LEAGUE_VIEWSET: Headers: {dict(request.headers)}")
         logger.info(f"LEAGUE_VIEWSET: User: {request.user}")
-        logger.info(f"LEAGUE_VIEWSET: User authenticated: {request.user.is_authenticated}")
+        logger.info(
+            f"LEAGUE_VIEWSET: User authenticated: {request.user.is_authenticated}"
+        )
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -188,14 +206,14 @@ class LeagueViewSet(viewsets.ModelViewSet):
             user=self.request.user,
             league=league,
             team_name=f"{self.request.user.username}'s Team",
-            is_admin=True
+            is_admin=True,
         )
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def join(self, request, pk=None):
         """Join a league"""
         league = self.get_object()
-        team_name = request.data.get('team_name', f"{request.user.username}'s Team")
+        team_name = request.data.get("team_name", f"{request.user.username}'s Team")
         confirm_multiple = request.data.get("confirm_multiple", False)
 
         # Check how many teams the user already has in this league
@@ -222,17 +240,17 @@ class LeagueViewSet(viewsets.ModelViewSet):
         # Check if league is full
         current_members = LeagueMembership.objects.filter(league=league).count()
         if current_members >= league.num_teams:
-            return Response({'error': 'This league is full'}, 
-                          status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "This league is full"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         membership = LeagueMembership.objects.create(
-            user=request.user,
-            league=league,
-            team_name=team_name
+            user=request.user, league=league, team_name=team_name
         )
 
-        return Response(LeagueMembershipSerializer(membership).data, 
-                       status=status.HTTP_201_CREATED)
+        return Response(
+            LeagueMembershipSerializer(membership).data, status=status.HTTP_201_CREATED
+        )
 
     @action(detail=True, methods=["post"])
     def create_team(self, request, pk=None):
@@ -392,62 +410,40 @@ class LeagueViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     def members(self, request, pk=None):
         """Get league members"""
         league = self.get_object()
-        members = LeagueMembership.objects.filter(league=league).select_related('user')
+        members = LeagueMembership.objects.filter(league=league).select_related("user")
         serializer = LeagueMembershipSerializer(members, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     def available_players(self, request, pk=None):
         """Get available players for drafting"""
         league = self.get_object()
 
         try:
-            # Use 2025 as the most recent complete NFL season
-            # TODO: Make this configurable or automatically detect latest available year
             nfl_year = 2025
-
-            # Use default positions if none specified
-            positions = league.positions_included if league.positions_included else ["QB", "RB", "WR", "TE", "K", "DST"]
-
-            available_players_df = get_all_playoff_players(
-                year=nfl_year,
-                positions_to_keep=positions
+            positions = (
+                league.positions_included
+                if league.positions_included
+                else ["QB", "RB", "WR", "TE", "K", "DST"]
             )
-
-            # Convert to list of dicts
-            available_players = []
-            for _, player in available_players_df.iterrows():
-                available_players.append({
-                    'player_id': str(player.get('player_id', player.get('gsis_id', ''))),
-                    'name': player.get('full_name', 'Unknown'),
-                    'position': player.get('position', 'Unknown'),
-                    'team': player.get('team', 'Unknown'),
-                    'fantasy_points': round(player.get('fantasy_points', 0), 2)
-                })
-
-            # Remove already drafted players
-            drafted_player_ids = DraftedTeam.objects.filter(
-                league=league
-            ).values_list('player_id', flat=True)
-            available_players = [
-                p for p in available_players 
-                if p['player_id'] not in drafted_player_ids
-            ]
-
-            # Sort by fantasy points in descending order
-            available_players.sort(key=lambda x: -x['fantasy_points'])
-
-            serializer = AvailablePlayerSerializer(available_players, many=True)
-            return Response(serializer.data)
-
+            available_players = query_playoff_players_from_db(
+                year=nfl_year, positions_to_keep=positions
+            )
+            # Map full_name to name for frontend compatibility
+            for player in available_players:
+                player["name"] = player.get("full_name", "")
+            # available_players is already a list of dicts
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        return Response(available_players)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def draft_player(self, request, pk=None):
         """Draft a player to a team"""
         league = self.get_object()
@@ -458,21 +454,26 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 user=request.user, league=league, is_admin=True
             ).first()
             if not membership:
-                return Response({'error': 'Admin access required'}, 
-                              status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    {"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN
+                )
         except Exception:
-            return Response({'error': 'You are not a member of this league'}, 
-                          status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "You are not a member of this league"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         if league.is_draft_complete:
-            return Response({'error': 'Draft is already complete'}, 
-                          status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Draft is already complete"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         serializer = DraftPlayerSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        player_id = serializer.validated_data['player_id']
+        gsis_id = serializer.validated_data["gsis_id"]
         team_id = serializer.validated_data.get("team_id")
         user_id = serializer.validated_data.get("user_id")
 
@@ -482,6 +483,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 target_membership = LeagueMembership.objects.get(
                     id=team_id, league=league
                 )
+                # target_user can be None for unclaimed teams
                 target_user = target_membership.user
             except LeagueMembership.DoesNotExist:
                 return Response(
@@ -511,32 +513,33 @@ class LeagueViewSet(viewsets.ModelViewSet):
             )
 
         # Check if player is already drafted
-        if DraftedTeam.objects.filter(league=league, player_id=player_id).exists():
-            return Response({'error': 'Player already drafted'}, 
-                          status=status.HTTP_400_BAD_REQUEST)
+        if DraftedTeam.objects.filter(league=league, gsis_id=gsis_id).exists():
+            return Response(
+                {"error": "Player already drafted"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Get player info
         try:
-            # Use 2025 as the most recent complete NFL season
             nfl_year = 2025
-
-            # Use default positions if none specified
-            positions = league.positions_included if league.positions_included else ["QB", "RB", "WR", "TE", "K", "DST"]
-
-            available_players_df = get_all_playoff_players(
-                year=nfl_year,
-                positions_to_keep=positions
+            positions = (
+                league.positions_included
+                if league.positions_included
+                else ["QB", "RB", "WR", "TE", "K", "DST"]
             )
 
+            available_players = query_playoff_players_from_db(
+                year=nfl_year, positions_to_keep=positions
+            )
             player_row = None
-            for _, player in available_players_df.iterrows():
-                if str(player.get('player_id', player.get('gsis_id', ''))) == player_id:
+            for player in available_players:
+                if str(player.get("gsis_id", "")) == gsis_id:
                     player_row = player
                     break
 
             if player_row is None:
-                return Response({'error': 'Player not found'}, 
-                              status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "Player not found"}, status=status.HTTP_400_BAD_REQUEST
+                )
 
             # Get next draft order
             next_draft_order = DraftedTeam.objects.filter(league=league).count() + 1
@@ -546,13 +549,14 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 drafted_team = DraftedTeam.objects.create(
                     league=league,
                     user=target_user,
+                    team_membership=target_membership,
                     team_name=target_membership.team_name,
-                    player_id=player_id,
-                    player_name=player_row.get('full_name', 'Unknown'),
-                    position=player_row.get('position', 'Unknown'),
-                    team=player_row.get('team', 'Unknown'),
-                    fantasy_points=player_row.get('fantasy_points', 0),
-                    draft_order=next_draft_order
+                    gsis_id=gsis_id,
+                    player_name=player_row.get("full_name", "Unknown"),
+                    position=player_row.get("position", "Unknown"),
+                    nfl_team=player_row.get("team", "Unknown"),
+                    fantasy_points=player_row.get("fantasy_points", 0),
+                    draft_order=next_draft_order,
                 )
 
                 # Start draft if this is the first pick
@@ -564,9 +568,11 @@ class LeagueViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def complete_draft(self, request, pk=None):
         """Complete the draft"""
         league = self.get_object()
@@ -577,11 +583,14 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 user=request.user, league=league, is_admin=True
             ).first()
             if not membership:
-                return Response({'error': 'Admin access required'}, 
-                              status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    {"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN
+                )
         except Exception:
-            return Response({'error': 'You are not a member of this league'}, 
-                          status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "You are not a member of this league"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         league.is_draft_complete = True
         league.draft_completed_at = timezone.now()
@@ -653,45 +662,57 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     def drafted_teams(self, request, pk=None):
         """Get all drafted teams organized by user"""
         league = self.get_object()
 
         # Get all drafted players
-        drafted_players = DraftedTeam.objects.filter(league=league).order_by('draft_order')
+        drafted_players = DraftedTeam.objects.filter(league=league).order_by(
+            "draft_order"
+        )
 
         # Group by user
         teams = {}
         for player in drafted_players:
-            user_id = player.user.id
+            # Handle both claimed and unclaimed teams
+            if player.user:
+                user_id = player.user.id
+                user_data = UserSerializer(player.user).data
+            else:
+                # For unclaimed teams, use team_membership id as identifier
+                user_id = f"unclaimed_{player.team_membership.id}"
+                user_data = None
+                
             if user_id not in teams:
                 teams[user_id] = {
-                    'user': UserSerializer(player.user).data,
-                    'team_name': player.team_name,
-                    'players': [],
-                    'total_points': 0
+                    "user": user_data,
+                    "team_name": player.team_name,
+                    "players": [],
+                    "total_points": 0,
                 }
 
             player_data = DraftedTeamSerializer(player).data
-            teams[user_id]['players'].append(player_data)
-            teams[user_id]['total_points'] += player.fantasy_points
+            teams[user_id]["players"].append(player_data)
+            teams[user_id]["total_points"] += player.fantasy_points
 
         # Convert to list and sort by total points
         teams_list = list(teams.values())
-        teams_list.sort(key=lambda x: x['total_points'], reverse=True)
+        teams_list.sort(key=lambda x: x["total_points"], reverse=True)
 
-        return Response({
-            'teams': teams_list,
-            'total_teams': len(teams_list),
-            'total_players': drafted_players.count()
-        })
+        return Response(
+            {
+                "teams": teams_list,
+                "total_teams": len(teams_list),
+                "total_players": drafted_players.count(),
+            }
+        )
 
 
 class LeagueMembershipViewSet(viewsets.ModelViewSet):
     serializer_class = LeagueMembershipSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         return LeagueMembership.objects.filter(user=self.request.user)
 
@@ -699,7 +720,7 @@ class LeagueMembershipViewSet(viewsets.ModelViewSet):
 class DraftedTeamViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = DraftedTeamSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         # Only return drafted players from leagues the user is in
         user_leagues = League.objects.filter(members__user=self.request.user)

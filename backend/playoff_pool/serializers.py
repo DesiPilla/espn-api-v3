@@ -8,32 +8,32 @@ from .models import League, LeagueMembership, DraftedTeam, UserProfile
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
-        read_only_fields = ['id']
+        fields = ["id", "username", "email", "first_name", "last_name"]
+        read_only_fields = ["id"]
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    
+
     class Meta:
         model = UserProfile
-        fields = ['user', 'display_name']
+        fields = ["user", "display_name"]
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     display_name = serializers.CharField(required=False, allow_blank=True)
-    
+
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'display_name']
-    
+        fields = ["username", "email", "password", "display_name"]
+
     def create(self, validated_data):
-        display_name = validated_data.pop('display_name', '')
+        display_name = validated_data.pop("display_name", "")
         user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password']
+            username=validated_data["username"],
+            email=validated_data["email"],
+            password=validated_data["password"],
         )
         UserProfile.objects.create(user=user, display_name=display_name)
         return user
@@ -66,13 +66,19 @@ class LeagueSerializer(serializers.ModelSerializer):
             "member_count",
             "user_membership",
         ]
-        read_only_fields = ['id', 'created_by', 'created_at', 'draft_started_at', 'draft_completed_at']
+        read_only_fields = [
+            "id",
+            "created_by",
+            "created_at",
+            "draft_started_at",
+            "draft_completed_at",
+        ]
 
     def get_member_count(self, obj):
         return obj.members.count()
 
     def get_user_membership(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request and request.user.is_authenticated:
             try:
                 # Get all memberships for this user in this league
@@ -114,7 +120,7 @@ class LeagueSerializer(serializers.ModelSerializer):
 
 class LeagueMembershipSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    league_name = serializers.CharField(source='league.name', read_only=True)
+    league_name = serializers.CharField(source="league.name", read_only=True)
     joined_at_est = serializers.SerializerMethodField()
 
     class Meta:
@@ -129,7 +135,7 @@ class LeagueMembershipSerializer(serializers.ModelSerializer):
             "joined_at",
             "joined_at_est",
         ]
-        read_only_fields = ['id', 'user', 'joined_at']
+        read_only_fields = ["id", "user", "joined_at"]
 
     def get_joined_at_est(self, obj):
         """Return joined_at in EST timezone"""
@@ -140,8 +146,8 @@ class LeagueMembershipSerializer(serializers.ModelSerializer):
 
 
 class DraftedTeamSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    league_name = serializers.CharField(source='league.name', read_only=True)
+    user = serializers.SerializerMethodField()
+    league_name = serializers.CharField(source="league.name", read_only=True)
     drafted_at_est = serializers.SerializerMethodField()
 
     class Meta:
@@ -152,16 +158,30 @@ class DraftedTeamSerializer(serializers.ModelSerializer):
             "league_name",
             "user",
             "team_name",
-            "player_id",
+            "gsis_id",
             "player_name",
             "position",
-            "team",
+            "nfl_team",
             "fantasy_points",
             "drafted_at",
             "drafted_at_est",
             "draft_order",
         ]
-        read_only_fields = ['id', 'drafted_at']
+        read_only_fields = ["id", "drafted_at"]
+
+    def get_user(self, obj):
+        """Safely serialize user, returning None if user doesn't exist"""
+        if obj.user:
+            return UserSerializer(obj.user).data
+        return None
+
+    def to_representation(self, instance):
+        """Custom serialization to handle None user"""
+        ret = super().to_representation(instance)
+        # If user is None, explicitly set it to None in the output
+        if instance.user is None:
+            ret['user'] = None
+        return ret
 
     def get_drafted_at_est(self, obj):
         """Return drafted_at in EST timezone"""
@@ -172,7 +192,7 @@ class DraftedTeamSerializer(serializers.ModelSerializer):
 
 
 class DraftPlayerSerializer(serializers.Serializer):
-    player_id = serializers.CharField(max_length=50)
+    gsis_id = serializers.CharField(max_length=50)
     user_id = serializers.IntegerField(required=False)
     team_id = serializers.IntegerField(required=False)
 
@@ -192,7 +212,7 @@ class DraftPlayerSerializer(serializers.Serializer):
 
 
 class AvailablePlayerSerializer(serializers.Serializer):
-    player_id = serializers.CharField()
+    gsis_id = serializers.CharField()
     name = serializers.CharField()
     position = serializers.CharField()
     team = serializers.CharField()
