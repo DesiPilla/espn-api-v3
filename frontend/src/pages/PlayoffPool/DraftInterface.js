@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { usePlayoffPoolAuth } from '../../components/PlayoffPool/AuthContext';
-import playoffPoolAPI from '../../utils/PlayoffPool/api';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { usePlayoffPoolAuth } from "../../components/PlayoffPool/AuthContext";
+import playoffPoolAPI from "../../utils/PlayoffPool/api";
 
 const DraftInterface = () => {
     const { leagueId } = useParams();
@@ -11,16 +11,19 @@ const DraftInterface = () => {
     const [members, setMembers] = useState([]);
     const [availablePlayers, setAvailablePlayers] = useState([]);
     const [draftedPlayers, setDraftedPlayers] = useState([]);
+    const [teamRosters, setTeamRosters] = useState({});
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
-    const [filterPosition, setFilterPosition] = useState('ALL');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [filterPosition, setFilterPosition] = useState("ALL");
+    const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [playersPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
     const [draftLoading, setDraftLoading] = useState(false);
     const [undoLoading, setUndoLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showRosterPanel, setShowRosterPanel] = useState(false);
+    const [selectedRosterTeam, setSelectedRosterTeam] = useState("");
 
     useEffect(() => {
         if (leagueId) {
@@ -45,14 +48,45 @@ const DraftInterface = () => {
 
             // Load drafted teams data to show current picks
             try {
-                const teamsData = await playoffPoolAPI.getDraftedTeams(leagueId);
+                const teamsData = await playoffPoolAPI.getDraftedTeams(
+                    leagueId
+                );
                 const allDrafted = [];
+                const teamRostersByUser = {};
+
                 teamsData.teams.forEach((team) => {
-                    team.players.forEach((player) => allDrafted.push(player));
+                    const userId =
+                        team.user?.id || `unclaimed_${team.team_name}`;
+                    teamRostersByUser[userId] = {
+                        ...team,
+                        playersByPosition: {},
+                    };
+
+                    team.players.forEach((player) => {
+                        allDrafted.push(player);
+
+                        // Group players by position for this team
+                        const position = player.position;
+                        if (
+                            !teamRostersByUser[userId].playersByPosition[
+                                position
+                            ]
+                        ) {
+                            teamRostersByUser[userId].playersByPosition[
+                                position
+                            ] = [];
+                        }
+                        teamRostersByUser[userId].playersByPosition[
+                            position
+                        ].push(player);
+                    });
                 });
+
                 setDraftedPlayers(allDrafted);
+                setTeamRosters(teamRostersByUser);
             } catch (err) {
                 console.warn("No drafted players yet");
+                setTeamRosters({});
             }
         } catch (err) {
             setError("Failed to load draft data");
@@ -62,6 +96,203 @@ const DraftInterface = () => {
         }
     };
 
+    // Helper function to get position limits for a team
+    const getPositionLimits = (league) => {
+        if (!league?.roster_config) return {};
+
+        const limits = {};
+        Object.entries(league.roster_config).forEach(([position, count]) => {
+            if (position === "flex") {
+                // Handle flex positions separately
+                limits.flex = count;
+            } else {
+                limits[position] = count;
+            }
+        });
+
+        return limits;
+    };
+
+    // Check if a team can draft a player in a specific position
+    const canDraftPosition = (teamId, position) => {
+        if (!league?.roster_config || !teamRosters[teamId]) return true;
+
+        const positionLimits = getPositionLimits(league);
+        const teamRoster = teamRosters[teamId];
+        const playersAtPosition =
+            teamRoster.playersByPosition[position]?.length || 0;
+
+        // Check direct position limit
+        if (positionLimits[position]) {
+            if (playersAtPosition >= positionLimits[position]) {
+                // Check if can be flex
+                if (
+                    positionLimits.flex &&
+                    ["RB", "WR", "TE"].includes(position)
+                ) {
+                    const flexEligiblePositions = positionLimits.flex
+                        .eligible_positions || ["RB", "WR", "TE"];
+                    if (flexEligiblePositions.includes(position)) {
+                        // Count total flex eligible players
+                        const totalFlexPlayers = flexEligiblePositions.reduce(
+                            (sum, pos) => {
+                                return (
+                                    sum +
+                                    (teamRoster.playersByPosition[pos]
+                                        ?.length || 0)
+                                );
+                            },
+                            0
+                        );
+
+                        // Calculate how many flex spots are available
+                        const usedDirectSpots = flexEligiblePositions.reduce(
+                            (sum, pos) => {
+                                const directLimit = positionLimits[pos] || 0;
+                                const playersAtPos =
+                                    teamRoster.playersByPosition[pos]?.length ||
+                                    0;
+                                return (
+                                    sum + Math.min(playersAtPos, directLimit)
+                                );
+                            },
+                            0
+                        );
+
+                        const availableFlexSpots =
+                            (positionLimits.flex.count || 0) -
+                            (totalFlexPlayers - usedDirectSpots);
+                        return availableFlexSpots > 0;
+                    }
+                }
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    // Get roster summary for a team
+    const getTeamRosterSummary = (teamId) => {
+        if (!teamRosters[teamId] || !league?.roster_config) return {};
+
+        const summary = {};
+        const positionLimits = getPositionLimits(league);
+        const teamRoster = teamRosters[teamId];
+
+        Object.keys(positionLimits).forEach((position) => {
+            if (position === "flex") {
+                const flexConfig = positionLimits.flex;
+                const eligiblePositions = flexConfig.eligible_positions || [
+                    "RB",
+                    "WR",
+                    "TE",
+                ];
+                const totalEligible = eligiblePositions.reduce((sum, pos) => {
+                    return (
+                        sum + (teamRoster.playersByPosition[pos]?.length || 0)
+                    );
+                }, 0);
+
+                summary.flex = {
+                    current: Math.max(
+                        0,
+                        totalEligible -
+                            eligiblePositions.reduce((sum, pos) => {
+                                return (
+                                    sum +
+                                    Math.min(
+                                        teamRoster.playersByPosition[pos]
+                                            ?.length || 0,
+                                        positionLimits[pos] || 0
+                                    )
+                                );
+                            }, 0)
+                    ),
+                    max: flexConfig.count || 0,
+                };
+            } else {
+                summary[position] = {
+                    current:
+                        teamRoster.playersByPosition[position]?.length || 0,
+                    max: positionLimits[position] || 0,
+                };
+            }
+        });
+
+        return summary;
+    };
+
+    // Create individual roster slots based on roster configuration
+    const createRosterSlots = (teamId) => {
+        if (!league?.roster_config) return [];
+
+        const slots = [];
+        const positionLimits = getPositionLimits(league);
+        const teamRoster = teamRosters[teamId];
+
+        // Create slots for each position in order: QB, RB, WR, TE, FLEX, DST, K
+        const positionOrder = ["QB", "RB", "WR", "TE", "flex", "DST", "K"];
+
+        positionOrder.forEach((position) => {
+            if (positionLimits[position]) {
+                const count =
+                    position === "flex"
+                        ? positionLimits.flex.count
+                        : positionLimits[position];
+
+                for (let i = 0; i < count; i++) {
+                    let slotPlayer = null;
+
+                    if (position === "flex") {
+                        // For flex, find eligible players that aren't already in direct position slots
+                        const eligiblePositions = positionLimits.flex
+                            .eligible_positions || ["RB", "WR", "TE"];
+                        const allFlexEligible = [];
+
+                        eligiblePositions.forEach((pos) => {
+                            const posPlayers =
+                                teamRoster?.playersByPosition[pos] || [];
+                            allFlexEligible.push(...posPlayers);
+                        });
+
+                        // Sort by draft order to assign to flex consistently
+                        allFlexEligible.sort(
+                            (a, b) => a.draft_order - b.draft_order
+                        );
+
+                        // Skip players already assigned to direct positions
+                        let flexAssignedCount = 0;
+                        eligiblePositions.forEach((pos) => {
+                            const directLimit = positionLimits[pos] || 0;
+                            flexAssignedCount += directLimit;
+                        });
+
+                        if (allFlexEligible[flexAssignedCount + i]) {
+                            slotPlayer = allFlexEligible[flexAssignedCount + i];
+                        }
+                    } else {
+                        // Direct position assignment
+                        const positionPlayers =
+                            teamRoster?.playersByPosition[position] || [];
+                        if (positionPlayers[i]) {
+                            slotPlayer = positionPlayers[i];
+                        }
+                    }
+
+                    slots.push({
+                        position: position === "flex" ? "FLEX" : position,
+                        player: slotPlayer,
+                        slotIndex: i,
+                        isEmpty: !slotPlayer,
+                    });
+                }
+            }
+        });
+
+        return slots;
+    };
+
     const handleDraftPlayer = async () => {
         if (!selectedPlayer || !selectedUser) {
             // Allow drafting to unclaimed teams (selectedUser can be null)
@@ -69,6 +300,18 @@ const DraftInterface = () => {
                 alert("Please select a player and a team");
                 return;
             }
+        }
+
+        // Validate roster limits
+        const teamId =
+            selectedUser?.user?.id || `unclaimed_${selectedUser?.team_name}`;
+        const playerPosition = selectedPlayer.position;
+
+        if (!canDraftPosition(teamId, playerPosition)) {
+            alert(
+                `Cannot draft ${selectedPlayer.name} (${playerPosition}). Team roster is full for this position.`
+            );
+            return;
         }
 
         try {
@@ -357,7 +600,15 @@ const DraftInterface = () => {
                                             ))}
                                         </select>
                                     </div>
-                                    <div style={{ flex: 1, minWidth: "200px" }}>
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            minWidth: "200px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "8px",
+                                        }}
+                                    >
                                         <label
                                             style={{
                                                 fontSize: "12px",
@@ -365,10 +616,10 @@ const DraftInterface = () => {
                                                 color: "#64748b",
                                                 textTransform: "uppercase",
                                                 letterSpacing: "0.05em",
-                                                marginRight: "8px",
+                                                whiteSpace: "nowrap",
                                             }}
                                         >
-                                            Search:
+                                            SEARCH:
                                         </label>
                                         <input
                                             type="text"
@@ -384,7 +635,8 @@ const DraftInterface = () => {
                                                 border: "1px solid #d1d5db",
                                                 borderRadius: "6px",
                                                 fontSize: "14px",
-                                                width: "100%",
+                                                flex: 1,
+                                                maxWidth: "300px",
                                             }}
                                         />
                                     </div>
@@ -396,14 +648,14 @@ const DraftInterface = () => {
                                 style={{
                                     display: "grid",
                                     gridTemplateColumns:
-                                        "6% 8% 22% 10% 14% 12% 8% 14% 6%",
+                                        "5% 8% 20% 8% 14% 10% 10% 15% 10%",
                                     backgroundColor: "#f1f5f9",
                                     borderBottom: "1px solid #e2e8f0",
                                 }}
                             >
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -416,7 +668,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -429,7 +681,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -441,7 +693,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -454,7 +706,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -467,7 +719,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -480,7 +732,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -493,7 +745,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -506,7 +758,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -533,7 +785,7 @@ const DraftInterface = () => {
                                             style={{
                                                 display: "grid",
                                                 gridTemplateColumns:
-                                                    "6% 8% 22% 10% 14% 12% 8% 14% 6%",
+                                                    "5% 8% 20% 8% 14% 10% 10% 15% 10%",
                                                 padding: "12px 0",
                                                 borderBottom:
                                                     "1px solid #f1f5f9",
@@ -574,7 +826,6 @@ const DraftInterface = () => {
                                                     {globalRank}
                                                 </span>
                                             </div>
-
                                             {/* Position with colored badge */}
                                             <div
                                                 style={{
@@ -616,7 +867,6 @@ const DraftInterface = () => {
                                                     {player.position}
                                                 </span>
                                             </div>
-
                                             {/* Player Name and Info */}
                                             <div style={{ padding: "0 8px" }}>
                                                 <div
@@ -629,7 +879,6 @@ const DraftInterface = () => {
                                                     {player.name}
                                                 </div>
                                             </div>
-
                                             {/* NFL Team */}
                                             <div
                                                 style={{
@@ -652,7 +901,6 @@ const DraftInterface = () => {
                                                     {player.team}
                                                 </span>
                                             </div>
-
                                             {/* Regular Season Point Total */}
                                             <div
                                                 style={{
@@ -672,7 +920,6 @@ const DraftInterface = () => {
                                                     )}
                                                 </span>
                                             </div>
-
                                             {/* Draft Value */}
                                             <div
                                                 style={{
@@ -692,7 +939,6 @@ const DraftInterface = () => {
                                                     ).toFixed(1)}
                                                 </span>
                                             </div>
-
                                             {/* Select Button */}
                                             <div
                                                 style={{
@@ -759,7 +1005,6 @@ const DraftInterface = () => {
                                                         : "Select"}
                                                 </button>
                                             </div>
-
                                             {/* Team Selection Dropdown - Only for selected player */}
                                             <div
                                                 style={{
@@ -783,7 +1028,7 @@ const DraftInterface = () => {
                                                                 "#ffffff",
                                                             color: "#374151",
                                                             width: "100%",
-                                                            maxWidth: "120px",
+                                                            maxWidth: "130px",
                                                         }}
                                                         onChange={(e) => {
                                                             const selectedMember =
@@ -803,20 +1048,45 @@ const DraftInterface = () => {
                                                             Select Team
                                                         </option>
                                                         {members.map(
-                                                            (member) => (
-                                                                <option
-                                                                    key={
-                                                                        member.id
-                                                                    }
-                                                                    value={
-                                                                        member.id
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        member.team_name
-                                                                    }
-                                                                </option>
-                                                            )
+                                                            (member) => {
+                                                                const teamId =
+                                                                    member.user
+                                                                        ?.id ||
+                                                                    `unclaimed_${member.team_name}`;
+                                                                const canDraft =
+                                                                    canDraftPosition(
+                                                                        teamId,
+                                                                        player.position
+                                                                    );
+                                                                return (
+                                                                    <option
+                                                                        key={
+                                                                            member.id
+                                                                        }
+                                                                        value={
+                                                                            member.id
+                                                                        }
+                                                                        style={{
+                                                                            color: canDraft
+                                                                                ? "#374151"
+                                                                                : "#9ca3af",
+                                                                            backgroundColor:
+                                                                                canDraft
+                                                                                    ? "white"
+                                                                                    : "#f9fafb",
+                                                                        }}
+                                                                        disabled={
+                                                                            !canDraft
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            member.team_name
+                                                                        }
+                                                                        {!canDraft &&
+                                                                            " (Position Full)"}
+                                                                    </option>
+                                                                );
+                                                            }
                                                         )}
                                                     </select>
                                                 ) : (
@@ -830,55 +1100,103 @@ const DraftInterface = () => {
                                                     </span>
                                                 )}
                                             </div>
-
                                             {/* Draft Button - Only for selected player with team */}
                                             <div
                                                 style={{
                                                     textAlign: "center",
-                                                    padding: "0 8px",
+                                                    padding: "0 4px",
                                                 }}
                                             >
                                                 {isSelected && selectedUser ? (
-                                                    <button
-                                                        onClick={
-                                                            handleDraftPlayer
-                                                        }
-                                                        disabled={draftLoading}
-                                                        style={{
-                                                            padding: "6px 12px",
-                                                            fontSize: "12px",
-                                                            fontWeight: "500",
-                                                            borderRadius: "6px",
-                                                            border: "1px solid #10b981",
-                                                            backgroundColor:
-                                                                draftLoading
-                                                                    ? "#9ca3af"
-                                                                    : "#10b981",
-                                                            color: "#ffffff",
-                                                            cursor: draftLoading
-                                                                ? "not-allowed"
-                                                                : "pointer",
-                                                            transition:
-                                                                "all 0.15s",
-                                                            minWidth: "60px",
-                                                        }}
-                                                        onMouseEnter={(e) => {
-                                                            if (!draftLoading) {
-                                                                e.target.style.backgroundColor =
-                                                                    "#059669";
-                                                            }
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            if (!draftLoading) {
-                                                                e.target.style.backgroundColor =
-                                                                    "#10b981";
-                                                            }
-                                                        }}
-                                                    >
-                                                        {draftLoading
-                                                            ? "..."
-                                                            : "Draft"}
-                                                    </button>
+                                                    (() => {
+                                                        const teamId =
+                                                            selectedUser?.user
+                                                                ?.id ||
+                                                            `unclaimed_${selectedUser?.team_name}`;
+                                                        const canDraft =
+                                                            canDraftPosition(
+                                                                teamId,
+                                                                player.position
+                                                            );
+                                                        const isDisabled =
+                                                            draftLoading ||
+                                                            !canDraft;
+
+                                                        return (
+                                                            <button
+                                                                onClick={
+                                                                    handleDraftPlayer
+                                                                }
+                                                                disabled={
+                                                                    isDisabled
+                                                                }
+                                                                style={{
+                                                                    padding:
+                                                                        "4px 8px",
+                                                                    fontSize:
+                                                                        "11px",
+                                                                    fontWeight:
+                                                                        "500",
+                                                                    borderRadius:
+                                                                        "4px",
+                                                                    border: `1px solid ${
+                                                                        canDraft
+                                                                            ? "#10b981"
+                                                                            : "#dc2626"
+                                                                    }`,
+                                                                    backgroundColor:
+                                                                        isDisabled
+                                                                            ? "#9ca3af"
+                                                                            : canDraft
+                                                                            ? "#10b981"
+                                                                            : "#dc2626",
+                                                                    color: "#ffffff",
+                                                                    cursor: isDisabled
+                                                                        ? "not-allowed"
+                                                                        : "pointer",
+                                                                    transition:
+                                                                        "all 0.15s",
+                                                                    minWidth:
+                                                                        "50px",
+                                                                    whiteSpace:
+                                                                        "nowrap",
+                                                                }}
+                                                                title={
+                                                                    !canDraft
+                                                                        ? "Position roster is full"
+                                                                        : ""
+                                                                }
+                                                                onMouseEnter={(
+                                                                    e
+                                                                ) => {
+                                                                    if (
+                                                                        !isDisabled &&
+                                                                        canDraft
+                                                                    ) {
+                                                                        e.target.style.backgroundColor =
+                                                                            "#059669";
+                                                                    }
+                                                                }}
+                                                                onMouseLeave={(
+                                                                    e
+                                                                ) => {
+                                                                    if (
+                                                                        !isDisabled &&
+                                                                        canDraft
+                                                                    ) {
+                                                                        e.target.style.backgroundColor =
+                                                                            "#10b981";
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {draftLoading
+                                                                    ? "..."
+                                                                    : !canDraft
+                                                                    ? "Full"
+                                                                    : "Draft"}
+                                                            </button>
+                                                        );
+                                                    })()
                                                 ) : (
                                                     <span
                                                         style={{
@@ -999,11 +1317,8 @@ const DraftInterface = () => {
                                 </div>
                             )}
                         </div>
-                    </div>;
-
-                    {
-                        /* Draft Panel */
-                    }
+                    </div>
+                    ;{/* Draft Panel */}
                     <div className="xl:col-span-1 space-y-6">
                         {/* Complete Draft Button */}
                         <div className="bg-white shadow-md rounded-lg p-4">
@@ -1013,6 +1328,368 @@ const DraftInterface = () => {
                             >
                                 Complete Draft
                             </button>
+                        </div>
+
+                        {/* Team Roster Panel */}
+                        <div
+                            style={{
+                                backgroundColor: "white",
+                                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: "8px",
+                                overflow: "hidden",
+                            }}
+                        >
+                            {/* Header */}
+                            <div
+                                style={{
+                                    backgroundColor: "#f8fafc",
+                                    borderBottom: "1px solid #e2e8f0",
+                                    padding: "16px 20px",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                }}
+                            >
+                                <h3
+                                    style={{
+                                        fontSize: "16px",
+                                        fontWeight: "600",
+                                        color: "#1f2937",
+                                        margin: 0,
+                                    }}
+                                >
+                                    Team Rosters
+                                </h3>
+                                <button
+                                    onClick={() =>
+                                        setShowRosterPanel(!showRosterPanel)
+                                    }
+                                    style={{
+                                        padding: "4px 8px",
+                                        fontSize: "12px",
+                                        backgroundColor: showRosterPanel
+                                            ? "#3b82f6"
+                                            : "#e5e7eb",
+                                        color: showRosterPanel
+                                            ? "white"
+                                            : "#374151",
+                                        border: "none",
+                                        borderRadius: "4px",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    {showRosterPanel ? "Hide" : "Show"}
+                                </button>
+                            </div>
+
+                            {/* Roster Content */}
+                            {showRosterPanel && (
+                                <div style={{ padding: "16px" }}>
+                                    {/* Team Dropdown */}
+                                    <div style={{ marginBottom: "16px" }}>
+                                        <label
+                                            style={{
+                                                display: "block",
+                                                fontSize: "14px",
+                                                fontWeight: "600",
+                                                color: "#374151",
+                                                marginBottom: "8px",
+                                            }}
+                                        >
+                                            Select Team
+                                        </label>
+                                        <select
+                                            value={selectedRosterTeam}
+                                            onChange={(e) =>
+                                                setSelectedRosterTeam(
+                                                    e.target.value
+                                                )
+                                            }
+                                            style={{
+                                                width: "100%",
+                                                padding: "8px 12px",
+                                                border: "1px solid #d1d5db",
+                                                borderRadius: "6px",
+                                                backgroundColor: "white",
+                                                fontSize: "14px",
+                                            }}
+                                        >
+                                            <option value="">
+                                                Choose a team...
+                                            </option>
+                                            {Object.entries(teamRosters).map(
+                                                ([teamId, roster]) => (
+                                                    <option
+                                                        key={teamId}
+                                                        value={teamId}
+                                                    >
+                                                        {roster.team_name}
+                                                    </option>
+                                                )
+                                            )}
+                                        </select>
+                                    </div>
+
+                                    {/* Roster Display */}
+                                    {selectedRosterTeam &&
+                                    teamRosters[selectedRosterTeam] ? (
+                                        <div>
+                                            {/* Position Tracker */}
+                                            <div
+                                                style={{
+                                                    marginBottom: "16px",
+                                                    padding: "12px",
+                                                    backgroundColor: "#f8fafc",
+                                                    borderRadius: "6px",
+                                                    border: "1px solid #e2e8f0",
+                                                }}
+                                            >
+                                                <h4
+                                                    style={{
+                                                        fontSize: "14px",
+                                                        fontWeight: "600",
+                                                        color: "#374151",
+                                                        margin: "0 0 8px 0",
+                                                    }}
+                                                >
+                                                    Position Tracker
+                                                </h4>
+                                                <div
+                                                    style={{
+                                                        display: "grid",
+                                                        gridTemplateColumns:
+                                                            "repeat(auto-fit, minmax(80px, 1fr))",
+                                                        gap: "8px",
+                                                    }}
+                                                >
+                                                    {Object.entries(
+                                                        getTeamRosterSummary(
+                                                            selectedRosterTeam
+                                                        )
+                                                    ).map(
+                                                        ([
+                                                            position,
+                                                            counts,
+                                                        ]) => {
+                                                            const isEmpty =
+                                                                counts.current ===
+                                                                0;
+                                                            const isPartial =
+                                                                counts.current >
+                                                                    0 &&
+                                                                counts.current <
+                                                                    counts.max;
+                                                            const isFull =
+                                                                counts.current ===
+                                                                counts.max;
+
+                                                            return (
+                                                                <div
+                                                                    key={
+                                                                        position
+                                                                    }
+                                                                    style={{
+                                                                        padding:
+                                                                            "6px 8px",
+                                                                        borderRadius:
+                                                                            "4px",
+                                                                        fontSize:
+                                                                            "11px",
+                                                                        fontWeight:
+                                                                            "600",
+                                                                        textAlign:
+                                                                            "center",
+                                                                        backgroundColor:
+                                                                            isEmpty
+                                                                                ? "#e5e7eb"
+                                                                                : isPartial
+                                                                                ? "#fef3c7"
+                                                                                : "#dcfce7",
+                                                                        color: isEmpty
+                                                                            ? "#6b7280"
+                                                                            : isPartial
+                                                                            ? "#d97706"
+                                                                            : "#166534",
+                                                                        border: `1px solid ${
+                                                                            isEmpty
+                                                                                ? "#d1d5db"
+                                                                                : isPartial
+                                                                                ? "#fbbf24"
+                                                                                : "#16a34a"
+                                                                        }`,
+                                                                    }}
+                                                                >
+                                                                    {position.toUpperCase()}
+                                                                    <br />
+                                                                    {
+                                                                        counts.current
+                                                                    }
+                                                                    /
+                                                                    {counts.max}
+                                                                </div>
+                                                            );
+                                                        }
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Roster Breakdown */}
+                                            <div>
+                                                <h4
+                                                    style={{
+                                                        fontSize: "14px",
+                                                        fontWeight: "600",
+                                                        color: "#1f2937",
+                                                        margin: "0 0 12px 0",
+                                                        borderBottom:
+                                                            "1px solid #e5e7eb",
+                                                        paddingBottom: "8px",
+                                                    }}
+                                                >
+                                                    Roster Breakdown
+                                                </h4>
+                                                <div
+                                                    style={{
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        gap: "6px",
+                                                    }}
+                                                >
+                                                    {createRosterSlots(
+                                                        selectedRosterTeam
+                                                    ).map((slot, index) => (
+                                                        <div
+                                                            key={`${slot.position}-${slot.slotIndex}`}
+                                                            style={{
+                                                                display: "flex",
+                                                                justifyContent:
+                                                                    "space-between",
+                                                                alignItems:
+                                                                    "center",
+                                                                padding:
+                                                                    "8px 12px",
+                                                                backgroundColor:
+                                                                    slot.isEmpty
+                                                                        ? "#f9fafb"
+                                                                        : "#f0f9ff",
+                                                                borderRadius:
+                                                                    "6px",
+                                                                border: `1px solid ${
+                                                                    slot.isEmpty
+                                                                        ? "#e5e7eb"
+                                                                        : "#bfdbfe"
+                                                                }`,
+                                                                minHeight:
+                                                                    "40px",
+                                                            }}
+                                                        >
+                                                            <span
+                                                                style={{
+                                                                    fontWeight:
+                                                                        "600",
+                                                                    color:
+                                                                        slot.position ===
+                                                                        "FLEX"
+                                                                            ? "#7c3aed"
+                                                                            : "#2563eb",
+                                                                    fontSize:
+                                                                        "12px",
+                                                                    minWidth:
+                                                                        "40px",
+                                                                }}
+                                                            >
+                                                                {slot.position}
+                                                            </span>
+
+                                                            {slot.player ? (
+                                                                <div
+                                                                    style={{
+                                                                        display:
+                                                                            "flex",
+                                                                        alignItems:
+                                                                            "center",
+                                                                        gap: "8px",
+                                                                        flex: 1,
+                                                                        justifyContent:
+                                                                            "flex-end",
+                                                                    }}
+                                                                >
+                                                                    <div
+                                                                        style={{
+                                                                            textAlign:
+                                                                                "right",
+                                                                        }}
+                                                                    >
+                                                                        <div
+                                                                            style={{
+                                                                                fontSize:
+                                                                                    "13px",
+                                                                                fontWeight:
+                                                                                    "500",
+                                                                                color: "#1f2937",
+                                                                            }}
+                                                                        >
+                                                                            {
+                                                                                slot
+                                                                                    .player
+                                                                                    .player_name
+                                                                            }
+                                                                        </div>
+                                                                        <div
+                                                                            style={{
+                                                                                fontSize:
+                                                                                    "11px",
+                                                                                color: "#6b7280",
+                                                                            }}
+                                                                        >
+                                                                            {
+                                                                                slot
+                                                                                    .player
+                                                                                    .nfl_team
+                                                                            }{" "}
+                                                                            •{" "}
+                                                                            {slot.player.fantasy_points?.toFixed(
+                                                                                1
+                                                                            )}{" "}
+                                                                            pts
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <span
+                                                                    style={{
+                                                                        color: "#9ca3af",
+                                                                        fontSize:
+                                                                            "12px",
+                                                                        fontStyle:
+                                                                            "italic",
+                                                                    }}
+                                                                >
+                                                                    Empty
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            style={{
+                                                textAlign: "center",
+                                                color: "#9ca3af",
+                                                padding: "20px",
+                                            }}
+                                        >
+                                            {Object.entries(teamRosters)
+                                                .length === 0
+                                                ? "No teams have drafted players yet"
+                                                : "Select a team to view their roster"}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Recent Picks - ESPN Style Table */}
@@ -1069,7 +1746,7 @@ const DraftInterface = () => {
                             >
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -1082,7 +1759,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -1095,7 +1772,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -1107,7 +1784,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -1119,7 +1796,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -1132,7 +1809,7 @@ const DraftInterface = () => {
                                 </div>
                                 <div
                                     style={{
-                                        padding: "12px 8px",
+                                        padding: "8px 4px",
                                         fontSize: "12px",
                                         fontWeight: "500",
                                         color: "#64748b",
@@ -1410,7 +2087,8 @@ const DraftInterface = () => {
                                 )}
                             </div>
                         </div>
-                    </div>;
+                    </div>
+                    ;
                 </div>
             </div>
         </div>
