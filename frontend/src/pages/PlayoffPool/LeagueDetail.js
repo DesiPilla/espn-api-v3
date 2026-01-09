@@ -198,138 +198,56 @@ const LeagueDetail = () => {
                       >
                           ← Back to Dashboard
                       </button>
-                      <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                          {league?.name}
-                      </h1>
-                      <p className="text-gray-600">
-                          Created by {league?.created_by?.username}
-                      </p>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                      {/* League Info */}
-                      <div className="lg:col-span-2">
-                          <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-                              <h2 className="text-xl font-bold mb-4">
-                                  League Information
-                              </h2>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                      <h3 className="font-semibold text-gray-700">
-                                          Teams
-                                      </h3>
-                                      <p className="text-gray-600">
-                                          {members.length} / {league?.num_teams}
-                                      </p>
-                                  </div>
-                                  <div>
-                                      <h3 className="font-semibold text-gray-700">
-                                          Status
-                                      </h3>
-                                      <div
-                                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                                              draftComplete
-                                                  ? "bg-green-100 text-green-800"
-                                                  : draftInProgress
-                                                  ? "bg-yellow-100 text-yellow-800"
-                                                  : "bg-gray-100 text-gray-800"
-                                          }`}
-                                      >
-                                          {draftComplete
-                                              ? "Draft Complete"
-                                              : draftInProgress
-                                              ? "Draft In Progress"
-                                              : "Draft Not Started"}
+                  <div className="grid grid-cols-1 gap-8">
+
+                      {/* Action Buttons */}
+                      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+                          <h2 className="text-xl font-bold mb-4">
+                              Actions
+                          </h2>
+                          <div className="flex flex-wrap gap-4">
+                              {canStartDraft && (
+                                  <button
+                                      onClick={handleStartDraft}
+                                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                  >
+                                      Start Draft
+                                  </button>
+                              )}
+
+                              {draftInProgress && isAdmin && (
+                                  <button
+                                      onClick={handleStartDraft}
+                                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                                  >
+                                      Manage Draft
+                                  </button>
+                              )}
+
+                              {draftComplete && (
+                                  <button
+                                      onClick={handleViewDraftedTeams}
+                                      className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+                                  >
+                                      View Drafted Teams
+                                  </button>
+                              )}
+
+                              {!draftComplete &&
+                                  !draftInProgress &&
+                                  members.length < league?.num_teams && (
+                                      <div className="text-gray-600">
+                                          Waiting for more members to
+                                          join...
                                       </div>
-                                  </div>
-                                  <div>
-                                      <h3 className="font-semibold text-gray-700">
-                                          Positions
-                                      </h3>
-                                      <p className="text-gray-600">
-                                          {Array.isArray(
-                                              league?.positions_included
-                                          )
-                                              ? league.positions_included.join(
-                                                    ", "
-                                                )
-                                              : "Not configured"}
-                                      </p>
-                                  </div>
-                                  <div>
-                                      <h3 className="font-semibold text-gray-700">
-                                          Created
-                                      </h3>
-                                      <p className="text-gray-600">
-                                          {league?.created_at_est
-                                              ? new Date(
-                                                    league.created_at_est
-                                                ).toLocaleDateString("en-US", {
-                                                    timeZone:
-                                                        "America/New_York",
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                }) + " EST"
-                                              : league?.created_at
-                                              ? new Date(
-                                                    league.created_at
-                                                ).toLocaleDateString()
-                                              : "Unknown"}
-                                      </p>
-                                  </div>
-                              </div>
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-                              <h2 className="text-xl font-bold mb-4">
-                                  Actions
-                              </h2>
-                              <div className="flex flex-wrap gap-4">
-                                  {canStartDraft && (
-                                      <button
-                                          onClick={handleStartDraft}
-                                          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                                      >
-                                          Start Draft
-                                      </button>
                                   )}
-
-                                  {draftInProgress && isAdmin && (
-                                      <button
-                                          onClick={handleStartDraft}
-                                          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                      >
-                                          Manage Draft
-                                      </button>
-                                  )}
-
-                                  {draftComplete && (
-                                      <button
-                                          onClick={handleViewDraftedTeams}
-                                          className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-                                      >
-                                          View Drafted Teams
-                                      </button>
-                                  )}
-
-                                  {!draftComplete &&
-                                      !draftInProgress &&
-                                      members.length < league?.num_teams && (
-                                          <div className="text-gray-600">
-                                              Waiting for more members to
-                                              join...
-                                          </div>
-                                      )}
-
-                                  {/* Actions removed - now integrated into table */}
-                              </div>
                           </div>
                       </div>
 
-                      {/* Members */}
-                      <div className="lg:col-span-1">
+                      {/* League Members with Enhanced Header */}
+                      <div>
                           <ESPNStyleLeagueMembers
                               league={league}
                               members={members}
