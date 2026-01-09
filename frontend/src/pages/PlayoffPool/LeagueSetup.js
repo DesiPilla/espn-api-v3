@@ -21,10 +21,12 @@ const LeagueSetup = () => {
           count: 0,
           eligible_positions: ["RB", "WR", "TE"],
       },
+      scoring_settings: {},
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [positionOptions, setPositionOptions] = useState([]);
+  const [scoringCategories, setScoringCategories] = useState({});
 
   const { user } = usePlayoffPoolAuth();
   const navigate = useNavigate();
@@ -52,6 +54,27 @@ const LeagueSetup = () => {
               .filter(Boolean);
 
           setPositionOptions(orderedPositions);
+
+          // Set scoring categories and initialize default scoring settings
+          if (data.scoring_categories) {
+              setScoringCategories(data.scoring_categories);
+
+              // Initialize default scoring settings in formData
+              const defaultScoringSettings = {};
+              Object.values(data.scoring_categories).forEach(
+                  (categoryStats) => {
+                      categoryStats.forEach((stat) => {
+                          defaultScoringSettings[stat.stat_name] =
+                              stat.default_value;
+                      });
+                  }
+              );
+
+              setFormData((prev) => ({
+                  ...prev,
+                  scoring_settings: defaultScoringSettings,
+              }));
+          }
       } catch (err) {
           console.error("Error loading scoring settings:", err);
           // Fallback to default positions in correct order
@@ -141,6 +164,16 @@ const LeagueSetup = () => {
       handleFlexChange("eligible_positions", updatedPositions);
   };
 
+  const handleScoringChange = (statName, value) => {
+      setFormData({
+          ...formData,
+          scoring_settings: {
+              ...formData.scoring_settings,
+              [statName]: parseFloat(value) || 0,
+          },
+      });
+  };
+
   const handleSubmit = async (e) => {
       e.preventDefault();
 
@@ -184,6 +217,7 @@ const LeagueSetup = () => {
                         }
                       : {}),
               },
+              scoring_settings: formData.scoring_settings,
           };
 
           const league = await playoffPoolAPI.createLeague(submissionData);
@@ -971,6 +1005,142 @@ const LeagueSetup = () => {
                                               ))}
                                       </tbody>
                                   </table>
+                              </div>
+                          </div>
+
+                          {/* Scoring Settings Card */}
+                          <div
+                              style={{
+                                  backgroundColor: "#f0f9ff",
+                                  border: "1px solid #e0f2fe",
+                                  borderRadius: "0.5rem",
+                                  padding: "1.5rem",
+                              }}
+                          >
+                              <h3
+                                  style={{
+                                      fontSize: "1.25rem",
+                                      fontWeight: "bold",
+                                      color: "#1f2937",
+                                      marginBottom: "1rem",
+                                      borderBottom: "1px solid #d1d5db",
+                                      paddingBottom: "0.5rem",
+                                  }}
+                              >
+                                  Scoring Settings
+                              </h3>
+                              <p
+                                  style={{
+                                      color: "#6b7280",
+                                      fontSize: "0.875rem",
+                                      marginBottom: "1.5rem",
+                                  }}
+                              >
+                                  Customize point values for each statistical
+                                  category. Default values are shown.
+                              </p>
+
+                              <div
+                                  style={{
+                                      display: "grid",
+                                      gap: "1.5rem",
+                                  }}
+                              >
+                                  {Object.entries(scoringCategories).map(
+                                      ([category, stats]) => (
+                                          <div key={category}>
+                                              <h4
+                                                  style={{
+                                                      fontSize: "1rem",
+                                                      fontWeight: "600",
+                                                      color: "#374151",
+                                                      marginBottom: "0.75rem",
+                                                      paddingBottom: "0.25rem",
+                                                      borderBottom:
+                                                          "1px solid #e5e7eb",
+                                                  }}
+                                              >
+                                                  {category}
+                                              </h4>
+                                              <div
+                                                  style={{
+                                                      display: "grid",
+                                                      gridTemplateColumns:
+                                                          "repeat(auto-fit, minmax(280px, 1fr))",
+                                                      gap: "0.75rem",
+                                                  }}
+                                              >
+                                                  {stats.map((stat) => (
+                                                      <div
+                                                          key={stat.stat_name}
+                                                          style={{
+                                                              display: "flex",
+                                                              alignItems:
+                                                                  "center",
+                                                              justifyContent:
+                                                                  "space-between",
+                                                              padding:
+                                                                  "0.5rem 0.75rem",
+                                                              backgroundColor:
+                                                                  "#ffffff",
+                                                              border: "1px solid #e5e7eb",
+                                                              borderRadius:
+                                                                  "0.375rem",
+                                                          }}
+                                                      >
+                                                          <label
+                                                              style={{
+                                                                  fontSize:
+                                                                      "0.875rem",
+                                                                  color: "#374151",
+                                                                  fontWeight:
+                                                                      "500",
+                                                                  flex: 1,
+                                                              }}
+                                                          >
+                                                              {
+                                                                  stat.display_name
+                                                              }
+                                                          </label>
+                                                          <input
+                                                              type="number"
+                                                              step="0.01"
+                                                              value={
+                                                                  formData
+                                                                      .scoring_settings[
+                                                                      stat
+                                                                          .stat_name
+                                                                  ] ||
+                                                                  stat.default_value
+                                                              }
+                                                              onChange={(e) =>
+                                                                  handleScoringChange(
+                                                                      stat.stat_name,
+                                                                      e.target
+                                                                          .value
+                                                                  )
+                                                              }
+                                                              style={{
+                                                                  width: "80px",
+                                                                  padding:
+                                                                      "0.375rem 0.5rem",
+                                                                  border: "1px solid #d1d5db",
+                                                                  borderRadius:
+                                                                      "0.25rem",
+                                                                  fontSize:
+                                                                      "0.875rem",
+                                                                  textAlign:
+                                                                      "right",
+                                                                  marginLeft:
+                                                                      "0.5rem",
+                                                              }}
+                                                          />
+                                                      </div>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      )
+                                  )}
                               </div>
                           </div>
 

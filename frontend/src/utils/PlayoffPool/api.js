@@ -220,6 +220,24 @@ class PlayoffPoolAPI {
         const response = await this.api.get("scoring-settings/");
         return response.data;
     }
+
+    // League scoring settings
+    async getLeagueScoringSettings(leagueId) {
+        const response = await this.api.get(
+            `api/leagues/${leagueId}/scoring_settings/`
+        );
+        return response.data;
+    }
+
+    async updateLeagueScoringSettings(leagueId, scoringSettings) {
+        const response = await this.api.post(
+            `api/leagues/${leagueId}/update_scoring_settings/`,
+            {
+                scoring_settings: scoringSettings,
+            }
+        );
+        return response.data;
+    }
 }
 
 export default new PlayoffPoolAPI();

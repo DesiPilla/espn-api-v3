@@ -1,18 +1,18 @@
 # Features to add:
 
 ## Security
-
 - [ ] Add google authentication for login
 
 ## League setup
-
-- [ ] Allow for picking IDP players
-- [ ] Allow for custom scoring
+- [x] Allow for custom scoring
+  - [x] Save all scoring (even with a zero multiplier) in case it is changed later
+  - [x] Ability to edit scoring after created (currently says no stats found)
 - [x] Add flex as an option
 - [x] Specify how many of each position to include
   - Somehow handle flex
 - [ ] Make the "create league" button at the bottom prettier
   - As well as the spinner icon that appears after pressing it
+- [ ] Allow for picking IDP players
 
 ## Draft
 - [ ] Make the "start draft" button prettier

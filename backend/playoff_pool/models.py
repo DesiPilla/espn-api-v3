@@ -134,5 +134,37 @@ class PlayoffDraftablePlayer(models.Model):
         ]
         ordering = ["position", "-fantasy_points"]
 
+
+class LeagueScoringSetting(models.Model):
+    """Custom scoring settings for each league"""
+
+    league = models.ForeignKey(
+        League, on_delete=models.CASCADE, related_name="custom_scoring_settings"
+    )
+    stat_name = models.CharField(
+        max_length=100, help_text="Name of the statistical category"
+    )
+    multiplier = models.FloatField(
+        default=0.0, help_text="Point multiplier for this stat"
+    )
+    is_defensive_stat = models.BooleanField(
+        default=False, help_text="Whether this is a defensive/DST stat"
+    )
+    category = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Category grouping (passing, rushing, etc.)",
+    )
+    display_name = models.CharField(
+        max_length=100, blank=True, help_text="Human-readable name for display"
+    )
+
+    class Meta:
+        unique_together = ("league", "stat_name")
+        ordering = ["category", "stat_name"]
+        indexes = [
+            models.Index(fields=["league", "is_defensive_stat"]),
+        ]
+
     def __str__(self):
-        return f"{self.full_name} ({self.position}, {self.team}) - {self.year}"
+        return f"{self.league.name} - {self.display_name or self.stat_name}: {self.multiplier}"

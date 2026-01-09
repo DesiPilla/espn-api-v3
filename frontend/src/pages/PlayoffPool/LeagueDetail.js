@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayoffPoolAuth } from '../../components/PlayoffPool/AuthContext';
 import playoffPoolAPI from '../../utils/PlayoffPool/api';
 import ESPNStyleLeagueMembers from "../../components/PlayoffPool/ESPNStyleLeagueMembers";
+import ScoringSettingsEditor from "../../components/PlayoffPool/ScoringSettingsEditor";
 
 const LeagueDetail = () => {
   const { leagueId } = useParams();
@@ -17,6 +18,7 @@ const LeagueDetail = () => {
   const [selectedTeamForInvite, setSelectedTeamForInvite] = useState(null);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [teamToRemove, setTeamToRemove] = useState(null);
+  const [showScoringEditor, setShowScoringEditor] = useState(false);
 
   useEffect(() => {
       if (leagueId) {
@@ -76,6 +78,20 @@ const LeagueDetail = () => {
           alert(err.response?.data?.error || "Failed to delete league");
           console.error("Error deleting league:", err);
       }
+  };
+
+  const handleOpenScoringEditor = () => {
+      setShowScoringEditor(true);
+  };
+
+  const handleCloseScoringEditor = () => {
+      setShowScoringEditor(false);
+  };
+
+  const handleScoringSettingsSaved = () => {
+      setShowScoringEditor(false);
+      // Optionally reload league data to reflect any changes
+      // loadLeagueData();
   };
 
   const handleCreateTeam = async (teamName) => {
@@ -254,6 +270,15 @@ const LeagueDetail = () => {
                                   </button>
                               )}
 
+                              {isAdmin && (
+                                  <button
+                                      onClick={handleOpenScoringEditor}
+                                      className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
+                                  >
+                                      Edit Scoring Settings
+                                  </button>
+                              )}
+
                               {!draftComplete &&
                                   !draftInProgress &&
                                   members.length < league?.num_teams && (
@@ -393,6 +418,15 @@ const LeagueDetail = () => {
                       </div>
                   </div>
               </div>
+          )}
+
+          {/* Scoring Settings Editor */}
+          {showScoringEditor && (
+              <ScoringSettingsEditor
+                  leagueId={leagueId}
+                  onClose={handleCloseScoringEditor}
+                  onSave={handleScoringSettingsSaved}
+              />
           )}
       </>
   );

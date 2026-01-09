@@ -2,7 +2,13 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.utils import timezone
 import pytz
-from .models import League, LeagueMembership, DraftedTeam, UserProfile
+from .models import (
+    League,
+    LeagueMembership,
+    DraftedTeam,
+    UserProfile,
+    LeagueScoringSetting,
+)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -37,6 +43,20 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         UserProfile.objects.create(user=user, display_name=display_name)
         return user
+
+
+class LeagueScoringSettingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LeagueScoringSetting
+        fields = [
+            "id",
+            "stat_name",
+            "multiplier",
+            "is_defensive_stat",
+            "category",
+            "display_name",
+        ]
+        read_only_fields = ["id"]
 
 
 class LeagueSerializer(serializers.ModelSerializer):
