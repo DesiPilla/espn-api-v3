@@ -28,6 +28,10 @@ class League(models.Model):
     positions_included = models.JSONField(
         default=list, help_text="List of positions to include (QB, RB, WR, TE, K, DST)"
     )
+    roster_config = models.JSONField(
+        default=dict,
+        help_text="Roster configuration: {position: count, flex: {eligible_positions: [RB, WR, TE], count: 1}}",
+    )
     scoring_settings = models.JSONField(
         default=dict, help_text="Scoring multipliers for different stats"
     )
@@ -45,6 +49,23 @@ class League(models.Model):
         if isinstance(self.positions_included, list):
             return ", ".join(self.positions_included)
         return "None set"
+
+    def get_total_roster_size(self):
+        """Calculate total roster size from roster config"""
+        if not isinstance(self.roster_config, dict):
+            return 0
+
+        total = 0
+        for position, count in self.roster_config.items():
+            if position == "flex":
+                # Flex is a dict with count
+                if isinstance(count, dict):
+                    total += count.get("count", 0)
+                else:
+                    total += count if isinstance(count, int) else 0
+            else:
+                total += count if isinstance(count, int) else 0
+        return total
 
 
 class LeagueMembership(models.Model):

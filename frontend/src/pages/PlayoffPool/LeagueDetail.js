@@ -56,6 +56,28 @@ const LeagueDetail = () => {
       navigate("/playoff-pool");
   };
 
+  const handleDeleteLeague = async () => {
+      if (!isAdmin) {
+          alert("Only league administrators can delete the league");
+          return;
+      }
+
+      const confirmMessage = `Are you sure you want to delete the league "${league?.name}"? This action cannot be undone and will remove all teams, drafts, and league data.`;
+
+      if (!window.confirm(confirmMessage)) {
+          return;
+      }
+
+      try {
+          await playoffPoolAPI.deleteLeague(leagueId);
+          alert("League deleted successfully");
+          navigate("/playoff-pool");
+      } catch (err) {
+          alert(err.response?.data?.error || "Failed to delete league");
+          console.error("Error deleting league:", err);
+      }
+  };
+
   const handleCreateTeam = async (teamName) => {
       if (!teamName || !teamName.trim()) {
           alert("Please enter a team name");
@@ -201,12 +223,9 @@ const LeagueDetail = () => {
                   </div>
 
                   <div className="grid grid-cols-1 gap-8">
-
                       {/* Action Buttons */}
                       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-                          <h2 className="text-xl font-bold mb-4">
-                              Actions
-                          </h2>
+                          <h2 className="text-xl font-bold mb-4">Actions</h2>
                           <div className="flex flex-wrap gap-4">
                               {canStartDraft && (
                                   <button
@@ -239,8 +258,7 @@ const LeagueDetail = () => {
                                   !draftInProgress &&
                                   members.length < league?.num_teams && (
                                       <div className="text-gray-600">
-                                          Waiting for more members to
-                                          join...
+                                          Waiting for more members to join...
                                       </div>
                                   )}
                           </div>
@@ -258,6 +276,7 @@ const LeagueDetail = () => {
                               handleClaimTeam={handleClaimTeam}
                               handleUnclaimTeam={handleUnclaimTeam}
                               handleCreateTeam={handleCreateTeam}
+                              handleDeleteLeague={handleDeleteLeague}
                               leagueId={leagueId}
                           />
                       </div>

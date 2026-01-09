@@ -683,7 +683,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 # For unclaimed teams, use team_membership id as identifier
                 user_id = f"unclaimed_{player.team_membership.id}"
                 user_data = None
-                
+
             if user_id not in teams:
                 teams[user_id] = {
                     "user": user_data,
@@ -706,6 +706,33 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 "total_teams": len(teams_list),
                 "total_players": drafted_players.count(),
             }
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete a league (admin only)"""
+        league = self.get_object()
+
+        # Check if user is the creator or an admin
+        is_creator = league.created_by == request.user
+        is_admin = LeagueMembership.objects.filter(
+            user=request.user, league=league, is_admin=True
+        ).exists()
+
+        if not (is_creator or is_admin):
+            return Response(
+                {
+                    "error": "Only league administrators or the league creator can delete the league"
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Delete the league (this will cascade delete all related data)
+        league_name = league.name
+        league.delete()
+
+        return Response(
+            {"message": f"League '{league_name}' has been successfully deleted"},
+            status=status.HTTP_200_OK,
         )
 
 

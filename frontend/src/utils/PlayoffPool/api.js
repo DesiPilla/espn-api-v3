@@ -107,6 +107,11 @@ class PlayoffPoolAPI {
         return response.data;
     }
 
+    async deleteLeague(leagueId) {
+        const response = await this.api.delete(`api/leagues/${leagueId}/`);
+        return response.data;
+    }
+
     async joinLeague(leagueId, teamName, confirmMultiple = false) {
         const response = await this.api.post(`api/leagues/${leagueId}/join/`, {
             team_name: teamName,

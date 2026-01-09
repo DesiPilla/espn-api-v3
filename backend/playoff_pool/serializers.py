@@ -46,6 +46,7 @@ class LeagueSerializer(serializers.ModelSerializer):
     created_at_est = serializers.SerializerMethodField()
     draft_started_at_est = serializers.SerializerMethodField()
     draft_completed_at_est = serializers.SerializerMethodField()
+    total_roster_size = serializers.SerializerMethodField()
 
     class Meta:
         model = League
@@ -57,6 +58,7 @@ class LeagueSerializer(serializers.ModelSerializer):
             "created_at_est",
             "num_teams",
             "positions_included",
+            "roster_config",
             "scoring_settings",
             "is_draft_complete",
             "draft_started_at",
@@ -65,6 +67,7 @@ class LeagueSerializer(serializers.ModelSerializer):
             "draft_completed_at_est",
             "member_count",
             "user_membership",
+            "total_roster_size",
         ]
         read_only_fields = [
             "id",
@@ -115,6 +118,10 @@ class LeagueSerializer(serializers.ModelSerializer):
             est = pytz.timezone("America/New_York")
             return obj.draft_completed_at.astimezone(est).isoformat()
         return None
+
+    def get_total_roster_size(self, obj):
+        """Return total roster size from model method"""
+        return obj.get_total_roster_size()
         return None
 
 
