@@ -16,7 +16,7 @@
 
 ## Draft
 - [ ] Make the "start draft" button prettier
-- [ ] Bug where drafted players still appear in the available players table
+- [x] Bug where drafted players still appear in the available players table
 - [ ] Bug when searching for a player and then clearing the search, where the top result stays on top.
   - Reproduce by searching "josh" and then CMD + BACKSPACE
 - [ ] Add Flex as a possible filter position

@@ -610,13 +610,28 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 if league.positions_included
                 else ["QB", "RB", "WR", "TE", "K", "DST"]
             )
-            available_players = query_playoff_players_from_db(
+            all_players = query_playoff_players_from_db(
                 year=nfl_year, positions_to_keep=positions
             )
+
+            # Get list of already drafted player gsis_ids for this league
+            drafted_gsis_ids = set(
+                DraftedTeam.objects.filter(league=league).values_list(
+                    "gsis_id", flat=True
+                )
+            )
+
+            # Filter out already drafted players
+            available_players = [
+                player
+                for player in all_players
+                if player.get("gsis_id") not in drafted_gsis_ids
+            ]
+
             # Map full_name to name for frontend compatibility
             for player in available_players:
                 player["name"] = player.get("full_name", "")
-            # available_players is already a list of dicts
+
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR

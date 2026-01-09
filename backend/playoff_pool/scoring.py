@@ -87,7 +87,7 @@ SCORING_MULTIPLIERS = {
     # -------------------
     # Kicking
     # -------------------
-    "fg_made": 3,  # overridden by distance below
+    "fg_made": 0,
     "fg_att": 0,
     "fg_missed": -1,
     "fg_blocked": 0,

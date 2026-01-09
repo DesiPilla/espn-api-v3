@@ -148,13 +148,13 @@ const DraftInterface = () => {
             return matchesPosition && matchesSearch;
         })
         .sort((a, b) => {
-            // Primary sort by fantasy points (descending)
-            if (b.fantasy_points !== a.fantasy_points) {
-                return b.fantasy_points - a.fantasy_points;
+            // Primary sort by draft value (descending)
+            if (b.draft_value !== a.draft_value) {
+                return b.draft_value - a.draft_value;
             }
             // Secondary sort by player name for consistency
-            const nameA = a.name || '';
-            const nameB = b.name || '';
+            const nameA = a.name || "";
+            const nameB = b.name || "";
             return nameA.localeCompare(nameB);
         });
 
@@ -187,15 +187,12 @@ const DraftInterface = () => {
 
     const positions = React.useMemo(() => {
         if (!league || !league.positions_included) {
-            return [
-                "ALL",
-                ...new Set(availablePlayers.map((p) => p.position)),
-            ];
+            return ["ALL", ...new Set(availablePlayers.map((p) => p.position))];
         }
         return [
             "ALL",
-            ...league.positions_included.filter(
-                (pos) => availablePlayers.some((p) => p.position === pos)
+            ...league.positions_included.filter((pos) =>
+                availablePlayers.some((p) => p.position === pos)
             ),
         ];
     }, [league, availablePlayers]);
@@ -340,7 +337,9 @@ const DraftInterface = () => {
                                         <select
                                             value={filterPosition}
                                             onChange={(e) =>
-                                                handleFilterChange(e.target.value)
+                                                handleFilterChange(
+                                                    e.target.value
+                                                )
                                             }
                                             style={{
                                                 padding: "6px 12px",
@@ -376,7 +375,9 @@ const DraftInterface = () => {
                                             placeholder="Search players or teams..."
                                             value={searchTerm}
                                             onChange={(e) =>
-                                                handleSearchChange(e.target.value)
+                                                handleSearchChange(
+                                                    e.target.value
+                                                )
                                             }
                                             style={{
                                                 padding: "6px 12px",
@@ -395,7 +396,7 @@ const DraftInterface = () => {
                                 style={{
                                     display: "grid",
                                     gridTemplateColumns:
-                                        "6% 10% 25% 10% 15% 8% 16% 10%",
+                                        "6% 8% 22% 10% 14% 12% 8% 14% 6%",
                                     backgroundColor: "#f1f5f9",
                                     borderBottom: "1px solid #e2e8f0",
                                 }}
@@ -475,6 +476,19 @@ const DraftInterface = () => {
                                         textAlign: "center",
                                     }}
                                 >
+                                    DRAFT VALUE
+                                </div>
+                                <div
+                                    style={{
+                                        padding: "12px 8px",
+                                        fontSize: "12px",
+                                        fontWeight: "500",
+                                        color: "#64748b",
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.05em",
+                                        textAlign: "center",
+                                    }}
+                                >
                                     SELECT
                                 </div>
                                 <div
@@ -519,9 +533,10 @@ const DraftInterface = () => {
                                             style={{
                                                 display: "grid",
                                                 gridTemplateColumns:
-                                                    "6% 10% 25% 10% 15% 8% 16% 10%",
+                                                    "6% 8% 22% 10% 14% 12% 8% 14% 6%",
                                                 padding: "12px 0",
-                                                borderBottom: "1px solid #f1f5f9",
+                                                borderBottom:
+                                                    "1px solid #f1f5f9",
                                                 alignItems: "center",
                                                 transition:
                                                     "background-color 0.15s",
@@ -530,16 +545,16 @@ const DraftInterface = () => {
                                                     : "transparent",
                                             }}
                                             onMouseEnter={(e) =>
-                                            (e.currentTarget.style.backgroundColor =
-                                                isSelected
-                                                    ? "#bfdbfe"
-                                                    : "#f8fafc")
+                                                (e.currentTarget.style.backgroundColor =
+                                                    isSelected
+                                                        ? "#bfdbfe"
+                                                        : "#f8fafc")
                                             }
                                             onMouseLeave={(e) =>
-                                            (e.currentTarget.style.backgroundColor =
-                                                isSelected
-                                                    ? "#dbeafe"
-                                                    : "transparent")
+                                                (e.currentTarget.style.backgroundColor =
+                                                    isSelected
+                                                        ? "#dbeafe"
+                                                        : "transparent")
                                             }
                                         >
                                             {/* Global Rank */}
@@ -582,8 +597,9 @@ const DraftInterface = () => {
                                                                 TE: "#f3e8ff",
                                                                 K: "#fee2e2",
                                                                 DST: "#e0f2fe",
-                                                            }[player.position] ||
-                                                            "#f1f5f9",
+                                                            }[
+                                                                player.position
+                                                            ] || "#f1f5f9",
                                                         color:
                                                             {
                                                                 QB: "#1e40af",
@@ -592,8 +608,9 @@ const DraftInterface = () => {
                                                                 TE: "#7c3aed",
                                                                 K: "#dc2626",
                                                                 DST: "#0369a1",
-                                                            }[player.position] ||
-                                                            "#64748b",
+                                                            }[
+                                                                player.position
+                                                            ] || "#64748b",
                                                     }}
                                                 >
                                                     {player.position}
@@ -656,6 +673,26 @@ const DraftInterface = () => {
                                                 </span>
                                             </div>
 
+                                            {/* Draft Value */}
+                                            <div
+                                                style={{
+                                                    textAlign: "center",
+                                                    padding: "0 8px",
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        fontSize: "14px",
+                                                        fontWeight: "600",
+                                                        color: "#059669",
+                                                    }}
+                                                >
+                                                    {(
+                                                        player.draft_value || 0
+                                                    ).toFixed(1)}
+                                                </span>
+                                            </div>
+
                                             {/* Select Button */}
                                             <div
                                                 style={{
@@ -669,12 +706,16 @@ const DraftInterface = () => {
                                                             setSelectedPlayer(
                                                                 null
                                                             );
-                                                            setSelectedUser(null);
+                                                            setSelectedUser(
+                                                                null
+                                                            );
                                                         } else {
                                                             setSelectedPlayer(
                                                                 player
                                                             );
-                                                            setSelectedUser(null);
+                                                            setSelectedUser(
+                                                                null
+                                                            );
                                                         }
                                                     }}
                                                     style={{
@@ -730,7 +771,8 @@ const DraftInterface = () => {
                                                     <select
                                                         id={playerTeamId}
                                                         value={
-                                                            selectedUser?.id || ""
+                                                            selectedUser?.id ||
+                                                            ""
                                                         }
                                                         style={{
                                                             padding: "4px 8px",
@@ -753,21 +795,29 @@ const DraftInterface = () => {
                                                                 );
                                                             setSelectedUser(
                                                                 selectedMember ||
-                                                                null
+                                                                    null
                                                             );
                                                         }}
                                                     >
                                                         <option value="">
                                                             Select Team
                                                         </option>
-                                                        {members.map((member) => (
-                                                            <option
-                                                                key={member.id}
-                                                                value={member.id}
-                                                            >
-                                                                {member.team_name}
-                                                            </option>
-                                                        ))}
+                                                        {members.map(
+                                                            (member) => (
+                                                                <option
+                                                                    key={
+                                                                        member.id
+                                                                    }
+                                                                    value={
+                                                                        member.id
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        member.team_name
+                                                                    }
+                                                                </option>
+                                                            )
+                                                        )}
                                                     </select>
                                                 ) : (
                                                     <span
@@ -949,9 +999,11 @@ const DraftInterface = () => {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </div>;
 
-                    {/* Draft Panel */}
+                    {
+                        /* Draft Panel */
+                    }
                     <div className="xl:col-span-1 space-y-6">
                         {/* Complete Draft Button */}
                         <div className="bg-white shadow-md rounded-lg p-4">
@@ -1009,7 +1061,8 @@ const DraftInterface = () => {
                             <div
                                 style={{
                                     display: "grid",
-                                    gridTemplateColumns: "8% 15% 30% 15% 20% 12%",
+                                    gridTemplateColumns:
+                                        "8% 15% 30% 15% 20% 12%",
                                     backgroundColor: "#f1f5f9",
                                     borderBottom: "1px solid #e2e8f0",
                                 }}
@@ -1118,21 +1171,22 @@ const DraftInterface = () => {
                                                     alignItems: "center",
                                                     transition:
                                                         "background-color 0.15s",
-                                                    backgroundColor: isLatestPick
-                                                        ? "#fef3c7"
-                                                        : "transparent",
+                                                    backgroundColor:
+                                                        isLatestPick
+                                                            ? "#fef3c7"
+                                                            : "transparent",
                                                 }}
                                                 onMouseEnter={(e) =>
-                                                (e.currentTarget.style.backgroundColor =
-                                                    isLatestPick
-                                                        ? "#fde68a"
-                                                        : "#f8fafc")
+                                                    (e.currentTarget.style.backgroundColor =
+                                                        isLatestPick
+                                                            ? "#fde68a"
+                                                            : "#f8fafc")
                                                 }
                                                 onMouseLeave={(e) =>
-                                                (e.currentTarget.style.backgroundColor =
-                                                    isLatestPick
-                                                        ? "#fef3c7"
-                                                        : "transparent")
+                                                    (e.currentTarget.style.backgroundColor =
+                                                        isLatestPick
+                                                            ? "#fef3c7"
+                                                            : "transparent")
                                                 }
                                             >
                                                 {/* Pick Number */}
@@ -1165,7 +1219,8 @@ const DraftInterface = () => {
                                                             display:
                                                                 "inline-block",
                                                             padding: "4px 8px",
-                                                            borderRadius: "12px",
+                                                            borderRadius:
+                                                                "12px",
                                                             fontSize: "12px",
                                                             fontWeight: "600",
                                                             backgroundColor:
@@ -1177,7 +1232,8 @@ const DraftInterface = () => {
                                                                     K: "#fee2e2",
                                                                     DST: "#e0f2fe",
                                                                 }[
-                                                                pick.position
+                                                                    pick
+                                                                        .position
                                                                 ] || "#f1f5f9",
                                                             color:
                                                                 {
@@ -1188,7 +1244,8 @@ const DraftInterface = () => {
                                                                     K: "#dc2626",
                                                                     DST: "#0369a1",
                                                                 }[
-                                                                pick.position
+                                                                    pick
+                                                                        .position
                                                                 ] || "#64748b",
                                                         }}
                                                     >
@@ -1197,7 +1254,9 @@ const DraftInterface = () => {
                                                 </div>
 
                                                 {/* Player Name */}
-                                                <div style={{ padding: "0 8px" }}>
+                                                <div
+                                                    style={{ padding: "0 8px" }}
+                                                >
                                                     <div
                                                         style={{
                                                             fontSize: "14px",
@@ -1218,7 +1277,9 @@ const DraftInterface = () => {
                                                 </div>
 
                                                 {/* Team Name */}
-                                                <div style={{ padding: "0 8px" }}>
+                                                <div
+                                                    style={{ padding: "0 8px" }}
+                                                >
                                                     <div
                                                         style={{
                                                             fontSize: "14px",
@@ -1272,12 +1333,16 @@ const DraftInterface = () => {
                                                             onClick={
                                                                 handleUndoDraft
                                                             }
-                                                            disabled={undoLoading}
+                                                            disabled={
+                                                                undoLoading
+                                                            }
                                                             style={{
                                                                 padding:
                                                                     "4px 8px",
-                                                                fontSize: "12px",
-                                                                fontWeight: "500",
+                                                                fontSize:
+                                                                    "12px",
+                                                                fontWeight:
+                                                                    "500",
                                                                 borderRadius:
                                                                     "4px",
                                                                 border: "1px solid #ef4444",
@@ -1292,7 +1357,9 @@ const DraftInterface = () => {
                                                                 transition:
                                                                     "all 0.15s",
                                                             }}
-                                                            onMouseEnter={(e) => {
+                                                            onMouseEnter={(
+                                                                e
+                                                            ) => {
                                                                 if (
                                                                     !undoLoading
                                                                 ) {
@@ -1300,7 +1367,9 @@ const DraftInterface = () => {
                                                                         "#fecaca";
                                                                 }
                                                             }}
-                                                            onMouseLeave={(e) => {
+                                                            onMouseLeave={(
+                                                                e
+                                                            ) => {
                                                                 if (
                                                                     !undoLoading
                                                                 ) {
@@ -1316,7 +1385,8 @@ const DraftInterface = () => {
                                                     ) : (
                                                         <span
                                                             style={{
-                                                                fontSize: "12px",
+                                                                fontSize:
+                                                                    "12px",
                                                                 color: "#9ca3af",
                                                             }}
                                                         >
@@ -1340,7 +1410,7 @@ const DraftInterface = () => {
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </div>;
                 </div>
             </div>
         </div>

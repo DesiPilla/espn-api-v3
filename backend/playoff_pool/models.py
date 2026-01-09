@@ -126,13 +126,14 @@ class PlayoffDraftablePlayer(models.Model):
     team = models.CharField(max_length=10)
     position = models.CharField(max_length=10)
     fantasy_points = models.FloatField(default=0.0)
+    draft_value = models.FloatField(default=0.0)
 
     class Meta:
         unique_together = ("year", "gsis_id")
         indexes = [
             models.Index(fields=["year", "position", "team"]),
         ]
-        ordering = ["position", "-fantasy_points"]
+        ordering = ["position", "-draft_value"]
 
 
 class LeagueScoringSetting(models.Model):
