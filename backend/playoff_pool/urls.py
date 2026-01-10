@@ -9,7 +9,9 @@ from .views import (
     scoring_settings,
     debug_test,
     get_league_info,
+    available_league_years,
 )
+from .nfl_utils import current_nfl_season_api
 
 app_name = 'playoff_pool'
 
@@ -28,6 +30,9 @@ urlpatterns = [
     path("league-info/<int:league_id>/", get_league_info, name="league_info"),
     # Settings endpoint
     path("scoring-settings/", scoring_settings, name="scoring_settings"),
+    # NFL utilities
+    path("nfl/current-season/", current_nfl_season_api, name="current_nfl_season"),
+    path("available-years/", available_league_years, name="available_league_years"),
     # API routes
     path("api/", include(router.urls)),
 ]

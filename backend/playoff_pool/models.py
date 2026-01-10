@@ -18,6 +18,7 @@ class League(models.Model):
     """League configuration and settings"""
 
     name = models.CharField(max_length=200)
+    league_year = models.IntegerField(help_text="NFL season year for this league")
     created_by = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="created_leagues"
     )

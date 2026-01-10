@@ -73,6 +73,7 @@ class LeagueSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "league_year",
             "created_by",
             "created_at",
             "created_at_est",

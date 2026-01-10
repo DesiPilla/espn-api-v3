@@ -6,6 +6,7 @@ import playoffPoolAPI from '../../utils/PlayoffPool/api';
 const LeagueSetup = () => {
   const [formData, setFormData] = useState({
       name: "",
+      league_year: 2025, // Default to current season
       num_teams: 8,
       positions_included: ["QB", "RB", "WR", "TE", "K", "DST"],
       roster_config: {
@@ -27,13 +28,43 @@ const LeagueSetup = () => {
   const [error, setError] = useState(null);
   const [positionOptions, setPositionOptions] = useState([]);
   const [scoringCategories, setScoringCategories] = useState({});
+  const [availableYears, setAvailableYears] = useState([]);
+  const [currentSeason, setCurrentSeason] = useState(2025);
 
   const { user } = usePlayoffPoolAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
       loadScoringSettings();
+      loadLeagueYearData();
   }, []);
+
+  const loadLeagueYearData = async () => {
+      try {
+          // Load available years and current season
+          const [yearsData, currentSeasonData] = await Promise.all([
+              playoffPoolAPI.getAvailableLeagueYears(),
+              playoffPoolAPI.getCurrentNFLSeason(),
+          ]);
+
+          if (yearsData.available_years) {
+              setAvailableYears(yearsData.available_years);
+          }
+
+          if (currentSeasonData.current_season) {
+              setCurrentSeason(currentSeasonData.current_season);
+              // Update form data with current season as default
+              setFormData((prev) => ({
+                  ...prev,
+                  league_year: currentSeasonData.current_season,
+              }));
+          }
+      } catch (err) {
+          console.error("Error loading league year data:", err);
+          // Fallback to default year if API call fails
+          setAvailableYears([2025, 2024, 2023]);
+      }
+  };
 
   const loadScoringSettings = async () => {
       try {
@@ -203,6 +234,7 @@ const LeagueSetup = () => {
           // Prepare data for submission
           const submissionData = {
               name: formData.name.trim(),
+              league_year: formData.league_year,
               num_teams: formData.num_teams,
               positions_included: formData.positions_included,
               roster_config: {
@@ -389,13 +421,19 @@ const LeagueSetup = () => {
                               <div
                                   style={{
                                       display: "grid",
-                                      gridTemplateColumns: "2fr 1fr",
+                                      gridTemplateColumns:
+                                          "minmax(250px, 2fr) minmax(200px, 1fr) minmax(180px, 1fr)",
                                       gap: "3rem",
                                       alignItems: "start",
                                   }}
                               >
                                   {/* League Name */}
-                                  <div>
+                                  <div
+                                      style={{
+                                          marginRight: "1rem",
+                                          paddingRight: "1rem",
+                                      }}
+                                  >
                                       <label
                                           style={{
                                               display: "block",
@@ -437,7 +475,12 @@ const LeagueSetup = () => {
                                   </div>
 
                                   {/* Number of Teams */}
-                                  <div>
+                                  <div
+                                      style={{
+                                          margin: "0 1rem",
+                                          padding: "0 0.5rem",
+                                      }}
+                                  >
                                       <label
                                           style={{
                                               display: "block",
@@ -483,6 +526,60 @@ const LeagueSetup = () => {
                                       >
                                           Number of users/teams that can
                                           participate in this league
+                                      </p>
+                                  </div>
+
+                                  {/* League Year */}
+                                  <div
+                                      style={{
+                                          marginLeft: "1rem",
+                                          paddingLeft: "1rem",
+                                      }}
+                                  >
+                                      <label
+                                          style={{
+                                              display: "block",
+                                              fontSize: "0.875rem",
+                                              fontWeight: "600",
+                                              color: "#374151",
+                                              marginBottom: "0.5rem",
+                                          }}
+                                          htmlFor="league_year"
+                                      >
+                                          League Year *
+                                      </label>
+                                      <select
+                                          id="league_year"
+                                          name="league_year"
+                                          value={formData.league_year}
+                                          onChange={handleChange}
+                                          style={{
+                                              width: "100%",
+                                              padding: "0.75rem 1rem",
+                                              border: "1px solid #d1d5db",
+                                              borderRadius: "0.5rem",
+                                              fontSize: "1rem",
+                                              outline: "none",
+                                              backgroundColor: "white",
+                                          }}
+                                      >
+                                          {availableYears.map((year) => (
+                                              <option key={year} value={year}>
+                                                  {year}
+                                                  {year === currentSeason
+                                                      ? " (Current)"
+                                                      : ""}
+                                              </option>
+                                          ))}
+                                      </select>
+                                      <p
+                                          style={{
+                                              color: "#6b7280",
+                                              fontSize: "0.875rem",
+                                              marginTop: "0.25rem",
+                                          }}
+                                      >
+                                          NFL season year
                                       </p>
                                   </div>
                               </div>
@@ -1266,6 +1363,32 @@ const LeagueSetup = () => {
                                                       fontSize: "0.875rem",
                                                   }}
                                               >
+                                                  Year:
+                                              </span>
+                                              <span
+                                                  style={{
+                                                      fontWeight: "500",
+                                                      color: "#1f2937",
+                                                  }}
+                                              >
+                                                  {formData.league_year} NFL
+                                                  Season
+                                              </span>
+                                          </div>
+                                          <div
+                                              style={{
+                                                  display: "flex",
+                                                  justifyContent:
+                                                      "space-between",
+                                                  alignItems: "center",
+                                              }}
+                                          >
+                                              <span
+                                                  style={{
+                                                      color: "#6b7280",
+                                                      fontSize: "0.875rem",
+                                                  }}
+                                              >
                                                   Admin:
                                               </span>
                                               <span
@@ -1509,22 +1632,80 @@ const LeagueSetup = () => {
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                          <div
+                              style={{
+                                  display: "flex",
+                                  justifyContent: "flex-end",
+                                  gap: "1rem",
+                                  paddingTop: "1.5rem",
+                                  borderTop: "1px solid #e5e7eb",
+                              }}
+                          >
                               <button
                                   type="button"
                                   onClick={handleCancel}
-                                  className="px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                                  style={{
+                                      padding: "12px 24px",
+                                      fontSize: "14px",
+                                      fontWeight: "600",
+                                      borderRadius: "8px",
+                                      border: "1px solid #d1d5db",
+                                      backgroundColor: "#f9fafb",
+                                      color: "#374151",
+                                      cursor: "pointer",
+                                      transition: "all 0.15s",
+                                      outline: "none",
+                                  }}
+                                  onMouseEnter={(e) => {
+                                      e.target.style.backgroundColor =
+                                          "#f3f4f6";
+                                      e.target.style.borderColor = "#9ca3af";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                      e.target.style.backgroundColor =
+                                          "#f9fafb";
+                                      e.target.style.borderColor = "#d1d5db";
+                                  }}
                               >
                                   Cancel
                               </button>
                               <button
                                   type="submit"
                                   disabled={loading}
-                                  className={`px-8 py-3 font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                                      loading
-                                          ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-                                          : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
-                                  }`}
+                                  style={{
+                                      padding: "12px 32px",
+                                      fontSize: "14px",
+                                      fontWeight: "600",
+                                      borderRadius: "8px",
+                                      border:
+                                          "1px solid " +
+                                          (loading ? "#9ca3af" : "#3b82f6"),
+                                      backgroundColor: loading
+                                          ? "#f3f4f6"
+                                          : "#3b82f6",
+                                      color: loading ? "#6b7280" : "#ffffff",
+                                      cursor: loading
+                                          ? "not-allowed"
+                                          : "pointer",
+                                      transition: "all 0.15s",
+                                      outline: "none",
+                                  }}
+                                  onMouseEnter={(e) => {
+                                      if (!loading) {
+                                          e.target.style.backgroundColor =
+                                              "#2563eb";
+                                          e.target.style.borderColor =
+                                              "#2563eb";
+                                      }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                      if (!loading) {
+                                          e.target.style.backgroundColor =
+                                              "#3b82f6";
+                                          e.target.style.borderColor =
+                                              "#3b82f6";
+                                      }
+                                  }}
                               >
                                   {loading ? (
                                       <div className="flex items-center">

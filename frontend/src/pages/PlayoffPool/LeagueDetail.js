@@ -216,9 +216,28 @@ const LeagueDetail = () => {
               </div>
               <button
                   onClick={handleBackToDashboard}
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "12px 20px",
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      borderRadius: "8px",
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "background-color 0.15s",
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                  }}
+                  onMouseEnter={(e) =>
+                      (e.target.style.backgroundColor = "#2563eb")
+                  }
+                  onMouseLeave={(e) =>
+                      (e.target.style.backgroundColor = "#3b82f6")
+                  }
               >
-                  Back to Dashboard
+                  ← Back to Dashboard
               </button>
           </div>
       );
@@ -232,63 +251,33 @@ const LeagueDetail = () => {
                   <div className="mb-8">
                       <button
                           onClick={handleBackToDashboard}
-                          className="mb-4 text-blue-600 hover:text-blue-800"
+                          style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              padding: "8px 16px",
+                              backgroundColor: "#6b7280",
+                              color: "white",
+                              fontWeight: "500",
+                              fontSize: "13px",
+                              borderRadius: "6px",
+                              border: "none",
+                              cursor: "pointer",
+                              transition: "background-color 0.15s",
+                              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                              marginBottom: "16px",
+                          }}
+                          onMouseEnter={(e) =>
+                              (e.target.style.backgroundColor = "#4b5563")
+                          }
+                          onMouseLeave={(e) =>
+                              (e.target.style.backgroundColor = "#6b7280")
+                          }
                       >
                           ← Back to Dashboard
                       </button>
                   </div>
 
                   <div className="grid grid-cols-1 gap-8">
-                      {/* Action Buttons */}
-                      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-                          <h2 className="text-xl font-bold mb-4">Actions</h2>
-                          <div className="flex flex-wrap gap-4">
-                              {canStartDraft && (
-                                  <button
-                                      onClick={handleStartDraft}
-                                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                                  >
-                                      Start Draft
-                                  </button>
-                              )}
-
-                              {draftInProgress && isAdmin && (
-                                  <button
-                                      onClick={handleStartDraft}
-                                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                  >
-                                      Manage Draft
-                                  </button>
-                              )}
-
-                              {draftComplete && (
-                                  <button
-                                      onClick={handleViewDraftedTeams}
-                                      className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-                                  >
-                                      View Drafted Teams
-                                  </button>
-                              )}
-
-                              {isAdmin && (
-                                  <button
-                                      onClick={handleOpenScoringEditor}
-                                      className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
-                                  >
-                                      Edit Scoring Settings
-                                  </button>
-                              )}
-
-                              {!draftComplete &&
-                                  !draftInProgress &&
-                                  members.length < league?.num_teams && (
-                                      <div className="text-gray-600">
-                                          Waiting for more members to join...
-                                      </div>
-                                  )}
-                          </div>
-                      </div>
-
                       {/* League Members with Enhanced Header */}
                       <div>
                           <ESPNStyleLeagueMembers
@@ -303,6 +292,169 @@ const LeagueDetail = () => {
                               handleCreateTeam={handleCreateTeam}
                               handleDeleteLeague={handleDeleteLeague}
                               leagueId={leagueId}
+                              actionButtons={
+                                  <div
+                                      style={{
+                                          display: "flex",
+                                          justifyContent: "flex-end",
+                                          alignItems: "center",
+                                          gap: "12px",
+                                          flexWrap: "wrap",
+                                      }}
+                                  >
+                                      {canStartDraft && (
+                                          <button
+                                              onClick={handleStartDraft}
+                                              style={{
+                                                  display: "inline-flex",
+                                                  alignItems: "center",
+                                                  padding: "12px 20px",
+                                                  backgroundColor: "#10b981",
+                                                  color: "white",
+                                                  fontWeight: "600",
+                                                  fontSize: "14px",
+                                                  borderRadius: "8px",
+                                                  border: "none",
+                                                  cursor: "pointer",
+                                                  transition:
+                                                      "background-color 0.15s",
+                                                  boxShadow:
+                                                      "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                              }}
+                                              onMouseEnter={(e) =>
+                                                  (e.target.style.backgroundColor =
+                                                      "#059669")
+                                              }
+                                              onMouseLeave={(e) =>
+                                                  (e.target.style.backgroundColor =
+                                                      "#10b981")
+                                              }
+                                          >
+                                              Start Draft
+                                          </button>
+                                      )}
+
+                                      {draftInProgress && isAdmin && (
+                                          <button
+                                              onClick={handleStartDraft}
+                                              style={{
+                                                  display: "inline-flex",
+                                                  alignItems: "center",
+                                                  padding: "12px 20px",
+                                                  backgroundColor: "#3b82f6",
+                                                  color: "white",
+                                                  fontWeight: "600",
+                                                  fontSize: "14px",
+                                                  borderRadius: "8px",
+                                                  border: "none",
+                                                  cursor: "pointer",
+                                                  transition:
+                                                      "background-color 0.15s",
+                                                  boxShadow:
+                                                      "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                              }}
+                                              onMouseEnter={(e) =>
+                                                  (e.target.style.backgroundColor =
+                                                      "#2563eb")
+                                              }
+                                              onMouseLeave={(e) =>
+                                                  (e.target.style.backgroundColor =
+                                                      "#3b82f6")
+                                              }
+                                          >
+                                              Manage Draft
+                                          </button>
+                                      )}
+
+                                      {draftComplete && (
+                                          <button
+                                              onClick={handleViewDraftedTeams}
+                                              style={{
+                                                  display: "inline-flex",
+                                                  alignItems: "center",
+                                                  padding: "12px 20px",
+                                                  backgroundColor: "#8b5cf6",
+                                                  color: "white",
+                                                  fontWeight: "600",
+                                                  fontSize: "14px",
+                                                  borderRadius: "8px",
+                                                  border: "none",
+                                                  cursor: "pointer",
+                                                  transition:
+                                                      "background-color 0.15s",
+                                                  boxShadow:
+                                                      "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                              }}
+                                              onMouseEnter={(e) =>
+                                                  (e.target.style.backgroundColor =
+                                                      "#7c3aed")
+                                              }
+                                              onMouseLeave={(e) =>
+                                                  (e.target.style.backgroundColor =
+                                                      "#8b5cf6")
+                                              }
+                                          >
+                                              View Drafted Teams
+                                          </button>
+                                      )}
+
+                                      {isAdmin && (
+                                          <button
+                                              onClick={handleOpenScoringEditor}
+                                              style={{
+                                                  display: "inline-flex",
+                                                  alignItems: "center",
+                                                  padding: "12px 20px",
+                                                  backgroundColor: "#7c3aed",
+                                                  color: "white",
+                                                  fontWeight: "600",
+                                                  fontSize: "14px",
+                                                  borderRadius: "8px",
+                                                  border: "none",
+                                                  cursor: "pointer",
+                                                  transition:
+                                                      "background-color 0.15s",
+                                                  boxShadow:
+                                                      "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                              }}
+                                              onMouseEnter={(e) =>
+                                                  (e.target.style.backgroundColor =
+                                                      "#6d28d9")
+                                              }
+                                              onMouseLeave={(e) =>
+                                                  (e.target.style.backgroundColor =
+                                                      "#7c3aed")
+                                              }
+                                          >
+                                              {draftInProgress || draftComplete
+                                                  ? "Show Scoring Settings"
+                                                  : "Edit Scoring Settings"}
+                                          </button>
+                                      )}
+
+                                      {!draftComplete &&
+                                          !draftInProgress &&
+                                          members.length <
+                                              league?.num_teams && (
+                                              <div
+                                                  style={{
+                                                      display: "flex",
+                                                      alignItems: "center",
+                                                      padding: "8px 12px",
+                                                      backgroundColor:
+                                                          "#fef3c7",
+                                                      color: "#92400e",
+                                                      fontSize: "14px",
+                                                      borderRadius: "8px",
+                                                      fontWeight: "500",
+                                                  }}
+                                              >
+                                                  ⏳ Waiting for more members to
+                                                  join...
+                                              </div>
+                                          )}
+                                  </div>
+                              }
                           />
                       </div>
                   </div>
@@ -426,6 +578,7 @@ const LeagueDetail = () => {
                   leagueId={leagueId}
                   onClose={handleCloseScoringEditor}
                   onSave={handleScoringSettingsSaved}
+                  readOnly={draftInProgress || draftComplete}
               />
           )}
       </>

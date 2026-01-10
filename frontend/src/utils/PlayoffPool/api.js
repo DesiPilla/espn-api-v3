@@ -238,6 +238,17 @@ class PlayoffPoolAPI {
         );
         return response.data;
     }
+
+    // NFL utilities
+    async getCurrentNFLSeason() {
+        const response = await this.api.get("nfl/current-season/");
+        return response.data;
+    }
+
+    async getAvailableLeagueYears() {
+        const response = await this.api.get("available-years/");
+        return response.data;
+    }
 }
 
 export default new PlayoffPoolAPI();

@@ -21,6 +21,7 @@ from .models import (
     DraftedTeam,
     UserProfile,
     LeagueScoringSetting,
+    PlayoffDraftablePlayer,
 )
 from backend.playoff_pool.players import query_playoff_players_from_db
 from backend.playoff_pool.scoring import (
@@ -604,7 +605,11 @@ class LeagueViewSet(viewsets.ModelViewSet):
         league = self.get_object()
 
         try:
-            nfl_year = 2025
+            nfl_year = (
+                league.league_year
+                if hasattr(league, "league_year") and league.league_year
+                else 2025
+            )
             positions = (
                 league.positions_included
                 if league.positions_included
@@ -715,7 +720,11 @@ class LeagueViewSet(viewsets.ModelViewSet):
 
         # Get player info
         try:
-            nfl_year = 2025
+            nfl_year = (
+                league.league_year
+                if hasattr(league, "league_year") and league.league_year
+                else 2025
+            )
             positions = (
                 league.positions_included
                 if league.positions_included
@@ -1074,3 +1083,29 @@ class DraftedTeamViewSet(viewsets.ReadOnlyModelViewSet):
         # Only return drafted players from leagues the user is in
         user_leagues = League.objects.filter(members__user=self.request.user)
         return DraftedTeam.objects.filter(league__in=user_leagues)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.AllowAny])
+def available_league_years(request):
+    """
+    API endpoint to get available years from PlayoffDraftablePlayer table.
+
+    Returns:
+        JsonResponse: JSON response containing available years sorted in descending order
+
+    Example response:
+        {
+            "available_years": [2025, 2024, 2023],
+            "status": "success"
+        }
+    """
+    try:
+        years = (
+            PlayoffDraftablePlayer.objects.values_list("year", flat=True)
+            .distinct()
+            .order_by("-year")
+        )
+        return Response({"available_years": list(years), "status": "success"})
+    except Exception as e:
+        return Response({"error": str(e), "status": "error"}, status=500)

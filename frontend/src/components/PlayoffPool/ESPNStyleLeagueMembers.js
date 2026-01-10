@@ -12,6 +12,7 @@ const ESPNStyleLeagueMembers = ({
     handleCreateTeam,
     handleDeleteLeague,
     leagueId,
+    actionButtons,
 }) => {
     const [creatingTeamIndex, setCreatingTeamIndex] = useState(null);
     const [newTeamName, setNewTeamName] = useState("");
@@ -92,8 +93,30 @@ const ESPNStyleLeagueMembers = ({
                                 margin: 0,
                             }}
                         >
-                            Created by{" "}
-                            {league?.created_by?.username || "Unknown"}
+                            Created{" "}
+                            {league?.created_at_est
+                                ? new Date(
+                                      league.created_at_est
+                                  ).toLocaleDateString("en-US", {
+                                      timeZone: "America/New_York",
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                  }) +
+                                  " by " +
+                                  (league?.created_by?.username || "Unknown")
+                                : league?.created_at
+                                ? new Date(
+                                      league.created_at
+                                  ).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                  }) +
+                                  " by " +
+                                  (league?.created_by?.username || "Unknown")
+                                : "by " +
+                                  (league?.created_by?.username || "Unknown")}
                         </p>
                     </div>
                     <span
@@ -273,27 +296,10 @@ const ESPNStyleLeagueMembers = ({
                                     color: "#1f2937",
                                 }}
                             >
-                                {league?.created_at_est
-                                    ? new Date(
-                                          league.created_at_est
-                                      ).toLocaleDateString("en-US", {
-                                          timeZone: "America/New_York",
-                                          month: "short",
-                                          day: "numeric",
-                                          year: "numeric",
-                                      })
-                                    : league?.created_at
-                                    ? new Date(
-                                          league.created_at
-                                      ).toLocaleDateString("en-US", {
-                                          month: "short",
-                                          day: "numeric",
-                                          year: "numeric",
-                                      })
-                                    : "Unknown"}
+                                {league?.league_year || "Unknown"}
                             </div>
                             <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                                Created {league?.created_at_est ? "EST" : ""}
+                                NFL Season
                             </div>
                         </div>
                     </div>
@@ -375,6 +381,19 @@ const ESPNStyleLeagueMembers = ({
                         </div>
                     )}
             </div>
+
+            {/* Action Buttons */}
+            {actionButtons && (
+                <div
+                    style={{
+                        backgroundColor: "#f8fafc",
+                        borderBottom: "1px solid #e2e8f0",
+                        padding: "16px 24px",
+                    }}
+                >
+                    {actionButtons}
+                </div>
+            )}
 
             {/* Table using CSS Grid for proper column layout */}
             <div
