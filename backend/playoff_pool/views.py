@@ -866,7 +866,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @action(detail=True, methods=["get"])
+    @action(detail=True, methods=["get"], permission_classes=[permissions.AllowAny])
     def drafted_teams(self, request, pk=None):
         """Get all drafted teams organized by user with playoff stats"""
         league = self.get_object()
