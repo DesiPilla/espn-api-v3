@@ -20,68 +20,106 @@ const DraftedTeams = () => {
   }, [leagueId]);
 
   const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const [leagueData, draftedData] = await Promise.all([
-        playoffPoolAPI.getLeague(leagueId),
-        playoffPoolAPI.getDraftedTeams(leagueId)
-      ]);
-      
-      setLeague(leagueData);
-      setTeamsData(draftedData);
-    } catch (err) {
-      setError('Failed to load teams data');
-      console.error('Error loading teams:', err);
-    } finally {
-      setLoading(false);
-    }
+      try {
+          setLoading(true);
+          setError(null);
+
+          const [leagueData, playoffData] = await Promise.all([
+              playoffPoolAPI.getLeague(leagueId),
+              playoffPoolAPI.getPlayoffStats(leagueId),
+          ]);
+
+          setLeague(leagueData);
+          setTeamsData(playoffData);
+      } catch (err) {
+          console.error("Error loading teams:", err);
+          // Fallback to regular drafted teams if playoff stats fail
+          try {
+              const [leagueData, draftedData] = await Promise.all([
+                  playoffPoolAPI.getLeague(leagueId),
+                  playoffPoolAPI.getDraftedTeams(leagueId, false), // Use static points
+              ]);
+
+              setLeague(leagueData);
+              setTeamsData(draftedData);
+              setError("Using static points - playoff stats unavailable");
+          } catch (fallbackErr) {
+              setError("Failed to load teams data");
+          }
+      } finally {
+          setLoading(false);
+      }
   };
 
   const getPositionCounts = (players) => {
-    const counts = {};
-    players.forEach(player => {
-      counts[player.position] = (counts[player.position] || 0) + 1;
-    });
-    return counts;
+      const counts = {};
+      players.forEach((player) => {
+          counts[player.position] = (counts[player.position] || 0) + 1;
+      });
+      return counts;
   };
 
   const getPositionTotals = (players) => {
-    const totals = {};
-    players.forEach(player => {
-      totals[player.position] = (totals[player.position] || 0) + player.fantasy_points;
-    });
-    return totals;
+      const totals = {};
+      players.forEach((player) => {
+          totals[player.position] =
+              (totals[player.position] || 0) + player.fantasy_points;
+      });
+      return totals;
   };
 
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center">
-          <div className="text-lg">Loading drafted teams...</div>
-        </div>
-      </div>
-    );
+      return (
+          <div className="container mx-auto px-4 py-8">
+              <div className="flex justify-center">
+                  <div className="text-lg">Loading drafted teams...</div>
+              </div>
+          </div>
+      );
   }
 
   if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-        <button
-          onClick={() => navigate(`/playoff-pool/league/${leagueId}`)}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Back to League
-        </button>
-      </div>
-    );
+      return (
+          <div className="container mx-auto px-4 py-8">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                  {error}
+              </div>
+              <button
+                  onClick={() => navigate(`/playoff-pool/league/${leagueId}`)}
+                  style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "12px 20px",
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      borderRadius: "8px",
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "background-color 0.15s",
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                  }}
+                  onMouseEnter={(e) =>
+                      (e.target.style.backgroundColor = "#2563eb")
+                  }
+                  onMouseLeave={(e) =>
+                      (e.target.style.backgroundColor = "#3b82f6")
+                  }
+              >
+                  ← Back to League
+              </button>
+          </div>
+      );
   }
 
   const teams = teamsData?.teams || [];
+
+  // Calculate total players from teams data
+  const totalPlayers = teams.reduce(
+      (total, team) => total + (team.players?.length || 0),
+      0
+  );
 
   return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -92,17 +130,227 @@ const DraftedTeams = () => {
                       onClick={() =>
                           navigate(`/playoff-pool/league/${leagueId}`)
                       }
-                      className="mb-4 text-blue-600 hover:text-blue-800"
+                      style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          padding: "8px 16px",
+                          backgroundColor: "#6b7280",
+                          color: "white",
+                          fontWeight: "500",
+                          fontSize: "13px",
+                          borderRadius: "6px",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "background-color 0.15s",
+                          boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                          marginBottom: "20px",
+                      }}
+                      onMouseEnter={(e) =>
+                          (e.target.style.backgroundColor = "#4b5563")
+                      }
+                      onMouseLeave={(e) =>
+                          (e.target.style.backgroundColor = "#6b7280")
+                      }
                   >
                       ← Back to League
                   </button>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                      Drafted Teams
-                  </h1>
-                  <p className="text-gray-600">{league?.name}</p>
-                  <div className="text-sm text-gray-500 mt-2">
-                      {teamsData?.total_teams} teams •{" "}
-                      {teamsData?.total_players} total players drafted
+
+                  {/* League Information Card */}
+                  <div
+                      style={{
+                          backgroundColor: "white",
+                          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "8px",
+                          padding: "24px",
+                          marginBottom: "24px",
+                      }}
+                  >
+                      <div
+                          style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              marginBottom: "16px",
+                          }}
+                      >
+                          <div>
+                              <h1
+                                  style={{
+                                      fontSize: "24px",
+                                      fontWeight: "700",
+                                      color: "#1f2937",
+                                      margin: "0 0 8px 0",
+                                  }}
+                              >
+                                  Drafted Teams
+                              </h1>
+                              <h2
+                                  style={{
+                                      fontSize: "18px",
+                                      fontWeight: "600",
+                                      color: "#374151",
+                                      margin: "0",
+                                  }}
+                              >
+                                  {league?.name}
+                              </h2>
+                          </div>
+                          <div
+                              style={{
+                                  textAlign: "right",
+                              }}
+                          >
+                              {teamsData?.year && (
+                                  <div
+                                      style={{
+                                          fontSize: "16px",
+                                          fontWeight: "600",
+                                          color: "#1f2937",
+                                          marginBottom: "4px",
+                                      }}
+                                  >
+                                      {teamsData.year} Season
+                                  </div>
+                              )}
+                              {teamsData?.data_source === "playoff_stats" && (
+                                  <div
+                                      style={{
+                                          display: "inline-block",
+                                          padding: "4px 8px",
+                                          backgroundColor: "#10b981",
+                                          color: "white",
+                                          fontSize: "12px",
+                                          fontWeight: "500",
+                                          borderRadius: "12px",
+                                      }}
+                                  >
+                                      Live Playoff Stats
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+
+                      {/* League Stats */}
+                      <div
+                          style={{
+                              display: "flex",
+                              gap: "24px",
+                              paddingTop: "16px",
+                              borderTop: "1px solid #f1f5f9",
+                          }}
+                      >
+                          <div
+                              style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                              }}
+                          >
+                              <div
+                                  style={{
+                                      width: "8px",
+                                      height: "8px",
+                                      backgroundColor: "#3b82f6",
+                                      borderRadius: "50%",
+                                  }}
+                              ></div>
+                              <span
+                                  style={{
+                                      fontSize: "14px",
+                                      color: "#6b7280",
+                                  }}
+                              >
+                                  <strong style={{ color: "#1f2937" }}>
+                                      {teamsData?.total_teams || 0}
+                                  </strong>{" "}
+                                  teams
+                              </span>
+                          </div>
+                          <div
+                              style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                              }}
+                          >
+                              <div
+                                  style={{
+                                      width: "8px",
+                                      height: "8px",
+                                      backgroundColor: "#10b981",
+                                      borderRadius: "50%",
+                                  }}
+                              ></div>
+                              <span
+                                  style={{
+                                      fontSize: "14px",
+                                      color: "#6b7280",
+                                  }}
+                              >
+                                  <strong style={{ color: "#1f2937" }}>
+                                      {totalPlayers}
+                                  </strong>{" "}
+                                  total players drafted
+                              </span>
+                          </div>
+                      </div>
+
+                      {/* Playoff Rounds Legend */}
+                      {teamsData?.playoff_rounds &&
+                          teamsData.playoff_rounds.length > 0 && (
+                              <div
+                                  style={{
+                                      marginTop: "16px",
+                                      paddingTop: "16px",
+                                      borderTop: "1px solid #f1f5f9",
+                                  }}
+                              >
+                                  <div
+                                      style={{
+                                          fontSize: "14px",
+                                          fontWeight: "600",
+                                          color: "#374151",
+                                          marginBottom: "12px",
+                                      }}
+                                  >
+                                      Playoff Rounds:
+                                  </div>
+                                  <div
+                                      style={{
+                                          display: "flex",
+                                          flexWrap: "wrap",
+                                          gap: "8px",
+                                      }}
+                                  >
+                                      {teamsData.playoff_rounds.map((round) => {
+                                          const roundNames = {
+                                              WC: "Wild Card",
+                                              DIV: "Divisional",
+                                              CON: "Conference Championship",
+                                              SB: "Super Bowl",
+                                          };
+                                          return (
+                                              <span
+                                                  key={round}
+                                                  style={{
+                                                      padding: "6px 12px",
+                                                      backgroundColor:
+                                                          "#dbeafe",
+                                                      color: "#1e40af",
+                                                      borderRadius: "16px",
+                                                      fontSize: "13px",
+                                                      fontWeight: "500",
+                                                  }}
+                                              >
+                                                  {round}:{" "}
+                                                  {roundNames[round] || round}
+                                              </span>
+                                          );
+                                      })}
+                                  </div>
+                              </div>
+                          )}
                   </div>
               </div>
 
@@ -219,7 +467,8 @@ const DraftedTeams = () => {
                               <div
                                   style={{
                                       display: "grid",
-                                      gridTemplateColumns: "15% 55% 30%",
+                                      gridTemplateColumns:
+                                          "10% 35% 10% 10% 10% 10% 15%",
                                       backgroundColor: "#f1f5f9",
                                       borderRadius: "6px 6px 0 0",
                                       border: "1px solid #e2e8f0",
@@ -253,6 +502,50 @@ const DraftedTeams = () => {
                                   </div>
                                   <div
                                       style={{
+                                          padding: "8px 4px",
+                                          fontSize: "11px",
+                                          fontWeight: "600",
+                                          color: "#64748b",
+                                          textAlign: "center",
+                                      }}
+                                  >
+                                      WC
+                                  </div>
+                                  <div
+                                      style={{
+                                          padding: "8px 4px",
+                                          fontSize: "11px",
+                                          fontWeight: "600",
+                                          color: "#64748b",
+                                          textAlign: "center",
+                                      }}
+                                  >
+                                      DIV
+                                  </div>
+                                  <div
+                                      style={{
+                                          padding: "8px 4px",
+                                          fontSize: "11px",
+                                          fontWeight: "600",
+                                          color: "#64748b",
+                                          textAlign: "center",
+                                      }}
+                                  >
+                                      CON
+                                  </div>
+                                  <div
+                                      style={{
+                                          padding: "8px 4px",
+                                          fontSize: "11px",
+                                          fontWeight: "600",
+                                          color: "#64748b",
+                                          textAlign: "center",
+                                      }}
+                                  >
+                                      SB
+                                  </div>
+                                  <div
+                                      style={{
                                           padding: "8px 12px",
                                           fontSize: "12px",
                                           fontWeight: "500",
@@ -262,7 +555,7 @@ const DraftedTeams = () => {
                                           textAlign: "right",
                                       }}
                                   >
-                                      POINTS
+                                      TOTAL
                                   </div>
                               </div>
 
@@ -275,18 +568,24 @@ const DraftedTeams = () => {
                                   }}
                               >
                                   {team.players
-                                      .sort(
-                                          (a, b) =>
-                                              b.fantasy_points -
-                                              a.fantasy_points
-                                      )
+                                      .sort((a, b) => {
+                                          const aPoints =
+                                              a.total_points ||
+                                              a.fantasy_points ||
+                                              0;
+                                          const bPoints =
+                                              b.total_points ||
+                                              b.fantasy_points ||
+                                              0;
+                                          return bPoints - aPoints;
+                                      })
                                       .map((player, index) => (
                                           <div
-                                              key={player.id}
+                                              key={player.gsis_id || player.id}
                                               style={{
                                                   display: "grid",
                                                   gridTemplateColumns:
-                                                      "15% 55% 30%",
+                                                      "10% 35% 10% 10% 10% 10% 15%",
                                                   borderBottom:
                                                       index <
                                                       team.players.length - 1
@@ -372,11 +671,88 @@ const DraftedTeams = () => {
                                                           color: "#6b7280",
                                                       }}
                                                   >
-                                                      {player.team}
+                                                      {player.nfl_team ||
+                                                          player.team}
                                                   </div>
                                               </div>
 
-                                              {/* Points */}
+                                              {/* WC Points */}
+                                              <div
+                                                  style={{
+                                                      textAlign: "center",
+                                                      padding: "12px 4px",
+                                                      fontSize: "13px",
+                                                      color: "#1f2937",
+                                                  }}
+                                              >
+                                                  {player.round_points?.WC !==
+                                                      undefined &&
+                                                  player.round_points.WC > 0
+                                                      ? parseFloat(
+                                                            player.round_points
+                                                                .WC
+                                                        ).toFixed(1)
+                                                      : "-"}
+                                              </div>
+
+                                              {/* DIV Points */}
+                                              <div
+                                                  style={{
+                                                      textAlign: "center",
+                                                      padding: "12px 4px",
+                                                      fontSize: "13px",
+                                                      color: "#1f2937",
+                                                  }}
+                                              >
+                                                  {player.round_points?.DIV !==
+                                                      undefined &&
+                                                  player.round_points.DIV > 0
+                                                      ? parseFloat(
+                                                            player.round_points
+                                                                .DIV
+                                                        ).toFixed(1)
+                                                      : "-"}
+                                              </div>
+
+                                              {/* CON Points */}
+                                              <div
+                                                  style={{
+                                                      textAlign: "center",
+                                                      padding: "12px 4px",
+                                                      fontSize: "13px",
+                                                      color: "#1f2937",
+                                                  }}
+                                              >
+                                                  {player.round_points?.CON !==
+                                                      undefined &&
+                                                  player.round_points.CON > 0
+                                                      ? parseFloat(
+                                                            player.round_points
+                                                                .CON
+                                                        ).toFixed(1)
+                                                      : "-"}
+                                              </div>
+
+                                              {/* SB Points */}
+                                              <div
+                                                  style={{
+                                                      textAlign: "center",
+                                                      padding: "12px 4px",
+                                                      fontSize: "13px",
+                                                      color: "#1f2937",
+                                                  }}
+                                              >
+                                                  {player.round_points?.SB !==
+                                                      undefined &&
+                                                  player.round_points.SB > 0
+                                                      ? parseFloat(
+                                                            player.round_points
+                                                                .SB
+                                                        ).toFixed(1)
+                                                      : "-"}
+                                              </div>
+
+                                              {/* Total Points */}
                                               <div
                                                   style={{
                                                       textAlign: "right",
@@ -390,9 +766,11 @@ const DraftedTeams = () => {
                                                           color: "#1f2937",
                                                       }}
                                                   >
-                                                      {player.fantasy_points.toFixed(
-                                                          1
-                                                      )}
+                                                      {(
+                                                          player.total_points ||
+                                                          player.fantasy_points ||
+                                                          0
+                                                      ).toFixed(1)}
                                                   </div>
                                               </div>
                                           </div>

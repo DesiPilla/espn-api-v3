@@ -868,49 +868,193 @@ class LeagueViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def drafted_teams(self, request, pk=None):
-        """Get all drafted teams organized by user"""
+        """Get all drafted teams organized by user with playoff stats"""
         league = self.get_object()
 
-        # Get all drafted players
-        drafted_players = DraftedTeam.objects.filter(league=league).order_by(
-            "draft_order"
-        )
+        try:
+            # Check if we should use playoff stats or fallback to static points
+            use_playoff_stats = (
+                request.query_params.get("use_playoff_stats", "true").lower() == "true"
+            )
 
-        # Group by user
-        teams = {}
-        for player in drafted_players:
-            # Handle both claimed and unclaimed teams
-            if player.user:
-                user_id = player.user.id
-                user_data = UserSerializer(player.user).data
-            else:
-                # For unclaimed teams, use team_membership id as identifier
-                user_id = f"unclaimed_{player.team_membership.id}"
-                user_data = None
+            if use_playoff_stats:
+                # Use new playoff stats calculation
+                from .nfl_utils import calculate_player_playoff_points
 
-            if user_id not in teams:
-                teams[user_id] = {
-                    "user": user_data,
-                    "team_name": player.team_name,
-                    "players": [],
-                    "total_points": 0,
+                # Get year from query params or use league year
+                year = request.query_params.get("year")
+                if year:
+                    try:
+                        year = int(year)
+                    except ValueError:
+                        year = None
+
+                # Calculate playoff points for all drafted players
+                player_stats = calculate_player_playoff_points(league, year)
+
+                if player_stats:
+                    # Organize by teams using playoff stats
+                    teams = {}
+                    playoff_rounds = set()
+
+                    for player_id, player_data in player_stats.items():
+                        player_info = player_data["player_info"]
+                        user_key = (
+                            player_info["user"]
+                            if player_info["user"]
+                            else f"unclaimed_{player_info['team_name']}"
+                        )
+
+                        # Add to playoff rounds set
+                        playoff_rounds.update(player_data["round_points"].keys())
+
+                        if user_key not in teams:
+                            # Find user data for this team
+                            user_data = None
+                            if player_info["user"]:
+                                try:
+                                    user = User.objects.get(
+                                        username=player_info["user"]
+                                    )
+                                    user_data = UserSerializer(user).data
+                                except User.DoesNotExist:
+                                    pass
+
+                            teams[user_key] = {
+                                "user": user_data,
+                                "team_name": player_info["team_name"],
+                                "players": [],
+                                "total_points": 0.0,
+                                "round_totals": {},
+                            }
+
+                        # Add player with playoff stats
+                        player_with_stats = {
+                            "gsis_id": player_info["gsis_id"],
+                            "player_name": player_info["player_name"],
+                            "position": player_info["position"],
+                            "nfl_team": player_info["nfl_team"],
+                            "round_points": player_data["round_points"],
+                            "total_points": player_data["total_points"],
+                            "fantasy_points": player_data[
+                                "total_points"
+                            ],  # For backward compatibility
+                        }
+
+                        teams[user_key]["players"].append(player_with_stats)
+                        teams[user_key]["total_points"] += player_data["total_points"]
+
+                        # Add to round totals
+                        for round_name, round_points in player_data[
+                            "round_points"
+                        ].items():
+                            if round_name not in teams[user_key]["round_totals"]:
+                                teams[user_key]["round_totals"][round_name] = 0.0
+                            teams[user_key]["round_totals"][round_name] += round_points
+
+                    # Convert to list and sort by total points
+                    teams_list = list(teams.values())
+                    teams_list.sort(key=lambda x: x["total_points"], reverse=True)
+
+                    # Sort playoff rounds
+                    round_order = ["WC", "DIV", "CON", "SB"]
+                    sorted_rounds = [r for r in round_order if r in playoff_rounds]
+
+                    return Response(
+                        {
+                            "teams": teams_list,
+                            "total_teams": len(teams_list),
+                            "total_players": sum(
+                                len(team["players"]) for team in teams_list
+                            ),
+                            "playoff_rounds": sorted_rounds,
+                            "data_source": "playoff_stats",
+                            "year": year or league.league_year,
+                        }
+                    )
+
+            # Fallback to original method with static fantasy_points
+            drafted_players = DraftedTeam.objects.filter(league=league).order_by(
+                "draft_order"
+            )
+
+            # Group by user
+            teams = {}
+            for player in drafted_players:
+                # Handle both claimed and unclaimed teams
+                if player.user:
+                    user_id = player.user.id
+                    user_data = UserSerializer(player.user).data
+                else:
+                    # For unclaimed teams, use team_membership id as identifier
+                    user_id = f"unclaimed_{player.team_membership.id}"
+                    user_data = None
+
+                if user_id not in teams:
+                    teams[user_id] = {
+                        "user": user_data,
+                        "team_name": player.team_name,
+                        "players": [],
+                        "total_points": 0,
+                    }
+
+                player_data = DraftedTeamSerializer(player).data
+                teams[user_id]["players"].append(player_data)
+                teams[user_id]["total_points"] += player.fantasy_points
+
+            # Convert to list and sort by total points
+            teams_list = list(teams.values())
+            teams_list.sort(key=lambda x: x["total_points"], reverse=True)
+
+            return Response(
+                {
+                    "teams": teams_list,
+                    "total_teams": len(teams_list),
+                    "total_players": drafted_players.count(),
+                    "data_source": "static_points",
                 }
+            )
 
-            player_data = DraftedTeamSerializer(player).data
-            teams[user_id]["players"].append(player_data)
-            teams[user_id]["total_points"] += player.fantasy_points
+        except Exception as e:
+            logger.error(f"Error in drafted_teams: {e}")
+            # Fallback to original method on error
+            drafted_players = DraftedTeam.objects.filter(league=league).order_by(
+                "draft_order"
+            )
 
-        # Convert to list and sort by total points
-        teams_list = list(teams.values())
-        teams_list.sort(key=lambda x: x["total_points"], reverse=True)
+            teams = {}
+            for player in drafted_players:
+                if player.user:
+                    user_id = player.user.id
+                    user_data = UserSerializer(player.user).data
+                else:
+                    user_id = f"unclaimed_{player.team_membership.id}"
+                    user_data = None
 
-        return Response(
-            {
-                "teams": teams_list,
-                "total_teams": len(teams_list),
-                "total_players": drafted_players.count(),
-            }
-        )
+                if user_id not in teams:
+                    teams[user_id] = {
+                        "user": user_data,
+                        "team_name": player.team_name,
+                        "players": [],
+                        "total_points": 0,
+                    }
+
+                player_data = DraftedTeamSerializer(player).data
+                teams[user_id]["players"].append(player_data)
+                teams[user_id]["total_points"] += player.fantasy_points
+
+            teams_list = list(teams.values())
+            teams_list.sort(key=lambda x: x["total_points"], reverse=True)
+
+            return Response(
+                {
+                    "teams": teams_list,
+                    "total_teams": len(teams_list),
+                    "total_players": drafted_players.count(),
+                    "data_source": "static_points",
+                    "error": str(e),
+                }
+            )
 
     @action(detail=True, methods=["get"])
     def scoring_settings(self, request, pk=None):
@@ -1038,6 +1182,104 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 "updated_settings": updated_settings,
             }
         )
+
+    @action(detail=True, methods=["get"], permission_classes=[permissions.AllowAny])
+    def playoff_stats(self, request, pk=None):
+        """Get playoff stats for all drafted players with calculated fantasy points"""
+        league = self.get_object()
+
+        try:
+            from .nfl_utils import calculate_player_playoff_points
+
+            # Get year from query params or use league year
+            year = request.query_params.get("year")
+            if year:
+                try:
+                    year = int(year)
+                except ValueError:
+                    return Response(
+                        {"error": "Invalid year parameter"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            # Calculate playoff points for all drafted players
+            player_stats = calculate_player_playoff_points(league, year)
+
+            if not player_stats:
+                return Response(
+                    {
+                        "message": "No playoff stats available for this year",
+                        "teams": [],
+                        "playoff_rounds": [],
+                    }
+                )
+
+            # Organize by teams
+            teams = {}
+            playoff_rounds = set()
+
+            for player_id, player_data in player_stats.items():
+                player_info = player_data["player_info"]
+                user_key = (
+                    player_info["user"]
+                    if player_info["user"]
+                    else f"unclaimed_{player_info['team_name']}"
+                )
+
+                # Add to playoff rounds set
+                playoff_rounds.update(player_data["round_points"].keys())
+
+                if user_key not in teams:
+                    teams[user_key] = {
+                        "user": player_info["user"],
+                        "team_name": player_info["team_name"],
+                        "players": [],
+                        "total_points": 0.0,
+                        "round_totals": {},
+                    }
+
+                # Add player with playoff stats
+                player_with_stats = {
+                    "gsis_id": player_info["gsis_id"],
+                    "player_name": player_info["player_name"],
+                    "position": player_info["position"],
+                    "nfl_team": player_info["nfl_team"],
+                    "round_points": player_data["round_points"],
+                    "total_points": player_data["total_points"],
+                }
+
+                teams[user_key]["players"].append(player_with_stats)
+                teams[user_key]["total_points"] += player_data["total_points"]
+
+                # Add to round totals
+                for round_name, round_points in player_data["round_points"].items():
+                    if round_name not in teams[user_key]["round_totals"]:
+                        teams[user_key]["round_totals"][round_name] = 0.0
+                    teams[user_key]["round_totals"][round_name] += round_points
+
+            # Convert to list and sort by total points
+            teams_list = list(teams.values())
+            teams_list.sort(key=lambda x: x["total_points"], reverse=True)
+
+            # Sort playoff rounds
+            round_order = ["WC", "DIV", "CON", "SB"]
+            sorted_rounds = [r for r in round_order if r in playoff_rounds]
+
+            return Response(
+                {
+                    "teams": teams_list,
+                    "playoff_rounds": sorted_rounds,
+                    "total_teams": len(teams_list),
+                    "year": year or league.league_year,
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Error getting playoff stats: {e}")
+            return Response(
+                {"error": f"Failed to get playoff stats: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def destroy(self, request, *args, **kwargs):
         """Delete a league (admin only)"""

@@ -1,3 +1,8 @@
+import pandas as pd
+
+from backend.playoff_pool.models import League
+
+
 SCORING_MULTIPLIERS = {
     # -------------------
     # Passing
@@ -173,8 +178,42 @@ RELEVANT_DEFENSIVE_SCORING_STATS = {
 }
 
 
-def calculate_fantasy_points(row, scoring_dict):
-    points = 0
+def get_league_scoring_settings(league: League) -> dict:
+    """
+    Get compiled scoring settings for a league (custom + defaults).
+
+    Args:
+        league: League model instance
+
+    Returns:
+        dict: Complete scoring settings with custom overrides
+    """
+    from .models import LeagueScoringSetting
+
+    # Start with default scoring
+    scoring_settings = {**SCORING_MULTIPLIERS, **DEFENSE_SCORING_MULTIPLIERS}
+
+    # Override with custom league settings
+    custom_settings = LeagueScoringSetting.objects.filter(league=league)
+    for setting in custom_settings:
+        scoring_settings[setting.stat_name] = setting.multiplier
+
+    return scoring_settings
+
+
+def calculate_fantasy_points(row: pd.Series, scoring_dict: dict) -> float:
+    """
+    Calculate fantasy points for a player row based on a scoring dictionary.
+    Args:
+        row: pandas Series representing player stats
+        scoring_dict: dict mapping stat names to point multipliers
+    Returns:
+        float: Calculated fantasy points
+    """
+    points = 0.0
     for stat, value in scoring_dict.items():
-        points += (row.get(stat) or 0) * value
+        if stat in row and not pd.isna(value):
+            stat_value = row[stat]
+            if pd.notna(stat_value):
+                points += stat_value * value
     return points

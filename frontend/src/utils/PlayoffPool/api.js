@@ -208,10 +208,36 @@ class PlayoffPoolAPI {
     }
 
     // Teams
-    async getDraftedTeams(leagueId) {
-        const response = await this.api.get(
-            `api/leagues/${leagueId}/drafted_teams/`
-        );
+    async getDraftedTeams(leagueId, usePlayoffStats = true, year = null) {
+        const params = new URLSearchParams();
+        if (!usePlayoffStats) {
+            params.append("use_playoff_stats", "false");
+        }
+        if (year) {
+            params.append("year", year);
+        }
+
+        const queryString = params.toString();
+        const url = `api/leagues/${leagueId}/drafted_teams/${
+            queryString ? "?" + queryString : ""
+        }`;
+
+        const response = await this.api.get(url);
+        return response.data;
+    }
+
+    async getPlayoffStats(leagueId, year = null) {
+        const params = new URLSearchParams();
+        if (year) {
+            params.append("year", year);
+        }
+
+        const queryString = params.toString();
+        const url = `api/leagues/${leagueId}/playoff_stats/${
+            queryString ? "?" + queryString : ""
+        }`;
+
+        const response = await this.api.get(url);
         return response.data;
     }
 
