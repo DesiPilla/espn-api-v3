@@ -21,6 +21,8 @@ const DraftInterface = () => {
     const [loading, setLoading] = useState(true);
     const [draftLoading, setDraftLoading] = useState(false);
     const [undoLoading, setUndoLoading] = useState(false);
+    const [resetLoading, setResetLoading] = useState(false);
+    const [showResetWarning, setShowResetWarning] = useState(false);
     const [error, setError] = useState(null);
     const [showRosterPanel, setShowRosterPanel] = useState(false);
     const [selectedRosterTeam, setSelectedRosterTeam] = useState("");
@@ -103,8 +105,8 @@ const DraftInterface = () => {
         const limits = {};
         Object.entries(league.roster_config).forEach(([position, count]) => {
             if (position === "flex") {
-                // Handle flex positions separately
-                limits.flex = count;
+                // Handle flex positions separately - keep the entire flex config
+                limits.flex = count; // This should be the entire flex configuration object
             } else {
                 limits[position] = count;
             }
@@ -122,51 +124,66 @@ const DraftInterface = () => {
         const playersAtPosition =
             teamRoster.playersByPosition[position]?.length || 0;
 
-        // Check direct position limit
-        if (positionLimits[position]) {
-            if (playersAtPosition >= positionLimits[position]) {
-                // Check if can be flex
-                if (
-                    positionLimits.flex &&
-                    ["RB", "WR", "TE"].includes(position)
-                ) {
-                    const flexEligiblePositions = positionLimits.flex
-                        .eligible_positions || ["RB", "WR", "TE"];
-                    if (flexEligiblePositions.includes(position)) {
-                        // Count total flex eligible players
-                        const totalFlexPlayers = flexEligiblePositions.reduce(
-                            (sum, pos) => {
-                                return (
-                                    sum +
-                                    (teamRoster.playersByPosition[pos]
-                                        ?.length || 0)
-                                );
-                            },
-                            0
-                        );
+        // Get direct position limit
+        const directLimit = positionLimits[position] || 0;
 
-                        // Calculate how many flex spots are available
-                        const usedDirectSpots = flexEligiblePositions.reduce(
-                            (sum, pos) => {
-                                const directLimit = positionLimits[pos] || 0;
-                                const playersAtPos =
-                                    teamRoster.playersByPosition[pos]?.length ||
-                                    0;
-                                return (
-                                    sum + Math.min(playersAtPos, directLimit)
-                                );
-                            },
-                            0
-                        );
+        // Check if direct limit is exceeded
+        const directLimitExceeded =
+            directLimit > 0 && playersAtPosition >= directLimit;
 
-                        const availableFlexSpots =
-                            (positionLimits.flex.count || 0) -
-                            (totalFlexPlayers - usedDirectSpots);
-                        return availableFlexSpots > 0;
-                    }
-                }
+        // Check if this position is FLEX-eligible
+        const isFlexEligible =
+            positionLimits.flex &&
+            positionLimits.flex.eligible_positions &&
+            positionLimits.flex.eligible_positions.includes(position);
+
+        // If direct limit is exceeded OR position has no direct limit but is flex-eligible,
+        // check FLEX availability
+        if (directLimitExceeded || (directLimit === 0 && isFlexEligible)) {
+            if (isFlexEligible) {
+                const flexEligiblePositions =
+                    positionLimits.flex.eligible_positions;
+
+                // Count total flex eligible players
+                const totalFlexPlayers = flexEligiblePositions.reduce(
+                    (sum, pos) => {
+                        return (
+                            sum +
+                            (teamRoster.playersByPosition[pos]?.length || 0)
+                        );
+                    },
+                    0
+                );
+
+                // Calculate how many flex spots are available
+                const usedDirectSpots = flexEligiblePositions.reduce(
+                    (sum, pos) => {
+                        const directLimit = positionLimits[pos] || 0;
+                        const playersAtPos =
+                            teamRoster.playersByPosition[pos]?.length || 0;
+                        return sum + Math.min(playersAtPos, directLimit);
+                    },
+                    0
+                );
+
+                const availableFlexSpots =
+                    (positionLimits.flex.count || 0) -
+                    (totalFlexPlayers - usedDirectSpots);
+                return availableFlexSpots > 0;
+            } else {
+                // Position has direct limit but can't use FLEX
                 return false;
             }
+        }
+
+        // If we have a direct limit and haven't exceeded it, allow the draft
+        if (directLimit > 0 && playersAtPosition < directLimit) {
+            return true;
+        }
+
+        // If no direct limit and not flex-eligible, block the draft
+        if (directLimit === 0 && !isFlexEligible) {
+            return false;
         }
 
         return true;
@@ -379,11 +396,40 @@ const DraftInterface = () => {
         }
     };
 
+    const handleResetDraft = () => {
+        setShowResetWarning(true);
+    };
+
+    const confirmResetDraft = async () => {
+        try {
+            setResetLoading(true);
+            setShowResetWarning(false);
+            await playoffPoolAPI.resetDraft(leagueId);
+            // Reload data to reflect changes
+            await loadDraftData();
+            alert("Draft has been successfully reset!");
+        } catch (err) {
+            alert(err.response?.data?.error || "Failed to reset draft");
+            console.error("Error resetting draft:", err);
+        } finally {
+            setResetLoading(false);
+        }
+    };
+
+    const cancelResetDraft = () => {
+        setShowResetWarning(false);
+    };
+
     // Filter players based on position and search term
     const filteredPlayers = availablePlayers
         .filter((player) => {
             const matchesPosition =
-                filterPosition === "ALL" || player.position === filterPosition;
+                filterPosition === "ALL" ||
+                player.position === filterPosition ||
+                (filterPosition === "FLEX" &&
+                    league?.roster_config?.flex?.eligible_positions?.includes(
+                        player.position
+                    ));
             const matchesSearch =
                 !searchTerm ||
                 player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -432,12 +478,23 @@ const DraftInterface = () => {
         if (!league || !league.positions_included) {
             return ["ALL", ...new Set(availablePlayers.map((p) => p.position))];
         }
-        return [
+        const basePositions = [
             "ALL",
             ...league.positions_included.filter((pos) =>
                 availablePlayers.some((p) => p.position === pos)
             ),
         ];
+
+        // Add FLEX if flex is configured
+        if (
+            league.roster_config &&
+            league.roster_config.flex &&
+            league.roster_config.flex.count > 0
+        ) {
+            basePositions.push("FLEX");
+        }
+
+        return basePositions;
     }, [league, availablePlayers]);
     const isAdmin = league?.user_membership?.is_admin;
 
@@ -509,39 +566,106 @@ const DraftInterface = () => {
                         </h1>
                         <p className="text-gray-600">{league?.name}</p>
                     </div>
-                    <button
-                        onClick={handleCompleteDraft}
+                    <div
                         style={{
-                            background:
-                                "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "12px",
-                            padding: "12px 24px",
-                            fontSize: "16px",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            boxShadow: "0 4px 12px rgba(220, 38, 38, 0.3)",
-                            transition: "all 0.2s ease",
                             display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
+                            gap: "12px",
                             marginTop: "32px",
                         }}
-                        onMouseEnter={(e) => {
-                            e.target.style.transform = "translateY(-1px)";
-                            e.target.style.boxShadow =
-                                "0 6px 16px rgba(220, 38, 38, 0.4)";
-                        }}
-                        onMouseLeave={(e) => {
-                            e.target.style.transform = "translateY(0)";
-                            e.target.style.boxShadow =
-                                "0 4px 12px rgba(220, 38, 38, 0.3)";
-                        }}
-                        title="Finalize and close the draft"
                     >
-                        🏁 Complete Draft
-                    </button>
+                        <button
+                            onClick={handleResetDraft}
+                            disabled={
+                                resetLoading || draftedPlayers.length === 0
+                            }
+                            style={{
+                                background:
+                                    resetLoading || draftedPlayers.length === 0
+                                        ? "#9ca3af"
+                                        : "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "12px",
+                                padding: "12px 24px",
+                                fontSize: "16px",
+                                fontWeight: "600",
+                                cursor:
+                                    resetLoading || draftedPlayers.length === 0
+                                        ? "not-allowed"
+                                        : "pointer",
+                                boxShadow:
+                                    resetLoading || draftedPlayers.length === 0
+                                        ? "none"
+                                        : "0 4px 12px rgba(245, 158, 11, 0.3)",
+                                transition: "all 0.2s ease",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                            }}
+                            onMouseEnter={(e) => {
+                                if (
+                                    !resetLoading &&
+                                    draftedPlayers.length > 0
+                                ) {
+                                    e.target.style.transform =
+                                        "translateY(-1px)";
+                                    e.target.style.boxShadow =
+                                        "0 6px 16px rgba(245, 158, 11, 0.4)";
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (
+                                    !resetLoading &&
+                                    draftedPlayers.length > 0
+                                ) {
+                                    e.target.style.transform = "translateY(0)";
+                                    e.target.style.boxShadow =
+                                        "0 4px 12px rgba(245, 158, 11, 0.3)";
+                                }
+                            }}
+                            title={
+                                draftedPlayers.length === 0
+                                    ? "No draft picks to reset"
+                                    : "Reset the entire draft"
+                            }
+                        >
+                            {resetLoading
+                                ? "🔄 Resetting..."
+                                : "🔄 Reset Draft"}
+                        </button>
+                        <button
+                            onClick={handleCompleteDraft}
+                            style={{
+                                background:
+                                    "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "12px",
+                                padding: "12px 24px",
+                                fontSize: "16px",
+                                fontWeight: "600",
+                                cursor: "pointer",
+                                boxShadow: "0 4px 12px rgba(220, 38, 38, 0.3)",
+                                transition: "all 0.2s ease",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.transform = "translateY(-1px)";
+                                e.target.style.boxShadow =
+                                    "0 6px 16px rgba(220, 38, 38, 0.4)";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.transform = "translateY(0)";
+                                e.target.style.boxShadow =
+                                    "0 4px 12px rgba(220, 38, 38, 0.3)";
+                            }}
+                            title="Finalize and close the draft"
+                        >
+                            🏁 Complete Draft
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -2142,6 +2266,147 @@ const DraftInterface = () => {
                     ;
                 </div>
             </div>
+
+            {/* Reset Draft Warning Modal */}
+            {showResetWarning && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0, 0, 0, 0.7)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 1001,
+                    }}
+                >
+                    <div
+                        style={{
+                            backgroundColor: "white",
+                            borderRadius: "12px",
+                            padding: "32px",
+                            maxWidth: "500px",
+                            width: "90%",
+                            boxShadow: "0 20px 25px rgba(0, 0, 0, 0.15)",
+                        }}
+                    >
+                        <div
+                            style={{
+                                textAlign: "center",
+                                marginBottom: "24px",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    backgroundColor: "#dc2626",
+                                    borderRadius: "50%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    margin: "0 auto 16px",
+                                    fontSize: "24px",
+                                }}
+                            >
+                                ⚠️
+                            </div>
+                            <h3
+                                style={{
+                                    fontSize: "20px",
+                                    fontWeight: "bold",
+                                    color: "#1f2937",
+                                    margin: "0 0 8px 0",
+                                }}
+                            >
+                                Warning: Reset Entire Draft
+                            </h3>
+                            <p
+                                style={{
+                                    fontSize: "14px",
+                                    color: "#6b7280",
+                                    lineHeight: "1.5",
+                                    margin: 0,
+                                }}
+                            >
+                                This will delete ALL draft picks and return the
+                                league to "ready to draft" status. This action
+                                cannot be undone.
+                            </p>
+                        </div>
+
+                        <div
+                            style={{
+                                padding: "20px",
+                                backgroundColor: "#fef2f2",
+                                borderRadius: "8px",
+                                marginBottom: "24px",
+                                border: "1px solid #f87171",
+                            }}
+                        >
+                            <p
+                                style={{
+                                    fontSize: "14px",
+                                    color: "#991b1b",
+                                    fontWeight: "500",
+                                    margin: 0,
+                                }}
+                            >
+                                {draftedPlayers.length > 0
+                                    ? `This will remove ${draftedPlayers.length} draft picks. All teams will need to re-draft their players.`
+                                    : "No draft picks found to reset."}
+                            </p>
+                        </div>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "12px",
+                                justifyContent: "flex-end",
+                            }}
+                        >
+                            <button
+                                onClick={cancelResetDraft}
+                                style={{
+                                    padding: "12px 20px",
+                                    backgroundColor: "white",
+                                    border: "1px solid #d1d5db",
+                                    borderRadius: "8px",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    color: "#374151",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmResetDraft}
+                                disabled={resetLoading}
+                                style={{
+                                    padding: "12px 20px",
+                                    backgroundColor: resetLoading
+                                        ? "#fca5a5"
+                                        : "#dc2626",
+                                    border: "none",
+                                    borderRadius: "8px",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    color: "white",
+                                    cursor: resetLoading
+                                        ? "not-allowed"
+                                        : "pointer",
+                                }}
+                            >
+                                {resetLoading ? "Resetting..." : "Reset Draft"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

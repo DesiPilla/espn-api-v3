@@ -42,3 +42,13 @@
 ## Team rosters page
 - [x] Display actual scores, not the draft fantasy points
 
+
+
+- [x] Edit settings toggle
+- [x] Points allowed settings must show up in the scoring settings
+- [x] Points allowed must appear in calculations
+- [x] When rendering points allowed, include a "-" between the points, and replace "Plus" with "+"
+- [ ] When rendering points allowed, put them in the correct order (not alphabetic, but based on ordinal)
+- [x] Add Flex to the dropdown
+- [x] Reset draft option
+- [x] Team names editable

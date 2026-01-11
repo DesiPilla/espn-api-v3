@@ -213,8 +213,13 @@ const LeagueSetup = () => {
           return;
       }
 
-      if (formData.positions_included.length === 0) {
-          setError("At least one position must be selected");
+      if (
+          formData.positions_included.length === 0 &&
+          (!formData.flex.enabled || formData.flex.count === 0)
+      ) {
+          setError(
+              "At least one position must be selected or flex must be enabled"
+          );
           return;
       }
 
@@ -236,7 +241,18 @@ const LeagueSetup = () => {
               name: formData.name.trim(),
               league_year: formData.league_year,
               num_teams: formData.num_teams,
-              positions_included: formData.positions_included,
+              positions_included: (() => {
+                  let positions = [...formData.positions_included];
+                  // Add flex eligible positions if flex is enabled
+                  if (formData.flex.enabled && formData.flex.count > 0) {
+                      formData.flex.eligible_positions.forEach((pos) => {
+                          if (!positions.includes(pos)) {
+                              positions.push(pos);
+                          }
+                      });
+                  }
+                  return positions;
+              })(),
               roster_config: {
                   ...formData.roster_config,
                   ...(formData.flex.enabled && formData.flex.count > 0

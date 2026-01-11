@@ -6,6 +6,9 @@ const ScoringSettingsEditor = ({
     onClose,
     onSave,
     readOnly = false,
+    isAdmin = false,
+    draftInProgress = false,
+    draftComplete = false,
 }) => {
     const [scoringSettings, setScoringSettings] = useState({});
     const [originalSettings, setOriginalSettings] = useState({});
@@ -13,6 +16,8 @@ const ScoringSettingsEditor = ({
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
+    const [adminOverride, setAdminOverride] = useState(false);
+    const [showAdminWarning, setShowAdminWarning] = useState(false);
 
     useEffect(() => {
         loadScoringSettings();
@@ -93,7 +98,32 @@ const ScoringSettingsEditor = ({
         onClose && onClose();
     };
 
+    const handleAdminToggle = () => {
+        if (!adminOverride && (draftInProgress || draftComplete)) {
+            // Show warning when trying to enable override during draft
+            setShowAdminWarning(true);
+        } else {
+            // Toggle the state normally (either turning off or no draft restriction)
+            setAdminOverride(!adminOverride);
+        }
+    };
+
+    const confirmAdminOverride = () => {
+        setAdminOverride(true);
+        setShowAdminWarning(false);
+    };
+
+    const cancelAdminOverride = () => {
+        setShowAdminWarning(false);
+    };
+
+    // Determine if fields should be editable
+    const isEditable =
+        (!readOnly && !draftInProgress && !draftComplete) ||
+        (isAdmin && adminOverride);
+
     const hasChanges =
+        isEditable &&
         JSON.stringify(scoringSettings) !== JSON.stringify(originalSettings);
 
     if (loading) {
@@ -164,29 +194,83 @@ const ScoringSettingsEditor = ({
                         borderRadius: "0.5rem 0.5rem 0 0",
                     }}
                 >
-                    <h2
+                    <div
                         style={{
-                            fontSize: "1.5rem",
-                            fontWeight: "bold",
-                            color: "white",
-                            margin: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
                         }}
                     >
-                        {readOnly
-                            ? "Scoring Settings"
-                            : "Edit Scoring Settings"}
-                    </h2>
-                    <p
-                        style={{
-                            color: "#e2e8f0",
-                            fontSize: "0.875rem",
-                            margin: "0.5rem 0 0 0",
-                        }}
-                    >
-                        {readOnly
-                            ? "Current point values for each statistical category"
-                            : "Customize point values for each statistical category"}
-                    </p>
+                        <div>
+                            <h2
+                                style={{
+                                    fontSize: "1.5rem",
+                                    fontWeight: "bold",
+                                    color: "white",
+                                    margin: 0,
+                                }}
+                            >
+                                {isEditable
+                                    ? "Edit Scoring Settings"
+                                    : "Scoring Settings"}
+                            </h2>
+                            <p
+                                style={{
+                                    color: "#e2e8f0",
+                                    fontSize: "0.875rem",
+                                    margin: "0.5rem 0 0 0",
+                                }}
+                            >
+                                {isEditable
+                                    ? "Customize point values for each statistical category"
+                                    : "Current point values for each statistical category"}
+                            </p>
+                        </div>
+
+                        {/* Admin Toggle */}
+                        {isAdmin && (draftInProgress || draftComplete) && (
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "flex-end",
+                                }}
+                            >
+                                <label
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px",
+                                        color: "white",
+                                        fontSize: "0.875rem",
+                                        cursor: "pointer",
+                                        fontWeight: "500",
+                                    }}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={adminOverride}
+                                        onChange={handleAdminToggle}
+                                        style={{
+                                            width: "16px",
+                                            height: "16px",
+                                            accentColor: "#3b82f6",
+                                        }}
+                                    />
+                                    Admin Override
+                                </label>
+                                <span
+                                    style={{
+                                        fontSize: "0.75rem",
+                                        color: "#cbd5e1",
+                                        marginTop: "2px",
+                                    }}
+                                >
+                                    Allow editing during draft
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Content */}
@@ -275,8 +359,8 @@ const ScoringSettingsEditor = ({
                                                                 e.target.value
                                                             )
                                                         }
-                                                        readOnly={readOnly}
-                                                        disabled={readOnly}
+                                                        readOnly={!isEditable}
+                                                        disabled={!isEditable}
                                                         style={{
                                                             width: "80px",
                                                             padding:
@@ -290,10 +374,10 @@ const ScoringSettingsEditor = ({
                                                             marginLeft:
                                                                 "0.5rem",
                                                             backgroundColor:
-                                                                readOnly
+                                                                !isEditable
                                                                     ? "#f3f4f6"
                                                                     : "white",
-                                                            cursor: readOnly
+                                                            cursor: !isEditable
                                                                 ? "not-allowed"
                                                                 : "text",
                                                         }}
@@ -337,9 +421,9 @@ const ScoringSettingsEditor = ({
                             cursor: "pointer",
                         }}
                     >
-                        {readOnly ? "Close" : "Cancel"}
+                        Close
                     </button>
-                    {!readOnly && (
+                    {isEditable && (
                         <button
                             onClick={handleSave}
                             disabled={!hasChanges || saving}
@@ -365,6 +449,146 @@ const ScoringSettingsEditor = ({
                     )}
                 </div>
             </div>
+
+            {/* Admin Warning Popup */}
+            {showAdminWarning && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0, 0, 0, 0.7)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 1001,
+                    }}
+                >
+                    <div
+                        style={{
+                            backgroundColor: "white",
+                            borderRadius: "12px",
+                            padding: "32px",
+                            maxWidth: "500px",
+                            width: "90%",
+                            boxShadow: "0 20px 25px rgba(0, 0, 0, 0.15)",
+                        }}
+                    >
+                        <div
+                            style={{
+                                textAlign: "center",
+                                marginBottom: "24px",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    backgroundColor: "#fbbf24",
+                                    borderRadius: "50%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    margin: "0 auto 16px",
+                                    fontSize: "24px",
+                                }}
+                            >
+                                ⚠️
+                            </div>
+                            <h3
+                                style={{
+                                    fontSize: "20px",
+                                    fontWeight: "bold",
+                                    color: "#1f2937",
+                                    margin: "0 0 8px 0",
+                                }}
+                            >
+                                Warning: Edit Scoring During Draft
+                            </h3>
+                            <p
+                                style={{
+                                    fontSize: "14px",
+                                    color: "#6b7280",
+                                    lineHeight: "1.5",
+                                    margin: 0,
+                                }}
+                            >
+                                Changing scoring settings{" "}
+                                {draftInProgress
+                                    ? "during an active draft"
+                                    : "after the draft is complete"}{" "}
+                                could impact player scores and league fairness.
+                                This action should only be taken to fix critical
+                                errors.
+                            </p>
+                        </div>
+
+                        <div
+                            style={{
+                                padding: "20px",
+                                backgroundColor: "#fef3c7",
+                                borderRadius: "8px",
+                                marginBottom: "24px",
+                                border: "1px solid #fbbf24",
+                            }}
+                        >
+                            <p
+                                style={{
+                                    fontSize: "14px",
+                                    color: "#92400e",
+                                    fontWeight: "500",
+                                    margin: 0,
+                                }}
+                            >
+                                By proceeding, you acknowledge that this change
+                                may affect calculated scores and agree to take
+                                responsibility for maintaining league fairness.
+                            </p>
+                        </div>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "12px",
+                                justifyContent: "flex-end",
+                            }}
+                        >
+                            <button
+                                onClick={cancelAdminOverride}
+                                style={{
+                                    padding: "12px 20px",
+                                    backgroundColor: "white",
+                                    border: "1px solid #d1d5db",
+                                    borderRadius: "8px",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    color: "#374151",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmAdminOverride}
+                                style={{
+                                    padding: "12px 20px",
+                                    backgroundColor: "#ef4444",
+                                    border: "none",
+                                    borderRadius: "8px",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    color: "white",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                I Understand - Allow Editing
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

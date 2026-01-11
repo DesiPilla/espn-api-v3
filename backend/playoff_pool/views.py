@@ -185,7 +185,12 @@ def scoring_settings(request):
                 category = "Receiving"
             elif "fg_" in stat or "pat_" in stat or "gwfg_" in stat:
                 category = "Kicking"
-            elif "def_" in stat or "fumble_recovery" in stat or "special_teams" in stat:
+            elif (
+                "def_" in stat
+                or "fumble_recovery" in stat
+                or "special_teams" in stat
+                or "points_allowed" in stat
+            ):
                 category = "Defense/Special Teams"
             elif any(x in stat for x in ["return", "punt", "kickoff"]):
                 category = "Returns"
@@ -205,6 +210,22 @@ def scoring_settings(request):
                 display_name = "Rushing Yards"
             elif stat == "receiving_yards":
                 display_name = "Receiving Yards"
+            elif stat == "points_allowed":
+                display_name = "Points Allowed"
+            elif stat == "points_allowed_0":
+                display_name = "Points Allowed: 0 Points"
+            elif stat == "points_allowed_1_6":
+                display_name = "Points Allowed: 1-6 Points"
+            elif stat == "points_allowed_7_13":
+                display_name = "Points Allowed: 7-13 Points"
+            elif stat == "points_allowed_14_20":
+                display_name = "Points Allowed: 14-20 Points"
+            elif stat == "points_allowed_21_27":
+                display_name = "Points Allowed: 21-27 Points"
+            elif stat == "points_allowed_28_34":
+                display_name = "Points Allowed: 28-34 Points"
+            elif stat == "points_allowed_35_plus":
+                display_name = "Points Allowed: 35+ Points"
             elif "tds" in stat:
                 display_name = display_name.replace("Tds", "Touchdowns")
 
@@ -386,6 +407,22 @@ class LeagueViewSet(viewsets.ModelViewSet):
             return "Rushing Yards"
         elif stat_name == "receiving_yards":
             return "Receiving Yards"
+        elif stat_name == "points_allowed":
+            return "Points Allowed"
+        elif stat_name == "points_allowed_0":
+            return "Points Allowed: 0 Points"
+        elif stat_name == "points_allowed_1_6":
+            return "Points Allowed: 1-6 Points"
+        elif stat_name == "points_allowed_7_13":
+            return "Points Allowed: 7-13 Points"
+        elif stat_name == "points_allowed_14_20":
+            return "Points Allowed: 14-20 Points"
+        elif stat_name == "points_allowed_21_27":
+            return "Points Allowed: 21-27 Points"
+        elif stat_name == "points_allowed_28_34":
+            return "Points Allowed: 28-34 Points"
+        elif stat_name == "points_allowed_35_plus":
+            return "Points Allowed: 35+ Points"
         elif "tds" in stat_name:
             return display_name.replace("Tds", "Touchdowns")
         return display_name
@@ -524,8 +561,17 @@ class LeagueViewSet(viewsets.ModelViewSet):
             LeagueMembershipSerializer(team).data, status=status.HTTP_200_OK
         )
 
-    @action(detail=True, methods=["delete"], url_path="teams/(?P<team_id>[^/.]+)")
-    def remove_team(self, request, pk=None, team_id=None):
+    @action(
+        detail=True, methods=["delete", "patch"], url_path="teams/(?P<team_id>[^/.]+)"
+    )
+    def manage_team(self, request, pk=None, team_id=None):
+        """Remove or update a team - DELETE to remove, PATCH to update team details"""
+        if request.method == "DELETE":
+            return self._remove_team(request, pk, team_id)
+        elif request.method == "PATCH":
+            return self._update_team(request, pk, team_id)
+
+    def _remove_team(self, request, pk=None, team_id=None):
         """Remove a team from the league (admin only)"""
         league = self.get_object()
 
@@ -548,6 +594,73 @@ class LeagueViewSet(viewsets.ModelViewSet):
 
         team.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def _update_team(self, request, pk=None, team_id=None):
+        """Update team details (name, etc.) - user can update their own team or admin can update any"""
+        league = self.get_object()
+
+        if not team_id:
+            return Response(
+                {"error": "Team ID is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            team = LeagueMembership.objects.get(id=team_id, league=league)
+        except LeagueMembership.DoesNotExist:
+            return Response(
+                {"error": "Team not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Check if the user owns this team or is an admin
+        user_membership = LeagueMembership.objects.filter(
+            user=request.user, league=league, is_admin=True
+        ).first()
+
+        if team.user != request.user and not user_membership:
+            return Response(
+                {"error": "You can only update your own team or you must be an admin"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Get the new team name from request data
+        new_team_name = request.data.get("team_name", "").strip()
+
+        if not new_team_name:
+            return Response(
+                {"error": "Team name is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if len(new_team_name) > 100:  # Assuming reasonable max length
+            return Response(
+                {"error": "Team name must be 100 characters or less"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check if team name is already taken in this league
+        existing_team = (
+            LeagueMembership.objects.filter(league=league, team_name=new_team_name)
+            .exclude(id=team.id)
+            .first()
+        )
+
+        if existing_team:
+            return Response(
+                {"error": "Team name is already taken in this league"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        old_team_name = team.team_name
+        team.team_name = new_team_name
+        team.save()
+
+        return Response(
+            {
+                "message": f"Team name updated from '{old_team_name}' to '{new_team_name}'",
+                "team_name": new_team_name,
+                "success": True,
+            },
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=["post"])
     def unclaim_team(self, request, pk=None):
@@ -615,6 +728,20 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 if league.positions_included
                 else ["QB", "RB", "WR", "TE", "K", "DST"]
             )
+
+            # Add flex eligible positions if flex is configured
+            if league.roster_config and "flex" in league.roster_config:
+                flex_config = league.roster_config["flex"]
+                if (
+                    isinstance(flex_config, dict)
+                    and "eligible_positions" in flex_config
+                ):
+                    flex_eligible = flex_config["eligible_positions"]
+                    # Add flex eligible positions to the list if not already included
+                    for pos in flex_eligible:
+                        if pos not in positions:
+                            positions.append(pos)
+
             all_players = query_playoff_players_from_db(
                 year=nfl_year, positions_to_keep=positions
             )
@@ -718,7 +845,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 {"error": "Player already drafted"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Get player info
+        # Get player info first to check position limits
         try:
             nfl_year = (
                 league.league_year
@@ -730,6 +857,19 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 if league.positions_included
                 else ["QB", "RB", "WR", "TE", "K", "DST"]
             )
+
+            # Add flex eligible positions if flex is configured
+            if league.roster_config and "flex" in league.roster_config:
+                flex_config = league.roster_config["flex"]
+                if (
+                    isinstance(flex_config, dict)
+                    and "eligible_positions" in flex_config
+                ):
+                    flex_eligible = flex_config["eligible_positions"]
+                    # Add flex eligible positions to the list if not already included
+                    for pos in flex_eligible:
+                        if pos not in positions:
+                            positions.append(pos)
 
             available_players = query_playoff_players_from_db(
                 year=nfl_year, positions_to_keep=positions
@@ -745,6 +885,18 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     {"error": "Player not found"}, status=status.HTTP_400_BAD_REQUEST
                 )
 
+            player_position = player_row.get("position", "Unknown")
+
+            # Validate roster limits before drafting
+            if league.roster_config and target_membership:
+                error_message = self._validate_roster_limits(
+                    league, target_membership, player_position
+                )
+                if error_message:
+                    return Response(
+                        {"error": error_message}, status=status.HTTP_400_BAD_REQUEST
+                    )
+
             # Get next draft order
             next_draft_order = DraftedTeam.objects.filter(league=league).count() + 1
 
@@ -757,7 +909,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     team_name=target_membership.team_name,
                     gsis_id=gsis_id,
                     player_name=player_row.get("full_name", "Unknown"),
-                    position=player_row.get("position", "Unknown"),
+                    position=player_position,
                     nfl_team=player_row.get("team", "Unknown"),
                     fantasy_points=player_row.get("fantasy_points", 0),
                     draft_order=next_draft_order,
@@ -775,6 +927,90 @@ class LeagueViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    def _validate_roster_limits(self, league, team_membership, player_position):
+        """
+        Validate if a team can draft another player at the given position.
+        Returns error message if not allowed, None if allowed.
+        """
+        if not league.roster_config:
+            return None
+
+        # Get current roster for this team
+        current_roster = DraftedTeam.objects.filter(
+            league=league, team_membership=team_membership
+        )
+
+        # Count players by position
+        position_counts = {}
+        for drafted_player in current_roster:
+            pos = drafted_player.position
+            position_counts[pos] = position_counts.get(pos, 0) + 1
+
+        logger.info(
+            f"ROSTER_VALIDATION: Team {team_membership.team_name} position counts: {position_counts}"
+        )
+        logger.info(
+            f"ROSTER_VALIDATION: Trying to draft {player_position}, league config: {league.roster_config}"
+        )
+
+        # Check direct position limit first
+        direct_limit = league.roster_config.get(player_position, 0)
+        current_at_position = position_counts.get(player_position, 0)
+
+        # For positions with a direct limit, check if it's exceeded
+        direct_limit_exceeded = direct_limit > 0 and current_at_position >= direct_limit
+
+        # Check if this position is FLEX-eligible
+        flex_config = league.roster_config.get("flex")
+        is_flex_eligible = (
+            flex_config
+            and isinstance(flex_config, dict)
+            and player_position in flex_config.get("eligible_positions", [])
+        )
+
+        # If direct limit is exceeded OR position has no direct limit but is flex-eligible,
+        # check FLEX availability
+        if direct_limit_exceeded or (direct_limit == 0 and is_flex_eligible):
+            if is_flex_eligible:
+                # Check FLEX availability
+                flex_count = flex_config.get("count", 0)
+                flex_eligible_positions = flex_config.get("eligible_positions", [])
+
+                # Count all flex-eligible players currently on roster
+                total_flex_eligible = sum(
+                    position_counts.get(pos, 0) for pos in flex_eligible_positions
+                )
+
+                # Count players using direct position slots
+                used_direct_slots = sum(
+                    min(position_counts.get(pos, 0), league.roster_config.get(pos, 0))
+                    for pos in flex_eligible_positions
+                )
+
+                # Players in FLEX = total eligible - those using direct slots
+                players_in_flex = total_flex_eligible - used_direct_slots
+
+                if players_in_flex >= flex_count:
+                    return f"Cannot draft {player_position}: FLEX spots are full ({players_in_flex}/{flex_count})"
+
+                # Allow the draft to FLEX
+                return None
+            else:
+                # Position has direct limit but can't use FLEX
+                return f"Cannot draft {player_position}: position limit of {direct_limit} reached"
+
+        # If we have a direct limit and haven't exceeded it, allow the draft
+        if direct_limit > 0 and current_at_position < direct_limit:
+            return None
+
+        # If no direct limit and not flex-eligible, block the draft
+        if direct_limit == 0 and not is_flex_eligible:
+            return (
+                f"Cannot draft {player_position}: position not allowed in this league"
+            )
+
+        return None  # Allow the draft
 
     @action(detail=True, methods=["post"])
     def complete_draft(self, request, pk=None):
@@ -864,6 +1100,58 @@ class LeagueViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(
+        detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated]
+    )
+    def reset_draft(self, request, pk=None):
+        """Reset the entire draft - delete all draft picks (admin only)"""
+        league = self.get_object()
+
+        # Check if user is admin
+        membership = LeagueMembership.objects.filter(
+            league=league, user=request.user, is_admin=True
+        ).first()
+
+        if not membership:
+            return Response(
+                {"error": "Only league administrators can reset the draft"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            # Delete all drafted players for this league
+            drafted_players = DraftedTeam.objects.filter(league=league)
+            player_count = drafted_players.count()
+
+            if player_count == 0:
+                return Response(
+                    {"error": "No draft picks to reset"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            drafted_players.delete()
+
+            # Reset draft status
+            league.draft_started_at = None
+            league.draft_completed_at = None
+            league.is_draft_complete = False
+            league.save()
+
+            return Response(
+                {
+                    "message": f"Successfully reset draft - removed {player_count} draft picks",
+                    "success": True,
+                    "players_removed": player_count,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to reset draft: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
     @action(detail=True, methods=["get"], permission_classes=[permissions.AllowAny])
@@ -1084,11 +1372,15 @@ class LeagueViewSet(viewsets.ModelViewSet):
             category = setting.category or "Miscellaneous"
             if category not in categorized_settings:
                 categorized_settings[category] = []
+
+            # Use corrected display name (in case old ones were saved with incorrect format)
+            corrected_display_name = self._get_stat_display_name(setting.stat_name)
+
             categorized_settings[category].append(
                 {
                     "id": setting.id,
                     "stat_name": setting.stat_name,
-                    "display_name": setting.display_name,
+                    "display_name": corrected_display_name,
                     "multiplier": setting.multiplier,
                     "is_defensive_stat": setting.is_defensive_stat,
                 }

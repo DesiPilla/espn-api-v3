@@ -4,12 +4,36 @@ NFL utility functions for playoff pool application.
 from backend.playoff_pool.scoring import (
     calculate_fantasy_points,
     get_league_scoring_settings,
+    DEFENSE_SCORING_MULTIPLIERS,
 )
 import nflreadpy as nfl
 import pandas as pd
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+
+# Playoff teams for each year
+PLAYOFF_TEAMS = {
+    2024: [
+        "KC",
+        "BUF",
+        "BAL",
+        "HOU",
+        "LAC",
+        "PIT",
+        "DEN",
+        "DET",
+        "PHI",
+        "TB",
+        "LA",  # Rams are encoded as "LA" in nflreadpy
+        "MIN",
+        "WAS",
+        "GB",
+    ],
+    2025: [  # Add 2025 teams when known
+        # Will need to be updated when playoffs are set
+    ],
+}
 
 
 def get_current_nfl_season():
@@ -74,19 +98,14 @@ def calculate_player_playoff_points(league, year=None):
         weekly_stats = nfl.load_player_stats([year]).to_pandas()
         weekly_stats = weekly_stats[weekly_stats["season_type"] == "POST"]
 
-        # Debug: Print column names to understand data structure
-        print(
-            f"Debug: Available columns in weekly_stats: {list(weekly_stats.columns)[:10]}..."
-        )  # Show first 10
-
         if weekly_stats.empty:
             print(f"Debug: No playoff stats found for year {year}")
             return {}
 
         # Get playoff schedule to map weeks to game types
         try:
-            schedule = nfl.import_schedules([year])
-            playoff_games = schedule[schedule["playoff"] == 1].copy()
+            schedule = nfl.load_schedules([year]).to_pandas()
+            playoff_games = schedule[schedule["game_type"] != "REG"].copy()
 
             if playoff_games.empty:
                 print(f"Debug: No playoff games found in schedule for year {year}")
@@ -147,12 +166,91 @@ def calculate_player_playoff_points(league, year=None):
         from .models import DraftedTeam
 
         drafted_players = DraftedTeam.objects.filter(league=league)
-        print(f"Debug: Found {drafted_players.count()} drafted players")
+
+        # Separate D/ST and regular players
+        dst_players = drafted_players.filter(position="DST")
+        regular_players = drafted_players.exclude(position="DST")
+
+        # Load team stats for D/ST calculations
+        team_stats = None
+        if dst_players.exists():
+            try:
+                team_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
+                # Filter for playoff teams and postseason
+                if year in PLAYOFF_TEAMS:
+                    team_stats = team_stats[
+                        team_stats["team"].isin(PLAYOFF_TEAMS[year])
+                        & (team_stats["season_type"] == "POST")
+                    ]
+
+                # Add opponent scores efficiently
+                if not team_stats.empty:
+                    try:
+                        schedules = nfl.load_schedules(seasons=[year]).to_pandas()
+                        playoff_schedules = schedules[
+                            (schedules["game_type"] != "REG")
+                            & (schedules["season"] == year)
+                        ].copy()
+
+                        # Create mapping for home teams (opponent score = away_score)
+                        home_mapping = playoff_schedules[
+                            ["season", "week", "home_team", "away_score"]
+                        ].copy()
+                        home_mapping.columns = [
+                            "season",
+                            "week",
+                            "team",
+                            "opponent_score",
+                        ]
+
+                        # Create mapping for away teams (opponent score = home_score)
+                        away_mapping = playoff_schedules[
+                            ["season", "week", "away_team", "home_score"]
+                        ].copy()
+                        away_mapping.columns = [
+                            "season",
+                            "week",
+                            "team",
+                            "opponent_score",
+                        ]
+
+                        # Combine both mappings
+                        score_mapping = pd.concat(
+                            [home_mapping, away_mapping], ignore_index=True
+                        )
+
+                        # Merge with team stats
+                        team_stats = team_stats.merge(
+                            score_mapping, on=["season", "week", "team"], how="left"
+                        )
+
+                        # Fill any missing opponent scores with 0
+                        team_stats["opponent_score"] = team_stats[
+                            "opponent_score"
+                        ].fillna(0)
+
+                        # Only keep defensive stats
+                        team_stats = team_stats[
+                            ["season", "week", "team", "opponent_score"]
+                            + [
+                                col
+                                for col in DEFENSE_SCORING_MULTIPLIERS
+                                if col in team_stats.columns
+                            ]
+                        ]
+                    except Exception as e:
+                        print(f"Warning: Could not add opponent scores: {e}")
+                        team_stats["opponent_score"] = 0
+
+            except Exception as e:
+                print(f"Warning: Could not load team stats for D/ST: {e}")
+                team_stats = pd.DataFrame()  # Empty DataFrame
 
         # Calculate points for each player
         player_results = {}
 
-        for drafted_player in drafted_players:
+        # Process regular (non-D/ST) players
+        for drafted_player in regular_players:
             player_id = drafted_player.gsis_id
             player_results[player_id] = {
                 "player_info": {
@@ -215,6 +313,71 @@ def calculate_player_playoff_points(league, year=None):
                 total_points += round_points
 
             player_results[player_id]["total_points"] = total_points
+
+        # Process D/ST players using team stats
+        if dst_players.exists() and team_stats is not None and not team_stats.empty:
+            for drafted_dst in dst_players:
+                dst_team = drafted_dst.nfl_team  # This should be the team abbreviation
+                player_id = drafted_dst.gsis_id
+
+                player_results[player_id] = {
+                    "player_info": {
+                        "gsis_id": drafted_dst.gsis_id,
+                        "player_name": drafted_dst.player_name,
+                        "position": drafted_dst.position,
+                        "nfl_team": drafted_dst.nfl_team,
+                        "team_name": drafted_dst.team_name,
+                        "user": (
+                            drafted_dst.user.username if drafted_dst.user else None
+                        ),
+                    },
+                    "round_points": {},
+                    "total_points": 0.0,
+                }
+
+                total_points = 0.0
+
+                # Calculate points for each playoff round using team stats
+                for week, game_type in week_to_game_type.items():
+                    # Find this team's stats for this week
+                    team_week_stats = team_stats[
+                        (team_stats["team"] == dst_team) & (team_stats["week"] == week)
+                    ]
+
+                    round_points = 0.0
+
+                    # Calculate points for this round using league-specific defensive scoring
+                    for _, row in team_week_stats.iterrows():
+                        round_points += calculate_fantasy_points(row, scoring_settings)
+
+                    if game_type not in player_results[player_id]["round_points"]:
+                        player_results[player_id]["round_points"][game_type] = 0.0
+
+                    player_results[player_id]["round_points"][game_type] += round_points
+                    total_points += round_points
+
+                player_results[player_id]["total_points"] = total_points
+        elif dst_players.exists():
+            print(
+                f"Warning: Found {dst_players.count()} D/ST players but no team stats available"
+            )
+            # Still create entries for D/ST players with 0 points
+            for drafted_dst in dst_players:
+                player_id = drafted_dst.gsis_id
+                player_results[player_id] = {
+                    "player_info": {
+                        "gsis_id": drafted_dst.gsis_id,
+                        "player_name": drafted_dst.player_name,
+                        "position": drafted_dst.position,
+                        "nfl_team": drafted_dst.nfl_team,
+                        "team_name": drafted_dst.team_name,
+                        "user": (
+                            drafted_dst.user.username if drafted_dst.user else None
+                        ),
+                    },
+                    "round_points": {},
+                    "total_points": 0.0,
+                }
 
         return player_results
 

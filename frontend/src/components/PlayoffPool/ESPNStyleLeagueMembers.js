@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import playoffPoolAPI from "../../utils/PlayoffPool/api";
 
 const ESPNStyleLeagueMembers = ({
     league,
@@ -16,6 +17,9 @@ const ESPNStyleLeagueMembers = ({
 }) => {
     const [creatingTeamIndex, setCreatingTeamIndex] = useState(null);
     const [newTeamName, setNewTeamName] = useState("");
+    const [editingTeamId, setEditingTeamId] = useState(null);
+    const [editingTeamName, setEditingTeamName] = useState("");
+    const [savingTeamName, setSavingTeamName] = useState(false);
 
     const startCreatingTeam = (index) => {
         setCreatingTeamIndex(index);
@@ -36,6 +40,43 @@ const ESPNStyleLeagueMembers = ({
         } catch (err) {
             console.error("Failed to create team:", err);
         }
+    };
+
+    const handleEditTeamName = (team) => {
+        setEditingTeamId(team.id);
+        setEditingTeamName(team.team_name);
+    };
+
+    const handleSaveTeamName = async (team) => {
+        if (!editingTeamName.trim()) {
+            alert("Team name cannot be empty");
+            return;
+        }
+
+        try {
+            setSavingTeamName(true);
+            await playoffPoolAPI.updateTeam(
+                leagueId,
+                team.id,
+                editingTeamName.trim()
+            );
+            // Call the parent's reload function if available, or directly update local state
+            if (window.location.reload) {
+                window.location.reload();
+            }
+        } catch (err) {
+            alert(err.response?.data?.error || "Failed to update team name");
+            console.error("Error updating team name:", err);
+        } finally {
+            setSavingTeamName(false);
+            setEditingTeamId(null);
+            setEditingTeamName("");
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingTeamId(null);
+        setEditingTeamName("");
     };
 
     const containerStyle = {
@@ -333,23 +374,11 @@ const ESPNStyleLeagueMembers = ({
                                     flexWrap: "wrap",
                                 }}
                             >
-                                {Object.entries(league.roster_config).map(
-                                    ([position, config], index) => {
-                                        const count =
-                                            position === "flex" &&
-                                            typeof config === "object"
-                                                ? config.count
-                                                : config;
-                                        const label =
-                                            position === "flex"
-                                                ? `FLEX (${
-                                                      config.eligible_positions
-                                                          ? config.eligible_positions.join(
-                                                                "/"
-                                                            )
-                                                          : "RB/WR/TE"
-                                                  })`
-                                                : position;
+                                {Object.entries(league.roster_config)
+                                    .filter(([position]) => position !== "flex") // Handle flex separately
+                                    .map(([position, config], index) => {
+                                        const count = config;
+                                        const label = position.toUpperCase();
 
                                         return (
                                             <span
@@ -361,22 +390,39 @@ const ESPNStyleLeagueMembers = ({
                                                     borderRadius: "12px",
                                                     fontSize: "11px",
                                                     fontWeight: "600",
-                                                    backgroundColor:
-                                                        position === "flex"
-                                                            ? "#e9d5ff"
-                                                            : "#f1f5f9",
-                                                    color:
-                                                        position === "flex"
-                                                            ? "#7c3aed"
-                                                            : "#475569",
+                                                    backgroundColor: "#f1f5f9",
+                                                    color: "#475569",
                                                     border: "1px solid #e2e8f0",
                                                 }}
                                             >
                                                 {count}x {label}
                                             </span>
                                         );
-                                    }
-                                )}
+                                    })}
+                                {/* Handle flex separately */}
+                                {league.roster_config.flex &&
+                                    league.roster_config.flex.count > 0 && (
+                                        <span
+                                            style={{
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                padding: "4px 8px",
+                                                borderRadius: "12px",
+                                                fontSize: "11px",
+                                                fontWeight: "600",
+                                                backgroundColor: "#e9d5ff",
+                                                color: "#7c3aed",
+                                                border: "1px solid #e2e8f0",
+                                            }}
+                                        >
+                                            {league.roster_config.flex.count}x
+                                            FLEX (
+                                            {league.roster_config.flex.eligible_positions?.join(
+                                                "/"
+                                            ) || "RB/WR/TE"}
+                                            )
+                                        </span>
+                                    )}
                             </div>
                         </div>
                     )}
@@ -609,16 +655,148 @@ const ESPNStyleLeagueMembers = ({
                             {/* Team Name */}
                             <div style={{ padding: "0 8px" }}>
                                 {slot.type === "team" ? (
-                                    <div
-                                        style={{
-                                            fontSize: "14px",
-                                            fontWeight: "500",
-                                            color: "#1f2937",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        {slot.data.team_name}
-                                    </div>
+                                    editingTeamId === slot.data.id ? (
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "4px",
+                                            }}
+                                        >
+                                            <input
+                                                type="text"
+                                                value={editingTeamName}
+                                                onChange={(e) =>
+                                                    setEditingTeamName(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                onKeyPress={(e) => {
+                                                    if (e.key === "Enter") {
+                                                        handleSaveTeamName(
+                                                            slot.data
+                                                        );
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Escape") {
+                                                        handleCancelEdit();
+                                                    }
+                                                }}
+                                                onBlur={(e) => {
+                                                    // Cancel edit when clicking outside, unless clicking on the checkbox
+                                                    const relatedTarget =
+                                                        e.relatedTarget;
+                                                    if (
+                                                        !relatedTarget ||
+                                                        relatedTarget.type !==
+                                                            "checkbox"
+                                                    ) {
+                                                        setTimeout(() => {
+                                                            if (
+                                                                editingTeamId ===
+                                                                slot.data.id
+                                                            ) {
+                                                                handleCancelEdit();
+                                                            }
+                                                        }, 150);
+                                                    }
+                                                }}
+                                                disabled={savingTeamName}
+                                                style={{
+                                                    fontSize: "14px",
+                                                    padding: "4px 6px",
+                                                    border: "2px solid #3b82f6",
+                                                    borderRadius: "4px",
+                                                    flex: 1,
+                                                    outline: "none",
+                                                    backgroundColor: "white",
+                                                }}
+                                                autoFocus
+                                            />
+                                            <input
+                                                type="checkbox"
+                                                checked={false}
+                                                onChange={() =>
+                                                    handleSaveTeamName(
+                                                        slot.data
+                                                    )
+                                                }
+                                                disabled={
+                                                    savingTeamName ||
+                                                    !editingTeamName.trim()
+                                                }
+                                                style={{
+                                                    width: "18px",
+                                                    height: "18px",
+                                                    cursor:
+                                                        savingTeamName ||
+                                                        !editingTeamName.trim()
+                                                            ? "not-allowed"
+                                                            : "pointer",
+                                                    accentColor: "#10b981",
+                                                }}
+                                                title="Save team name"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div
+                                            style={{
+                                                fontSize: "14px",
+                                                fontWeight: "500",
+                                                color: "#1f2937",
+                                                cursor:
+                                                    slot.data.user?.id ===
+                                                        user?.id || isAdmin
+                                                        ? "pointer"
+                                                        : "default",
+                                                flex: 1,
+                                                padding: "4px 8px",
+                                                borderRadius: "4px",
+                                                transition:
+                                                    "background-color 0.15s",
+                                            }}
+                                            onDoubleClick={() => {
+                                                if (
+                                                    slot.data.user?.id ===
+                                                        user?.id ||
+                                                    isAdmin
+                                                ) {
+                                                    handleEditTeamName(
+                                                        slot.data
+                                                    );
+                                                }
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (
+                                                    slot.data.user?.id ===
+                                                        user?.id ||
+                                                    isAdmin
+                                                ) {
+                                                    e.target.style.backgroundColor =
+                                                        "#f3f4f6";
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (
+                                                    slot.data.user?.id ===
+                                                        user?.id ||
+                                                    isAdmin
+                                                ) {
+                                                    e.target.style.backgroundColor =
+                                                        "transparent";
+                                                }
+                                            }}
+                                            title={
+                                                slot.data.user?.id ===
+                                                    user?.id || isAdmin
+                                                    ? "Double-click to edit team name"
+                                                    : ""
+                                            }
+                                        >
+                                            {slot.data.team_name}
+                                        </div>
+                                    )
                                 ) : creatingTeamIndex === slot.index ? (
                                     <div
                                         style={{

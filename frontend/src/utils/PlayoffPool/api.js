@@ -156,6 +156,14 @@ class PlayoffPoolAPI {
         return response.data;
     }
 
+    async updateTeam(leagueId, teamId, teamName) {
+        const response = await this.api.patch(
+            `api/leagues/${leagueId}/teams/${teamId}/`,
+            { team_name: teamName }
+        );
+        return response.data;
+    }
+
     async getLeagueInfo(leagueId) {
         const response = await this.api.get(`league-info/${leagueId}/`);
         return response.data;
@@ -203,6 +211,13 @@ class PlayoffPoolAPI {
     async undoDraft(leagueId) {
         const response = await this.api.post(
             `api/leagues/${leagueId}/undo_draft/`
+        );
+        return response.data;
+    }
+
+    async resetDraft(leagueId) {
+        const response = await this.api.post(
+            `api/leagues/${leagueId}/reset_draft/`
         );
         return response.data;
     }

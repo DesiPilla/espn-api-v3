@@ -48,7 +48,13 @@ class League(models.Model):
     def get_positions_display(self):
         """Return positions as comma-separated string"""
         if isinstance(self.positions_included, list):
-            return ", ".join(self.positions_included)
+            positions = self.positions_included.copy()
+            # Add flex if it's configured
+            if self.roster_config and "flex" in self.roster_config:
+                flex_config = self.roster_config["flex"]
+                if isinstance(flex_config, dict) and flex_config.get("count", 0) > 0:
+                    positions.append("FLEX")
+            return ", ".join(positions)
         return "None set"
 
     def get_total_roster_size(self):
