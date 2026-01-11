@@ -20,46 +20,35 @@ const PlayoffPoolHome = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              NFL Playoff Pool
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Draft players from playoff teams and compete with your friends!
-            </p>
-          </div>
-          
-          <div className="max-w-md mx-auto">
-            {showRegister ? (
-              <div>
-                <RegisterForm />
-                <div className="text-center mt-4">
-                  <button
-                    onClick={() => setShowRegister(false)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Already have an account? Sign in
-                  </button>
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="container mx-auto px-4">
+                <div className="text-center mb-8">
+                    <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                        NFL Playoff Pool
+                    </h1>
+                    <p className="text-xl text-gray-600 mb-8">
+                        Draft players from playoff teams and compete with your
+                        friends!
+                    </p>
                 </div>
-              </div>
-            ) : (
-              <div>
-                <LoginForm />
-                <div className="text-center mt-4">
-                  <button
-                    onClick={() => setShowRegister(true)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Need an account? Register
-                  </button>
+
+                <div className="max-w-md mx-auto">
+                    {showRegister ? (
+                        <div>
+                            <RegisterForm
+                                onToggleLogin={() => setShowRegister(false)}
+                            />
+                        </div>
+                    ) : (
+                        <div>
+                            <LoginForm
+                                onToggleRegister={() => setShowRegister(true)}
+                            />
+                        </div>
+                    )}
                 </div>
-              </div>
-            )}
-          </div>
+            </div>
         </div>
-      </div>
     );
   }
 

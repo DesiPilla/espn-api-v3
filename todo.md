@@ -2,6 +2,8 @@
 
 ## Security
 - [ ] Add google authentication for login
+- [ ] Add a "forgot my password" button
+- [ ] Add a profile button to edit password or delete account
 
 ## League setup
 - [x] Allow for custom scoring
@@ -33,10 +35,10 @@
 - [ ] Build a page to view weekly standings
   - Must work when there are not yet any scores (all zeros)
   - If a league's draft is complete, it automatically displays on the league home page
-- [ ] Display the roster size instead of the number of positions
-- [ ] Lock the scoring settings after the draft has started
+- [x] Display the roster size instead of the number of positions
+- [x] Lock the scoring settings after the draft has started
 - [ ] Be able to reset the draft (will unlock scoring settings)
 
 ## Team rosters page
-- [ ] Display actual scores, not the draft fantasy points
+- [x] Display actual scores, not the draft fantasy points
 
