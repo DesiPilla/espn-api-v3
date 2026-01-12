@@ -181,71 +181,75 @@ def calculate_player_playoff_points(league, year=None):
             try:
                 team_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
 
-                # Filter for playoff teams and postseason
-                if year in PLAYOFF_TEAMS and not team_stats.empty:
-                    team_stats = team_stats[
-                        team_stats["team"].isin(PLAYOFF_TEAMS[year])
-                        & (team_stats["season_type"] == "POST")
-                    ]
+                # Filter for postseason games
+                if not team_stats.empty:
+                    team_stats = team_stats[team_stats["season_type"] == "POST"]
+
+                    # Further filter for playoff teams if we have the list
+                    if year in PLAYOFF_TEAMS and PLAYOFF_TEAMS[year]:
+                        team_stats = team_stats[
+                            team_stats["team"].isin(PLAYOFF_TEAMS[year])
+                        ]
 
                     # Add opponent scores efficiently
-                    try:
-                        schedules = nfl.load_schedules(seasons=[year]).to_pandas()
-                        playoff_schedules = schedules[
-                            (schedules["game_type"] != "REG")
-                            & (schedules["season"] == year)
-                        ].copy()
+                    if not team_stats.empty:
+                        try:
+                            schedules = nfl.load_schedules(seasons=[year]).to_pandas()
+                            playoff_schedules = schedules[
+                                (schedules["game_type"] != "REG")
+                                & (schedules["season"] == year)
+                            ].copy()
 
-                        # Create mapping for home teams (opponent score = away_score)
-                        home_mapping = playoff_schedules[
-                            ["season", "week", "home_team", "away_score"]
-                        ].copy()
-                        home_mapping.columns = [
-                            "season",
-                            "week",
-                            "team",
-                            "opponent_score",
-                        ]
-
-                        # Create mapping for away teams (opponent score = home_score)
-                        away_mapping = playoff_schedules[
-                            ["season", "week", "away_team", "home_score"]
-                        ].copy()
-                        away_mapping.columns = [
-                            "season",
-                            "week",
-                            "team",
-                            "opponent_score",
-                        ]
-
-                        # Combine both mappings
-                        score_mapping = pd.concat(
-                            [home_mapping, away_mapping], ignore_index=True
-                        )
-
-                        # Merge with team stats
-                        team_stats = team_stats.merge(
-                            score_mapping, on=["season", "week", "team"], how="left"
-                        )
-
-                        # Fill any missing opponent scores with 0
-                        team_stats["opponent_score"] = team_stats[
-                            "opponent_score"
-                        ].fillna(0)
-
-                        # Only keep defensive stats
-                        team_stats = team_stats[
-                            ["season", "week", "team", "opponent_score"]
-                            + [
-                                col
-                                for col in DEFENSE_SCORING_MULTIPLIERS
-                                if col in team_stats.columns
+                            # Create mapping for home teams (opponent score = away_score)
+                            home_mapping = playoff_schedules[
+                                ["season", "week", "home_team", "away_score"]
+                            ].copy()
+                            home_mapping.columns = [
+                                "season",
+                                "week",
+                                "team",
+                                "opponent_score",
                             ]
-                        ]
-                    except Exception as e:
-                        print(f"Warning: Could not add opponent scores: {e}")
-                        if not team_stats.empty:
-                            team_stats["opponent_score"] = 0
+
+                            # Create mapping for away teams (opponent score = home_score)
+                            away_mapping = playoff_schedules[
+                                ["season", "week", "away_team", "home_score"]
+                            ].copy()
+                            away_mapping.columns = [
+                                "season",
+                                "week",
+                                "team",
+                                "opponent_score",
+                            ]
+
+                            # Combine both mappings
+                            score_mapping = pd.concat(
+                                [home_mapping, away_mapping], ignore_index=True
+                            )
+
+                            # Merge with team stats
+                            team_stats = team_stats.merge(
+                                score_mapping, on=["season", "week", "team"], how="left"
+                            )
+
+                            # Fill any missing opponent scores with 0
+                            team_stats["opponent_score"] = team_stats[
+                                "opponent_score"
+                            ].fillna(0)
+
+                            # Only keep defensive stats
+                            team_stats = team_stats[
+                                ["season", "week", "team", "opponent_score"]
+                                + [
+                                    col
+                                    for col in DEFENSE_SCORING_MULTIPLIERS
+                                    if col in team_stats.columns
+                                ]
+                            ]
+                        except Exception as e:
+                            print(f"Warning: Could not add opponent scores: {e}")
+                            if not team_stats.empty:
+                                team_stats["opponent_score"] = 0
 
             except Exception as e:
                 print(f"Warning: Could not load team stats for D/ST: {e}")
