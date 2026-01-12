@@ -613,6 +613,17 @@ class LeagueViewSet(viewsets.ModelViewSet):
         team.user = request.user
         team.save()
 
+        # Update all DraftedTeam records for this team to link to this membership and user
+        DraftedTeam.objects.filter(league=league, team_name=team.team_name).update(
+            team_membership=team, user=request.user
+        )
+
+        # Clear cache for this league since team ownership changed
+        from django.core.cache import cache
+
+        cache_key = f"playoff_points_league_{league.id}_year_{league.league_year}"
+        cache.delete(cache_key)
+
         return Response(
             LeagueMembershipSerializer(team).data, status=status.HTTP_200_OK
         )
@@ -1243,16 +1254,13 @@ class LeagueViewSet(viewsets.ModelViewSet):
 
                     for player_id, player_data in player_stats.items():
                         player_info = player_data["player_info"]
-                        user_key = (
-                            player_info["user"]
-                            if player_info["user"]
-                            else f"unclaimed_{player_info['team_name']}"
-                        )
+                        # Use team_name as the key to avoid duplicates when users claim teams
+                        team_key = player_info["team_name"]
 
                         # Add to playoff rounds set
                         playoff_rounds.update(player_data["round_points"].keys())
 
-                        if user_key not in teams:
+                        if team_key not in teams:
                             # Find user data for this team
                             user_data = None
                             if player_info["user"]:
@@ -1308,16 +1316,16 @@ class LeagueViewSet(viewsets.ModelViewSet):
                             "id": player_info["id"],
                         }
 
-                        teams[user_key]["players"].append(player_with_stats)
-                        teams[user_key]["total_points"] += player_data["total_points"]
+                        teams[team_key]["players"].append(player_with_stats)
+                        teams[team_key]["total_points"] += player_data["total_points"]
 
                         # Add to round totals
                         for round_name, round_points in player_data[
                             "round_points"
                         ].items():
-                            if round_name not in teams[user_key]["round_totals"]:
-                                teams[user_key]["round_totals"][round_name] = 0.0
-                            teams[user_key]["round_totals"][round_name] += round_points
+                            if round_name not in teams[team_key]["round_totals"]:
+                                teams[team_key]["round_totals"][round_name] = 0.0
+                            teams[team_key]["round_totals"][round_name] += round_points
 
                     # Convert to list and sort by total points
                     teams_list = list(teams.values())
@@ -1345,24 +1353,20 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 "draft_order"
             )
 
-            # Group by user
+            # Group by team_name to avoid duplicates when users claim teams
             teams = {}
             for player in drafted_players:
-                # Handle both claimed and unclaimed teams
-                # Try player.user first, then team_membership.user
-                if player.user:
-                    user_id = player.user.id
-                    user_data = UserSerializer(player.user).data
-                elif player.team_membership and player.team_membership.user:
-                    user_id = player.team_membership.user.id
-                    user_data = UserSerializer(player.team_membership.user).data
-                else:
-                    # For unclaimed teams, use team_membership id as identifier
-                    user_id = f"unclaimed_{player.team_membership.id}"
-                    user_data = None
+                team_key = player.team_name
 
-                if user_id not in teams:
-                    teams[user_id] = {
+                if team_key not in teams:
+                    # Get user data from either player.user or team_membership.user
+                    user_data = None
+                    if player.user:
+                        user_data = UserSerializer(player.user).data
+                    elif player.team_membership and player.team_membership.user:
+                        user_data = UserSerializer(player.team_membership.user).data
+
+                    teams[team_key] = {
                         "user": user_data,
                         "team_name": player.team_name,
                         "players": [],
@@ -1370,8 +1374,8 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     }
 
                 player_data = DraftedTeamSerializer(player).data
-                teams[user_id]["players"].append(player_data)
-                teams[user_id]["total_points"] += player.fantasy_points
+                teams[team_key]["players"].append(player_data)
+                teams[team_key]["total_points"] += player.fantasy_points
 
             # Convert to list and sort by total points
             teams_list = list(teams.values())
