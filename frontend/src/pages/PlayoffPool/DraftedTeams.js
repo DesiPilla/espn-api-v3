@@ -467,6 +467,9 @@ const DraftedTeams = () => {
                                     backgroundColor: "#f8fafc",
                                     borderBottom: "1px solid #e2e8f0",
                                     padding: "16px 20px",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
                                 }}
                             >
                                 <h3
@@ -474,46 +477,38 @@ const DraftedTeams = () => {
                                         fontSize: "18px",
                                         fontWeight: "600",
                                         color: "#1f2937",
-                                        margin: "0 0 4px 0",
+                                        margin: "0",
                                     }}
                                 >
                                     {team.team_name}
                                 </h3>
                                 <div
                                     style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
+                                        textAlign: "right",
                                     }}
                                 >
                                     <div
                                         style={{
-                                            textAlign: "right",
+                                            fontSize: "16px",
+                                            fontWeight: "600",
+                                            color: "#1f2937",
                                         }}
                                     >
-                                        <div
-                                            style={{
-                                                fontSize: "16px",
-                                                fontWeight: "600",
-                                                color: "#1f2937",
-                                            }}
-                                        >
-                                            {teamsData?.data_source ===
-                                            "static_points"
-                                                ? "0.0"
-                                                : (
-                                                      team.total_points || 0
-                                                  ).toFixed(1)}{" "}
-                                            pts
-                                        </div>
-                                        <div
-                                            style={{
-                                                fontSize: "12px",
-                                                color: "#6b7280",
-                                            }}
-                                        >
-                                            {team.players.length} players
-                                        </div>
+                                        {teamsData?.data_source ===
+                                        "static_points"
+                                            ? "0.0"
+                                            : (team.total_points || 0).toFixed(
+                                                  1
+                                              )}{" "}
+                                        pts
+                                    </div>
+                                    <div
+                                        style={{
+                                            fontSize: "12px",
+                                            color: "#6b7280",
+                                        }}
+                                    >
+                                        {team.players.length} players
                                     </div>
                                 </div>
                             </div>
@@ -538,7 +533,7 @@ const DraftedTeams = () => {
                                     style={{
                                         display: "grid",
                                         gridTemplateColumns:
-                                            "10% 35% 10% 10% 10% 10% 15%",
+                                            "12% 36% 9% 9% 9% 9% 16%",
                                         backgroundColor: "#f1f5f9",
                                         borderRadius: "6px 6px 0 0",
                                         border: "1px solid #e2e8f0",
@@ -665,7 +660,7 @@ const DraftedTeams = () => {
                                                 style={{
                                                     display: "grid",
                                                     gridTemplateColumns:
-                                                        "10% 35% 10% 10% 10% 10% 15%",
+                                                        "12% 36% 9% 9% 9% 9% 16%",
                                                     borderBottom:
                                                         index <
                                                         team.players.length - 1
