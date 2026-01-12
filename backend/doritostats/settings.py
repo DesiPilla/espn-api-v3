@@ -186,6 +186,15 @@ DATABASES = {
     )
 }
 
+# Cache Configuration
+# Using database-backed cache for simplicity (no additional setup needed)
+# For production with high traffic, consider Redis or Memcached
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "default-cache",
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

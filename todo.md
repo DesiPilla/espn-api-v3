@@ -41,6 +41,8 @@
 - [x] Display the roster size instead of the number of positions
 - [x] Lock the scoring settings after the draft has started
 - [x] Be able to reset the draft (will unlock scoring settings)
+- [ ] When a new user claims their team, the Leaderboard adds them as a new team. So it looks like there are more teams than their should be, and the duplicate teams have zero points (though the original teams have points)
+- [ ] Stats are really slow to calculate
 
 ## Team rosters page
 - [x] Display actual scores, not the draft fantasy points
@@ -55,3 +57,4 @@
 - [x] Add Flex to the dropdown
 - [x] Reset draft option
 - [x] Team names editable
+- [ ] Add data caching to reduce network egress and increase speeds

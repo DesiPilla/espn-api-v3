@@ -9,6 +9,7 @@ from backend.playoff_pool.scoring import (
 import nflreadpy as nfl
 import pandas as pd
 from django.http import JsonResponse
+from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
@@ -82,6 +83,7 @@ def current_nfl_season_api(request):
 def calculate_player_playoff_points(league, year=None):
     """
     Calculate playoff fantasy points for all drafted players in a league.
+    Uses caching to avoid expensive NFL data loads and recalculations.
 
     Args:
         league: League model instance
@@ -94,97 +96,99 @@ def calculate_player_playoff_points(league, year=None):
         if year is None:
             year = league.league_year
 
-        # Get weekly stats for playoff weeks
-        weekly_stats = nfl.load_player_stats([year]).to_pandas()
-        weekly_stats = weekly_stats[weekly_stats["season_type"] == "POST"]
+        # Create cache key based on league ID and year
+        cache_key = f"playoff_points_league_{league.id}_year_{year}"
 
-        if weekly_stats.empty:
-            print(f"Debug: No playoff stats found for year {year}")
-            return {}
+        # Try to get cached result
+        cached_result = cache.get(cache_key)
+        if cached_result is not None:
+            return cached_result
 
-        # Get playoff schedule to map weeks to game types
-        try:
-            schedule = nfl.load_schedules([year]).to_pandas()
-            playoff_games = schedule[schedule["game_type"] != "REG"].copy()
+        # Cache key for NFL data (shared across all leagues for same year)
+        nfl_data_cache_key = f"nfl_playoff_data_year_{year}"
+        nfl_cached_data = cache.get(nfl_data_cache_key)
 
-            if playoff_games.empty:
-                print(f"Debug: No playoff games found in schedule for year {year}")
+        if nfl_cached_data is None:
+            # Get weekly stats for playoff weeks
+            weekly_stats = nfl.load_player_stats([year]).to_pandas()
+            weekly_stats = weekly_stats[weekly_stats["season_type"] == "POST"]
+
+            if weekly_stats.empty:
+                print(f"Debug: No playoff stats found for year {year}")
                 return {}
 
-            # Create week to game type mapping
-            playoff_games = playoff_games.sort_values("week")
-            playoff_weeks = sorted(playoff_games["week"].unique())
+            # Get playoff schedule to map weeks to game types
+            try:
+                schedule = nfl.load_schedules([year]).to_pandas()
+                playoff_games = schedule[schedule["game_type"] != "REG"].copy()
 
-            week_to_game_type = {}
-            for i, week in enumerate(playoff_weeks):
-                week_games = playoff_games[playoff_games["week"] == week]
-                num_games = len(week_games)
+                if playoff_games.empty:
+                    print(f"Debug: No playoff games found in schedule for year {year}")
+                    return {}
 
-                # Determine game type based on number of games and position
-                if i == 0 and num_games >= 4:
-                    game_type = "WC"  # Wild Card
-                elif (i == 1 and num_games == 4) or (i == 0 and num_games == 4):
-                    game_type = "DIV"  # Divisional Round
-                elif num_games == 2:
-                    game_type = "CON"  # Conference Championship
-                elif num_games == 1:
-                    game_type = "SB"  # Super Bowl
-                else:
-                    # Fallback based on position
+                # Create week to game type mapping
+                playoff_games = playoff_games.sort_values("week")
+                playoff_weeks = sorted(playoff_games["week"].unique())
+
+                week_to_game_type = {}
+                for i, week in enumerate(playoff_weeks):
+                    week_games = playoff_games[playoff_games["week"] == week]
+                    num_games = len(week_games)
+
+                    # Determine game type based on number of games and position
+                    if i == 0 and num_games >= 4:
+                        game_type = "WC"  # Wild Card
+                    elif (i == 1 and num_games == 4) or (i == 0 and num_games == 4):
+                        game_type = "DIV"  # Divisional Round
+                    elif num_games == 2:
+                        game_type = "CON"  # Conference Championship
+                    elif num_games == 1:
+                        game_type = "SB"  # Super Bowl
+                    else:
+                        # Fallback based on position
+                        if i == 0:
+                            game_type = "WC"
+                        elif i == 1:
+                            game_type = "DIV"
+                        elif i == 2:
+                            game_type = "CON"
+                        else:
+                            game_type = "SB"
+
+                    week_to_game_type[week] = game_type
+            except Exception as e:
+                print(
+                    f"Warning: Could not load playoff schedule, using week numbers: {e}"
+                )
+                # Fallback to week numbers as game types
+                playoff_weeks = sorted(weekly_stats["week"].unique())
+                week_to_game_type = {}
+                for i, week in enumerate(playoff_weeks):
                     if i == 0:
                         game_type = "WC"
                     elif i == 1:
                         game_type = "DIV"
                     elif i == 2:
                         game_type = "CON"
-                    else:
+                    elif i == 3:
                         game_type = "SB"
+                    else:
+                        game_type = f"Week_{week}"
+                    week_to_game_type[week] = game_type
 
-                week_to_game_type[week] = game_type
-        except Exception as e:
-            print(f"Warning: Could not load playoff schedule, using week numbers: {e}")
-            # Fallback to week numbers as game types, but map to proper round names
-            playoff_weeks = sorted(weekly_stats["week"].unique())
-            week_to_game_type = {}
-            for i, week in enumerate(playoff_weeks):
-                if i == 0:
-                    game_type = "WC"  # First playoff week = Wild Card
-                elif i == 1:
-                    game_type = "DIV"  # Second week = Divisional
-                elif i == 2:
-                    game_type = "CON"  # Third week = Conference Championship
-                elif i == 3:
-                    game_type = "SB"  # Fourth week = Super Bowl
-                else:
-                    game_type = f"Week_{week}"  # Any additional weeks
-                week_to_game_type[week] = game_type
-
-        # Get league scoring settings
-        scoring_settings = get_league_scoring_settings(league)
-
-        # Get drafted players
-        from .models import DraftedTeam
-
-        drafted_players = DraftedTeam.objects.filter(league=league)
-
-        # Separate D/ST and regular players
-        dst_players = drafted_players.filter(position="DST")
-        regular_players = drafted_players.exclude(position="DST")
-
-        # Load team stats for D/ST calculations
-        team_stats = None
-        if dst_players.exists():
+            # Load team stats for D/ST calculations (if needed)
+            team_stats = None
             try:
                 team_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
+
                 # Filter for playoff teams and postseason
-                if year in PLAYOFF_TEAMS:
+                if year in PLAYOFF_TEAMS and not team_stats.empty:
                     team_stats = team_stats[
                         team_stats["team"].isin(PLAYOFF_TEAMS[year])
                         & (team_stats["season_type"] == "POST")
                     ]
 
-                # Add opponent scores efficiently
-                if not team_stats.empty:
+                    # Add opponent scores efficiently
                     try:
                         schedules = nfl.load_schedules(seasons=[year]).to_pandas()
                         playoff_schedules = schedules[
@@ -240,11 +244,41 @@ def calculate_player_playoff_points(league, year=None):
                         ]
                     except Exception as e:
                         print(f"Warning: Could not add opponent scores: {e}")
-                        team_stats["opponent_score"] = 0
+                        if not team_stats.empty:
+                            team_stats["opponent_score"] = 0
 
             except Exception as e:
                 print(f"Warning: Could not load team stats for D/ST: {e}")
-                team_stats = pd.DataFrame()  # Empty DataFrame
+                team_stats = None
+
+            # Cache NFL data for 15 minutes (data doesn't change frequently during playoffs)
+            nfl_cached_data = {
+                "weekly_stats": weekly_stats,
+                "week_to_game_type": week_to_game_type,
+                "playoff_weeks": playoff_weeks,
+                "team_stats": team_stats,
+            }
+            cache.set(nfl_data_cache_key, nfl_cached_data, 900)  # 15 minutes
+
+        # Unpack cached NFL data
+        weekly_stats = nfl_cached_data["weekly_stats"]
+        week_to_game_type = nfl_cached_data["week_to_game_type"]
+        playoff_weeks = nfl_cached_data.get(
+            "playoff_weeks", sorted(weekly_stats["week"].unique())
+        )
+        team_stats = nfl_cached_data.get("team_stats", None)
+
+        # Get league scoring settings
+        scoring_settings = get_league_scoring_settings(league)
+
+        # Get drafted players
+        from .models import DraftedTeam
+
+        drafted_players = DraftedTeam.objects.filter(league=league)
+
+        # Separate D/ST and regular players
+        dst_players = drafted_players.filter(position="DST")
+        regular_players = drafted_players.exclude(position="DST")
 
         # Calculate points for each player
         player_results = {}
@@ -421,6 +455,9 @@ def calculate_player_playoff_points(league, year=None):
                     "round_points": {},
                     "total_points": 0.0,
                 }
+
+        # Cache the calculated result for 5 minutes
+        cache.set(cache_key, player_results, 300)
 
         return player_results
 
