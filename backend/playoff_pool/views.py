@@ -228,6 +228,34 @@ def scoring_settings(request):
                 display_name = "Points Allowed: 35+ Points"
             elif "tds" in stat:
                 display_name = display_name.replace("Tds", "Touchdowns")
+            elif stat == "fg_made_0_19":
+                display_name = "Field Goal Made: 0-19 yds"
+            elif stat == "fg_made_20_29":
+                display_name = "Field Goal Made: 20-29 yds"
+            elif stat == "fg_made_30_39":
+                display_name = "Field Goal Made: 30-39 yds"
+            elif stat == "fg_made_40_49":
+                display_name = "Field Goal Made: 40-49 yds"
+            elif stat == "fg_made_50_59":
+                display_name = "Field Goal Made: 50-59 yds"
+            elif stat == "fg_made_60_":
+                display_name = "Field Goal Made: 60+ yds"
+            elif stat == "fg_missed_0_19":
+                display_name = "Field Goal Missed: 0-19 yds"
+            elif stat == "fg_missed_20_29":
+                display_name = "Field Goal Missed: 20-29 yds"
+            elif stat == "fg_missed_30_39":
+                display_name = "Field Goal Missed: 30-39 yds"
+            elif stat == "fg_missed_40_49":
+                display_name = "Field Goal Missed: 40-49 yds"
+            elif stat == "fg_missed_50_59":
+                display_name = "Field Goal Missed: 50-59 yds"
+            elif stat == "fg_missed_60_":
+                display_name = "Field Goal Missed: 60+ yds"
+            elif stat == "fg_made":
+                display_name = "Field Goal Made"
+            elif stat == "fg_made_distance":
+                display_name = "Field Goal Made Distance"
 
             categorized[category].append(
                 {
@@ -425,6 +453,34 @@ class LeagueViewSet(viewsets.ModelViewSet):
             return "Points Allowed: 35+ Points"
         elif "tds" in stat_name:
             return display_name.replace("Tds", "Touchdowns")
+        elif stat_name == "fg_made_0_19":
+            return "Field Goal Made: 0-19 yds"
+        elif stat_name == "fg_made_20_29":
+            return "Field Goal Made: 20-29 yds"
+        elif stat_name == "fg_made_30_39":
+            return "Field Goal Made: 30-39 yds"
+        elif stat_name == "fg_made_40_49":
+            return "Field Goal Made: 40-49 yds"
+        elif stat_name == "fg_made_50_59":
+            return "Field Goal Made: 50-59 yds"
+        elif stat_name == "fg_made_60_":
+            return "Field Goal Made: 60+ yds"
+        elif stat_name == "fg_missed_0_19":
+            return "Field Goal Missed: 0-19 yds"
+        elif stat_name == "fg_missed_20_29":
+            return "Field Goal Missed: 20-29 yds"
+        elif stat_name == "fg_missed_30_39":
+            return "Field Goal Missed: 30-39 yds"
+        elif stat_name == "fg_missed_40_49":
+            return "Field Goal Missed: 40-49 yds"
+        elif stat_name == "fg_missed_50_59":
+            return "Field Goal Missed: 50-59 yds"
+        elif stat_name == "fg_missed_60_":
+            return "Field Goal Missed: 60+ yds"
+        elif stat_name == "fg_made":
+            return "Field Goal Made"
+        elif stat_name == "fg_made_distance":
+            return "Field Goal Made Distance"
         return display_name
 
     @action(detail=True, methods=["post"])
@@ -1227,6 +1283,10 @@ class LeagueViewSet(viewsets.ModelViewSet):
                             "fantasy_points": player_data[
                                 "total_points"
                             ],  # For backward compatibility
+                            "draft_order": player_info["draft_order"],
+                            "drafted_at": player_info["drafted_at"],
+                            "drafted_at_est": player_info["drafted_at_est"],
+                            "id": player_info["id"],
                         }
 
                         teams[user_key]["players"].append(player_with_stats)

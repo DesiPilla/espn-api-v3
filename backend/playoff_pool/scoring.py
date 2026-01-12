@@ -113,7 +113,7 @@ SCORING_MULTIPLIERS = {
     # "fg_made_list": 0, # Lists will break the calculation
     # "fg_missed_list": 0, # Lists will break the calculation
     # "fg_blocked_list": 0, # Lists will break the calculation
-    # "fg_made_distance": 0,
+    "fg_made_distance": 0,
     # "fg_missed_distance": 0,
     # "fg_blocked_distance": 0,
     "pat_made": 1,

@@ -65,7 +65,13 @@ const DraftInterface = () => {
                     };
 
                     team.players.forEach((player) => {
-                        allDrafted.push(player);
+                        // Add fantasy team info to player object for Recent Picks display
+                        const playerWithTeam = {
+                            ...player,
+                            fantasy_team_name: team.team_name,
+                            fantasy_team_user: team.user,
+                        };
+                        allDrafted.push(playerWithTeam);
 
                         // Group players by position for this team
                         const position = player.position;
@@ -1290,9 +1296,17 @@ const DraftInterface = () => {
 
                                                         return (
                                                             <button
-                                                                onClick={
-                                                                    handleDraftPlayer
-                                                                }
+                                                                onClick={() => {
+                                                                    setSelectedPlayer(
+                                                                        player
+                                                                    );
+                                                                    setTimeout(
+                                                                        () => {
+                                                                            handleDraftPlayer();
+                                                                        },
+                                                                        0
+                                                                    );
+                                                                }}
                                                                 disabled={
                                                                     isDisabled
                                                                 }
@@ -1484,7 +1498,7 @@ const DraftInterface = () => {
                             )}
                         </div>
                     </div>
-                    {/* Draft Panel */}
+                    ;{/* Draft Panel */}
                     <div
                         className="xl:col-span-1 space-y-6"
                         style={{ marginTop: "24px" }}
@@ -2118,17 +2132,20 @@ const DraftInterface = () => {
                                                     >
                                                         {pick.player_name}
                                                     </div>
+                                                    {/* NFL Team (under player name) */}
                                                     <div
                                                         style={{
                                                             fontSize: "12px",
                                                             color: "#6b7280",
                                                         }}
                                                     >
-                                                        {pick.team}
+                                                        {pick.nfl_team ||
+                                                            pick.team ||
+                                                            "N/A"}
                                                     </div>
                                                 </div>
 
-                                                {/* Team Name */}
+                                                {/* Fantasy Team Name */}
                                                 <div
                                                     style={{ padding: "0 8px" }}
                                                 >
@@ -2138,7 +2155,8 @@ const DraftInterface = () => {
                                                             color: "#1f2937",
                                                         }}
                                                     >
-                                                        {pick.team_name}
+                                                        {pick.fantasy_team_name ||
+                                                            "Unknown Team"}
                                                     </div>
                                                 </div>
 
@@ -2155,21 +2173,43 @@ const DraftInterface = () => {
                                                             color: "#6b7280",
                                                         }}
                                                     >
-                                                        {new Date(
-                                                            pick.drafted_at
-                                                        ).toLocaleString(
-                                                            "en-US",
-                                                            {
-                                                                timeZone:
-                                                                    "America/New_York",
-                                                                month: "short",
-                                                                day: "numeric",
-                                                                hour: "numeric",
-                                                                minute: "2-digit",
-                                                                hour12: true,
+                                                        {(() => {
+                                                            try {
+                                                                const draftDate =
+                                                                    pick.drafted_at_est ||
+                                                                    pick.drafted_at;
+                                                                if (!draftDate)
+                                                                    return "N/A";
+
+                                                                const date =
+                                                                    new Date(
+                                                                        draftDate
+                                                                    );
+                                                                if (
+                                                                    isNaN(
+                                                                        date.getTime()
+                                                                    )
+                                                                )
+                                                                    return "Invalid Date";
+
+                                                                return (
+                                                                    date.toLocaleString(
+                                                                        "en-US",
+                                                                        {
+                                                                            timeZone:
+                                                                                "America/New_York",
+                                                                            month: "short",
+                                                                            day: "numeric",
+                                                                            hour: "numeric",
+                                                                            minute: "2-digit",
+                                                                            hour12: true,
+                                                                        }
+                                                                    ) + " EST"
+                                                                );
+                                                            } catch (error) {
+                                                                return "Invalid Date";
                                                             }
-                                                        )}{" "}
-                                                        EST
+                                                        })()}
                                                     </div>
                                                 </div>
 

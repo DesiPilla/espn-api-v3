@@ -252,6 +252,22 @@ def calculate_player_playoff_points(league, year=None):
         # Process regular (non-D/ST) players
         for drafted_player in regular_players:
             player_id = drafted_player.gsis_id
+
+            # Format drafted_at in EST if available
+            drafted_at_est = None
+            if drafted_player.drafted_at:
+                import pytz
+
+                est = pytz.timezone("America/New_York")
+                drafted_at_est = drafted_player.drafted_at.astimezone(est).isoformat()
+
+            # Get username from user or team_membership
+            username = None
+            if drafted_player.user:
+                username = drafted_player.user.username
+            elif drafted_player.team_membership and drafted_player.team_membership.user:
+                username = drafted_player.team_membership.user.username
+
             player_results[player_id] = {
                 "player_info": {
                     "gsis_id": drafted_player.gsis_id,
@@ -259,9 +275,15 @@ def calculate_player_playoff_points(league, year=None):
                     "position": drafted_player.position,
                     "nfl_team": drafted_player.nfl_team,
                     "team_name": drafted_player.team_name,
-                    "user": (
-                        drafted_player.user.username if drafted_player.user else None
+                    "user": username,
+                    "draft_order": drafted_player.draft_order,
+                    "drafted_at": (
+                        drafted_player.drafted_at.isoformat()
+                        if drafted_player.drafted_at
+                        else None
                     ),
+                    "drafted_at_est": drafted_at_est,
+                    "id": drafted_player.id,
                 },
                 "round_points": {},
                 "total_points": 0.0,
@@ -320,6 +342,21 @@ def calculate_player_playoff_points(league, year=None):
                 dst_team = drafted_dst.nfl_team  # This should be the team abbreviation
                 player_id = drafted_dst.gsis_id
 
+                # Format drafted_at in EST if available
+                drafted_at_est = None
+                if drafted_dst.drafted_at:
+                    import pytz
+
+                    est = pytz.timezone("America/New_York")
+                    drafted_at_est = drafted_dst.drafted_at.astimezone(est).isoformat()
+
+                # Get username from user or team_membership
+                username = None
+                if drafted_dst.user:
+                    username = drafted_dst.user.username
+                elif drafted_dst.team_membership and drafted_dst.team_membership.user:
+                    username = drafted_dst.team_membership.user.username
+
                 player_results[player_id] = {
                     "player_info": {
                         "gsis_id": drafted_dst.gsis_id,
@@ -327,9 +364,15 @@ def calculate_player_playoff_points(league, year=None):
                         "position": drafted_dst.position,
                         "nfl_team": drafted_dst.nfl_team,
                         "team_name": drafted_dst.team_name,
-                        "user": (
-                            drafted_dst.user.username if drafted_dst.user else None
+                        "user": username,
+                        "draft_order": drafted_dst.draft_order,
+                        "drafted_at": (
+                            drafted_dst.drafted_at.isoformat()
+                            if drafted_dst.drafted_at
+                            else None
                         ),
+                        "drafted_at_est": drafted_at_est,
+                        "id": drafted_dst.id,
                     },
                     "round_points": {},
                     "total_points": 0.0,

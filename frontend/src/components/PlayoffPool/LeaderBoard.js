@@ -16,9 +16,10 @@ const LeaderBoard = ({ leagueId, isDraftComplete }) => {
         try {
             setLoading(true);
             setError(null);
-            
-            const draftedTeamsData = await playoffPoolAPI.getDraftedTeams(leagueId);
-            setTeamsData(draftedTeamsData);
+
+            // Use getPlayoffStats instead of getDraftedTeams for accurate round-by-round scoring
+            const playoffData = await playoffPoolAPI.getPlayoffStats(leagueId);
+            setTeamsData(playoffData);
         } catch (err) {
             console.error('Error loading leaderboard data:', err);
             setError('Failed to load leaderboard data');
@@ -75,11 +76,11 @@ const LeaderBoard = ({ leagueId, isDraftComplete }) => {
             WC: 0,
             DIV: 0,
             CON: 0,
-            SB: 0
+            SB: 0,
         };
 
         // Sum up each player's round points for the team
-        team.players.forEach(player => {
+        team.players.forEach((player) => {
             if (player.round_points) {
                 roundTotals.WC += player.round_points.WC || 0;
                 roundTotals.DIV += player.round_points.DIV || 0;
@@ -88,9 +89,14 @@ const LeaderBoard = ({ leagueId, isDraftComplete }) => {
             }
         });
 
+        // Calculate total from round totals instead of using backend total_points
+        const calculatedTotal =
+            roundTotals.WC + roundTotals.DIV + roundTotals.CON + roundTotals.SB;
+
         return {
             ...team,
-            roundTotals
+            roundTotals,
+            total_points: calculatedTotal, // Use our calculated total
         };
     });
 

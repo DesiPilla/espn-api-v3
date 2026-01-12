@@ -12,32 +12,35 @@
 - [x] Add flex as an option
 - [x] Specify how many of each position to include
   - Somehow handle flex
-- [ ] Make the "create league" button at the bottom prettier
-  - As well as the spinner icon that appears after pressing it
+- [x] Make the "create league" button at the bottom prettier
+  - [ ] As well as the spinner icon that appears after pressing it
 - [ ] Allow for picking IDP players
 - [x] Add year to each league
+- [ ] Fix the scoring inputs so that integer values increment by integers, and floats increment by 0.01
 
 ## Draft
-- [ ] If a team has 0 WR but 1 Flex, WR need to be available to draft (currently not)
-- [ ] Make the "start draft" button prettier
+- [x] If a team has 0 WR but 1 Flex, WR need to be available to draft (currently not)
+- [x] Make the "start draft" button prettier
 - [x] Bug where drafted players still appear in the available players table
-- [ ] Bug when searching for a player and then clearing the search, where the top result stays on top.
+- [x] Bug when searching for a player and then clearing the search, where the top result stays on top.
   - Reproduce by searching "josh" and then CMD + BACKSPACE
-- [ ] Add Flex as a possible filter position
-- [ ] Show how many of each position a team has drafted
-- [ ] Prevent a team from selecting more than the allowable number of players for a given position
-  - Must work with Flex
+- [x] Add Flex as a possible filter position
+- [x] Show how many of each position a team has drafted
+- [x] Prevent a team from selecting more than the allowable number of players for a given position
+  - [x] Must work with Flex
 - [x] Display players from the correct year
 - [ ] In the team rosters widget, display the first team by default when opened
+- [ ] Sort by Draft value, then regular season point total (both desc)
+   - [x] Also the draft value should not have a floor. Right now all players below a certain value are made to zero. This leaves TE's with 50 pts at 0 value.
 
 ## League page
 
-- [ ] Build a page to view weekly standings
-  - Must work when there are not yet any scores (all zeros)
-  - If a league's draft is complete, it automatically displays on the league home page
+- [x] Build a page to view weekly standings
+  - [x] Must work when there are not yet any scores (all zeros)
+  - [x] If a league's draft is complete, it automatically displays on the league home page
 - [x] Display the roster size instead of the number of positions
 - [x] Lock the scoring settings after the draft has started
-- [ ] Be able to reset the draft (will unlock scoring settings)
+- [x] Be able to reset the draft (will unlock scoring settings)
 
 ## Team rosters page
 - [x] Display actual scores, not the draft fantasy points
