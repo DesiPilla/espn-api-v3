@@ -148,6 +148,26 @@ const LeagueDetail = () => {
         }
     };
 
+    const handleInviteToLeague = () => {
+        const inviteLink = `${window.location.origin}/playoff-pool/join?league=${leagueId}`;
+        const message = `Join my NFL playoff pool "${league?.name}"! Click this link to join: ${inviteLink}`;
+
+        if (navigator.clipboard) {
+            navigator.clipboard
+                .writeText(message)
+                .then(() => {
+                    alert("League invite link copied to clipboard!");
+                })
+                .catch(() => {
+                    // Fallback
+                    prompt("Copy this league invite link:", message);
+                });
+        } else {
+            // Fallback for older browsers
+            prompt("Copy this league invite link:", message);
+        }
+    };
+
     const handleRemoveTeam = async (teamId) => {
         try {
             console.log(
@@ -268,32 +288,66 @@ const LeagueDetail = () => {
                 <div className="container mx-auto px-4">
                     {/* Header */}
                     <div className="mb-8">
-                        <button
-                            onClick={handleBackToDashboard}
+                        <div
                             style={{
-                                display: "inline-flex",
+                                display: "flex",
                                 alignItems: "center",
-                                padding: "8px 16px",
-                                backgroundColor: "#6b7280",
-                                color: "white",
-                                fontWeight: "500",
-                                fontSize: "13px",
-                                borderRadius: "6px",
-                                border: "none",
-                                cursor: "pointer",
-                                transition: "background-color 0.15s",
-                                boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                                gap: "12px",
                                 marginBottom: "16px",
                             }}
-                            onMouseEnter={(e) =>
-                                (e.target.style.backgroundColor = "#4b5563")
-                            }
-                            onMouseLeave={(e) =>
-                                (e.target.style.backgroundColor = "#6b7280")
-                            }
                         >
-                            ← Back to Dashboard
-                        </button>
+                            <button
+                                onClick={handleBackToDashboard}
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    padding: "8px 16px",
+                                    backgroundColor: "#6b7280",
+                                    color: "white",
+                                    fontWeight: "500",
+                                    fontSize: "13px",
+                                    borderRadius: "6px",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    transition: "background-color 0.15s",
+                                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                                }}
+                                onMouseEnter={(e) =>
+                                    (e.target.style.backgroundColor = "#4b5563")
+                                }
+                                onMouseLeave={(e) =>
+                                    (e.target.style.backgroundColor = "#6b7280")
+                                }
+                            >
+                                ← Back to Dashboard
+                            </button>
+
+                            <button
+                                onClick={handleInviteToLeague}
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    padding: "8px 16px",
+                                    backgroundColor: "#3b82f6",
+                                    color: "white",
+                                    fontWeight: "500",
+                                    fontSize: "13px",
+                                    borderRadius: "6px",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    transition: "background-color 0.15s",
+                                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                                }}
+                                onMouseEnter={(e) =>
+                                    (e.target.style.backgroundColor = "#2563eb")
+                                }
+                                onMouseLeave={(e) =>
+                                    (e.target.style.backgroundColor = "#3b82f6")
+                                }
+                            >
+                                📧 Invite to League
+                            </button>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-8">

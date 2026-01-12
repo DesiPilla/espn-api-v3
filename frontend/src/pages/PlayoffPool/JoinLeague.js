@@ -161,22 +161,29 @@ const JoinLeague = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="container mx-auto px-4">
-          <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6">
-            <h1 className="text-2xl font-bold mb-4">Join League</h1>
-            <p className="text-gray-600 mb-4">
-              Please log in or register to join a league.
-            </p>
-            <button
-              onClick={() => navigate('/playoff-pool/login')}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
-            >
-              Log In / Register
-            </button>
-          </div>
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="container mx-auto px-4">
+                <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6">
+                    <h1 className="text-2xl font-bold mb-4">Join League</h1>
+                    <p className="text-gray-600 mb-4">
+                        Please log in or register to join a league.
+                    </p>
+                    <button
+                        onClick={() => {
+                            // Preserve query parameters when redirecting to login
+                            const queryString = searchParams.toString();
+                            const redirectPath = queryString
+                                ? `/playoff-pool/?redirect=join&${queryString}`
+                                : "/playoff-pool/";
+                            navigate(redirectPath);
+                        }}
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
+                    >
+                        Log In / Register
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
     );
   }
 

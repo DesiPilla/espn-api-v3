@@ -1263,6 +1263,25 @@ class LeagueViewSet(viewsets.ModelViewSet):
                                     user_data = UserSerializer(user).data
                                 except User.DoesNotExist:
                                     pass
+                            else:
+                                # Fallback: Try to get user from team_membership
+                                # Get the first player's DraftedTeam object to access team_membership
+                                try:
+                                    drafted_team = DraftedTeam.objects.filter(
+                                        league=league, gsis_id=player_info["gsis_id"]
+                                    ).first()
+                                    if (
+                                        drafted_team
+                                        and drafted_team.team_membership
+                                        and drafted_team.team_membership.user
+                                    ):
+                                        user_data = UserSerializer(
+                                            drafted_team.team_membership.user
+                                        ).data
+                                except Exception as e:
+                                    logger.warning(
+                                        f"Could not get user from team_membership: {e}"
+                                    )
 
                             teams[user_key] = {
                                 "user": user_data,
@@ -1330,9 +1349,13 @@ class LeagueViewSet(viewsets.ModelViewSet):
             teams = {}
             for player in drafted_players:
                 # Handle both claimed and unclaimed teams
+                # Try player.user first, then team_membership.user
                 if player.user:
                     user_id = player.user.id
                     user_data = UserSerializer(player.user).data
+                elif player.team_membership and player.team_membership.user:
+                    user_id = player.team_membership.user.id
+                    user_data = UserSerializer(player.team_membership.user).data
                 else:
                     # For unclaimed teams, use team_membership id as identifier
                     user_id = f"unclaimed_{player.team_membership.id}"

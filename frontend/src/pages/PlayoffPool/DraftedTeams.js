@@ -486,27 +486,6 @@ const DraftedTeams = () => {
                                         alignItems: "center",
                                     }}
                                 >
-                                    <div>
-                                        <div
-                                            style={{
-                                                fontSize: "14px",
-                                                color: "#6b7280",
-                                            }}
-                                        >
-                                            {team.user?.username || "Unclaimed"}
-                                            {team.user?.id === user?.id && (
-                                                <span
-                                                    style={{
-                                                        marginLeft: "8px",
-                                                        color: "#059669",
-                                                        fontWeight: "500",
-                                                    }}
-                                                >
-                                                    (You)
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
                                     <div
                                         style={{
                                             textAlign: "right",
