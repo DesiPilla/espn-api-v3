@@ -233,7 +233,7 @@ def calculate_fantasy_points(row: pd.Series, scoring_dict: dict) -> float:
             stat_value = row[stat]
             if pd.notna(stat_value):
                 points += stat_value * value
-                # if row["team"] == "PHI":
+                # if row["player_name"] == "BUF D/ST":
                 #     print(
                 #         "Adding stat {} with value {}".format(stat, stat_value * value)
                 #     )

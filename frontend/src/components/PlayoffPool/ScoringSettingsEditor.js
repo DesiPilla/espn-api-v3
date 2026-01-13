@@ -118,8 +118,9 @@ const ScoringSettingsEditor = ({
     };
 
     // Determine if fields should be editable
+    // Only admins can edit settings, either before draft or with override during/after draft
     const isEditable =
-        (!readOnly && !draftInProgress && !draftComplete) ||
+        (isAdmin && !readOnly && !draftInProgress && !draftComplete) ||
         (isAdmin && adminOverride);
 
     const hasChanges =

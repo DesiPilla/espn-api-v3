@@ -471,42 +471,39 @@ const LeagueDetail = () => {
                                             </button>
                                         )}
 
-                                        {isAdmin && (
-                                            <button
-                                                onClick={
-                                                    handleOpenScoringEditor
-                                                }
-                                                style={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    padding: "12px 20px",
-                                                    backgroundColor: "#7c3aed",
-                                                    color: "white",
-                                                    fontWeight: "600",
-                                                    fontSize: "14px",
-                                                    borderRadius: "8px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    transition:
-                                                        "background-color 0.15s",
-                                                    boxShadow:
-                                                        "0 1px 3px rgba(0, 0, 0, 0.1)",
-                                                }}
-                                                onMouseEnter={(e) =>
-                                                    (e.target.style.backgroundColor =
-                                                        "#6d28d9")
-                                                }
-                                                onMouseLeave={(e) =>
-                                                    (e.target.style.backgroundColor =
-                                                        "#7c3aed")
-                                                }
-                                            >
-                                                {draftInProgress ||
-                                                draftComplete
-                                                    ? "Show Scoring Settings"
-                                                    : "Edit Scoring Settings"}
-                                            </button>
-                                        )}
+                                        <button
+                                            onClick={handleOpenScoringEditor}
+                                            style={{
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                padding: "12px 20px",
+                                                backgroundColor: "#7c3aed",
+                                                color: "white",
+                                                fontWeight: "600",
+                                                fontSize: "14px",
+                                                borderRadius: "8px",
+                                                border: "none",
+                                                cursor: "pointer",
+                                                transition:
+                                                    "background-color 0.15s",
+                                                boxShadow:
+                                                    "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                            }}
+                                            onMouseEnter={(e) =>
+                                                (e.target.style.backgroundColor =
+                                                    "#6d28d9")
+                                            }
+                                            onMouseLeave={(e) =>
+                                                (e.target.style.backgroundColor =
+                                                    "#7c3aed")
+                                            }
+                                        >
+                                            {draftInProgress || draftComplete
+                                                ? "Show Scoring Settings"
+                                                : isAdmin
+                                                ? "Edit Scoring Settings"
+                                                : "Show Scoring Settings"}
+                                        </button>
 
                                         {isAdmin &&
                                             (draftInProgress ||
