@@ -5,6 +5,7 @@ import pandas as pd
 import polars as pl
 
 from backend.playoff_pool.scoring import (
+    DEFENSE_SCORING_MULTIPLIERS,
     RELEVANT_SCORING_STATS,
     RELEVANT_DEFENSIVE_SCORING_STATS,
     calculate_fantasy_points,
@@ -45,6 +46,95 @@ PLAYOFF_TEAMS = {
         "GB",
     ],
 }
+
+
+def get_defense_stats(year: int) -> pd.DataFrame:
+    """Because defensive stats are team stats, they are not returned
+    by the nfl.load_stats() method. This function handles all defense
+    stat loading so that the dataframe exists out of the box.
+
+    Args:
+        year (int): NFL season year
+
+    Returns:
+        pd.DataFrame: DataFrame of defensive stats for all teams
+    """
+
+    # Load all available team level stats
+    defense_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
+
+    # Add team D/ST identifiers
+    defense_stats["gsis_id"] = defense_stats["team"]
+    defense_stats["full_name"] = defense_stats["team"] + " D/ST"
+    defense_stats["position"] = "DST"
+    defense_stats["player_id"] = defense_stats["gsis_id"]
+
+    # Keep only relevant columns
+    defense_stats = defense_stats[
+        [
+            "season",
+            "week",
+            "gsis_id",
+            "full_name",
+            "position",
+            "player_id",
+            "team",
+            "season_type",
+        ]
+        + [
+            key
+            for key in DEFENSE_SCORING_MULTIPLIERS.keys()
+            if key in defense_stats.columns
+        ]
+    ]
+
+    # Load schedule to get points allowed
+    schedule = nfl.load_schedules(seasons=[year]).to_pandas()
+
+    # Create mapping for home teams (opponent score = away_score)
+    home_mapping = (
+        schedule[["season", "week", "home_team", "away_score"]]
+        .copy()
+        .rename(columns={"home_team": "team", "away_score": "points_allowed"})
+    )
+
+    # Create mapping for away teams (opponent score = home_score)
+    away_mapping = (
+        schedule[["season", "week", "away_team", "home_score"]]
+        .copy()
+        .rename(columns={"away_team": "team", "home_score": "points_allowed"})
+    )
+
+    # Combine both mappings
+    score_mapping = pd.concat([home_mapping, away_mapping], ignore_index=True)
+
+    # Merge with team stats
+    defense_stats = defense_stats.merge(
+        score_mapping, on=["season", "week", "team"], how="left"
+    )
+
+    # Calculate points allowed ranges, since it is used in scoring but not provided directly
+    points_allowed_ranges = [
+        key for key in DEFENSE_SCORING_MULTIPLIERS.keys() if "points_allowed_" in key
+    ]
+
+    for pa_range in points_allowed_ranges:
+        # Extract the min and max from the key name
+        min_max = pa_range.replace("points_allowed_", "").split("_")
+
+        if min_max[0] == "0":
+            defense_stats[pa_range] = (defense_stats["points_allowed"] == 0).astype(int)
+        elif min_max[1] == "plus":
+            defense_stats[pa_range] = (
+                defense_stats["points_allowed"] >= int(min_max[0])
+            ).astype(int)
+        else:
+            defense_stats[pa_range] = (
+                (defense_stats["points_allowed"] >= int(min_max[0]))
+                & (defense_stats["points_allowed"] <= int(min_max[1]))
+            ).astype(int)
+
+    return defense_stats
 
 
 def add_draft_value(df, positions, league_size=12):
@@ -221,26 +311,20 @@ def get_all_playoff_players(
     )
 
     # ------------ Get list of Defenses ------------
-    # Load all available team level stats
-    team_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
-
-    playoff_team_stats = team_stats[
-        team_stats["team"].isin(PLAYOFF_TEAMS[year])
-        & (team_stats["season_type"] == "REG")
+    defense_stats = get_defense_stats(year)
+    defense_stats = defense_stats[
+        defense_stats["team"].isin(PLAYOFF_TEAMS[year])
+        & (defense_stats["season_type"] == "REG")
     ]
 
-    playoff_team_stats["fantasy_points"] = playoff_team_stats.apply(
+    defense_stats["fantasy_points"] = defense_stats.apply(
         lambda row: calculate_fantasy_points(row, RELEVANT_DEFENSIVE_SCORING_STATS),
         axis=1,
     )
 
     playoff_dst_stats = (
-        playoff_team_stats.groupby("team")[["fantasy_points"]].sum().reset_index()
+        defense_stats.groupby("team")[["fantasy_points"]].sum().reset_index()
     )
-    playoff_dst_stats["gsis_id"] = playoff_dst_stats["team"]
-    playoff_dst_stats["full_name"] = playoff_dst_stats["team"] + " D/ST"
-    playoff_dst_stats["position"] = "DST"
-    playoff_dst_stats["player_id"] = playoff_dst_stats["gsis_id"]
 
     # Combine skill players and DSTs
     playoff_players = pd.concat([playoff_skill_players, playoff_dst_stats])

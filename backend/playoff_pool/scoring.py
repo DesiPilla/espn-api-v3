@@ -178,74 +178,6 @@ DEFENSE_SCORING_MULTIPLIERS = {
 }
 
 
-def get_points_allowed_multiplier(points_allowed, scoring_dict: dict) -> float:
-    """
-    Get the appropriate points allowed multiplier from league scoring settings.
-    Args:
-        points_allowed (int/float): Points allowed by the defense
-        scoring_dict: dict mapping stat names to point multipliers (should contain only one range)
-    Returns:
-        float: Fantasy points based on league's custom scoring for the range, or 0 if not in range
-    """
-    if pd.isna(points_allowed):
-        return 0.0
-
-    points_allowed = int(points_allowed)
-
-    # Check if this points_allowed value matches any range in the scoring_dict
-    for range_stat, multiplier in scoring_dict.items():
-        if range_stat == "points_allowed_0" and points_allowed == 0:
-            return multiplier
-        elif range_stat == "points_allowed_1_6" and 1 <= points_allowed <= 6:
-            return multiplier
-        elif range_stat == "points_allowed_7_13" and 7 <= points_allowed <= 13:
-            return multiplier
-        elif range_stat == "points_allowed_14_20" and 14 <= points_allowed <= 20:
-            return multiplier
-        elif range_stat == "points_allowed_21_27" and 21 <= points_allowed <= 27:
-            return multiplier
-        elif range_stat == "points_allowed_28_34" and 28 <= points_allowed <= 34:
-            return multiplier
-        elif range_stat == "points_allowed_35_plus" and points_allowed >= 35:
-            return multiplier
-
-    return 0.0
-
-
-def calculate_points_allowed_score(points_allowed):
-    """
-    DEPRECATED: Use get_points_allowed_multiplier() with league scoring settings instead.
-
-    Calculate fantasy points based on points allowed by defense.
-    This function uses hardcoded values and should no longer be used for league scoring.
-
-    Args:
-        points_allowed (int/float): Points allowed by the defense
-
-    Returns:
-        float: Fantasy points for points allowed
-    """
-    if pd.isna(points_allowed):
-        return 0.0
-
-    points_allowed = int(points_allowed)
-
-    if points_allowed == 0:
-        return 10.0
-    elif 1 <= points_allowed <= 6:
-        return 7.0
-    elif 7 <= points_allowed <= 13:
-        return 4.0
-    elif 14 <= points_allowed <= 20:
-        return 1.0
-    elif 21 <= points_allowed <= 27:
-        return 0.0
-    elif 28 <= points_allowed <= 34:
-        return -1.0
-    else:  # 35+
-        return -4.0
-
-
 RELEVANT_SCORING_STATS = {
     stat: multiplier for stat, multiplier in SCORING_MULTIPLIERS.items() if multiplier != 0
 }
@@ -291,33 +223,13 @@ def calculate_fantasy_points(row: pd.Series, scoring_dict: dict) -> float:
         float: Calculated fantasy points
     """
     points = 0.0
-    # print("New week")
-    # Handle points_allowed stats specially using opponent_score
-    if "opponent_score" in row and not pd.isna(row["opponent_score"]):
-        for stat_name in scoring_dict.keys():
-            if (
-                stat_name.startswith("points_allowed_")
-                and stat_name != "points_allowed"
-            ):
-                # Get the multiplier for this specific points allowed range
-                multiplier = scoring_dict[stat_name]
-                if not pd.isna(multiplier):
-                    points_allowed_value = get_points_allowed_multiplier(
-                        row["opponent_score"], {stat_name: multiplier}
-                    )
-                    if points_allowed_value > 0:  # Only add if this range matches
-                        # print(
-                        #     "Adding stat {} with value {}".format(
-                        #         stat_name, points_allowed_value
-                        #     )
-                        # )
 
-                        points += points_allowed_value
-                        break  # Only one range should match
-
-    # Handle all other stats normally
+    # print(
+    #     "Calculating points for player/team:",
+    #     row.get("player_name", row.get("team", "unknown")),
+    # )
     for stat, value in scoring_dict.items():
-        if stat in row and not pd.isna(value) and not stat.startswith("points_allowed"):
+        if stat in row and not pd.isna(value):
             stat_value = row[stat]
             if pd.notna(stat_value):
                 points += stat_value * value
@@ -325,5 +237,15 @@ def calculate_fantasy_points(row: pd.Series, scoring_dict: dict) -> float:
                 #     print(
                 #         "Adding stat {} with value {}".format(stat, stat_value * value)
                 #     )
+            else:
+                # print(
+                #     f"Stat {stat} is NaN for team {row.get('team', 'unknown')}, skipping."
+                # )
+                continue
+        else:
+            # print(
+            #     f"Stat {stat} not found in row for team {row.get('team', 'unknown')}."
+            # )
+            continue
 
     return points
