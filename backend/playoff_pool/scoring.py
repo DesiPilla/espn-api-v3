@@ -7,186 +7,467 @@ SCORING_MULTIPLIERS = {
     # -------------------
     # Passing
     # -------------------
-    # "completions": 0,
-    # "attempts": 0,
-    "passing_yards": 1 / 25,
-    "passing_tds": 4,
-    "passing_interceptions": -2,
-    "sacks_suffered": 0,
-    # "sack_yards_lost": 0,
-    # "sack_fumbles": 0,
-    "sack_fumbles_lost": -2,
-    # "passing_air_yards": 0,
-    # "passing_yards_after_catch": 0,
-    # "passing_first_downs": 0,
-    # "passing_epa": 0,
-    # "passing_cpoe": 0,
-    "passing_2pt_conversions": 2,
-    # "pacr": 0,
+    "passing_yards": {
+        "display_name": "Passing Yards",
+        "default_value": 1 / 25,
+        "increment_value": 0.01,
+        "category": "Passing",
+    },
+    "passing_tds": {
+        "display_name": "Passing Touchdowns",
+        "default_value": 4,
+        "increment_value": 1,
+        "category": "Passing",
+    },
+    "passing_interceptions": {
+        "display_name": "Passing Interceptions",
+        "default_value": -2,
+        "increment_value": 1,
+        "category": "Passing",
+    },
+    "sacks_suffered": {
+        "display_name": "Sacks Suffered",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Passing",
+    },
+    "sack_fumbles_lost": {
+        "display_name": "Sack Fumbles Lost",
+        "default_value": -2,
+        "increment_value": 1,
+        "category": "Passing",
+    },
+    "passing_2pt_conversions": {
+        "display_name": "Passing 2-Point Conversions",
+        "default_value": 2,
+        "increment_value": 1,
+        "category": "Passing",
+    },
     # -------------------
     # Rushing
     # -------------------
-    # "carries": 0,
-    "rushing_yards": 1 / 10,
-    "rushing_tds": 6,
-    # "rushing_fumbles": 0,
-    "rushing_fumbles_lost": -2,
-    "rushing_first_downs": 0,
-    # "rushing_epa": 0,
-    "rushing_2pt_conversions": 2,
+    "rushing_yards": {
+        "display_name": "Rushing Yards",
+        "default_value": 1 / 10,
+        "increment_value": 0.01,
+        "category": "Rushing",
+    },
+    "rushing_tds": {
+        "display_name": "Rushing Touchdowns",
+        "default_value": 6,
+        "increment_value": 1,
+        "category": "Rushing",
+    },
+    "rushing_fumbles_lost": {
+        "display_name": "Rushing Fumbles Lost",
+        "default_value": -2,
+        "increment_value": 1,
+        "category": "Rushing",
+    },
+    "rushing_first_downs": {
+        "display_name": "Rushing First Downs",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Rushing",
+    },
+    "rushing_2pt_conversions": {
+        "display_name": "Rushing 2-Point Conversions",
+        "default_value": 2,
+        "increment_value": 1,
+        "category": "Rushing",
+    },
     # -------------------
     # Receiving
     # -------------------
-    "receptions": 0,  # non-PPR
-    # "targets": 0,
-    "receiving_yards": 1 / 10,
-    "receiving_tds": 6,
-    # "receiving_fumbles": 0,
-    "receiving_fumbles_lost": -2,
-    # "receiving_air_yards": 0,
-    # "receiving_yards_after_catch": 0,
-    "receiving_first_downs": 0,
-    # "receiving_epa": 0,
-    "receiving_2pt_conversions": 2,
-    # "racr": 0,
-    # "target_share": 0,
-    # "air_yards_share": 0,
-    # "wopr": 0,
-    # -------------------
-    # Defense / IDP
-    # -------------------
-    # "special_teams_tds": 6,
-    # "def_tackles_solo": 1,
-    # "def_tackles_with_assist": 0,
-    # "def_tackle_assists": 0.5,
-    # "def_tackles_for_loss": 1,
-    # "def_tackles_for_loss_yards": 0,
-    # "def_fumbles_forced": 2,
-    # "def_sacks": 2,
-    # "def_sack_yards": 0,
-    # "def_qb_hits": 0,
-    # "def_interceptions": 2,
-    # "def_interception_yards": 0,
-    # "def_pass_defended": 1,
-    # "def_tds": 6,
-    # "def_fumbles": 2,  # recovered
-    # "def_safeties": 2,
-    # -------------------
-    # Fumble recoveries
-    # -------------------
-    # "fumble_recovery_own": 0,
-    # "fumble_recovery_yards_own": 0,
-    # "fumble_recovery_opp": 2,
-    # "fumble_recovery_yards_opp": 0,
-    # "fumble_recovery_tds": 6,
-    # -------------------
-    # Returns / misc
-    # -------------------
-    # "misc_yards": 0,
-    # "penalties": 0,
-    # "penalty_yards": 0,
-    # "punt_returns": 0,
-    # "punt_return_yards": 0,
-    # "kickoff_returns": 0,
-    # "kickoff_return_yards": 0,
+    "receptions": {
+        "display_name": "Receptions (PPR)",
+        "default_value": 0,  # non-PPR by default
+        "increment_value": 0.5,
+        "category": "Receiving",
+    },
+    "receiving_yards": {
+        "display_name": "Receiving Yards",
+        "default_value": 1 / 10,
+        "increment_value": 0.01,
+        "category": "Receiving",
+    },
+    "receiving_tds": {
+        "display_name": "Receiving Touchdowns",
+        "default_value": 6,
+        "increment_value": 1,
+        "category": "Receiving",
+    },
+    "receiving_fumbles_lost": {
+        "display_name": "Receiving Fumbles Lost",
+        "default_value": -2,
+        "increment_value": 1,
+        "category": "Receiving",
+    },
+    "receiving_first_downs": {
+        "display_name": "Receiving First Downs",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Receiving",
+    },
+    "receiving_2pt_conversions": {
+        "display_name": "Receiving 2-Point Conversions",
+        "default_value": 2,
+        "increment_value": 1,
+        "category": "Receiving",
+    },
     # -------------------
     # Kicking
     # -------------------
-    "fg_made": 0,
-    # "fg_att": 0,
-    # "fg_missed": -1,
-    # "fg_blocked": 0,
-    # "fg_long": 0,
-    # "fg_pct": 0,
-    "fg_made_0_19": 3,
-    "fg_made_20_29": 3,
-    "fg_made_30_39": 3,
-    "fg_made_40_49": 4,
-    "fg_made_50_59": 5,
-    "fg_made_60_": 5,
-    "fg_missed_0_19": -1,
-    "fg_missed_20_29": -1,
-    "fg_missed_30_39": -1,
-    "fg_missed_40_49": -1,
-    "fg_missed_50_59": -1,
-    "fg_missed_60_": -1,
-    # "fg_made_list": 0, # Lists will break the calculation
-    # "fg_missed_list": 0, # Lists will break the calculation
-    # "fg_blocked_list": 0, # Lists will break the calculation
-    "fg_made_distance": 0,
-    # "fg_missed_distance": 0,
-    # "fg_blocked_distance": 0,
-    "pat_made": 1,
-    # "pat_att": 0,
-    "pat_missed": -1,
-    "pat_blocked": 0,
-    # "pat_pct": 0,
-    # "gwfg_made": 0,
-    # "gwfg_att": 0,
-    # "gwfg_missed": 0,
-    # "gwfg_blocked": 0,
-    # "gwfg_distance": 0,
+    "fg_made": {
+        "display_name": "Field Goal Made",
+        "default_value": 0,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_made_0_19": {
+        "display_name": "Field Goal Made: 0-19 yds",
+        "default_value": 3,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_made_20_29": {
+        "display_name": "Field Goal Made: 20-29 yds",
+        "default_value": 3,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_made_30_39": {
+        "display_name": "Field Goal Made: 30-39 yds",
+        "default_value": 3,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_made_40_49": {
+        "display_name": "Field Goal Made: 40-49 yds",
+        "default_value": 4,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_made_50_59": {
+        "display_name": "Field Goal Made: 50-59 yds",
+        "default_value": 5,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_made_60_": {
+        "display_name": "Field Goal Made: 60+ yds",
+        "default_value": 5,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_missed_0_19": {
+        "display_name": "Field Goal Missed: 0-19 yds",
+        "default_value": -1,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_missed_20_29": {
+        "display_name": "Field Goal Missed: 20-29 yds",
+        "default_value": -1,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_missed_30_39": {
+        "display_name": "Field Goal Missed: 30-39 yds",
+        "default_value": -1,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_missed_40_49": {
+        "display_name": "Field Goal Missed: 40-49 yds",
+        "default_value": -1,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_missed_50_59": {
+        "display_name": "Field Goal Missed: 50-59 yds",
+        "default_value": -1,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_missed_60_": {
+        "display_name": "Field Goal Missed: 60+ yds",
+        "default_value": -1,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "fg_made_distance": {
+        "display_name": "Field Goal Made Distance",
+        "default_value": 0,
+        "increment_value": 0.01,
+        "category": "Kicking",
+    },
+    "pat_made": {
+        "display_name": "PAT Made",
+        "default_value": 1,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "pat_missed": {
+        "display_name": "PAT Missed",
+        "default_value": -1,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
+    "pat_blocked": {
+        "display_name": "PAT Blocked",
+        "default_value": 0,
+        "increment_value": 1,
+        "category": "Kicking",
+    },
 }
 
 DEFENSE_SCORING_MULTIPLIERS = {
     # Touchdowns
-    "special_teams_tds": 6,
-    "def_tds": 6,
-    "fumble_recovery_tds": 6,
+    "special_teams_tds": {
+        "display_name": "Special Teams Touchdowns",
+        "default_value": 6,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "def_tds": {
+        "display_name": "Defensive Touchdowns",
+        "default_value": 6,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "fumble_recovery_tds": {
+        "display_name": "Fumble Recovery Touchdowns",
+        "default_value": 6,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
     # Tackles (not scored in ESPN standard D/ST)
-    "def_tackles_solo": 0,
-    "def_tackles_with_assist": 0,
-    "def_tackle_assists": 0,
-    "def_tackles_for_loss": 0,
-    "def_tackles_for_loss_yards": 0,
+    "def_tackles_solo": {
+        "display_name": "Solo Tackles",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Defense/Special Teams",
+    },
+    "def_tackles_with_assist": {
+        "display_name": "Tackles With Assist",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Defense/Special Teams",
+    },
+    "def_tackle_assists": {
+        "display_name": "Tackle Assists",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Defense/Special Teams",
+    },
+    "def_tackles_for_loss": {
+        "display_name": "Tackles For Loss",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Defense/Special Teams",
+    },
+    "def_tackles_for_loss_yards": {
+        "display_name": "Tackles For Loss Yards",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Defense/Special Teams",
+    },
     # Turnovers & pressure
-    "def_fumbles_forced": 0,  # ESPN only scores fumble recoveries
-    "def_fumbles": 2,  # fumbles recovered
-    "def_interceptions": 2,
-    "def_interception_yards": 0,
-    "def_sacks": 1,
-    "def_sack_yards": 0,
-    "def_qb_hits": 0,
+    "def_fumbles_forced": {
+        "display_name": "Fumbles Forced",
+        "default_value": 0,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "def_fumbles": {
+        "display_name": "Fumbles Recovered",
+        "default_value": 2,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "def_interceptions": {
+        "display_name": "Interceptions",
+        "default_value": 2,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "def_interception_yards": {
+        "display_name": "Interception Return Yards",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Defense/Special Teams",
+    },
+    "def_sacks": {
+        "display_name": "Sacks",
+        "default_value": 1,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "def_sack_yards": {
+        "display_name": "Sack Yards",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Defense/Special Teams",
+    },
+    "def_qb_hits": {
+        "display_name": "QB Hits",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Defense/Special Teams",
+    },
     # Coverage / misc defense
-    "def_pass_defended": 0,
-    "def_safeties": 2,
+    "def_pass_defended": {
+        "display_name": "Passes Defended",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Defense/Special Teams",
+    },
+    "def_safeties": {
+        "display_name": "Safeties",
+        "default_value": 2,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
     # Fumble recoveries (by possession)
-    "fumble_recovery_own": 0,
-    "fumble_recovery_yards_own": 0,
-    "fumble_recovery_opp": 2,
-    "fumble_recovery_yards_opp": 0,
+    "fumble_recovery_own": {
+        "display_name": "Own Fumble Recoveries",
+        "default_value": 0,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "fumble_recovery_yards_own": {
+        "display_name": "Own Fumble Recovery Yards",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Defense/Special Teams",
+    },
+    "fumble_recovery_opp": {
+        "display_name": "Opponent Fumble Recoveries",
+        "default_value": 2,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "fumble_recovery_yards_opp": {
+        "display_name": "Opponent Fumble Recovery Yards",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Defense/Special Teams",
+    },
     # Returns (yards not scored)
-    "punt_returns": 0,
-    "punt_return_yards": 0,
-    "kickoff_returns": 0,
-    "kickoff_return_yards": 0,
+    "punt_returns": {
+        "display_name": "Punt Returns",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Returns",
+    },
+    "punt_return_yards": {
+        "display_name": "Punt Return Yards",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Returns",
+    },
+    "kickoff_returns": {
+        "display_name": "Kickoff Returns",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Returns",
+    },
+    "kickoff_return_yards": {
+        "display_name": "Kickoff Return Yards",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Returns",
+    },
     # Misc / non-scoring
-    "misc_yards": 0,
-    "penalties": 0,
-    "penalty_yards": 0,
-    "timeouts": 0,
+    "misc_yards": {
+        "display_name": "Miscellaneous Yards",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Miscellaneous",
+    },
+    "penalties": {
+        "display_name": "Penalties",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Miscellaneous",
+    },
+    "penalty_yards": {
+        "display_name": "Penalty Yards",
+        "default_value": 0,
+        "increment_value": 0.1,
+        "category": "Miscellaneous",
+    },
+    "timeouts": {
+        "display_name": "Timeouts",
+        "default_value": 0,
+        "increment_value": 0.5,
+        "category": "Miscellaneous",
+    },
     # Points allowed scoring
-    "points_allowed": 0,  # This will be calculated dynamically
+    "points_allowed": {
+        "display_name": "Points Allowed",
+        "default_value": 0,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
     # Points allowed ranges (for custom scoring)
-    "points_allowed_0": 10,
-    "points_allowed_1_6": 7,
-    "points_allowed_7_13": 4,
-    "points_allowed_14_20": 1,
-    "points_allowed_21_27": 0,
-    "points_allowed_28_34": -1,
-    "points_allowed_35_plus": -4,
+    "points_allowed_0": {
+        "display_name": "Points Allowed: 0 Points",
+        "default_value": 10,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "points_allowed_1_6": {
+        "display_name": "Points Allowed: 1-6 Points",
+        "default_value": 7,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "points_allowed_7_13": {
+        "display_name": "Points Allowed: 7-13 Points",
+        "default_value": 4,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "points_allowed_14_20": {
+        "display_name": "Points Allowed: 14-20 Points",
+        "default_value": 1,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "points_allowed_21_27": {
+        "display_name": "Points Allowed: 21-27 Points",
+        "default_value": 0,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "points_allowed_28_34": {
+        "display_name": "Points Allowed: 28-34 Points",
+        "default_value": -1,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
+    "points_allowed_35_plus": {
+        "display_name": "Points Allowed: 35+ Points",
+        "default_value": -4,
+        "increment_value": 1,
+        "category": "Defense/Special Teams",
+    },
 }
 
 
 RELEVANT_SCORING_STATS = {
-    stat: multiplier for stat, multiplier in SCORING_MULTIPLIERS.items() if multiplier != 0
+    stat: config
+    for stat, config in SCORING_MULTIPLIERS.items()
+    if config["default_value"] != 0
 }
 
 RELEVANT_DEFENSIVE_SCORING_STATS = {
-    stat: multiplier
-    for stat, multiplier in DEFENSE_SCORING_MULTIPLIERS.items()
-    if multiplier != 0
-    or stat == "points_allowed"  # Include points_allowed even though multiplier is 0
+    stat: config
+    for stat, config in DEFENSE_SCORING_MULTIPLIERS.items()
+    if config["default_value"] != 0
+    or stat == "points_allowed"  # Include points_allowed even though default is 0
 }
 
 
@@ -198,17 +479,20 @@ def get_league_scoring_settings(league: League) -> dict:
         league: League model instance
 
     Returns:
-        dict: Complete scoring settings with custom overrides
+        dict: Complete scoring settings with custom overrides applied to default_value
     """
     from .models import LeagueScoringSetting
 
-    # Start with default scoring
-    scoring_settings = {**SCORING_MULTIPLIERS, **DEFENSE_SCORING_MULTIPLIERS}
+    # Start with default scoring (deep copy to avoid mutating originals)
+    scoring_settings = {}
+    for stat, config in {**SCORING_MULTIPLIERS, **DEFENSE_SCORING_MULTIPLIERS}.items():
+        scoring_settings[stat] = config.copy()
 
-    # Override with custom league settings
+    # Override with custom league settings (update the default_value)
     custom_settings = LeagueScoringSetting.objects.filter(league=league)
     for setting in custom_settings:
-        scoring_settings[setting.stat_name] = setting.multiplier
+        if setting.stat_name in scoring_settings:
+            scoring_settings[setting.stat_name]["default_value"] = setting.multiplier
 
     return scoring_settings
 
@@ -218,7 +502,7 @@ def calculate_fantasy_points(row: pd.Series, scoring_dict: dict) -> float:
     Calculate fantasy points for a player row based on a scoring dictionary.
     Args:
         row: pandas Series representing player stats
-        scoring_dict: dict mapping stat names to point multipliers
+        scoring_dict: dict mapping stat names to config dicts with default_value
     Returns:
         float: Calculated fantasy points
     """
@@ -228,7 +512,13 @@ def calculate_fantasy_points(row: pd.Series, scoring_dict: dict) -> float:
     #     "Calculating points for player/team:",
     #     row.get("player_name", row.get("team", "unknown")),
     # )
-    for stat, value in scoring_dict.items():
+    for stat, config in scoring_dict.items():
+        # Handle both old format (direct value) and new format (dict with default_value)
+        if isinstance(config, dict):
+            value = config.get("default_value", 0)
+        else:
+            value = config  # Backwards compatibility
+
         if stat in row and not pd.isna(value):
             stat_value = row[stat]
             if pd.notna(stat_value):

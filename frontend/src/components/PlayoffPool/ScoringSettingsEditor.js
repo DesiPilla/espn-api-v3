@@ -58,7 +58,7 @@ const ScoringSettingsEditor = ({
     const handleSettingChange = (statName, value) => {
         setScoringSettings((prev) => ({
             ...prev,
-            [statName]: parseFloat(value) || 0,
+            [statName]: value === "" ? "" : parseFloat(value),
         }));
     };
 
@@ -348,11 +348,18 @@ const ScoringSettingsEditor = ({
                                                     </label>
                                                     <input
                                                         type="number"
-                                                        step="0.01"
+                                                        step="any"
+                                                        min="-999"
+                                                        max="999"
                                                         value={
                                                             scoringSettings[
                                                                 stat.stat_name
-                                                            ] || 0
+                                                            ] === ""
+                                                                ? ""
+                                                                : scoringSettings[
+                                                                      stat
+                                                                          .stat_name
+                                                                  ] ?? 0
                                                         }
                                                         onChange={(e) =>
                                                             handleSettingChange(
@@ -360,6 +367,59 @@ const ScoringSettingsEditor = ({
                                                                 e.target.value
                                                             )
                                                         }
+                                                        onKeyDown={(e) => {
+                                                            // Handle arrow key increments with custom step
+                                                            const step =
+                                                                stat.increment_value ||
+                                                                0.01;
+                                                            if (
+                                                                e.key ===
+                                                                "ArrowUp"
+                                                            ) {
+                                                                e.preventDefault();
+                                                                const currentValue =
+                                                                    parseFloat(
+                                                                        scoringSettings[
+                                                                            stat
+                                                                                .stat_name
+                                                                        ]
+                                                                    );
+                                                                const newValue =
+                                                                    (isNaN(
+                                                                        currentValue
+                                                                    )
+                                                                        ? 0
+                                                                        : currentValue) +
+                                                                    step;
+                                                                handleSettingChange(
+                                                                    stat.stat_name,
+                                                                    newValue.toString()
+                                                                );
+                                                            } else if (
+                                                                e.key ===
+                                                                "ArrowDown"
+                                                            ) {
+                                                                e.preventDefault();
+                                                                const currentValue =
+                                                                    parseFloat(
+                                                                        scoringSettings[
+                                                                            stat
+                                                                                .stat_name
+                                                                        ]
+                                                                    );
+                                                                const newValue =
+                                                                    (isNaN(
+                                                                        currentValue
+                                                                    )
+                                                                        ? 0
+                                                                        : currentValue) -
+                                                                    step;
+                                                                handleSettingChange(
+                                                                    stat.stat_name,
+                                                                    newValue.toString()
+                                                                );
+                                                            }
+                                                        }}
                                                         readOnly={!isEditable}
                                                         disabled={!isEditable}
                                                         style={{

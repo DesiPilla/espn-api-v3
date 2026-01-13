@@ -33,9 +33,21 @@ const DraftInterface = () => {
         }
     }, [leagueId]);
 
-    const loadDraftData = async () => {
+    // Initialize selectedRosterTeam to first team when members are loaded
+    useEffect(() => {
+        if (members.length > 0 && !selectedRosterTeam) {
+            const firstMember = members[0];
+            const firstTeamId =
+                firstMember.user?.id || `unclaimed_${firstMember.team_name}`;
+            setSelectedRosterTeam(firstTeamId);
+        }
+    }, [members, selectedRosterTeam]);
+
+    const loadDraftData = async (skipLoadingState = false) => {
         try {
-            setLoading(true);
+            if (!skipLoadingState) {
+                setLoading(true);
+            }
             setError(null);
 
             const [leagueData, membersData, playersData] = await Promise.all([
@@ -100,7 +112,9 @@ const DraftInterface = () => {
             setError("Failed to load draft data");
             console.error("Error loading draft data:", err);
         } finally {
-            setLoading(false);
+            if (!skipLoadingState) {
+                setLoading(false);
+            }
         }
     };
 
@@ -348,8 +362,8 @@ const DraftInterface = () => {
                 selectedUser?.id || null
             );
 
-            // Reload draft data to update UI
-            await loadDraftData();
+            // Reload draft data to update UI without showing main loading state
+            await loadDraftData(true);
 
             // Clear selections
             setSelectedPlayer(null);
@@ -447,7 +461,11 @@ const DraftInterface = () => {
             if (b.draft_value !== a.draft_value) {
                 return b.draft_value - a.draft_value;
             }
-            // Secondary sort by player name for consistency
+            // Secondary sort by regular season points (descending)
+            if (b.fantasy_points !== a.fantasy_points) {
+                return b.fantasy_points - a.fantasy_points;
+            }
+            // Tertiary sort by player name for consistency
             const nameA = a.name || "";
             const nameB = b.name || "";
             return nameA.localeCompare(nameB);
@@ -547,1515 +565,467 @@ const DraftInterface = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
-            <div className="container mx-auto px-4">
-                {/* Header */}
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "24px",
-                    }}
-                >
-                    <div>
-                        <button
-                            onClick={() =>
-                                navigate(`/playoff-pool/league/${leagueId}`)
-                            }
-                            className="mb-4 text-blue-600 hover:text-blue-800"
-                        >
-                            ← Back to League
-                        </button>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                            Draft Interface
-                        </h1>
-                        <p className="text-gray-600">{league?.name}</p>
-                    </div>
+        <>
+            <style>
+                {`
+                    @keyframes spin {
+                        from {
+                            transform: rotate(0deg);
+                        }
+                        to {
+                            transform: rotate(360deg);
+                        }
+                    }
+                `}
+            </style>
+            <div className="min-h-screen bg-gray-50 py-8">
+                <div className="container mx-auto px-4">
+                    {/* Header */}
                     <div
                         style={{
                             display: "flex",
-                            gap: "12px",
-                            marginTop: "32px",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: "24px",
                         }}
                     >
-                        <button
-                            onClick={handleResetDraft}
-                            disabled={
-                                resetLoading || draftedPlayers.length === 0
-                            }
+                        <div>
+                            <button
+                                onClick={() =>
+                                    navigate(`/playoff-pool/league/${leagueId}`)
+                                }
+                                className="mb-4 text-blue-600 hover:text-blue-800"
+                            >
+                                ← Back to League
+                            </button>
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                Draft Interface
+                            </h1>
+                            <p className="text-gray-600">{league?.name}</p>
+                        </div>
+                        <div
                             style={{
-                                background:
-                                    resetLoading || draftedPlayers.length === 0
-                                        ? "#9ca3af"
-                                        : "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "12px",
-                                padding: "12px 24px",
-                                fontSize: "16px",
-                                fontWeight: "600",
-                                cursor:
-                                    resetLoading || draftedPlayers.length === 0
-                                        ? "not-allowed"
-                                        : "pointer",
-                                boxShadow:
-                                    resetLoading || draftedPlayers.length === 0
-                                        ? "none"
-                                        : "0 4px 12px rgba(245, 158, 11, 0.3)",
-                                transition: "all 0.2s ease",
                                 display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
+                                gap: "12px",
+                                marginTop: "32px",
                             }}
-                            onMouseEnter={(e) => {
-                                if (
-                                    !resetLoading &&
-                                    draftedPlayers.length > 0
-                                ) {
+                        >
+                            <button
+                                onClick={handleResetDraft}
+                                disabled={
+                                    resetLoading || draftedPlayers.length === 0
+                                }
+                                style={{
+                                    background:
+                                        resetLoading ||
+                                        draftedPlayers.length === 0
+                                            ? "#9ca3af"
+                                            : "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "12px",
+                                    padding: "12px 24px",
+                                    fontSize: "16px",
+                                    fontWeight: "600",
+                                    cursor:
+                                        resetLoading ||
+                                        draftedPlayers.length === 0
+                                            ? "not-allowed"
+                                            : "pointer",
+                                    boxShadow:
+                                        resetLoading ||
+                                        draftedPlayers.length === 0
+                                            ? "none"
+                                            : "0 4px 12px rgba(245, 158, 11, 0.3)",
+                                    transition: "all 0.2s ease",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (
+                                        !resetLoading &&
+                                        draftedPlayers.length > 0
+                                    ) {
+                                        e.target.style.transform =
+                                            "translateY(-1px)";
+                                        e.target.style.boxShadow =
+                                            "0 6px 16px rgba(245, 158, 11, 0.4)";
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (
+                                        !resetLoading &&
+                                        draftedPlayers.length > 0
+                                    ) {
+                                        e.target.style.transform =
+                                            "translateY(0)";
+                                        e.target.style.boxShadow =
+                                            "0 4px 12px rgba(245, 158, 11, 0.3)";
+                                    }
+                                }}
+                                title={
+                                    draftedPlayers.length === 0
+                                        ? "No draft picks to reset"
+                                        : "Reset the entire draft"
+                                }
+                            >
+                                {resetLoading
+                                    ? "🔄 Resetting..."
+                                    : "🔄 Reset Draft"}
+                            </button>
+                            <button
+                                onClick={handleCompleteDraft}
+                                style={{
+                                    background:
+                                        "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "12px",
+                                    padding: "12px 24px",
+                                    fontSize: "16px",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    boxShadow:
+                                        "0 4px 12px rgba(220, 38, 38, 0.3)",
+                                    transition: "all 0.2s ease",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                }}
+                                onMouseEnter={(e) => {
                                     e.target.style.transform =
                                         "translateY(-1px)";
                                     e.target.style.boxShadow =
-                                        "0 6px 16px rgba(245, 158, 11, 0.4)";
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (
-                                    !resetLoading &&
-                                    draftedPlayers.length > 0
-                                ) {
+                                        "0 6px 16px rgba(220, 38, 38, 0.4)";
+                                }}
+                                onMouseLeave={(e) => {
                                     e.target.style.transform = "translateY(0)";
                                     e.target.style.boxShadow =
-                                        "0 4px 12px rgba(245, 158, 11, 0.3)";
-                                }
-                            }}
-                            title={
-                                draftedPlayers.length === 0
-                                    ? "No draft picks to reset"
-                                    : "Reset the entire draft"
-                            }
-                        >
-                            {resetLoading
-                                ? "🔄 Resetting..."
-                                : "🔄 Reset Draft"}
-                        </button>
-                        <button
-                            onClick={handleCompleteDraft}
-                            style={{
-                                background:
-                                    "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "12px",
-                                padding: "12px 24px",
-                                fontSize: "16px",
-                                fontWeight: "600",
-                                cursor: "pointer",
-                                boxShadow: "0 4px 12px rgba(220, 38, 38, 0.3)",
-                                transition: "all 0.2s ease",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                            }}
-                            onMouseEnter={(e) => {
-                                e.target.style.transform = "translateY(-1px)";
-                                e.target.style.boxShadow =
-                                    "0 6px 16px rgba(220, 38, 38, 0.4)";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.transform = "translateY(0)";
-                                e.target.style.boxShadow =
-                                    "0 4px 12px rgba(220, 38, 38, 0.3)";
-                            }}
-                            title="Finalize and close the draft"
-                        >
-                            🏁 Complete Draft
-                        </button>
+                                        "0 4px 12px rgba(220, 38, 38, 0.3)";
+                                }}
+                                title="Finalize and close the draft"
+                            >
+                                🏁 Complete Draft
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                    {/* Available Players */}
-                    <div className="xl:col-span-2">
-                        <div
-                            style={{
-                                backgroundColor: "white",
-                                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: "8px",
-                                overflow: "hidden",
-                            }}
-                        >
-                            {/* Header */}
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        {/* Available Players */}
+                        <div className="xl:col-span-2">
                             <div
                                 style={{
-                                    backgroundColor: "#f8fafc",
-                                    borderBottom: "1px solid #e2e8f0",
-                                    padding: "16px 24px",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
+                                    backgroundColor: "white",
+                                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "8px",
+                                    overflow: "hidden",
                                 }}
                             >
-                                <h2
-                                    style={{
-                                        fontSize: "18px",
-                                        fontWeight: "600",
-                                        color: "#1f2937",
-                                        margin: 0,
-                                    }}
-                                >
-                                    Available Players
-                                </h2>
-                                <span
-                                    style={{
-                                        fontSize: "14px",
-                                        fontWeight: "500",
-                                        color: "#6b7280",
-                                    }}
-                                >
-                                    {startIndex + 1}-
-                                    {Math.min(endIndex, filteredPlayers.length)}{" "}
-                                    of {filteredPlayers.length} players
-                                </span>
-                            </div>
-
-                            {/* Filters */}
-                            <div
-                                style={{
-                                    padding: "16px 24px",
-                                    borderBottom: "1px solid #f1f5f9",
-                                    backgroundColor: "#fafbfc",
-                                }}
-                            >
+                                {/* Header */}
                                 <div
                                     style={{
-                                        display: "flex",
-                                        gap: "16px",
-                                        flexWrap: "wrap",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <div>
-                                        <label
-                                            style={{
-                                                fontSize: "12px",
-                                                fontWeight: "500",
-                                                color: "#64748b",
-                                                textTransform: "uppercase",
-                                                letterSpacing: "0.05em",
-                                                marginRight: "8px",
-                                            }}
-                                        >
-                                            Position:
-                                        </label>
-                                        <select
-                                            value={filterPosition}
-                                            onChange={(e) =>
-                                                handleFilterChange(
-                                                    e.target.value
-                                                )
-                                            }
-                                            style={{
-                                                padding: "6px 12px",
-                                                border: "1px solid #d1d5db",
-                                                borderRadius: "6px",
-                                                fontSize: "14px",
-                                                backgroundColor: "white",
-                                                minWidth: "100px",
-                                            }}
-                                        >
-                                            {positions.map((pos) => (
-                                                <option key={pos} value={pos}>
-                                                    {pos}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div
-                                        style={{
-                                            flex: 1,
-                                            minWidth: "200px",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: "8px",
-                                        }}
-                                    >
-                                        <label
-                                            style={{
-                                                fontSize: "12px",
-                                                fontWeight: "500",
-                                                color: "#64748b",
-                                                textTransform: "uppercase",
-                                                letterSpacing: "0.05em",
-                                                whiteSpace: "nowrap",
-                                            }}
-                                        >
-                                            SEARCH:
-                                        </label>
-                                        <input
-                                            type="text"
-                                            placeholder="Search players or teams..."
-                                            value={searchTerm}
-                                            onChange={(e) =>
-                                                handleSearchChange(
-                                                    e.target.value
-                                                )
-                                            }
-                                            style={{
-                                                padding: "6px 12px",
-                                                border: "1px solid #d1d5db",
-                                                borderRadius: "6px",
-                                                fontSize: "14px",
-                                                flex: 1,
-                                                maxWidth: "300px",
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Table Headers */}
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns:
-                                        "5% 8% 20% 8% 14% 10% 10% 15% 10%",
-                                    backgroundColor: "#f1f5f9",
-                                    borderBottom: "1px solid #e2e8f0",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    RANK
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    POS
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                    }}
-                                >
-                                    PLAYER
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    NFL TEAM
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    REGULAR SEASON POINT TOTAL
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    DRAFT VALUE
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    SELECT
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    DRAFT TO TEAM
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    DRAFT
-                                </div>
-                            </div>
-
-                            {/* Table Body */}
-                            <div>
-                                {currentPlayers.map((player, index) => {
-                                    const globalRank = startIndex + index + 1;
-                                    const playerTeamId = `player-${player.player_id}-team`;
-                                    const isSelected =
-                                        selectedPlayer?.player_id ===
-                                        player.player_id;
-                                    return (
-                                        <div
-                                            key={player.player_id}
-                                            style={{
-                                                display: "grid",
-                                                gridTemplateColumns:
-                                                    "5% 8% 20% 8% 14% 10% 10% 15% 10%",
-                                                padding: "12px 0",
-                                                borderBottom:
-                                                    "1px solid #f1f5f9",
-                                                alignItems: "center",
-                                                transition:
-                                                    "background-color 0.15s",
-                                                backgroundColor: isSelected
-                                                    ? "#dbeafe"
-                                                    : "transparent",
-                                            }}
-                                            onMouseEnter={(e) =>
-                                                (e.currentTarget.style.backgroundColor =
-                                                    isSelected
-                                                        ? "#bfdbfe"
-                                                        : "#f8fafc")
-                                            }
-                                            onMouseLeave={(e) =>
-                                                (e.currentTarget.style.backgroundColor =
-                                                    isSelected
-                                                        ? "#dbeafe"
-                                                        : "transparent")
-                                            }
-                                        >
-                                            {/* Global Rank */}
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    padding: "0 8px",
-                                                }}
-                                            >
-                                                <span
-                                                    style={{
-                                                        fontSize: "14px",
-                                                        fontWeight: "600",
-                                                        color: "#6b7280",
-                                                    }}
-                                                >
-                                                    {globalRank}
-                                                </span>
-                                            </div>
-                                            {/* Position with colored badge */}
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    padding: "0 8px",
-                                                }}
-                                            >
-                                                <span
-                                                    style={{
-                                                        display: "inline-block",
-                                                        padding: "4px 8px",
-                                                        borderRadius: "12px",
-                                                        fontSize: "12px",
-                                                        fontWeight: "600",
-                                                        backgroundColor:
-                                                            {
-                                                                QB: "#dbeafe",
-                                                                RB: "#dcfce7",
-                                                                WR: "#fef3c7",
-                                                                TE: "#f3e8ff",
-                                                                K: "#fee2e2",
-                                                                DST: "#e0f2fe",
-                                                            }[
-                                                                player.position
-                                                            ] || "#f1f5f9",
-                                                        color:
-                                                            {
-                                                                QB: "#1e40af",
-                                                                RB: "#166534",
-                                                                WR: "#92400e",
-                                                                TE: "#7c3aed",
-                                                                K: "#dc2626",
-                                                                DST: "#0369a1",
-                                                            }[
-                                                                player.position
-                                                            ] || "#64748b",
-                                                    }}
-                                                >
-                                                    {player.position}
-                                                </span>
-                                            </div>
-                                            {/* Player Name and Info */}
-                                            <div style={{ padding: "0 8px" }}>
-                                                <div
-                                                    style={{
-                                                        fontSize: "14px",
-                                                        fontWeight: "500",
-                                                        color: "#1f2937",
-                                                    }}
-                                                >
-                                                    {player.name}
-                                                </div>
-                                            </div>
-                                            {/* NFL Team */}
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    padding: "0 8px",
-                                                }}
-                                            >
-                                                <span
-                                                    style={{
-                                                        display: "inline-block",
-                                                        padding: "2px 6px",
-                                                        borderRadius: "4px",
-                                                        fontSize: "12px",
-                                                        fontWeight: "600",
-                                                        backgroundColor:
-                                                            "#f1f5f9",
-                                                        color: "#374151",
-                                                    }}
-                                                >
-                                                    {player.team}
-                                                </span>
-                                            </div>
-                                            {/* Regular Season Point Total */}
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    padding: "0 8px",
-                                                }}
-                                            >
-                                                <span
-                                                    style={{
-                                                        fontSize: "14px",
-                                                        fontWeight: "600",
-                                                        color: "#1f2937",
-                                                    }}
-                                                >
-                                                    {player.fantasy_points.toFixed(
-                                                        1
-                                                    )}
-                                                </span>
-                                            </div>
-                                            {/* Draft Value */}
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    padding: "0 8px",
-                                                }}
-                                            >
-                                                <span
-                                                    style={{
-                                                        fontSize: "14px",
-                                                        fontWeight: "600",
-                                                        color: "#059669",
-                                                    }}
-                                                >
-                                                    {(
-                                                        player.draft_value || 0
-                                                    ).toFixed(1)}
-                                                </span>
-                                            </div>
-                                            {/* Select Button */}
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    padding: "0 8px",
-                                                }}
-                                            >
-                                                <button
-                                                    onClick={() => {
-                                                        if (isSelected) {
-                                                            setSelectedPlayer(
-                                                                null
-                                                            );
-                                                            setSelectedUser(
-                                                                null
-                                                            );
-                                                        } else {
-                                                            setSelectedPlayer(
-                                                                player
-                                                            );
-                                                            setSelectedUser(
-                                                                null
-                                                            );
-                                                        }
-                                                    }}
-                                                    style={{
-                                                        padding: "6px 12px",
-                                                        fontSize: "12px",
-                                                        fontWeight: "500",
-                                                        borderRadius: "6px",
-                                                        border: isSelected
-                                                            ? "1px solid #3b82f6"
-                                                            : "1px solid #d1d5db",
-                                                        backgroundColor:
-                                                            isSelected
-                                                                ? "#3b82f6"
-                                                                : "#ffffff",
-                                                        color: isSelected
-                                                            ? "#ffffff"
-                                                            : "#374151",
-                                                        cursor: "pointer",
-                                                        transition: "all 0.15s",
-                                                        minWidth: "70px",
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        if (!isSelected) {
-                                                            e.target.style.backgroundColor =
-                                                                "#f3f4f6";
-                                                            e.target.style.borderColor =
-                                                                "#9ca3af";
-                                                        }
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        if (!isSelected) {
-                                                            e.target.style.backgroundColor =
-                                                                "#ffffff";
-                                                            e.target.style.borderColor =
-                                                                "#d1d5db";
-                                                        }
-                                                    }}
-                                                >
-                                                    {isSelected
-                                                        ? "Selected"
-                                                        : "Select"}
-                                                </button>
-                                            </div>
-                                            {/* Team Selection Dropdown - Only for selected player */}
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    padding: "0 4px",
-                                                }}
-                                            >
-                                                {isSelected ? (
-                                                    <select
-                                                        id={playerTeamId}
-                                                        value={
-                                                            selectedUser?.id ||
-                                                            ""
-                                                        }
-                                                        style={{
-                                                            padding: "4px 8px",
-                                                            fontSize: "12px",
-                                                            borderRadius: "4px",
-                                                            border: "1px solid #d1d5db",
-                                                            backgroundColor:
-                                                                "#ffffff",
-                                                            color: "#374151",
-                                                            width: "100%",
-                                                            maxWidth: "130px",
-                                                        }}
-                                                        onChange={(e) => {
-                                                            const selectedMember =
-                                                                members.find(
-                                                                    (m) =>
-                                                                        m.id.toString() ===
-                                                                        e.target
-                                                                            .value
-                                                                );
-                                                            setSelectedUser(
-                                                                selectedMember ||
-                                                                    null
-                                                            );
-                                                        }}
-                                                    >
-                                                        <option value="">
-                                                            Select Team
-                                                        </option>
-                                                        {members.map(
-                                                            (member) => {
-                                                                const teamId =
-                                                                    member.user
-                                                                        ?.id ||
-                                                                    `unclaimed_${member.team_name}`;
-                                                                const canDraft =
-                                                                    canDraftPosition(
-                                                                        teamId,
-                                                                        player.position
-                                                                    );
-                                                                return (
-                                                                    <option
-                                                                        key={
-                                                                            member.id
-                                                                        }
-                                                                        value={
-                                                                            member.id
-                                                                        }
-                                                                        style={{
-                                                                            color: canDraft
-                                                                                ? "#374151"
-                                                                                : "#9ca3af",
-                                                                            backgroundColor:
-                                                                                canDraft
-                                                                                    ? "white"
-                                                                                    : "#f9fafb",
-                                                                        }}
-                                                                        disabled={
-                                                                            !canDraft
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            member.team_name
-                                                                        }
-                                                                        {!canDraft &&
-                                                                            " (Position Full)"}
-                                                                    </option>
-                                                                );
-                                                            }
-                                                        )}
-                                                    </select>
-                                                ) : (
-                                                    <span
-                                                        style={{
-                                                            fontSize: "12px",
-                                                            color: "#9ca3af",
-                                                        }}
-                                                    >
-                                                        -
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {/* Draft Button - Only for selected player with team */}
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    padding: "0 4px",
-                                                }}
-                                            >
-                                                {isSelected && selectedUser ? (
-                                                    (() => {
-                                                        const teamId =
-                                                            selectedUser?.user
-                                                                ?.id ||
-                                                            `unclaimed_${selectedUser?.team_name}`;
-                                                        const canDraft =
-                                                            canDraftPosition(
-                                                                teamId,
-                                                                player.position
-                                                            );
-                                                        const isDisabled =
-                                                            draftLoading ||
-                                                            !canDraft;
-
-                                                        return (
-                                                            <button
-                                                                onClick={() => {
-                                                                    setSelectedPlayer(
-                                                                        player
-                                                                    );
-                                                                    setTimeout(
-                                                                        () => {
-                                                                            handleDraftPlayer();
-                                                                        },
-                                                                        0
-                                                                    );
-                                                                }}
-                                                                disabled={
-                                                                    isDisabled
-                                                                }
-                                                                style={{
-                                                                    padding:
-                                                                        "4px 8px",
-                                                                    fontSize:
-                                                                        "11px",
-                                                                    fontWeight:
-                                                                        "500",
-                                                                    borderRadius:
-                                                                        "4px",
-                                                                    border: `1px solid ${
-                                                                        canDraft
-                                                                            ? "#10b981"
-                                                                            : "#dc2626"
-                                                                    }`,
-                                                                    backgroundColor:
-                                                                        isDisabled
-                                                                            ? "#9ca3af"
-                                                                            : canDraft
-                                                                            ? "#10b981"
-                                                                            : "#dc2626",
-                                                                    color: "#ffffff",
-                                                                    cursor: isDisabled
-                                                                        ? "not-allowed"
-                                                                        : "pointer",
-                                                                    transition:
-                                                                        "all 0.15s",
-                                                                    minWidth:
-                                                                        "50px",
-                                                                    whiteSpace:
-                                                                        "nowrap",
-                                                                }}
-                                                                title={
-                                                                    !canDraft
-                                                                        ? "Position roster is full"
-                                                                        : ""
-                                                                }
-                                                                onMouseEnter={(
-                                                                    e
-                                                                ) => {
-                                                                    if (
-                                                                        !isDisabled &&
-                                                                        canDraft
-                                                                    ) {
-                                                                        e.target.style.backgroundColor =
-                                                                            "#059669";
-                                                                    }
-                                                                }}
-                                                                onMouseLeave={(
-                                                                    e
-                                                                ) => {
-                                                                    if (
-                                                                        !isDisabled &&
-                                                                        canDraft
-                                                                    ) {
-                                                                        e.target.style.backgroundColor =
-                                                                            "#10b981";
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {draftLoading
-                                                                    ? "..."
-                                                                    : !canDraft
-                                                                    ? "Full"
-                                                                    : "Draft"}
-                                                            </button>
-                                                        );
-                                                    })()
-                                                ) : (
-                                                    <span
-                                                        style={{
-                                                            fontSize: "12px",
-                                                            color: "#9ca3af",
-                                                        }}
-                                                    >
-                                                        -
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-
-                                {currentPlayers.length === 0 && (
-                                    <div
-                                        style={{
-                                            textAlign: "center",
-                                            padding: "32px",
-                                            color: "#9ca3af",
-                                        }}
-                                    >
-                                        No players found matching your search
-                                        criteria
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Pagination Controls */}
-                            {totalPages > 1 && (
-                                <div
-                                    style={{
+                                        backgroundColor: "#f8fafc",
+                                        borderBottom: "1px solid #e2e8f0",
                                         padding: "16px 24px",
-                                        borderTop: "1px solid #f1f5f9",
-                                        backgroundColor: "#fafbfc",
                                         display: "flex",
-                                        justifyContent: "center",
+                                        justifyContent: "space-between",
                                         alignItems: "center",
-                                        gap: "12px",
                                     }}
                                 >
-                                    <button
-                                        onClick={() =>
-                                            setCurrentPage(
-                                                Math.max(1, currentPage - 1)
-                                            )
-                                        }
-                                        disabled={currentPage === 1}
+                                    <h2
                                         style={{
-                                            padding: "8px 16px",
-                                            fontSize: "14px",
-                                            fontWeight: "500",
-                                            borderRadius: "6px",
-                                            border: "1px solid #d1d5db",
-                                            backgroundColor:
-                                                currentPage === 1
-                                                    ? "#f9fafb"
-                                                    : "#ffffff",
-                                            color:
-                                                currentPage === 1
-                                                    ? "#9ca3af"
-                                                    : "#374151",
-                                            cursor:
-                                                currentPage === 1
-                                                    ? "not-allowed"
-                                                    : "pointer",
-                                            transition: "all 0.15s",
+                                            fontSize: "18px",
+                                            fontWeight: "600",
+                                            color: "#1f2937",
+                                            margin: 0,
                                         }}
                                     >
-                                        Previous
-                                    </button>
-
+                                        Available Players
+                                    </h2>
                                     <span
                                         style={{
-                                            padding: "8px 16px",
                                             fontSize: "14px",
                                             fontWeight: "500",
                                             color: "#6b7280",
                                         }}
                                     >
-                                        Page {currentPage} of {totalPages}
+                                        {startIndex + 1}-
+                                        {Math.min(
+                                            endIndex,
+                                            filteredPlayers.length
+                                        )}{" "}
+                                        of {filteredPlayers.length} players
                                     </span>
+                                </div>
 
-                                    <button
-                                        onClick={() =>
-                                            setCurrentPage(
-                                                Math.min(
-                                                    totalPages,
-                                                    currentPage + 1
-                                                )
-                                            )
-                                        }
-                                        disabled={currentPage === totalPages}
+                                {/* Filters */}
+                                <div
+                                    style={{
+                                        padding: "16px 24px",
+                                        borderBottom: "1px solid #f1f5f9",
+                                        backgroundColor: "#fafbfc",
+                                    }}
+                                >
+                                    <div
                                         style={{
-                                            padding: "8px 16px",
-                                            fontSize: "14px",
-                                            fontWeight: "500",
-                                            borderRadius: "6px",
-                                            border: "1px solid #d1d5db",
-                                            backgroundColor:
-                                                currentPage === totalPages
-                                                    ? "#f9fafb"
-                                                    : "#ffffff",
-                                            color:
-                                                currentPage === totalPages
-                                                    ? "#9ca3af"
-                                                    : "#374151",
-                                            cursor:
-                                                currentPage === totalPages
-                                                    ? "not-allowed"
-                                                    : "pointer",
-                                            transition: "all 0.15s",
+                                            display: "flex",
+                                            gap: "16px",
+                                            flexWrap: "wrap",
+                                            alignItems: "center",
                                         }}
                                     >
-                                        Next
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    ;{/* Draft Panel */}
-                    <div
-                        className="xl:col-span-1 space-y-6"
-                        style={{ marginTop: "24px" }}
-                    >
-                        {/* Team Roster Panel */}
-                        <div
-                            style={{
-                                backgroundColor: "white",
-                                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: "8px",
-                                overflow: "hidden",
-                            }}
-                        >
-                            {/* Header */}
-                            <div
-                                style={{
-                                    backgroundColor: "#f8fafc",
-                                    borderBottom: "1px solid #e2e8f0",
-                                    padding: "16px 20px",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <h3
-                                    style={{
-                                        fontSize: "16px",
-                                        fontWeight: "600",
-                                        color: "#1f2937",
-                                        margin: 0,
-                                    }}
-                                >
-                                    Team Rosters
-                                </h3>
-                                <button
-                                    onClick={() =>
-                                        setShowRosterPanel(!showRosterPanel)
-                                    }
-                                    style={{
-                                        padding: "4px 8px",
-                                        fontSize: "12px",
-                                        backgroundColor: showRosterPanel
-                                            ? "#3b82f6"
-                                            : "#e5e7eb",
-                                        color: showRosterPanel
-                                            ? "white"
-                                            : "#374151",
-                                        border: "none",
-                                        borderRadius: "4px",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    {showRosterPanel ? "Hide" : "Show"}
-                                </button>
-                            </div>
-
-                            {/* Roster Content */}
-                            {showRosterPanel && (
-                                <div style={{ padding: "16px" }}>
-                                    {/* Team Dropdown */}
-                                    <div style={{ marginBottom: "16px" }}>
-                                        <label
-                                            style={{
-                                                display: "block",
-                                                fontSize: "14px",
-                                                fontWeight: "600",
-                                                color: "#374151",
-                                                marginBottom: "8px",
-                                            }}
-                                        >
-                                            Select Team
-                                        </label>
-                                        <select
-                                            value={selectedRosterTeam}
-                                            onChange={(e) =>
-                                                setSelectedRosterTeam(
-                                                    e.target.value
-                                                )
-                                            }
-                                            style={{
-                                                width: "100%",
-                                                padding: "8px 12px",
-                                                border: "1px solid #d1d5db",
-                                                borderRadius: "6px",
-                                                backgroundColor: "white",
-                                                fontSize: "14px",
-                                            }}
-                                        >
-                                            <option value="">
-                                                Choose a team...
-                                            </option>
-                                            {Object.entries(teamRosters).map(
-                                                ([teamId, roster]) => (
-                                                    <option
-                                                        key={teamId}
-                                                        value={teamId}
-                                                    >
-                                                        {roster.team_name}
-                                                    </option>
-                                                )
-                                            )}
-                                        </select>
-                                    </div>
-
-                                    {/* Roster Display */}
-                                    {selectedRosterTeam &&
-                                    teamRosters[selectedRosterTeam] ? (
                                         <div>
-                                            {/* Position Tracker */}
-                                            <div
+                                            <label
                                                 style={{
-                                                    marginBottom: "16px",
-                                                    padding: "12px",
-                                                    backgroundColor: "#f8fafc",
-                                                    borderRadius: "6px",
-                                                    border: "1px solid #e2e8f0",
+                                                    fontSize: "12px",
+                                                    fontWeight: "500",
+                                                    color: "#64748b",
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.05em",
+                                                    marginRight: "8px",
                                                 }}
                                             >
-                                                <h4
-                                                    style={{
-                                                        fontSize: "14px",
-                                                        fontWeight: "600",
-                                                        color: "#374151",
-                                                        margin: "0 0 8px 0",
-                                                    }}
-                                                >
-                                                    Position Tracker
-                                                </h4>
-                                                <div
-                                                    style={{
-                                                        display: "grid",
-                                                        gridTemplateColumns:
-                                                            "repeat(auto-fit, minmax(80px, 1fr))",
-                                                        gap: "8px",
-                                                    }}
-                                                >
-                                                    {[
-                                                        "QB",
-                                                        "RB",
-                                                        "WR",
-                                                        "TE",
-                                                        "flex",
-                                                        "DST",
-                                                        "K",
-                                                    ]
-                                                        .map((position) => {
-                                                            const summary =
-                                                                getTeamRosterSummary(
-                                                                    selectedRosterTeam
-                                                                );
-                                                            const counts =
-                                                                summary[
-                                                                    position
-                                                                ];
-                                                            if (!counts)
-                                                                return null;
-                                                            const isEmpty =
-                                                                counts.current ===
-                                                                0;
-                                                            const isPartial =
-                                                                counts.current >
-                                                                    0 &&
-                                                                counts.current <
-                                                                    counts.max;
-                                                            const isFull =
-                                                                counts.current ===
-                                                                counts.max;
-
-                                                            return (
-                                                                <div
-                                                                    key={
-                                                                        position
-                                                                    }
-                                                                    style={{
-                                                                        padding:
-                                                                            "6px 8px",
-                                                                        borderRadius:
-                                                                            "4px",
-                                                                        fontSize:
-                                                                            "11px",
-                                                                        fontWeight:
-                                                                            "600",
-                                                                        textAlign:
-                                                                            "center",
-                                                                        backgroundColor:
-                                                                            isEmpty
-                                                                                ? "#e5e7eb"
-                                                                                : isPartial
-                                                                                ? "#fef3c7"
-                                                                                : "#dcfce7",
-                                                                        color: isEmpty
-                                                                            ? "#6b7280"
-                                                                            : isPartial
-                                                                            ? "#d97706"
-                                                                            : "#166534",
-                                                                        border: `1px solid ${
-                                                                            isEmpty
-                                                                                ? "#d1d5db"
-                                                                                : isPartial
-                                                                                ? "#fbbf24"
-                                                                                : "#16a34a"
-                                                                        }`,
-                                                                    }}
-                                                                >
-                                                                    {(position ===
-                                                                    "flex"
-                                                                        ? "FLEX"
-                                                                        : position
-                                                                    ).toUpperCase()}
-                                                                    <br />
-                                                                    {
-                                                                        counts.current
-                                                                    }
-                                                                    /
-                                                                    {counts.max}
-                                                                </div>
-                                                            );
-                                                        })
-                                                        .filter(Boolean)}
-                                                </div>
-                                            </div>
-
-                                            {/* Roster Breakdown */}
-                                            <div>
-                                                <h4
-                                                    style={{
-                                                        fontSize: "14px",
-                                                        fontWeight: "600",
-                                                        color: "#1f2937",
-                                                        margin: "0 0 12px 0",
-                                                        borderBottom:
-                                                            "1px solid #e5e7eb",
-                                                        paddingBottom: "8px",
-                                                    }}
-                                                >
-                                                    Roster Breakdown
-                                                </h4>
-                                                <div
-                                                    style={{
-                                                        display: "flex",
-                                                        flexDirection: "column",
-                                                        gap: "6px",
-                                                    }}
-                                                >
-                                                    {createRosterSlots(
-                                                        selectedRosterTeam
-                                                    ).map((slot, index) => (
-                                                        <div
-                                                            key={`${slot.position}-${slot.slotIndex}`}
-                                                            style={{
-                                                                display: "flex",
-                                                                justifyContent:
-                                                                    "space-between",
-                                                                alignItems:
-                                                                    "center",
-                                                                padding:
-                                                                    "8px 12px",
-                                                                backgroundColor:
-                                                                    slot.isEmpty
-                                                                        ? "#f9fafb"
-                                                                        : "#f0f9ff",
-                                                                borderRadius:
-                                                                    "6px",
-                                                                border: `1px solid ${
-                                                                    slot.isEmpty
-                                                                        ? "#e5e7eb"
-                                                                        : "#bfdbfe"
-                                                                }`,
-                                                                minHeight:
-                                                                    "40px",
-                                                            }}
-                                                        >
-                                                            <span
-                                                                style={{
-                                                                    fontWeight:
-                                                                        "600",
-                                                                    color:
-                                                                        slot.position ===
-                                                                        "FLEX"
-                                                                            ? "#7c3aed"
-                                                                            : "#2563eb",
-                                                                    fontSize:
-                                                                        "12px",
-                                                                    minWidth:
-                                                                        "40px",
-                                                                }}
-                                                            >
-                                                                {slot.position}
-                                                            </span>
-
-                                                            {slot.player ? (
-                                                                <div
-                                                                    style={{
-                                                                        display:
-                                                                            "flex",
-                                                                        alignItems:
-                                                                            "center",
-                                                                        gap: "8px",
-                                                                        flex: 1,
-                                                                        justifyContent:
-                                                                            "flex-end",
-                                                                    }}
-                                                                >
-                                                                    <div
-                                                                        style={{
-                                                                            textAlign:
-                                                                                "right",
-                                                                        }}
-                                                                    >
-                                                                        <div
-                                                                            style={{
-                                                                                fontSize:
-                                                                                    "13px",
-                                                                                fontWeight:
-                                                                                    "500",
-                                                                                color: "#1f2937",
-                                                                            }}
-                                                                        >
-                                                                            {
-                                                                                slot
-                                                                                    .player
-                                                                                    .player_name
-                                                                            }
-                                                                        </div>
-                                                                        <div
-                                                                            style={{
-                                                                                fontSize:
-                                                                                    "11px",
-                                                                                color: "#6b7280",
-                                                                            }}
-                                                                        >
-                                                                            {
-                                                                                slot
-                                                                                    .player
-                                                                                    .nfl_team
-                                                                            }{" "}
-                                                                            •{" "}
-                                                                            {slot.player.fantasy_points?.toFixed(
-                                                                                1
-                                                                            )}{" "}
-                                                                            pts
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <span
-                                                                    style={{
-                                                                        color: "#9ca3af",
-                                                                        fontSize:
-                                                                            "12px",
-                                                                        fontStyle:
-                                                                            "italic",
-                                                                    }}
-                                                                >
-                                                                    Empty
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
+                                                Position:
+                                            </label>
+                                            <select
+                                                value={filterPosition}
+                                                onChange={(e) =>
+                                                    handleFilterChange(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                style={{
+                                                    padding: "6px 12px",
+                                                    border: "1px solid #d1d5db",
+                                                    borderRadius: "6px",
+                                                    fontSize: "14px",
+                                                    backgroundColor: "white",
+                                                    minWidth: "100px",
+                                                }}
+                                            >
+                                                {positions.map((pos) => (
+                                                    <option
+                                                        key={pos}
+                                                        value={pos}
+                                                    >
+                                                        {pos}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
-                                    ) : (
                                         <div
                                             style={{
-                                                textAlign: "center",
-                                                color: "#9ca3af",
-                                                padding: "20px",
+                                                flex: 1,
+                                                minWidth: "200px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "8px",
                                             }}
                                         >
-                                            {Object.entries(teamRosters)
-                                                .length === 0
-                                                ? "No teams have drafted players yet"
-                                                : "Select a team to view their roster"}
+                                            <label
+                                                style={{
+                                                    fontSize: "12px",
+                                                    fontWeight: "500",
+                                                    color: "#64748b",
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.05em",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                SEARCH:
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="Search players or teams..."
+                                                value={searchTerm}
+                                                onChange={(e) =>
+                                                    handleSearchChange(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                style={{
+                                                    padding: "6px 12px",
+                                                    border: "1px solid #d1d5db",
+                                                    borderRadius: "6px",
+                                                    fontSize: "14px",
+                                                    flex: 1,
+                                                    maxWidth: "300px",
+                                                }}
+                                            />
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Recent Picks - ESPN Style Table */}
-                        <div
-                            style={{
-                                backgroundColor: "white",
-                                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: "8px",
-                                overflow: "hidden",
-                                marginTop: "24px",
-                            }}
-                        >
-                            {/* Table Header */}
-                            <div
-                                style={{
-                                    backgroundColor: "#f8fafc",
-                                    borderBottom: "1px solid #e2e8f0",
-                                    padding: "16px 24px",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <h3
+                                {/* Table Headers */}
+                                <div
                                     style={{
-                                        fontSize: "18px",
-                                        fontWeight: "600",
-                                        color: "#1f2937",
-                                        margin: 0,
+                                        display: "grid",
+                                        gridTemplateColumns:
+                                            "5% 8% 20% 8% 14% 10% 10% 15% 10%",
+                                        backgroundColor: "#f1f5f9",
+                                        borderBottom: "1px solid #e2e8f0",
                                     }}
                                 >
-                                    Recent Picks (All Teams)
-                                </h3>
-                                <span
-                                    style={{
-                                        fontSize: "14px",
-                                        fontWeight: "500",
-                                        color: "#6b7280",
-                                    }}
-                                >
-                                    Last 10 Picks
-                                </span>
-                            </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        RANK
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        POS
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                        }}
+                                    >
+                                        PLAYER
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        NFL TEAM
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        REGULAR SEASON POINT TOTAL
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        DRAFT VALUE
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        SELECT
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        DRAFT TO TEAM
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        DRAFT
+                                    </div>
+                                </div>
 
-                            {/* Table Headers */}
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns:
-                                        "8% 15% 30% 15% 20% 12%",
-                                    backgroundColor: "#f1f5f9",
-                                    borderBottom: "1px solid #e2e8f0",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    PICK
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    POS
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                    }}
-                                >
-                                    PLAYER
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                    }}
-                                >
-                                    TEAM
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    DRAFTED
-                                </div>
-                                <div
-                                    style={{
-                                        padding: "8px 4px",
-                                        fontSize: "12px",
-                                        fontWeight: "500",
-                                        color: "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    ACTION
-                                </div>
-                            </div>
-
-                            {/* Table Body */}
-                            <div>
-                                {draftedPlayers
-                                    .sort(
-                                        (a, b) =>
-                                            new Date(b.drafted_at) -
-                                            new Date(a.drafted_at)
-                                    )
-                                    .slice(0, 10)
-                                    .map((pick, index) => {
-                                        const isLatestPick =
-                                            index === 0 &&
-                                            draftedPlayers.length > 0;
+                                {/* Table Body */}
+                                <div>
+                                    {currentPlayers.map((player, index) => {
+                                        const globalRank =
+                                            startIndex + index + 1;
+                                        const playerTeamId = `player-${player.player_id}-team`;
+                                        const isSelected =
+                                            selectedPlayer?.player_id ===
+                                            player.player_id;
                                         return (
                                             <div
-                                                key={pick.id}
+                                                key={player.player_id}
                                                 style={{
                                                     display: "grid",
                                                     gridTemplateColumns:
-                                                        "8% 15% 30% 15% 20% 12%",
+                                                        "5% 8% 20% 8% 14% 10% 10% 15% 10%",
                                                     padding: "12px 0",
                                                     borderBottom:
                                                         "1px solid #f1f5f9",
                                                     alignItems: "center",
                                                     transition:
                                                         "background-color 0.15s",
-                                                    backgroundColor:
-                                                        isLatestPick
-                                                            ? "#fef3c7"
-                                                            : "transparent",
+                                                    backgroundColor: isSelected
+                                                        ? "#dbeafe"
+                                                        : "transparent",
                                                 }}
                                                 onMouseEnter={(e) =>
                                                     (e.currentTarget.style.backgroundColor =
-                                                        isLatestPick
-                                                            ? "#fde68a"
+                                                        isSelected
+                                                            ? "#bfdbfe"
                                                             : "#f8fafc")
                                                 }
                                                 onMouseLeave={(e) =>
                                                     (e.currentTarget.style.backgroundColor =
-                                                        isLatestPick
-                                                            ? "#fef3c7"
+                                                        isSelected
+                                                            ? "#dbeafe"
                                                             : "transparent")
                                                 }
                                             >
-                                                {/* Pick Number */}
+                                                {/* Global Rank */}
                                                 <div
                                                     style={{
                                                         textAlign: "center",
@@ -2066,13 +1036,12 @@ const DraftInterface = () => {
                                                         style={{
                                                             fontSize: "14px",
                                                             fontWeight: "600",
-                                                            color: "#1f2937",
+                                                            color: "#6b7280",
                                                         }}
                                                     >
-                                                        #{pick.draft_order}
+                                                        {globalRank}
                                                     </span>
                                                 </div>
-
                                                 {/* Position with colored badge */}
                                                 <div
                                                     style={{
@@ -2098,7 +1067,7 @@ const DraftInterface = () => {
                                                                     K: "#fee2e2",
                                                                     DST: "#e0f2fe",
                                                                 }[
-                                                                    pick
+                                                                    player
                                                                         .position
                                                                 ] || "#f1f5f9",
                                                             color:
@@ -2110,16 +1079,15 @@ const DraftInterface = () => {
                                                                     K: "#dc2626",
                                                                     DST: "#0369a1",
                                                                 }[
-                                                                    pick
+                                                                    player
                                                                         .position
                                                                 ] || "#64748b",
                                                         }}
                                                     >
-                                                        {pick.position}
+                                                        {player.position}
                                                     </span>
                                                 </div>
-
-                                                {/* Player Name */}
+                                                {/* Player Name and Info */}
                                                 <div
                                                     style={{ padding: "0 8px" }}
                                                 >
@@ -2130,150 +1098,228 @@ const DraftInterface = () => {
                                                             color: "#1f2937",
                                                         }}
                                                     >
-                                                        {pick.player_name}
-                                                    </div>
-                                                    {/* NFL Team (under player name) */}
-                                                    <div
-                                                        style={{
-                                                            fontSize: "12px",
-                                                            color: "#6b7280",
-                                                        }}
-                                                    >
-                                                        {pick.nfl_team ||
-                                                            pick.team ||
-                                                            "N/A"}
+                                                        {player.name}
                                                     </div>
                                                 </div>
-
-                                                {/* Fantasy Team Name */}
+                                                {/* NFL Team */}
                                                 <div
-                                                    style={{ padding: "0 8px" }}
+                                                    style={{
+                                                        textAlign: "center",
+                                                        padding: "0 8px",
+                                                    }}
                                                 >
-                                                    <div
+                                                    <span
+                                                        style={{
+                                                            display:
+                                                                "inline-block",
+                                                            padding: "2px 6px",
+                                                            borderRadius: "4px",
+                                                            fontSize: "12px",
+                                                            fontWeight: "600",
+                                                            backgroundColor:
+                                                                "#f1f5f9",
+                                                            color: "#374151",
+                                                        }}
+                                                    >
+                                                        {player.team}
+                                                    </span>
+                                                </div>
+                                                {/* Regular Season Point Total */}
+                                                <div
+                                                    style={{
+                                                        textAlign: "center",
+                                                        padding: "0 8px",
+                                                    }}
+                                                >
+                                                    <span
                                                         style={{
                                                             fontSize: "14px",
+                                                            fontWeight: "600",
                                                             color: "#1f2937",
                                                         }}
                                                     >
-                                                        {pick.fantasy_team_name ||
-                                                            "Unknown Team"}
-                                                    </div>
+                                                        {player.fantasy_points.toFixed(
+                                                            1
+                                                        )}
+                                                    </span>
                                                 </div>
-
-                                                {/* Drafted Time */}
+                                                {/* Draft Value */}
                                                 <div
                                                     style={{
                                                         textAlign: "center",
                                                         padding: "0 8px",
                                                     }}
                                                 >
-                                                    <div
+                                                    <span
                                                         style={{
-                                                            fontSize: "12px",
-                                                            color: "#6b7280",
+                                                            fontSize: "14px",
+                                                            fontWeight: "600",
+                                                            color: "#059669",
                                                         }}
                                                     >
-                                                        {(() => {
-                                                            try {
-                                                                const draftDate =
-                                                                    pick.drafted_at_est ||
-                                                                    pick.drafted_at;
-                                                                if (!draftDate)
-                                                                    return "N/A";
-
-                                                                const date =
-                                                                    new Date(
-                                                                        draftDate
-                                                                    );
-                                                                if (
-                                                                    isNaN(
-                                                                        date.getTime()
-                                                                    )
-                                                                )
-                                                                    return "Invalid Date";
-
-                                                                return (
-                                                                    date.toLocaleString(
-                                                                        "en-US",
-                                                                        {
-                                                                            timeZone:
-                                                                                "America/New_York",
-                                                                            month: "short",
-                                                                            day: "numeric",
-                                                                            hour: "numeric",
-                                                                            minute: "2-digit",
-                                                                            hour12: true,
-                                                                        }
-                                                                    ) + " EST"
-                                                                );
-                                                            } catch (error) {
-                                                                return "Invalid Date";
-                                                            }
-                                                        })()}
-                                                    </div>
+                                                        {(
+                                                            player.draft_value ||
+                                                            0
+                                                        ).toFixed(1)}
+                                                    </span>
                                                 </div>
-
-                                                {/* Action Button */}
+                                                {/* Select Button */}
                                                 <div
                                                     style={{
                                                         textAlign: "center",
                                                         padding: "0 8px",
                                                     }}
                                                 >
-                                                    {isLatestPick ? (
-                                                        <button
-                                                            onClick={
-                                                                handleUndoDraft
+                                                    <button
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                setSelectedPlayer(
+                                                                    null
+                                                                );
+                                                                setSelectedUser(
+                                                                    null
+                                                                );
+                                                            } else {
+                                                                setSelectedPlayer(
+                                                                    player
+                                                                );
+                                                                setSelectedUser(
+                                                                    null
+                                                                );
                                                             }
-                                                            disabled={
-                                                                undoLoading
+                                                        }}
+                                                        style={{
+                                                            padding: "6px 12px",
+                                                            fontSize: "12px",
+                                                            fontWeight: "500",
+                                                            borderRadius: "6px",
+                                                            border: isSelected
+                                                                ? "1px solid #3b82f6"
+                                                                : "1px solid #d1d5db",
+                                                            backgroundColor:
+                                                                isSelected
+                                                                    ? "#3b82f6"
+                                                                    : "#ffffff",
+                                                            color: isSelected
+                                                                ? "#ffffff"
+                                                                : "#374151",
+                                                            cursor: "pointer",
+                                                            transition:
+                                                                "all 0.15s",
+                                                            minWidth: "70px",
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            if (!isSelected) {
+                                                                e.target.style.backgroundColor =
+                                                                    "#f3f4f6";
+                                                                e.target.style.borderColor =
+                                                                    "#9ca3af";
+                                                            }
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            if (!isSelected) {
+                                                                e.target.style.backgroundColor =
+                                                                    "#ffffff";
+                                                                e.target.style.borderColor =
+                                                                    "#d1d5db";
+                                                            }
+                                                        }}
+                                                    >
+                                                        {isSelected
+                                                            ? "Selected"
+                                                            : "Select"}
+                                                    </button>
+                                                </div>
+                                                {/* Team Selection Dropdown - Only for selected player */}
+                                                <div
+                                                    style={{
+                                                        textAlign: "center",
+                                                        padding: "0 4px",
+                                                    }}
+                                                >
+                                                    {isSelected ? (
+                                                        <select
+                                                            id={playerTeamId}
+                                                            value={
+                                                                selectedUser?.id ||
+                                                                ""
                                                             }
                                                             style={{
                                                                 padding:
                                                                     "4px 8px",
                                                                 fontSize:
                                                                     "12px",
-                                                                fontWeight:
-                                                                    "500",
                                                                 borderRadius:
                                                                     "4px",
-                                                                border: "1px solid #ef4444",
+                                                                border: "1px solid #d1d5db",
                                                                 backgroundColor:
-                                                                    undoLoading
-                                                                        ? "#fca5a5"
-                                                                        : "#fee2e2",
-                                                                color: "#dc2626",
-                                                                cursor: undoLoading
-                                                                    ? "not-allowed"
-                                                                    : "pointer",
-                                                                transition:
-                                                                    "all 0.15s",
+                                                                    "#ffffff",
+                                                                color: "#374151",
+                                                                width: "100%",
+                                                                maxWidth:
+                                                                    "130px",
                                                             }}
-                                                            onMouseEnter={(
-                                                                e
-                                                            ) => {
-                                                                if (
-                                                                    !undoLoading
-                                                                ) {
-                                                                    e.target.style.backgroundColor =
-                                                                        "#fecaca";
-                                                                }
-                                                            }}
-                                                            onMouseLeave={(
-                                                                e
-                                                            ) => {
-                                                                if (
-                                                                    !undoLoading
-                                                                ) {
-                                                                    e.target.style.backgroundColor =
-                                                                        "#fee2e2";
-                                                                }
+                                                            onChange={(e) => {
+                                                                const selectedMember =
+                                                                    members.find(
+                                                                        (m) =>
+                                                                            m.id.toString() ===
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                    );
+                                                                setSelectedUser(
+                                                                    selectedMember ||
+                                                                        null
+                                                                );
                                                             }}
                                                         >
-                                                            {undoLoading
-                                                                ? "Undoing..."
-                                                                : "Undo"}
-                                                        </button>
+                                                            <option value="">
+                                                                Select Team
+                                                            </option>
+                                                            {members.map(
+                                                                (member) => {
+                                                                    const teamId =
+                                                                        member
+                                                                            .user
+                                                                            ?.id ||
+                                                                        `unclaimed_${member.team_name}`;
+                                                                    const canDraft =
+                                                                        canDraftPosition(
+                                                                            teamId,
+                                                                            player.position
+                                                                        );
+                                                                    return (
+                                                                        <option
+                                                                            key={
+                                                                                member.id
+                                                                            }
+                                                                            value={
+                                                                                member.id
+                                                                            }
+                                                                            style={{
+                                                                                color: canDraft
+                                                                                    ? "#374151"
+                                                                                    : "#9ca3af",
+                                                                                backgroundColor:
+                                                                                    canDraft
+                                                                                        ? "white"
+                                                                                        : "#f9fafb",
+                                                                            }}
+                                                                            disabled={
+                                                                                !canDraft
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                member.team_name
+                                                                            }
+                                                                            {!canDraft &&
+                                                                                " (Position Full)"}
+                                                                        </option>
+                                                                    );
+                                                                }
+                                                            )}
+                                                        </select>
                                                     ) : (
                                                         <span
                                                             style={{
@@ -2285,169 +1331,1260 @@ const DraftInterface = () => {
                                                             -
                                                         </span>
                                                     )}
-                                                </div>
+                                                </div>;
+                                                {
+                                                    /* Draft Button - Only for selected player with team */
+                                                }
+                                                <div
+                                                    style={{
+                                                        textAlign: "center",
+                                                        padding: "0 4px",
+                                                    }}
+                                                >
+                                                    {isSelected &&
+                                                    selectedUser ? (
+                                                        (() => {
+                                                            const teamId =
+                                                                selectedUser
+                                                                    ?.user
+                                                                    ?.id ||
+                                                                `unclaimed_${selectedUser?.team_name}`;
+                                                            const canDraft =
+                                                                canDraftPosition(
+                                                                    teamId,
+                                                                    player.position
+                                                                );
+                                                            const isDisabled =
+                                                                draftLoading ||
+                                                                !canDraft;
+
+                                                            return (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedPlayer(
+                                                                            player
+                                                                        );
+                                                                        setTimeout(
+                                                                            () => {
+                                                                                handleDraftPlayer();
+                                                                            },
+                                                                            0
+                                                                        );
+                                                                    }}
+                                                                    disabled={
+                                                                        isDisabled
+                                                                    }
+                                                                    style={{
+                                                                        padding:
+                                                                            "4px 8px",
+                                                                        fontSize:
+                                                                            "11px",
+                                                                        fontWeight:
+                                                                            "500",
+                                                                        borderRadius:
+                                                                            "4px",
+                                                                        border: `1px solid ${
+                                                                            canDraft
+                                                                                ? "#10b981"
+                                                                                : "#dc2626"
+                                                                        }`,
+                                                                        backgroundColor:
+                                                                            isDisabled
+                                                                                ? "#9ca3af"
+                                                                                : draftLoading
+                                                                                ? "#059669"
+                                                                                : canDraft
+                                                                                ? "#10b981"
+                                                                                : "#dc2626",
+                                                                        color: "#ffffff",
+                                                                        cursor: isDisabled
+                                                                            ? "not-allowed"
+                                                                            : "pointer",
+                                                                        transition:
+                                                                            "all 0.15s",
+                                                                        minWidth:
+                                                                            "50px",
+                                                                        whiteSpace:
+                                                                            "nowrap",
+                                                                        display:
+                                                                            "inline-flex",
+                                                                        alignItems:
+                                                                            "center",
+                                                                        justifyContent:
+                                                                            "center",
+                                                                        gap: "4px",
+                                                                    }}
+                                                                    title={
+                                                                        !canDraft
+                                                                            ? "Position roster is full"
+                                                                            : ""
+                                                                    }
+                                                                    onMouseEnter={(
+                                                                        e
+                                                                    ) => {
+                                                                        if (
+                                                                            !isDisabled &&
+                                                                            canDraft
+                                                                        ) {
+                                                                            e.target.style.backgroundColor =
+                                                                                "#059669";
+                                                                        }
+                                                                    }}
+                                                                    onMouseLeave={(
+                                                                        e
+                                                                    ) => {
+                                                                        if (
+                                                                            !isDisabled &&
+                                                                            canDraft
+                                                                        ) {
+                                                                            e.target.style.backgroundColor =
+                                                                                "#10b981";
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    {draftLoading && (
+                                                                        <svg
+                                                                            style={{
+                                                                                animation:
+                                                                                    "spin 1s linear infinite",
+                                                                                width: "12px",
+                                                                                height: "12px",
+                                                                            }}
+                                                                            xmlns="http://www.w3.org/2000/svg"
+                                                                            fill="none"
+                                                                            viewBox="0 0 24 24"
+                                                                        >
+                                                                            <circle
+                                                                                style={{
+                                                                                    opacity: 0.25,
+                                                                                }}
+                                                                                cx="12"
+                                                                                cy="12"
+                                                                                r="10"
+                                                                                stroke="currentColor"
+                                                                                strokeWidth="4"
+                                                                            />
+                                                                            <path
+                                                                                style={{
+                                                                                    opacity: 0.75,
+                                                                                }}
+                                                                                fill="currentColor"
+                                                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                                            />
+                                                                        </svg>
+                                                                    )}
+                                                                    {draftLoading
+                                                                        ? "Drafting..."
+                                                                        : !canDraft
+                                                                        ? "Full"
+                                                                        : "Draft"}
+                                                                </button>
+                                                            );
+                                                        })()
+                                                    ) : (
+                                                        <span
+                                                            style={{
+                                                                fontSize:
+                                                                    "12px",
+                                                                color: "#9ca3af",
+                                                            }}
+                                                        >
+                                                            -
+                                                        </span>
+                                                    )}
+                                                </div>;
                                             </div>
                                         );
                                     })}
-                                {draftedPlayers.length === 0 && (
+
+                                    {currentPlayers.length === 0 && (
+                                        <div
+                                            style={{
+                                                textAlign: "center",
+                                                padding: "32px",
+                                                color: "#9ca3af",
+                                            }}
+                                        >
+                                            No players found matching your
+                                            search criteria
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Pagination Controls */}
+                                {totalPages > 1 && (
                                     <div
                                         style={{
-                                            textAlign: "center",
-                                            padding: "32px",
-                                            color: "#9ca3af",
+                                            padding: "16px 24px",
+                                            borderTop: "1px solid #f1f5f9",
+                                            backgroundColor: "#fafbfc",
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            gap: "12px",
                                         }}
                                     >
-                                        No picks yet
+                                        <button
+                                            onClick={() =>
+                                                setCurrentPage(
+                                                    Math.max(1, currentPage - 1)
+                                                )
+                                            }
+                                            disabled={currentPage === 1}
+                                            style={{
+                                                padding: "8px 16px",
+                                                fontSize: "14px",
+                                                fontWeight: "500",
+                                                borderRadius: "6px",
+                                                border: "1px solid #d1d5db",
+                                                backgroundColor:
+                                                    currentPage === 1
+                                                        ? "#f9fafb"
+                                                        : "#ffffff",
+                                                color:
+                                                    currentPage === 1
+                                                        ? "#9ca3af"
+                                                        : "#374151",
+                                                cursor:
+                                                    currentPage === 1
+                                                        ? "not-allowed"
+                                                        : "pointer",
+                                                transition: "all 0.15s",
+                                            }}
+                                        >
+                                            Previous
+                                        </button>
+
+                                        <span
+                                            style={{
+                                                padding: "8px 16px",
+                                                fontSize: "14px",
+                                                fontWeight: "500",
+                                                color: "#6b7280",
+                                            }}
+                                        >
+                                            Page {currentPage} of {totalPages}
+                                        </span>
+
+                                        <button
+                                            onClick={() =>
+                                                setCurrentPage(
+                                                    Math.min(
+                                                        totalPages,
+                                                        currentPage + 1
+                                                    )
+                                                )
+                                            }
+                                            disabled={
+                                                currentPage === totalPages
+                                            }
+                                            style={{
+                                                padding: "8px 16px",
+                                                fontSize: "14px",
+                                                fontWeight: "500",
+                                                borderRadius: "6px",
+                                                border: "1px solid #d1d5db",
+                                                backgroundColor:
+                                                    currentPage === totalPages
+                                                        ? "#f9fafb"
+                                                        : "#ffffff",
+                                                color:
+                                                    currentPage === totalPages
+                                                        ? "#9ca3af"
+                                                        : "#374151",
+                                                cursor:
+                                                    currentPage === totalPages
+                                                        ? "not-allowed"
+                                                        : "pointer",
+                                                transition: "all 0.15s",
+                                            }}
+                                        >
+                                            Next
+                                        </button>
                                     </div>
                                 )}
                             </div>
                         </div>
-                    </div>
-                    ;
-                </div>
-            </div>
+                        {/* Draft Panel */}
+                        <div
+                            className="xl:col-span-1 space-y-6"
+                            style={{ marginTop: "24px" }}
+                        >
+                            {/* Team Roster Panel */}
+                            <div
+                                style={{
+                                    backgroundColor: "white",
+                                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "8px",
+                                    overflow: "hidden",
+                                }}
+                            >
+                                {/* Header */}
+                                <div
+                                    style={{
+                                        backgroundColor: "#f8fafc",
+                                        borderBottom: "1px solid #e2e8f0",
+                                        padding: "16px 20px",
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <h3
+                                        style={{
+                                            fontSize: "16px",
+                                            fontWeight: "600",
+                                            color: "#1f2937",
+                                            margin: 0,
+                                        }}
+                                    >
+                                        Team Rosters
+                                    </h3>
+                                    <button
+                                        onClick={() =>
+                                            setShowRosterPanel(!showRosterPanel)
+                                        }
+                                        style={{
+                                            padding: "4px 8px",
+                                            fontSize: "12px",
+                                            backgroundColor: showRosterPanel
+                                                ? "#3b82f6"
+                                                : "#e5e7eb",
+                                            color: showRosterPanel
+                                                ? "white"
+                                                : "#374151",
+                                            border: "none",
+                                            borderRadius: "4px",
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        {showRosterPanel ? "Hide" : "Show"}
+                                    </button>
+                                </div>
 
-            {/* Reset Draft Warning Modal */}
-            {showResetWarning && (
-                <div
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: "rgba(0, 0, 0, 0.7)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 1001,
-                    }}
-                >
+                                {/* Roster Content */}
+                                {showRosterPanel && (
+                                    <div style={{ padding: "16px" }}>
+                                        {/* Team Dropdown */}
+                                        <div style={{ marginBottom: "16px" }}>
+                                            <label
+                                                style={{
+                                                    display: "block",
+                                                    fontSize: "14px",
+                                                    fontWeight: "600",
+                                                    color: "#374151",
+                                                    marginBottom: "8px",
+                                                }}
+                                            >
+                                                Select Team
+                                            </label>
+                                            <select
+                                                value={selectedRosterTeam}
+                                                onChange={(e) =>
+                                                    setSelectedRosterTeam(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                style={{
+                                                    width: "100%",
+                                                    padding: "8px 12px",
+                                                    border: "1px solid #d1d5db",
+                                                    borderRadius: "6px",
+                                                    backgroundColor: "white",
+                                                    fontSize: "14px",
+                                                }}
+                                            >
+                                                <option value="">
+                                                    Choose a team...
+                                                </option>
+                                                {Object.entries(
+                                                    teamRosters
+                                                ).map(([teamId, roster]) => (
+                                                    <option
+                                                        key={teamId}
+                                                        value={teamId}
+                                                    >
+                                                        {roster.team_name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Roster Display */}
+                                        {selectedRosterTeam &&
+                                        teamRosters[selectedRosterTeam] ? (
+                                            <div>
+                                                {/* Position Tracker */}
+                                                <div
+                                                    style={{
+                                                        marginBottom: "16px",
+                                                        padding: "12px",
+                                                        backgroundColor:
+                                                            "#f8fafc",
+                                                        borderRadius: "6px",
+                                                        border: "1px solid #e2e8f0",
+                                                    }}
+                                                >
+                                                    <h4
+                                                        style={{
+                                                            fontSize: "14px",
+                                                            fontWeight: "600",
+                                                            color: "#374151",
+                                                            margin: "0 0 8px 0",
+                                                        }}
+                                                    >
+                                                        Position Tracker
+                                                    </h4>
+                                                    <div
+                                                        style={{
+                                                            display: "grid",
+                                                            gridTemplateColumns:
+                                                                "repeat(auto-fit, minmax(80px, 1fr))",
+                                                            gap: "8px",
+                                                        }}
+                                                    >
+                                                        {[
+                                                            "QB",
+                                                            "RB",
+                                                            "WR",
+                                                            "TE",
+                                                            "flex",
+                                                            "DST",
+                                                            "K",
+                                                        ]
+                                                            .map((position) => {
+                                                                const summary =
+                                                                    getTeamRosterSummary(
+                                                                        selectedRosterTeam
+                                                                    );
+                                                                const counts =
+                                                                    summary[
+                                                                        position
+                                                                    ];
+                                                                if (!counts)
+                                                                    return null;
+                                                                const isEmpty =
+                                                                    counts.current ===
+                                                                    0;
+                                                                const isPartial =
+                                                                    counts.current >
+                                                                        0 &&
+                                                                    counts.current <
+                                                                        counts.max;
+                                                                const isFull =
+                                                                    counts.current ===
+                                                                    counts.max;
+
+                                                                return (
+                                                                    <div
+                                                                        key={
+                                                                            position
+                                                                        }
+                                                                        style={{
+                                                                            padding:
+                                                                                "6px 8px",
+                                                                            borderRadius:
+                                                                                "4px",
+                                                                            fontSize:
+                                                                                "11px",
+                                                                            fontWeight:
+                                                                                "600",
+                                                                            textAlign:
+                                                                                "center",
+                                                                            backgroundColor:
+                                                                                isEmpty
+                                                                                    ? "#e5e7eb"
+                                                                                    : isPartial
+                                                                                    ? "#fef3c7"
+                                                                                    : "#dcfce7",
+                                                                            color: isEmpty
+                                                                                ? "#6b7280"
+                                                                                : isPartial
+                                                                                ? "#d97706"
+                                                                                : "#166534",
+                                                                            border: `1px solid ${
+                                                                                isEmpty
+                                                                                    ? "#d1d5db"
+                                                                                    : isPartial
+                                                                                    ? "#fbbf24"
+                                                                                    : "#16a34a"
+                                                                            }`,
+                                                                        }}
+                                                                    >
+                                                                        {(position ===
+                                                                        "flex"
+                                                                            ? "FLEX"
+                                                                            : position
+                                                                        ).toUpperCase()}
+                                                                        <br />
+                                                                        {
+                                                                            counts.current
+                                                                        }
+                                                                        /
+                                                                        {
+                                                                            counts.max
+                                                                        }
+                                                                    </div>
+                                                                );
+                                                            })
+                                                            .filter(Boolean)}
+                                                    </div>
+                                                </div>
+
+                                                {/* Roster Breakdown */}
+                                                <div>
+                                                    <h4
+                                                        style={{
+                                                            fontSize: "14px",
+                                                            fontWeight: "600",
+                                                            color: "#1f2937",
+                                                            margin: "0 0 12px 0",
+                                                            borderBottom:
+                                                                "1px solid #e5e7eb",
+                                                            paddingBottom:
+                                                                "8px",
+                                                        }}
+                                                    >
+                                                        Roster Breakdown
+                                                    </h4>
+                                                    <div
+                                                        style={{
+                                                            display: "flex",
+                                                            flexDirection:
+                                                                "column",
+                                                            gap: "6px",
+                                                        }}
+                                                    >
+                                                        {createRosterSlots(
+                                                            selectedRosterTeam
+                                                        ).map((slot, index) => (
+                                                            <div
+                                                                key={`${slot.position}-${slot.slotIndex}`}
+                                                                style={{
+                                                                    display:
+                                                                        "flex",
+                                                                    justifyContent:
+                                                                        "space-between",
+                                                                    alignItems:
+                                                                        "center",
+                                                                    padding:
+                                                                        "8px 12px",
+                                                                    backgroundColor:
+                                                                        slot.isEmpty
+                                                                            ? "#f9fafb"
+                                                                            : "#f0f9ff",
+                                                                    borderRadius:
+                                                                        "6px",
+                                                                    border: `1px solid ${
+                                                                        slot.isEmpty
+                                                                            ? "#e5e7eb"
+                                                                            : "#bfdbfe"
+                                                                    }`,
+                                                                    minHeight:
+                                                                        "40px",
+                                                                }}
+                                                            >
+                                                                <span
+                                                                    style={{
+                                                                        fontWeight:
+                                                                            "600",
+                                                                        color:
+                                                                            slot.position ===
+                                                                            "FLEX"
+                                                                                ? "#7c3aed"
+                                                                                : "#2563eb",
+                                                                        fontSize:
+                                                                            "12px",
+                                                                        minWidth:
+                                                                            "40px",
+                                                                    }}
+                                                                >
+                                                                    {
+                                                                        slot.position
+                                                                    }
+                                                                </span>
+
+                                                                {slot.player ? (
+                                                                    <div
+                                                                        style={{
+                                                                            display:
+                                                                                "flex",
+                                                                            alignItems:
+                                                                                "center",
+                                                                            gap: "8px",
+                                                                            flex: 1,
+                                                                            justifyContent:
+                                                                                "flex-end",
+                                                                        }}
+                                                                    >
+                                                                        <div
+                                                                            style={{
+                                                                                textAlign:
+                                                                                    "right",
+                                                                            }}
+                                                                        >
+                                                                            <div
+                                                                                style={{
+                                                                                    fontSize:
+                                                                                        "13px",
+                                                                                    fontWeight:
+                                                                                        "500",
+                                                                                    color: "#1f2937",
+                                                                                }}
+                                                                            >
+                                                                                {
+                                                                                    slot
+                                                                                        .player
+                                                                                        .player_name
+                                                                                }
+                                                                            </div>
+                                                                            <div
+                                                                                style={{
+                                                                                    fontSize:
+                                                                                        "11px",
+                                                                                    color: "#6b7280",
+                                                                                }}
+                                                                            >
+                                                                                {
+                                                                                    slot
+                                                                                        .player
+                                                                                        .nfl_team
+                                                                                }{" "}
+                                                                                •{" "}
+                                                                                {slot.player.fantasy_points?.toFixed(
+                                                                                    1
+                                                                                )}{" "}
+                                                                                pts
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span
+                                                                        style={{
+                                                                            color: "#9ca3af",
+                                                                            fontSize:
+                                                                                "12px",
+                                                                            fontStyle:
+                                                                                "italic",
+                                                                        }}
+                                                                    >
+                                                                        Empty
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                style={{
+                                                    textAlign: "center",
+                                                    color: "#9ca3af",
+                                                    padding: "20px",
+                                                }}
+                                            >
+                                                {Object.entries(teamRosters)
+                                                    .length === 0
+                                                    ? "No teams have drafted players yet"
+                                                    : "Select a team to view their roster"}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Recent Picks - ESPN Style Table */}
+                            <div
+                                style={{
+                                    backgroundColor: "white",
+                                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "8px",
+                                    overflow: "hidden",
+                                    marginTop: "24px",
+                                }}
+                            >
+                                {/* Table Header */}
+                                <div
+                                    style={{
+                                        backgroundColor: "#f8fafc",
+                                        borderBottom: "1px solid #e2e8f0",
+                                        padding: "16px 24px",
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <h3
+                                        style={{
+                                            fontSize: "18px",
+                                            fontWeight: "600",
+                                            color: "#1f2937",
+                                            margin: 0,
+                                        }}
+                                    >
+                                        Recent Picks (All Teams)
+                                    </h3>
+                                    <span
+                                        style={{
+                                            fontSize: "14px",
+                                            fontWeight: "500",
+                                            color: "#6b7280",
+                                        }}
+                                    >
+                                        Last 10 Picks
+                                    </span>
+                                </div>
+
+                                {/* Table Headers */}
+                                <div
+                                    style={{
+                                        display: "grid",
+                                        gridTemplateColumns:
+                                            "8% 15% 30% 15% 20% 12%",
+                                        backgroundColor: "#f1f5f9",
+                                        borderBottom: "1px solid #e2e8f0",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        PICK
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        POS
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                        }}
+                                    >
+                                        PLAYER
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                        }}
+                                    >
+                                        TEAM
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        DRAFTED
+                                    </div>
+                                    <div
+                                        style={{
+                                            padding: "8px 4px",
+                                            fontSize: "12px",
+                                            fontWeight: "500",
+                                            color: "#64748b",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        ACTION
+                                    </div>
+                                </div>
+
+                                {/* Table Body */}
+                                <div>
+                                    {draftedPlayers
+                                        .sort(
+                                            (a, b) =>
+                                                new Date(b.drafted_at) -
+                                                new Date(a.drafted_at)
+                                        )
+                                        .slice(0, 10)
+                                        .map((pick, index) => {
+                                            const isLatestPick =
+                                                index === 0 &&
+                                                draftedPlayers.length > 0;
+                                            return (
+                                                <div
+                                                    key={pick.id}
+                                                    style={{
+                                                        display: "grid",
+                                                        gridTemplateColumns:
+                                                            "8% 15% 30% 15% 20% 12%",
+                                                        padding: "12px 0",
+                                                        borderBottom:
+                                                            "1px solid #f1f5f9",
+                                                        alignItems: "center",
+                                                        transition:
+                                                            "background-color 0.15s",
+                                                        backgroundColor:
+                                                            isLatestPick
+                                                                ? "#fef3c7"
+                                                                : "transparent",
+                                                    }}
+                                                    onMouseEnter={(e) =>
+                                                        (e.currentTarget.style.backgroundColor =
+                                                            isLatestPick
+                                                                ? "#fde68a"
+                                                                : "#f8fafc")
+                                                    }
+                                                    onMouseLeave={(e) =>
+                                                        (e.currentTarget.style.backgroundColor =
+                                                            isLatestPick
+                                                                ? "#fef3c7"
+                                                                : "transparent")
+                                                    }
+                                                >
+                                                    {/* Pick Number */}
+                                                    <div
+                                                        style={{
+                                                            textAlign: "center",
+                                                            padding: "0 8px",
+                                                        }}
+                                                    >
+                                                        <span
+                                                            style={{
+                                                                fontSize:
+                                                                    "14px",
+                                                                fontWeight:
+                                                                    "600",
+                                                                color: "#1f2937",
+                                                            }}
+                                                        >
+                                                            #{pick.draft_order}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Position with colored badge */}
+                                                    <div
+                                                        style={{
+                                                            textAlign: "center",
+                                                            padding: "0 8px",
+                                                        }}
+                                                    >
+                                                        <span
+                                                            style={{
+                                                                display:
+                                                                    "inline-block",
+                                                                padding:
+                                                                    "4px 8px",
+                                                                borderRadius:
+                                                                    "12px",
+                                                                fontSize:
+                                                                    "12px",
+                                                                fontWeight:
+                                                                    "600",
+                                                                backgroundColor:
+                                                                    {
+                                                                        QB: "#dbeafe",
+                                                                        RB: "#dcfce7",
+                                                                        WR: "#fef3c7",
+                                                                        TE: "#f3e8ff",
+                                                                        K: "#fee2e2",
+                                                                        DST: "#e0f2fe",
+                                                                    }[
+                                                                        pick
+                                                                            .position
+                                                                    ] ||
+                                                                    "#f1f5f9",
+                                                                color:
+                                                                    {
+                                                                        QB: "#1e40af",
+                                                                        RB: "#166534",
+                                                                        WR: "#92400e",
+                                                                        TE: "#7c3aed",
+                                                                        K: "#dc2626",
+                                                                        DST: "#0369a1",
+                                                                    }[
+                                                                        pick
+                                                                            .position
+                                                                    ] ||
+                                                                    "#64748b",
+                                                            }}
+                                                        >
+                                                            {pick.position}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Player Name */}
+                                                    <div
+                                                        style={{
+                                                            padding: "0 8px",
+                                                        }}
+                                                    >
+                                                        <div
+                                                            style={{
+                                                                fontSize:
+                                                                    "14px",
+                                                                fontWeight:
+                                                                    "500",
+                                                                color: "#1f2937",
+                                                            }}
+                                                        >
+                                                            {pick.player_name}
+                                                        </div>
+                                                        {/* NFL Team (under player name) */}
+                                                        <div
+                                                            style={{
+                                                                fontSize:
+                                                                    "12px",
+                                                                color: "#6b7280",
+                                                            }}
+                                                        >
+                                                            {pick.nfl_team ||
+                                                                pick.team ||
+                                                                "N/A"}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Fantasy Team Name */}
+                                                    <div
+                                                        style={{
+                                                            padding: "0 8px",
+                                                        }}
+                                                    >
+                                                        <div
+                                                            style={{
+                                                                fontSize:
+                                                                    "14px",
+                                                                color: "#1f2937",
+                                                            }}
+                                                        >
+                                                            {pick.fantasy_team_name ||
+                                                                "Unknown Team"}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Drafted Time */}
+                                                    <div
+                                                        style={{
+                                                            textAlign: "center",
+                                                            padding: "0 8px",
+                                                        }}
+                                                    >
+                                                        <div
+                                                            style={{
+                                                                fontSize:
+                                                                    "12px",
+                                                                color: "#6b7280",
+                                                            }}
+                                                        >
+                                                            {(() => {
+                                                                try {
+                                                                    const draftDate =
+                                                                        pick.drafted_at_est ||
+                                                                        pick.drafted_at;
+                                                                    if (
+                                                                        !draftDate
+                                                                    )
+                                                                        return "N/A";
+
+                                                                    const date =
+                                                                        new Date(
+                                                                            draftDate
+                                                                        );
+                                                                    if (
+                                                                        isNaN(
+                                                                            date.getTime()
+                                                                        )
+                                                                    )
+                                                                        return "Invalid Date";
+
+                                                                    return (
+                                                                        date.toLocaleString(
+                                                                            "en-US",
+                                                                            {
+                                                                                timeZone:
+                                                                                    "America/New_York",
+                                                                                month: "short",
+                                                                                day: "numeric",
+                                                                                hour: "numeric",
+                                                                                minute: "2-digit",
+                                                                                hour12: true,
+                                                                            }
+                                                                        ) +
+                                                                        " EST"
+                                                                    );
+                                                                } catch (error) {
+                                                                    return "Invalid Date";
+                                                                }
+                                                            })()}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Action Button */}
+                                                    <div
+                                                        style={{
+                                                            textAlign: "center",
+                                                            padding: "0 8px",
+                                                        }}
+                                                    >
+                                                        {isLatestPick ? (
+                                                            <button
+                                                                onClick={
+                                                                    handleUndoDraft
+                                                                }
+                                                                disabled={
+                                                                    undoLoading
+                                                                }
+                                                                style={{
+                                                                    padding:
+                                                                        "4px 8px",
+                                                                    fontSize:
+                                                                        "12px",
+                                                                    fontWeight:
+                                                                        "500",
+                                                                    borderRadius:
+                                                                        "4px",
+                                                                    border: "1px solid #ef4444",
+                                                                    backgroundColor:
+                                                                        undoLoading
+                                                                            ? "#fca5a5"
+                                                                            : "#fee2e2",
+                                                                    color: "#dc2626",
+                                                                    cursor: undoLoading
+                                                                        ? "not-allowed"
+                                                                        : "pointer",
+                                                                    transition:
+                                                                        "all 0.15s",
+                                                                }}
+                                                                onMouseEnter={(
+                                                                    e
+                                                                ) => {
+                                                                    if (
+                                                                        !undoLoading
+                                                                    ) {
+                                                                        e.target.style.backgroundColor =
+                                                                            "#fecaca";
+                                                                    }
+                                                                }}
+                                                                onMouseLeave={(
+                                                                    e
+                                                                ) => {
+                                                                    if (
+                                                                        !undoLoading
+                                                                    ) {
+                                                                        e.target.style.backgroundColor =
+                                                                            "#fee2e2";
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {undoLoading
+                                                                    ? "Undoing..."
+                                                                    : "Undo"}
+                                                            </button>
+                                                        ) : (
+                                                            <span
+                                                                style={{
+                                                                    fontSize:
+                                                                        "12px",
+                                                                    color: "#9ca3af",
+                                                                }}
+                                                            >
+                                                                -
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    {draftedPlayers.length === 0 && (
+                                        <div
+                                            style={{
+                                                textAlign: "center",
+                                                padding: "32px",
+                                                color: "#9ca3af",
+                                            }}
+                                        >
+                                            No picks yet
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        ;
+                    </div>
+                </div>
+
+                {/* Reset Draft Warning Modal */}
+                {showResetWarning && (
                     <div
                         style={{
-                            backgroundColor: "white",
-                            borderRadius: "12px",
-                            padding: "32px",
-                            maxWidth: "500px",
-                            width: "90%",
-                            boxShadow: "0 20px 25px rgba(0, 0, 0, 0.15)",
+                            position: "fixed",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: "rgba(0, 0, 0, 0.7)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 1001,
                         }}
                     >
                         <div
                             style={{
-                                textAlign: "center",
-                                marginBottom: "24px",
+                                backgroundColor: "white",
+                                borderRadius: "12px",
+                                padding: "32px",
+                                maxWidth: "500px",
+                                width: "90%",
+                                boxShadow: "0 20px 25px rgba(0, 0, 0, 0.15)",
                             }}
                         >
                             <div
                                 style={{
-                                    width: "48px",
-                                    height: "48px",
-                                    backgroundColor: "#dc2626",
-                                    borderRadius: "50%",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    margin: "0 auto 16px",
-                                    fontSize: "24px",
+                                    textAlign: "center",
+                                    marginBottom: "24px",
                                 }}
                             >
-                                ⚠️
+                                <div
+                                    style={{
+                                        width: "48px",
+                                        height: "48px",
+                                        backgroundColor: "#dc2626",
+                                        borderRadius: "50%",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        margin: "0 auto 16px",
+                                        fontSize: "24px",
+                                    }}
+                                >
+                                    ⚠️
+                                </div>
+                                <h3
+                                    style={{
+                                        fontSize: "20px",
+                                        fontWeight: "bold",
+                                        color: "#1f2937",
+                                        margin: "0 0 8px 0",
+                                    }}
+                                >
+                                    Warning: Reset Entire Draft
+                                </h3>
+                                <p
+                                    style={{
+                                        fontSize: "14px",
+                                        color: "#6b7280",
+                                        lineHeight: "1.5",
+                                        margin: 0,
+                                    }}
+                                >
+                                    This will delete ALL draft picks and return
+                                    the league to "ready to draft" status. This
+                                    action cannot be undone.
+                                </p>
                             </div>
-                            <h3
-                                style={{
-                                    fontSize: "20px",
-                                    fontWeight: "bold",
-                                    color: "#1f2937",
-                                    margin: "0 0 8px 0",
-                                }}
-                            >
-                                Warning: Reset Entire Draft
-                            </h3>
-                            <p
-                                style={{
-                                    fontSize: "14px",
-                                    color: "#6b7280",
-                                    lineHeight: "1.5",
-                                    margin: 0,
-                                }}
-                            >
-                                This will delete ALL draft picks and return the
-                                league to "ready to draft" status. This action
-                                cannot be undone.
-                            </p>
-                        </div>
 
-                        <div
-                            style={{
-                                padding: "20px",
-                                backgroundColor: "#fef2f2",
-                                borderRadius: "8px",
-                                marginBottom: "24px",
-                                border: "1px solid #f87171",
-                            }}
-                        >
-                            <p
+                            <div
                                 style={{
-                                    fontSize: "14px",
-                                    color: "#991b1b",
-                                    fontWeight: "500",
-                                    margin: 0,
+                                    padding: "20px",
+                                    backgroundColor: "#fef2f2",
+                                    borderRadius: "8px",
+                                    marginBottom: "24px",
+                                    border: "1px solid #f87171",
                                 }}
                             >
-                                {draftedPlayers.length > 0
-                                    ? `This will remove ${draftedPlayers.length} draft picks. All teams will need to re-draft their players.`
-                                    : "No draft picks found to reset."}
-                            </p>
-                        </div>
+                                <p
+                                    style={{
+                                        fontSize: "14px",
+                                        color: "#991b1b",
+                                        fontWeight: "500",
+                                        margin: 0,
+                                    }}
+                                >
+                                    {draftedPlayers.length > 0
+                                        ? `This will remove ${draftedPlayers.length} draft picks. All teams will need to re-draft their players.`
+                                        : "No draft picks found to reset."}
+                                </p>
+                            </div>
 
-                        <div
-                            style={{
-                                display: "flex",
-                                gap: "12px",
-                                justifyContent: "flex-end",
-                            }}
-                        >
-                            <button
-                                onClick={cancelResetDraft}
+                            <div
                                 style={{
-                                    padding: "12px 20px",
-                                    backgroundColor: "white",
-                                    border: "1px solid #d1d5db",
-                                    borderRadius: "8px",
-                                    fontSize: "14px",
-                                    fontWeight: "500",
-                                    color: "#374151",
-                                    cursor: "pointer",
+                                    display: "flex",
+                                    gap: "12px",
+                                    justifyContent: "flex-end",
                                 }}
                             >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmResetDraft}
-                                disabled={resetLoading}
-                                style={{
-                                    padding: "12px 20px",
-                                    backgroundColor: resetLoading
-                                        ? "#fca5a5"
-                                        : "#dc2626",
-                                    border: "none",
-                                    borderRadius: "8px",
-                                    fontSize: "14px",
-                                    fontWeight: "500",
-                                    color: "white",
-                                    cursor: resetLoading
-                                        ? "not-allowed"
-                                        : "pointer",
-                                }}
-                            >
-                                {resetLoading ? "Resetting..." : "Reset Draft"}
-                            </button>
+                                <button
+                                    onClick={cancelResetDraft}
+                                    style={{
+                                        padding: "12px 20px",
+                                        backgroundColor: "white",
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "8px",
+                                        fontSize: "14px",
+                                        fontWeight: "500",
+                                        color: "#374151",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmResetDraft}
+                                    disabled={resetLoading}
+                                    style={{
+                                        padding: "12px 20px",
+                                        backgroundColor: resetLoading
+                                            ? "#fca5a5"
+                                            : "#dc2626",
+                                        border: "none",
+                                        borderRadius: "8px",
+                                        fontSize: "14px",
+                                        fontWeight: "500",
+                                        color: "white",
+                                        cursor: resetLoading
+                                            ? "not-allowed"
+                                            : "pointer",
+                                    }}
+                                >
+                                    {resetLoading
+                                        ? "Resetting..."
+                                        : "Reset Draft"}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </>
     );
 };
 

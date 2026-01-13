@@ -174,94 +174,23 @@ def scoring_settings(request):
     """Get default scoring settings with categories"""
 
     def categorize_stats(stats_dict, is_defensive=False):
+        """
+        Simplified categorization - now just extracts info from the stat config dict
+        """
         categorized = {}
-        for stat, value in stats_dict.items():
-            # Determine category based on stat name
-            if "passing" in stat:
-                category = "Passing"
-            elif "rushing" in stat:
-                category = "Rushing"
-            elif "receiving" in stat or "target" in stat or "receptions" == stat:
-                category = "Receiving"
-            elif "fg_" in stat or "pat_" in stat or "gwfg_" in stat:
-                category = "Kicking"
-            elif (
-                "def_" in stat
-                or "fumble_recovery" in stat
-                or "special_teams" in stat
-                or "points_allowed" in stat
-            ):
-                category = "Defense/Special Teams"
-            elif any(x in stat for x in ["return", "punt", "kickoff"]):
-                category = "Returns"
-            else:
-                category = "Miscellaneous"
+        for stat, config in stats_dict.items():
+            # Extract category and display_name from config
+            category = config["category"]
 
             if category not in categorized:
                 categorized[category] = []
 
-            # Create display name
-            display_name = stat.replace("_", " ").title()
-            if stat == "receptions":
-                display_name = "Receptions (PPR)"
-            elif stat == "passing_yards":
-                display_name = "Passing Yards"
-            elif stat == "rushing_yards":
-                display_name = "Rushing Yards"
-            elif stat == "receiving_yards":
-                display_name = "Receiving Yards"
-            elif stat == "points_allowed":
-                display_name = "Points Allowed"
-            elif stat == "points_allowed_0":
-                display_name = "Points Allowed: 0 Points"
-            elif stat == "points_allowed_1_6":
-                display_name = "Points Allowed: 1-6 Points"
-            elif stat == "points_allowed_7_13":
-                display_name = "Points Allowed: 7-13 Points"
-            elif stat == "points_allowed_14_20":
-                display_name = "Points Allowed: 14-20 Points"
-            elif stat == "points_allowed_21_27":
-                display_name = "Points Allowed: 21-27 Points"
-            elif stat == "points_allowed_28_34":
-                display_name = "Points Allowed: 28-34 Points"
-            elif stat == "points_allowed_35_plus":
-                display_name = "Points Allowed: 35+ Points"
-            elif "tds" in stat:
-                display_name = display_name.replace("Tds", "Touchdowns")
-            elif stat == "fg_made_0_19":
-                display_name = "Field Goal Made: 0-19 yds"
-            elif stat == "fg_made_20_29":
-                display_name = "Field Goal Made: 20-29 yds"
-            elif stat == "fg_made_30_39":
-                display_name = "Field Goal Made: 30-39 yds"
-            elif stat == "fg_made_40_49":
-                display_name = "Field Goal Made: 40-49 yds"
-            elif stat == "fg_made_50_59":
-                display_name = "Field Goal Made: 50-59 yds"
-            elif stat == "fg_made_60_":
-                display_name = "Field Goal Made: 60+ yds"
-            elif stat == "fg_missed_0_19":
-                display_name = "Field Goal Missed: 0-19 yds"
-            elif stat == "fg_missed_20_29":
-                display_name = "Field Goal Missed: 20-29 yds"
-            elif stat == "fg_missed_30_39":
-                display_name = "Field Goal Missed: 30-39 yds"
-            elif stat == "fg_missed_40_49":
-                display_name = "Field Goal Missed: 40-49 yds"
-            elif stat == "fg_missed_50_59":
-                display_name = "Field Goal Missed: 50-59 yds"
-            elif stat == "fg_missed_60_":
-                display_name = "Field Goal Missed: 60+ yds"
-            elif stat == "fg_made":
-                display_name = "Field Goal Made"
-            elif stat == "fg_made_distance":
-                display_name = "Field Goal Made Distance"
-
             categorized[category].append(
                 {
                     "stat_name": stat,
-                    "display_name": display_name,
-                    "default_value": value,
+                    "display_name": config["display_name"],
+                    "default_value": config["default_value"],
+                    "increment_value": config["increment_value"],
                     "is_defensive_stat": is_defensive,
                 }
             )
@@ -281,6 +210,7 @@ def scoring_settings(request):
         "Receiving",
         "Defense/Special Teams",
         "Kicking",
+        "Returns",
         "Miscellaneous",
     ]
 
@@ -351,11 +281,9 @@ class LeagueViewSet(viewsets.ModelViewSet):
         all_stats = {**SCORING_MULTIPLIERS, **DEFENSE_SCORING_MULTIPLIERS}
 
         # Create settings for all available stats
-        for stat_name, default_value in all_stats.items():
+        for stat_name, config in all_stats.items():
             # Use custom value if provided, otherwise use default
-            multiplier = custom_scoring.get(stat_name, default_value)
-            category = self._get_stat_category(stat_name)
-            display_name = self._get_stat_display_name(stat_name)
+            multiplier = custom_scoring.get(stat_name, config["default_value"])
             is_defensive = stat_name in DEFENSE_SCORING_MULTIPLIERS
 
             LeagueScoringSetting.objects.create(
@@ -363,125 +291,35 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 stat_name=stat_name,
                 multiplier=multiplier,
                 is_defensive_stat=is_defensive,
-                category=category,
-                display_name=display_name,
+                category=config["category"],
+                display_name=config["display_name"],
             )
 
     def _create_default_scoring_settings(self, league):
         """Create default scoring settings for a new league"""
         # Create offensive scoring settings for ALL stats (including zeros)
-        for stat_name, default_value in SCORING_MULTIPLIERS.items():
+        for stat_name, config in SCORING_MULTIPLIERS.items():
             if stat_name:  # Only check that stat_name exists
-                category = self._get_stat_category(stat_name)
-                display_name = self._get_stat_display_name(stat_name)
-
                 LeagueScoringSetting.objects.create(
                     league=league,
                     stat_name=stat_name,
-                    multiplier=default_value,
+                    multiplier=config["default_value"],
                     is_defensive_stat=False,
-                    category=category,
-                    display_name=display_name,
+                    category=config["category"],
+                    display_name=config["display_name"],
                 )
 
         # Create defensive scoring settings for ALL stats (including zeros)
-        for stat_name, default_value in DEFENSE_SCORING_MULTIPLIERS.items():
+        for stat_name, config in DEFENSE_SCORING_MULTIPLIERS.items():
             if stat_name:  # Only check that stat_name exists
-                category = self._get_stat_category(stat_name)
-                display_name = self._get_stat_display_name(stat_name)
-
                 LeagueScoringSetting.objects.create(
                     league=league,
                     stat_name=stat_name,
-                    multiplier=default_value,
+                    multiplier=config["default_value"],
                     is_defensive_stat=True,
-                    category=category,
-                    display_name=display_name,
+                    category=config["category"],
+                    display_name=config["display_name"],
                 )
-
-    def _get_stat_category(self, stat_name):
-        """Get category for a stat name"""
-        if "passing" in stat_name:
-            return "Passing"
-        elif "rushing" in stat_name:
-            return "Rushing"
-        elif (
-            "receiving" in stat_name
-            or "target" in stat_name
-            or stat_name == "receptions"
-        ):
-            return "Receiving"
-        elif "fg_" in stat_name or "pat_" in stat_name or "gwfg_" in stat_name:
-            return "Kicking"
-        elif (
-            "def_" in stat_name
-            or "fumble_recovery" in stat_name
-            or "special_teams" in stat_name
-        ):
-            return "Defense/Special Teams"
-        elif any(x in stat_name for x in ["return", "punt", "kickoff"]):
-            return "Returns"
-        else:
-            return "Miscellaneous"
-
-    def _get_stat_display_name(self, stat_name):
-        """Get display name for a stat"""
-        display_name = stat_name.replace("_", " ").title()
-        if stat_name == "receptions":
-            return "Receptions (PPR)"
-        elif stat_name == "passing_yards":
-            return "Passing Yards"
-        elif stat_name == "rushing_yards":
-            return "Rushing Yards"
-        elif stat_name == "receiving_yards":
-            return "Receiving Yards"
-        elif stat_name == "points_allowed":
-            return "Points Allowed"
-        elif stat_name == "points_allowed_0":
-            return "Points Allowed: 0 Points"
-        elif stat_name == "points_allowed_1_6":
-            return "Points Allowed: 1-6 Points"
-        elif stat_name == "points_allowed_7_13":
-            return "Points Allowed: 7-13 Points"
-        elif stat_name == "points_allowed_14_20":
-            return "Points Allowed: 14-20 Points"
-        elif stat_name == "points_allowed_21_27":
-            return "Points Allowed: 21-27 Points"
-        elif stat_name == "points_allowed_28_34":
-            return "Points Allowed: 28-34 Points"
-        elif stat_name == "points_allowed_35_plus":
-            return "Points Allowed: 35+ Points"
-        elif "tds" in stat_name:
-            return display_name.replace("Tds", "Touchdowns")
-        elif stat_name == "fg_made_0_19":
-            return "Field Goal Made: 0-19 yds"
-        elif stat_name == "fg_made_20_29":
-            return "Field Goal Made: 20-29 yds"
-        elif stat_name == "fg_made_30_39":
-            return "Field Goal Made: 30-39 yds"
-        elif stat_name == "fg_made_40_49":
-            return "Field Goal Made: 40-49 yds"
-        elif stat_name == "fg_made_50_59":
-            return "Field Goal Made: 50-59 yds"
-        elif stat_name == "fg_made_60_":
-            return "Field Goal Made: 60+ yds"
-        elif stat_name == "fg_missed_0_19":
-            return "Field Goal Missed: 0-19 yds"
-        elif stat_name == "fg_missed_20_29":
-            return "Field Goal Missed: 20-29 yds"
-        elif stat_name == "fg_missed_30_39":
-            return "Field Goal Missed: 30-39 yds"
-        elif stat_name == "fg_missed_40_49":
-            return "Field Goal Missed: 40-49 yds"
-        elif stat_name == "fg_missed_50_59":
-            return "Field Goal Missed: 50-59 yds"
-        elif stat_name == "fg_missed_60_":
-            return "Field Goal Missed: 60+ yds"
-        elif stat_name == "fg_made":
-            return "Field Goal Made"
-        elif stat_name == "fg_made_distance":
-            return "Field Goal Made Distance"
-        return display_name
 
     @action(detail=True, methods=["post"])
     def join(self, request, pk=None):
@@ -1453,6 +1291,9 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 f"After creating defaults, league has {scoring_settings.count()} scoring settings"
             )
 
+        # Get default configurations for increment_value and display_name
+        all_defaults = {**SCORING_MULTIPLIERS, **DEFENSE_SCORING_MULTIPLIERS}
+
         # Group by category with enforced order
         categorized_settings = {}
         for setting in scoring_settings:
@@ -1460,15 +1301,21 @@ class LeagueViewSet(viewsets.ModelViewSet):
             if category not in categorized_settings:
                 categorized_settings[category] = []
 
-            # Use corrected display name (in case old ones were saved with incorrect format)
-            corrected_display_name = self._get_stat_display_name(setting.stat_name)
+            # Get increment_value and display_name from default config (if available)
+            increment_value = 0.01  # default fallback
+            display_name = setting.display_name  # fallback to stored name
+
+            if setting.stat_name in all_defaults:
+                increment_value = all_defaults[setting.stat_name]["increment_value"]
+                display_name = all_defaults[setting.stat_name]["display_name"]
 
             categorized_settings[category].append(
                 {
                     "id": setting.id,
                     "stat_name": setting.stat_name,
-                    "display_name": corrected_display_name,
+                    "display_name": display_name,
                     "multiplier": setting.multiplier,
+                    "increment_value": increment_value,
                     "is_defensive_stat": setting.is_defensive_stat,
                 }
             )
@@ -1480,6 +1327,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
             "Receiving",
             "Defense/Special Teams",
             "Kicking",
+            "Returns",
             "Miscellaneous",
         ]
 

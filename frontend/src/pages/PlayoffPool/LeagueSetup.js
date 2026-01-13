@@ -200,7 +200,7 @@ const LeagueSetup = () => {
           ...formData,
           scoring_settings: {
               ...formData.scoring_settings,
-              [statName]: parseFloat(value) || 0,
+              [statName]: value === "" ? "" : parseFloat(value),
           },
       });
   };
@@ -1217,14 +1217,22 @@ const LeagueSetup = () => {
                                                           </label>
                                                           <input
                                                               type="number"
-                                                              step="0.01"
+                                                              step="any"
+                                                              min="-999"
+                                                              max="999"
                                                               value={
                                                                   formData
                                                                       .scoring_settings[
                                                                       stat
                                                                           .stat_name
-                                                                  ] ||
-                                                                  stat.default_value
+                                                                  ] === ""
+                                                                      ? ""
+                                                                      : formData
+                                                                            .scoring_settings[
+                                                                            stat
+                                                                                .stat_name
+                                                                        ] ??
+                                                                        stat.default_value
                                                               }
                                                               onChange={(e) =>
                                                                   handleScoringChange(
@@ -1233,6 +1241,65 @@ const LeagueSetup = () => {
                                                                           .value
                                                                   )
                                                               }
+                                                              onKeyDown={(
+                                                                  e
+                                                              ) => {
+                                                                  // Handle arrow key increments with custom step
+                                                                  const step =
+                                                                      stat.increment_value ||
+                                                                      0.01;
+                                                                  if (
+                                                                      e.key ===
+                                                                      "ArrowUp"
+                                                                  ) {
+                                                                      e.preventDefault();
+                                                                      const currentValue =
+                                                                          parseFloat(
+                                                                              formData
+                                                                                  .scoring_settings[
+                                                                                  stat
+                                                                                      .stat_name
+                                                                              ] ??
+                                                                                  stat.default_value
+                                                                          );
+                                                                      const newValue =
+                                                                          (isNaN(
+                                                                              currentValue
+                                                                          )
+                                                                              ? 0
+                                                                              : currentValue) +
+                                                                          step;
+                                                                      handleScoringChange(
+                                                                          stat.stat_name,
+                                                                          newValue.toString()
+                                                                      );
+                                                                  } else if (
+                                                                      e.key ===
+                                                                      "ArrowDown"
+                                                                  ) {
+                                                                      e.preventDefault();
+                                                                      const currentValue =
+                                                                          parseFloat(
+                                                                              formData
+                                                                                  .scoring_settings[
+                                                                                  stat
+                                                                                      .stat_name
+                                                                              ] ??
+                                                                                  stat.default_value
+                                                                          );
+                                                                      const newValue =
+                                                                          (isNaN(
+                                                                              currentValue
+                                                                          )
+                                                                              ? 0
+                                                                              : currentValue) -
+                                                                          step;
+                                                                      handleScoringChange(
+                                                                          stat.stat_name,
+                                                                          newValue.toString()
+                                                                      );
+                                                                  }
+                                                              }}
                                                               style={{
                                                                   width: "80px",
                                                                   padding:
@@ -1689,6 +1756,9 @@ const LeagueSetup = () => {
                                   type="submit"
                                   disabled={loading}
                                   style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
                                       padding: "12px 32px",
                                       fontSize: "14px",
                                       fontWeight: "600",
@@ -1705,6 +1775,7 @@ const LeagueSetup = () => {
                                           : "pointer",
                                       transition: "all 0.15s",
                                       outline: "none",
+                                      minWidth: "160px",
                                   }}
                                   onMouseEnter={(e) => {
                                       if (!loading) {
@@ -1724,12 +1795,16 @@ const LeagueSetup = () => {
                                   }}
                               >
                                   {loading ? (
-                                      <div className="flex items-center">
+                                      <>
                                           <svg
-                                              className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-600"
+                                              className="animate-spin -ml-1 mr-2 h-4 w-4"
                                               xmlns="http://www.w3.org/2000/svg"
                                               fill="none"
                                               viewBox="0 0 24 24"
+                                              style={{
+                                                  animation:
+                                                      "spin 1s linear infinite",
+                                              }}
                                           >
                                               <circle
                                                   className="opacity-25"
@@ -1745,8 +1820,8 @@ const LeagueSetup = () => {
                                                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                               ></path>
                                           </svg>
-                                          Creating League...
-                                      </div>
+                                          Creating...
+                                      </>
                                   ) : (
                                       "Create League"
                                   )}

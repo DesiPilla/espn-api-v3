@@ -11,12 +11,12 @@
   - [x] Ability to edit scoring after created (currently says no stats found)
 - [x] Add flex as an option
 - [x] Specify how many of each position to include
-  - Somehow handle flex
 - [x] Make the "create league" button at the bottom prettier
-  - [ ] As well as the spinner icon that appears after pressing it
+  - [x] As well as the spinner icon that appears after pressing it
 - [ ] Allow for picking IDP players
 - [x] Add year to each league
-- [ ] Fix the scoring inputs so that integer values increment by integers, and floats increment by 0.01
+- [x] Fix the scoring inputs so that integer values increment by integers, and floats increment by 0.01
+- [x] Display settings to non-admins
 
 ## Draft
 - [x] If a team has 0 WR but 1 Flex, WR need to be available to draft (currently not)
@@ -29,9 +29,10 @@
 - [x] Prevent a team from selecting more than the allowable number of players for a given position
   - [x] Must work with Flex
 - [x] Display players from the correct year
-- [ ] In the team rosters widget, display the first team by default when opened
+- [x] In the team rosters widget, display the first team by default when opened
 - [ ] Sort by Draft value, then regular season point total (both desc)
    - [x] Also the draft value should not have a floor. Right now all players below a certain value are made to zero. This leaves TE's with 50 pts at 0 value.
+- [x] Don't reload the page every time a player is drafted
 
 ## League page
 
@@ -41,7 +42,7 @@
 - [x] Display the roster size instead of the number of positions
 - [x] Lock the scoring settings after the draft has started
 - [x] Be able to reset the draft (will unlock scoring settings)
-- [ ] When a new user claims their team, the Leaderboard adds them as a new team. So it looks like there are more teams than their should be, and the duplicate teams have zero points (though the original teams have points)
+- [x] When a new user claims their team, the Leaderboard adds them as a new team. So it looks like there are more teams than their should be, and the duplicate teams have zero points (though the original teams have points)
 - [ ] Stats are really slow to calculate
 
 ## Team rosters page
