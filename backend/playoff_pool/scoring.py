@@ -1,4 +1,6 @@
 import pandas as pd
+import nflreadpy as nfl
+from django.core.cache import cache
 
 from backend.playoff_pool.models import League
 
@@ -469,6 +471,32 @@ RELEVANT_DEFENSIVE_SCORING_STATS = {
     if config["default_value"] != 0
     or stat == "points_allowed"  # Include points_allowed even though default is 0
 }
+
+
+def get_most_recent_game(year: int) -> pd.Series:
+    """This function retrieves the most recent game ID for a given year.
+    It can be used to identify the latest game played in that season.
+
+    Args:
+        year (int): The NFL season year.
+
+    Returns:
+        pd.Series: A pandas Series containing the game_id, gameday, and gametime
+                   of the most recent game.
+    """
+    cache_key = f"nfl_schedule_{year}"
+    schedules = cache.get(cache_key)
+
+    if schedules is None:
+        schedules = nfl.load_schedules(seasons=[year]).to_pandas()
+        # Cache for 1 hour (3600 seconds)
+        cache.set(cache_key, schedules, 3600)
+
+    return (
+        schedules.dropna(subset=["total"])
+        .sort_values(by=["gameday", "gametime"], ascending=[False, False])
+        .iloc[0][["game_id", "gameday", "gametime"]]
+    )
 
 
 def get_league_scoring_settings(league: League) -> dict:

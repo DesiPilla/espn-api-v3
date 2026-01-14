@@ -10,7 +10,6 @@ from backend.playoff_pool.scoring import (
 import nflreadpy as nfl
 import pandas as pd
 from django.http import JsonResponse
-from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
@@ -97,21 +96,22 @@ def calculate_player_playoff_points(league, year=None):
         if year is None:
             year = league.league_year
 
-        # Create cache key based on league ID and year
-        cache_key = f"playoff_points_league_{league.id}_year_{year}"
+        # NOTE: Old Django cache removed - now using PostgreSQL cache tables
+        # Cache is managed by cache_utils.py and views.py
 
-        # Try to get cached result
-        cached_result = cache.get(cache_key)
-        if cached_result is not None:
-            return cached_result
+        nfl_cached_data = None
 
-        # Cache key for NFL data (shared across all leagues for same year)
-        nfl_data_cache_key = f"nfl_playoff_data_year_{year}"
-        nfl_cached_data = cache.get(nfl_data_cache_key)
+        if True:  # Always fetch fresh data (will be cached in DB by cache_utils)
+            # Get weekly stats for playoff weeks (with Django caching)
+            from django.core.cache import cache
 
-        if nfl_cached_data is None:
-            # Get weekly stats for playoff weeks
-            weekly_stats = nfl.load_player_stats([year]).to_pandas()
+            cache_key = f"nfl_player_stats_{year}"
+            weekly_stats = cache.get(cache_key)
+
+            if weekly_stats is None:
+                weekly_stats = nfl.load_player_stats([year]).to_pandas()
+                # Cache for 1 hour (3600 seconds)
+                cache.set(cache_key, weekly_stats, 3600)
 
             defense_stats = get_defense_stats(year)
             defense_stats["player_name"] = defense_stats["full_name"]
@@ -134,14 +134,13 @@ def calculate_player_playoff_points(league, year=None):
             }
             weekly_stats["game_type"] = weekly_stats["week"].map(week_map)
 
-            # Cache NFL data for 15 minutes (data doesn't change frequently during playoffs)
+            # Note: No longer caching in Django - using DB cache instead
             nfl_cached_data = {
                 "weekly_stats": weekly_stats,
                 "week_to_game_type": week_map,
             }
-            cache.set(nfl_data_cache_key, nfl_cached_data, 900)  # 15 minutes
 
-        # Unpack cached NFL data
+        # Unpack NFL data
         weekly_stats = nfl_cached_data["weekly_stats"]
         week_to_game_type = nfl_cached_data["week_to_game_type"]
 
@@ -237,9 +236,7 @@ def calculate_player_playoff_points(league, year=None):
 
             player_results[gsis_id]["total_points"] = total_points
 
-        # Cache the calculated result for 5 minutes
-        cache.set(cache_key, player_results, 300)
-
+        # Note: No longer caching in Django - using DB cache instead (see cache_utils.py)
         return player_results
 
     except Exception as e:

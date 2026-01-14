@@ -176,3 +176,69 @@ class LeagueScoringSetting(models.Model):
 
     def __str__(self):
         return f"{self.league.name} - {self.display_name or self.stat_name}: {self.multiplier}"
+
+
+class CachedPlayers(models.Model):
+    """Global cache of playoff players with most recent game metadata"""
+
+    gsis_id = models.CharField(max_length=50, db_index=True)
+    player_name = models.CharField(max_length=200)
+    position = models.CharField(max_length=10)
+    nfl_team = models.CharField(max_length=10)
+
+    # Global metadata
+    year = models.IntegerField()
+    most_recent_game_id = models.CharField(max_length=50, null=True, blank=True)
+    most_recent_gametime = models.DateTimeField(null=True, blank=True)
+    last_updated = models.DateTimeField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = [("gsis_id", "year")]
+        indexes = [
+            models.Index(fields=["gsis_id"]),
+            models.Index(fields=["year"]),
+        ]
+
+    def __str__(self):
+        return f"{self.player_name} ({self.position}) - {self.year}"
+
+
+class CachedPlayerStats(models.Model):
+    """League-specific cached player game stats with pre-computed fantasy points"""
+
+    league = models.ForeignKey(
+        League, on_delete=models.CASCADE, related_name="cached_stats"
+    )
+    cached_player = models.ForeignKey(
+        CachedPlayers, on_delete=models.CASCADE, related_name="game_stats"
+    )
+
+    # Game context
+    week = models.IntegerField()  # 19=WC, 20=DIV, 21=CON, 22=SB
+    game_type = models.CharField(max_length=10)  # WC, DIV, CON, SB
+    game_id = models.CharField(max_length=50)
+
+    # Cache metadata for validation
+    most_recent_game_id = models.CharField(max_length=50, null=True, blank=True)
+    most_recent_gametime = models.DateTimeField(null=True, blank=True)
+
+    # Pre-computed fantasy points using league's scoring
+    fantasy_points = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = [("league", "cached_player", "game_id")]
+        indexes = [
+            models.Index(fields=["league"]),
+            models.Index(fields=["cached_player"]),
+            models.Index(fields=["week"]),
+            models.Index(fields=["game_id"]),
+            models.Index(fields=["league", "cached_player"]),
+        ]
+        # Enable fast joins on gsis_id
+        db_table_comment = "Optimized for fast lookups by league + cached_player"
+
+    def __str__(self):
+        return f"{self.cached_player.player_name} - League {self.league.id} - Week {self.week}"

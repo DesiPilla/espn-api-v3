@@ -3,6 +3,7 @@ from typing import List
 import nflreadpy as nfl
 import pandas as pd
 import polars as pl
+from django.core.cache import cache
 
 from backend.playoff_pool.scoring import (
     DEFENSE_SCORING_MULTIPLIERS,
@@ -60,8 +61,14 @@ def get_defense_stats(year: int) -> pd.DataFrame:
         pd.DataFrame: DataFrame of defensive stats for all teams
     """
 
-    # Load all available team level stats
-    defense_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
+    # Load all available team level stats (with caching)
+    cache_key = f"nfl_team_stats_{year}"
+    defense_stats = cache.get(cache_key)
+
+    if defense_stats is None:
+        defense_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
+        # Cache for 1 hour (3600 seconds)
+        cache.set(cache_key, defense_stats, 3600)
 
     # Add team D/ST identifiers
     defense_stats["gsis_id"] = defense_stats["team"]
@@ -88,8 +95,14 @@ def get_defense_stats(year: int) -> pd.DataFrame:
         ]
     ]
 
-    # Load schedule to get points allowed
-    schedule = nfl.load_schedules(seasons=[year]).to_pandas()
+    # Load schedule to get points allowed (with caching)
+    cache_key = f"nfl_schedule_{year}"
+    schedule = cache.get(cache_key)
+
+    if schedule is None:
+        schedule = nfl.load_schedules(seasons=[year]).to_pandas()
+        # Cache for 1 hour (3600 seconds)
+        cache.set(cache_key, schedule, 3600)
 
     # Create mapping for home teams (opponent score = away_score)
     home_mapping = (
@@ -284,12 +297,25 @@ def get_all_playoff_players(
 ) -> pd.DataFrame:
 
     # ------------ Get list of individual players ------------
-    # Load rosters for the playoff teams
-    playoff_rosters = nfl.load_rosters([year]).to_pandas()
+    # Load rosters for the playoff teams (with caching)
+    cache_key_rosters = f"nfl_rosters_{year}"
+    playoff_rosters = cache.get(cache_key_rosters)
+
+    if playoff_rosters is None:
+        playoff_rosters = nfl.load_rosters([year]).to_pandas()
+        # Cache for 1 hour (3600 seconds)
+        cache.set(cache_key_rosters, playoff_rosters, 3600)
+
     playoff_rosters = playoff_rosters[playoff_rosters["team"].isin(PLAYOFF_TEAMS[year])]
 
-    # Load player game-level stats for multiple seasons
-    player_stats = nfl.load_player_stats([year]).to_pandas()
+    # Load player game-level stats for multiple seasons (with caching)
+    cache_key_stats = f"nfl_player_stats_{year}"
+    player_stats = cache.get(cache_key_stats)
+
+    if player_stats is None:
+        player_stats = nfl.load_player_stats([year]).to_pandas()
+        # Cache for 1 hour (3600 seconds)
+        cache.set(cache_key_stats, player_stats, 3600)
     player_stats["fantasy_points"] = player_stats.apply(
         lambda row: calculate_fantasy_points(row, RELEVANT_SCORING_STATS),
         axis=1,
