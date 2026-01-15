@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { usePlayoffPoolAuth } from "../../components/PlayoffPool/AuthContext";
 import playoffPoolAPI from "../../utils/PlayoffPool/api";
 import ESPNStyleLeagueMembers from "../../components/PlayoffPool/ESPNStyleLeagueMembers";
+import LeagueDetails from "../../components/PlayoffPool/LeagueDetails";
 import ScoringSettingsEditor from "../../components/PlayoffPool/ScoringSettingsEditor";
 import LeaderBoard from "../../components/PlayoffPool/LeaderBoard";
 import Footer from "../../components/Footer";
@@ -56,6 +57,10 @@ const LeagueDetail = () => {
 
     const handleViewDraftedTeams = () => {
         navigate(`/playoff-pool/league/${leagueId}/teams`);
+    };
+
+    const handleEditTeams = () => {
+        navigate(`/playoff-pool/league/${leagueId}/edit-teams`);
     };
 
     const handleBackToDashboard = () => {
@@ -353,176 +358,57 @@ const LeagueDetail = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-8">
-                        {/* League Members with Enhanced Header */}
-                        <div>
-                            <ESPNStyleLeagueMembers
-                                league={league}
-                                members={members}
-                                user={user}
-                                isAdmin={isAdmin}
-                                handleInviteFriend={handleInviteFriend}
-                                confirmRemoveTeam={confirmRemoveTeam}
-                                handleClaimTeam={handleClaimTeam}
-                                handleUnclaimTeam={handleUnclaimTeam}
-                                handleCreateTeam={handleCreateTeam}
-                                handleDeleteLeague={handleDeleteLeague}
-                                leagueId={leagueId}
-                                actionButtons={
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "flex-end",
-                                            alignItems: "center",
-                                            gap: "12px",
-                                            flexWrap: "wrap",
-                                        }}
-                                    >
-                                        {canStartDraft && (
-                                            <button
-                                                onClick={handleStartDraft}
-                                                style={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    padding: "12px 20px",
-                                                    backgroundColor: "#10b981",
-                                                    color: "white",
-                                                    fontWeight: "600",
-                                                    fontSize: "14px",
-                                                    borderRadius: "8px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    transition:
-                                                        "background-color 0.15s",
-                                                    boxShadow:
-                                                        "0 1px 3px rgba(0, 0, 0, 0.1)",
-                                                }}
-                                                onMouseEnter={(e) =>
-                                                    (e.target.style.backgroundColor =
-                                                        "#059669")
-                                                }
-                                                onMouseLeave={(e) =>
-                                                    (e.target.style.backgroundColor =
-                                                        "#10b981")
-                                                }
-                                            >
-                                                Start Draft
-                                            </button>
-                                        )}
+                    {/* League Details Widget - Always visible */}
+                    <div className="mb-8">
+                        <LeagueDetails
+                            league={league}
+                            members={members}
+                            isAdmin={isAdmin}
+                            draftInProgress={draftInProgress}
+                            draftComplete={draftComplete}
+                            handleStartDraft={handleStartDraft}
+                            handleViewDraftedTeams={handleViewDraftedTeams}
+                            handleEditTeams={handleEditTeams}
+                            handleOpenScoringEditor={handleOpenScoringEditor}
+                            handleResetDraft={() => setShowResetConfirm(true)}
+                        />
+                    </div>
 
-                                        {draftInProgress && isAdmin && (
-                                            <button
-                                                onClick={handleStartDraft}
-                                                style={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    padding: "12px 20px",
-                                                    backgroundColor: "#3b82f6",
-                                                    color: "white",
-                                                    fontWeight: "600",
-                                                    fontSize: "14px",
-                                                    borderRadius: "8px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    transition:
-                                                        "background-color 0.15s",
-                                                    boxShadow:
-                                                        "0 1px 3px rgba(0, 0, 0, 0.1)",
-                                                }}
-                                                onMouseEnter={(e) =>
-                                                    (e.target.style.backgroundColor =
-                                                        "#2563eb")
-                                                }
-                                                onMouseLeave={(e) =>
-                                                    (e.target.style.backgroundColor =
-                                                        "#3b82f6")
-                                                }
-                                            >
-                                                Manage Draft
-                                            </button>
-                                        )}
-
-                                        {draftComplete && (
-                                            <button
-                                                onClick={handleViewDraftedTeams}
-                                                style={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    padding: "12px 20px",
-                                                    backgroundColor: "#8b5cf6",
-                                                    color: "white",
-                                                    fontWeight: "600",
-                                                    fontSize: "14px",
-                                                    borderRadius: "8px",
-                                                    border: "none",
-                                                    cursor: "pointer",
-                                                    transition:
-                                                        "background-color 0.15s",
-                                                    boxShadow:
-                                                        "0 1px 3px rgba(0, 0, 0, 0.1)",
-                                                }}
-                                                onMouseEnter={(e) =>
-                                                    (e.target.style.backgroundColor =
-                                                        "#7c3aed")
-                                                }
-                                                onMouseLeave={(e) =>
-                                                    (e.target.style.backgroundColor =
-                                                        "#8b5cf6")
-                                                }
-                                            >
-                                                View Drafted Teams
-                                            </button>
-                                        )}
-
-                                        <button
-                                            onClick={handleOpenScoringEditor}
+                    {/* League Members - Show only before draft starts */}
+                    {!draftInProgress && !draftComplete && (
+                        <div className="grid grid-cols-1 gap-8">
+                            <div>
+                                <ESPNStyleLeagueMembers
+                                    league={league}
+                                    members={members}
+                                    user={user}
+                                    isAdmin={isAdmin}
+                                    handleInviteFriend={handleInviteFriend}
+                                    confirmRemoveTeam={confirmRemoveTeam}
+                                    handleClaimTeam={handleClaimTeam}
+                                    handleUnclaimTeam={handleUnclaimTeam}
+                                    handleCreateTeam={handleCreateTeam}
+                                    handleDeleteLeague={handleDeleteLeague}
+                                    leagueId={leagueId}
+                                    actionButtons={
+                                        <div
                                             style={{
-                                                display: "inline-flex",
+                                                display: "flex",
+                                                justifyContent: "flex-end",
                                                 alignItems: "center",
-                                                padding: "12px 20px",
-                                                backgroundColor: "#7c3aed",
-                                                color: "white",
-                                                fontWeight: "600",
-                                                fontSize: "14px",
-                                                borderRadius: "8px",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                transition:
-                                                    "background-color 0.15s",
-                                                boxShadow:
-                                                    "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                                gap: "12px",
+                                                flexWrap: "wrap",
                                             }}
-                                            onMouseEnter={(e) =>
-                                                (e.target.style.backgroundColor =
-                                                    "#6d28d9")
-                                            }
-                                            onMouseLeave={(e) =>
-                                                (e.target.style.backgroundColor =
-                                                    "#7c3aed")
-                                            }
                                         >
-                                            {draftInProgress || draftComplete
-                                                ? "Show Scoring Settings"
-                                                : isAdmin
-                                                ? "Edit Scoring Settings"
-                                                : "Show Scoring Settings"}
-                                        </button>
-
-                                        {isAdmin &&
-                                            (draftInProgress ||
-                                                draftComplete) && (
+                                            {canStartDraft && (
                                                 <button
-                                                    onClick={() =>
-                                                        setShowResetConfirm(
-                                                            true
-                                                        )
-                                                    }
+                                                    onClick={handleStartDraft}
                                                     style={{
                                                         display: "inline-flex",
                                                         alignItems: "center",
                                                         padding: "12px 20px",
                                                         backgroundColor:
-                                                            "#dc2626",
+                                                            "#10b981",
                                                         color: "white",
                                                         fontWeight: "600",
                                                         fontSize: "14px",
@@ -536,20 +422,52 @@ const LeagueDetail = () => {
                                                     }}
                                                     onMouseEnter={(e) =>
                                                         (e.target.style.backgroundColor =
-                                                            "#b91c1c")
+                                                            "#059669")
                                                     }
                                                     onMouseLeave={(e) =>
                                                         (e.target.style.backgroundColor =
-                                                            "#dc2626")
+                                                            "#10b981")
                                                     }
                                                 >
-                                                    Reset Draft
+                                                    Start Draft
                                                 </button>
                                             )}
 
-                                        {!draftComplete &&
-                                            !draftInProgress &&
-                                            members.length <
+                                            <button
+                                                onClick={
+                                                    handleOpenScoringEditor
+                                                }
+                                                style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    padding: "12px 20px",
+                                                    backgroundColor: "#7c3aed",
+                                                    color: "white",
+                                                    fontWeight: "600",
+                                                    fontSize: "14px",
+                                                    borderRadius: "8px",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    transition:
+                                                        "background-color 0.15s",
+                                                    boxShadow:
+                                                        "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                                }}
+                                                onMouseEnter={(e) =>
+                                                    (e.target.style.backgroundColor =
+                                                        "#6d28d9")
+                                                }
+                                                onMouseLeave={(e) =>
+                                                    (e.target.style.backgroundColor =
+                                                        "#7c3aed")
+                                                }
+                                            >
+                                                {isAdmin
+                                                    ? "Edit Scoring Settings"
+                                                    : "Show Scoring Settings"}
+                                            </button>
+
+                                            {members.length <
                                                 league?.num_teams && (
                                                 <div
                                                     style={{
@@ -568,11 +486,12 @@ const LeagueDetail = () => {
                                                     to join...
                                                 </div>
                                             )}
-                                    </div>
-                                }
-                            />
+                                        </div>
+                                    }
+                                />
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* LeaderBoard */}
                     <LeaderBoard

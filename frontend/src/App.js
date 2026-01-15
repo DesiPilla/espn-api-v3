@@ -21,6 +21,7 @@ import LeagueDetail from "./pages/PlayoffPool/LeagueDetail";
 import DraftInterface from "./pages/PlayoffPool/DraftInterface";
 import DraftedTeams from "./pages/PlayoffPool/DraftedTeams";
 import JoinLeague from "./pages/PlayoffPool/JoinLeague";
+import EditTeams from "./pages/PlayoffPool/EditTeams";
 
 import { initGoogleAnalytics } from "./utils/google_analytics";
 import Layout from "./components/Layout";
@@ -88,6 +89,10 @@ const App = () => {
                                     <Route
                                         path="league/:leagueId"
                                         element={<LeagueDetail />}
+                                    />
+                                    <Route
+                                        path="league/:leagueId/edit-teams"
+                                        element={<EditTeams />}
                                     />
                                     <Route
                                         path="league/:leagueId/draft"
