@@ -1,10 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import playoffPoolAPI from '../../utils/PlayoffPool/api';
+import React, {
+    useEffect,
+    useState,
+    forwardRef,
+    useImperativeHandle,
+} from "react";
+import playoffPoolAPI from "../../utils/PlayoffPool/api";
 
-const LeaderBoard = ({ leagueId, isDraftComplete }) => {
+const LeaderBoard = forwardRef(({ leagueId, isDraftComplete }, ref) => {
     const [teamsData, setTeamsData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // Expose reload function to parent component
+    useImperativeHandle(ref, () => ({
+        reload: loadLeaderboardData,
+    }));
 
     useEffect(() => {
         if (isDraftComplete && leagueId) {
@@ -21,8 +31,8 @@ const LeaderBoard = ({ leagueId, isDraftComplete }) => {
             const playoffData = await playoffPoolAPI.getPlayoffStats(leagueId);
             setTeamsData(playoffData);
         } catch (err) {
-            console.error('Error loading leaderboard data:', err);
-            setError('Failed to load leaderboard data');
+            console.error("Error loading leaderboard data:", err);
+            setError("Failed to load leaderboard data");
         } finally {
             setLoading(false);
         }
@@ -35,14 +45,16 @@ const LeaderBoard = ({ leagueId, isDraftComplete }) => {
 
     if (loading) {
         return (
-            <div style={{ 
-                padding: '20px', 
-                textAlign: 'center',
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                marginTop: '24px'
-            }}>
+            <div
+                style={{
+                    padding: "20px",
+                    textAlign: "center",
+                    backgroundColor: "white",
+                    borderRadius: "8px",
+                    border: "1px solid #e2e8f0",
+                    marginTop: "24px",
+                }}
+            >
                 Loading leaderboard...
             </div>
         );
@@ -50,15 +62,17 @@ const LeaderBoard = ({ leagueId, isDraftComplete }) => {
 
     if (error) {
         return (
-            <div style={{ 
-                padding: '20px', 
-                textAlign: 'center',
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                marginTop: '24px',
-                color: '#dc2626'
-            }}>
+            <div
+                style={{
+                    padding: "20px",
+                    textAlign: "center",
+                    backgroundColor: "white",
+                    borderRadius: "8px",
+                    border: "1px solid #e2e8f0",
+                    marginTop: "24px",
+                    color: "#dc2626",
+                }}
+            >
                 {error}
             </div>
         );
@@ -71,7 +85,7 @@ const LeaderBoard = ({ leagueId, isDraftComplete }) => {
     const teams = teamsData.teams;
 
     // Calculate team round totals from individual players' round_points
-    const processedTeams = teams.map(team => {
+    const processedTeams = teams.map((team) => {
         const roundTotals = {
             WC: 0,
             DIV: 0,
@@ -372,6 +386,6 @@ const LeaderBoard = ({ leagueId, isDraftComplete }) => {
             )}
         </div>
     );
-};
+});
 
 export default LeaderBoard;

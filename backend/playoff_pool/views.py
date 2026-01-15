@@ -1499,10 +1499,22 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+        # Invalidate cache after scoring settings are updated
+        from .models import CachedPlayerStats
+
+        deleted_count = CachedPlayerStats.objects.filter(league=league).delete()[0]
+        logger.info(
+            f"Scoring settings updated for league {league.id}. "
+            f"Cleared {deleted_count} cached entries. "
+            f"Cache will be rebuilt on next request."
+        )
+
         return Response(
             {
                 "message": f"Updated {len(updated_settings)} scoring settings",
                 "updated_settings": updated_settings,
+                "cache_invalidated": True,
+                "cached_entries_cleared": deleted_count,
             }
         )
 

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { usePlayoffPoolAuth } from '../../components/PlayoffPool/AuthContext';
-import playoffPoolAPI from '../../utils/PlayoffPool/api';
+import React, { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { usePlayoffPoolAuth } from "../../components/PlayoffPool/AuthContext";
+import playoffPoolAPI from "../../utils/PlayoffPool/api";
 import ESPNStyleLeagueMembers from "../../components/PlayoffPool/ESPNStyleLeagueMembers";
 import ScoringSettingsEditor from "../../components/PlayoffPool/ScoringSettingsEditor";
 import LeaderBoard from "../../components/PlayoffPool/LeaderBoard";
@@ -10,6 +10,7 @@ const LeagueDetail = () => {
     const { leagueId } = useParams();
     const navigate = useNavigate();
     const { user } = usePlayoffPoolAuth();
+    const leaderboardRef = useRef(null);
 
     const [league, setLeague] = useState(null);
     const [members, setMembers] = useState([]);
@@ -93,8 +94,10 @@ const LeagueDetail = () => {
 
     const handleScoringSettingsSaved = () => {
         setShowScoringEditor(false);
-        // Optionally reload league data to reflect any changes
-        // loadLeagueData();
+        // Reload leaderboard to reflect new fantasy point calculations
+        if (leaderboardRef.current) {
+            leaderboardRef.current.reload();
+        }
     };
 
     const handleResetDraft = async () => {
@@ -573,6 +576,7 @@ const LeagueDetail = () => {
 
                     {/* LeaderBoard */}
                     <LeaderBoard
+                        ref={leaderboardRef}
                         leagueId={leagueId}
                         isDraftComplete={draftComplete}
                     />
