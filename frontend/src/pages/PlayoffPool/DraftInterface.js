@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { usePlayoffPoolAuth } from "../../components/PlayoffPool/AuthContext";
 import playoffPoolAPI from "../../utils/PlayoffPool/api";
+import Footer from "../../components/Footer";
 
 const DraftInterface = () => {
     const { leagueId } = useParams();
@@ -1331,10 +1332,9 @@ const DraftInterface = () => {
                                                             -
                                                         </span>
                                                     )}
-                                                </div>;
-                                                {
-                                                    /* Draft Button - Only for selected player with team */
-                                                }
+                                                </div>
+                                                ;
+                                                {/* Draft Button - Only for selected player with team */}
                                                 <div
                                                     style={{
                                                         textAlign: "center",
@@ -1492,7 +1492,8 @@ const DraftInterface = () => {
                                                             -
                                                         </span>
                                                     )}
-                                                </div>;
+                                                </div>
+                                                ;
                                             </div>
                                         );
                                     })}
@@ -2584,6 +2585,7 @@ const DraftInterface = () => {
                     </div>
                 )}
             </div>
+            <Footer />
         </>
     );
 };

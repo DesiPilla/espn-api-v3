@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayoffPoolAuth } from '../../components/PlayoffPool/AuthContext';
 import playoffPoolAPI from '../../utils/PlayoffPool/api';
+import Footer from "../../components/Footer";
 
 const DraftedTeams = () => {
     const { leagueId } = useParams();
@@ -864,6 +865,7 @@ const DraftedTeams = () => {
                     ))}
                 </div>
             </div>
+            <Footer />
         </div>
     );
 };

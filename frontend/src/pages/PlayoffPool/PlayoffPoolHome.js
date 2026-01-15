@@ -4,6 +4,7 @@ import { usePlayoffPoolAuth } from "../../components/PlayoffPool/AuthContext";
 import LoginForm from "../../components/PlayoffPool/LoginForm";
 import RegisterForm from "../../components/PlayoffPool/RegisterForm";
 import Dashboard from "../../components/PlayoffPool/Dashboard";
+import Footer from "../../components/Footer";
 
 const PlayoffPoolHome = () => {
     const { isAuthenticated, loading } = usePlayoffPoolAuth();
@@ -73,14 +74,18 @@ const PlayoffPoolHome = () => {
                         )}
                     </div>
                 </div>
+                <Footer />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <Dashboard />
-        </div>
+        <>
+            <div className="min-h-screen bg-gray-50">
+                <Dashboard />
+            </div>
+            <Footer />
+        </>
     );
 };
 

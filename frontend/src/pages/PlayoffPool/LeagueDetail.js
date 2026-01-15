@@ -5,7 +5,7 @@ import playoffPoolAPI from "../../utils/PlayoffPool/api";
 import ESPNStyleLeagueMembers from "../../components/PlayoffPool/ESPNStyleLeagueMembers";
 import ScoringSettingsEditor from "../../components/PlayoffPool/ScoringSettingsEditor";
 import LeaderBoard from "../../components/PlayoffPool/LeaderBoard";
-
+import Footer from "../../components/Footer";
 const LeagueDetail = () => {
     const { leagueId } = useParams();
     const navigate = useNavigate();
@@ -848,6 +848,7 @@ const LeagueDetail = () => {
                     draftComplete={draftComplete}
                 />
             )}
+            <Footer />
         </>
     );
 };
