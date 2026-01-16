@@ -163,7 +163,8 @@ const LeagueDetails = ({
                                     color: "#1f2937",
                                 }}
                             >
-                                {members?.length || 0} / {league?.num_teams || 0}
+                                {members?.length || 0} /{" "}
+                                {league?.num_teams || 0}
                             </div>
                             <div style={{ fontSize: "12px", color: "#6b7280" }}>
                                 Teams
@@ -274,8 +275,8 @@ const LeagueDetails = ({
                 {league?.roster_config && (
                     <div
                         style={{
-                            backgroundColor: "#fef3c7",
-                            border: "1px solid #fcd34d",
+                            backgroundColor: "#ffffff",
+                            border: "1px solid #e2e8f0",
                             borderRadius: "8px",
                             padding: "12px 16px",
                         }}
@@ -284,7 +285,7 @@ const LeagueDetails = ({
                             style={{
                                 fontSize: "13px",
                                 fontWeight: "600",
-                                color: "#78350f",
+                                color: "#1f2937",
                                 marginBottom: "8px",
                             }}
                         >
@@ -293,33 +294,83 @@ const LeagueDetails = ({
                         <div
                             style={{
                                 fontSize: "12px",
-                                color: "#92400e",
+                                color: "#374151",
                                 display: "flex",
                                 flexWrap: "wrap",
                                 gap: "12px",
                             }}
                         >
-                            {Object.entries(league.roster_config)
-                                .filter(([_, value]) => value > 0)
-                                .map(([position, count]) => (
-                                    <span
-                                        key={position}
-                                        style={{
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            padding: "4px 8px",
-                                            backgroundColor: "#ffffff",
-                                            borderRadius: "4px",
-                                            fontWeight: "500",
-                                        }}
-                                    >
-                                        <span style={{ fontWeight: "700" }}>
-                                            {count}
-                                        </span>
-                                        &nbsp;
-                                        {position}
-                                    </span>
-                                ))}
+                            {(() => {
+                                const positionOrder = [
+                                    "qb",
+                                    "rb",
+                                    "wr",
+                                    "te",
+                                    "flex",
+                                    "dst",
+                                    "k",
+                                ];
+                                const entries = Object.entries(
+                                    league.roster_config
+                                );
+
+                                // Sort entries based on position order
+                                const sortedEntries = entries.sort((a, b) => {
+                                    const posA = a[0].toLowerCase();
+                                    const posB = b[0].toLowerCase();
+                                    const indexA = positionOrder.indexOf(posA);
+                                    const indexB = positionOrder.indexOf(posB);
+
+                                    // If position not in order list, put it at the end
+                                    if (indexA === -1) return 1;
+                                    if (indexB === -1) return -1;
+                                    return indexA - indexB;
+                                });
+
+                                return sortedEntries
+                                    .filter(([position, value]) => {
+                                        // For flex, check if it's an object with count
+                                        if (position.toLowerCase() === "flex") {
+                                            return typeof value === "object"
+                                                ? value.count > 0
+                                                : value > 0;
+                                        }
+                                        return value > 0;
+                                    })
+                                    .map(([position, value]) => {
+                                        const count =
+                                            typeof value === "object"
+                                                ? value.count
+                                                : value;
+                                        const displayPos =
+                                            position.toUpperCase();
+
+                                        return (
+                                            <span
+                                                key={position}
+                                                style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    padding: "4px 8px",
+                                                    backgroundColor: "#f8fafc",
+                                                    borderRadius: "4px",
+                                                    fontWeight: "500",
+                                                    border: "1px solid #e2e8f0",
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        fontWeight: "700",
+                                                    }}
+                                                >
+                                                    {count}
+                                                </span>
+                                                &nbsp;
+                                                {displayPos}
+                                            </span>
+                                        );
+                                    });
+                            })()}
                         </div>
                     </div>
                 )}
