@@ -1599,11 +1599,16 @@ class LeagueViewSet(viewsets.ModelViewSet):
                         },
                         "round_points": {},
                         "total_points": 0.0,
+                        "is_eliminated": False,  # Will be updated if any game is eliminated
                     }
 
                 # Add this game's points to the appropriate round
                 game_type = stat.game_type
                 points = float(stat.fantasy_points)
+
+                # Update elimination status (if any game is eliminated, player is eliminated)
+                if stat.is_eliminated:
+                    player_results[gsis_id]["is_eliminated"] = True
 
                 player_results[gsis_id]["round_points"][game_type] = (
                     player_results[gsis_id]["round_points"].get(game_type, 0) + points
@@ -1641,6 +1646,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     "nfl_team": player_info["nfl_team"],
                     "round_points": player_data["round_points"],
                     "total_points": player_data["total_points"],
+                    "is_eliminated": player_data.get("is_eliminated", False),
                 }
 
                 teams[user_key]["players"].append(player_with_stats)
@@ -1736,6 +1742,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     "nfl_team": player_info["nfl_team"],
                     "round_points": player_data["round_points"],
                     "total_points": player_data["total_points"],
+                    "is_eliminated": player_data.get("is_eliminated", False),
                 }
 
                 teams[user_key]["players"].append(player_with_stats)

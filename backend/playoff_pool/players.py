@@ -49,6 +49,54 @@ PLAYOFF_TEAMS = {
 }
 
 
+def get_schedule(year: int) -> pd.DataFrame:
+    """Load NFL schedule for the given year with caching.
+
+    Args:
+        year (int): NFL season year
+    Returns:
+        pd.DataFrame: DataFrame of the NFL schedule for the given year
+    """
+    # Load schedule to get points allowed (with caching)
+    cache_key = f"nfl_schedule_{year}"
+    schedule = cache.get(cache_key)
+
+    if schedule is None:
+        schedule = nfl.load_schedules(seasons=[year]).to_pandas()
+        # Cache for 1 hour (3600 seconds)
+        cache.set(cache_key, schedule, 3600)
+
+    # Create mapping for home teams (opponent score = away_score)
+    home_mapping = (
+        schedule[["season", "week", "home_team", "home_score", "away_score"]]
+        .copy()
+        .rename(
+            columns={
+                "home_team": "team",
+                "home_score": "team_score",
+                "away_score": "opponent_score",
+            }
+        )
+    )
+
+    # Create mapping for away teams (opponent score = home_score)
+    away_mapping = (
+        schedule[["season", "week", "away_team", "home_score", "away_score"]]
+        .copy()
+        .rename(
+            columns={
+                "away_team": "team",
+                "away_score": "team_score",
+                "home_score": "opponent_score",
+            }
+        )
+    )
+
+    # Combine both mappings
+    score_mapping = pd.concat([home_mapping, away_mapping], ignore_index=True)
+    return score_mapping
+
+
 def get_defense_stats(year: int) -> pd.DataFrame:
     """Because defensive stats are team stats, they are not returned
     by the nfl.load_stats() method. This function handles all defense
@@ -95,33 +143,10 @@ def get_defense_stats(year: int) -> pd.DataFrame:
         ]
     ]
 
-    # Load schedule to get points allowed (with caching)
-    cache_key = f"nfl_schedule_{year}"
-    schedule = cache.get(cache_key)
-
-    if schedule is None:
-        schedule = nfl.load_schedules(seasons=[year]).to_pandas()
-        # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key, schedule, 3600)
-
-    # Create mapping for home teams (opponent score = away_score)
-    home_mapping = (
-        schedule[["season", "week", "home_team", "away_score"]]
-        .copy()
-        .rename(columns={"home_team": "team", "away_score": "points_allowed"})
-    )
-
-    # Create mapping for away teams (opponent score = home_score)
-    away_mapping = (
-        schedule[["season", "week", "away_team", "home_score"]]
-        .copy()
-        .rename(columns={"away_team": "team", "home_score": "points_allowed"})
-    )
-
-    # Combine both mappings
-    score_mapping = pd.concat([home_mapping, away_mapping], ignore_index=True)
-
     # Merge with team stats
+    score_mapping = get_schedule(year).rename(
+        columns={"opponent_score": "points_allowed"}
+    )
     defense_stats = defense_stats.merge(
         score_mapping, on=["season", "week", "team"], how="left"
     )

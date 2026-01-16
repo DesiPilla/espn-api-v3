@@ -85,12 +85,12 @@ def refresh_league_cache(league):
     """
     from .scoring import get_most_recent_game, get_league_scoring_settings, calculate_fantasy_points
     from .models import CachedPlayers, CachedPlayerStats, DraftedTeam
-    from .players import get_defense_stats
-    
+    from .players import get_defense_stats, get_schedule
+
     year = league.league_year
-    
+
     logger.info(f"Starting cache refresh for league {league.id} ({league.name})")
-    
+
     with transaction.atomic():
         # Step 1: Get most recent game metadata
         try:
@@ -106,59 +106,96 @@ def refresh_league_cache(league):
             error_msg = f"Could not get most recent game for year {year}: {e}"
             logger.error(error_msg)
             raise Exception(error_msg) from e
-        
+
         # Step 2: Load NFL playoff data
         logger.debug(f"Loading NFL playoff data for year {year}")
-        
+
         # Cache player stats (1 hour TTL)
         cache_key_stats = f"nfl_player_stats_{year}"
         weekly_stats = cache.get(cache_key_stats)
-        
+
         if weekly_stats is None:
             weekly_stats = nfl.load_player_stats([year]).to_pandas()
             cache.set(cache_key_stats, weekly_stats, 3600)
-        
+
         defense_stats = get_defense_stats(year)
-        
+
         # Add player_display_name to defense stats to match regular player stats format
         defense_stats["player_display_name"] = defense_stats["full_name"]
-        
+
+        # Drop team_score and opponent_score from defense stats to avoid merge conflicts
+        # (we'll add them back from schedule for all players together)
+        defense_stats = defense_stats.drop(
+            columns=["team_score", "opponent_score"], errors="ignore"
+        )
+
         weekly_stats = pd.concat([weekly_stats, defense_stats])
         weekly_stats = weekly_stats[weekly_stats["season_type"] == "POST"]
-        
+
         if weekly_stats.empty:
             error_msg = f"No playoff stats found for year {year}"
             logger.warning(error_msg)
             raise Exception(error_msg)
-        
-        # Step 3: Get league's custom scoring settings
+
+        # Step 3a: Load schedule and calculate elimination status
+        logger.debug(
+            f"Loading schedule and calculating elimination status for year {year}"
+        )
+        schedule = get_schedule(year)
+
+        # Filter schedule to only playoff weeks to match with weekly_stats
+        schedule_playoff = schedule[schedule["week"].isin([19, 20, 21, 22])]
+
+        # Merge schedule with weekly stats to get team scores
+        # Use left join to keep all player stats even if schedule data doesn't exist yet
+        weekly_stats = weekly_stats.merge(
+            schedule_playoff[
+                ["season", "week", "team", "team_score", "opponent_score"]
+            ],
+            on=["season", "week", "team"],
+            how="left",
+        )
+
+        # Ensure columns exist even if merge produced no matches
+        if "team_score" not in weekly_stats.columns:
+            weekly_stats["team_score"] = pd.NA
+        if "opponent_score" not in weekly_stats.columns:
+            weekly_stats["opponent_score"] = pd.NA
+
+        # Calculate elimination: player is eliminated if their team lost (score < opponent_score)
+        # NaN comparisons evaluate to False, so players with no game data default to not eliminated
+        weekly_stats["is_eliminated"] = (
+            weekly_stats["team_score"] < weekly_stats["opponent_score"]
+        ).fillna(False)
+
+        # Step 3b: Get league's custom scoring settings
         scoring_settings = get_league_scoring_settings(league)
-        
+
         # Step 4: Get drafted players for this league
         drafted_players = DraftedTeam.objects.filter(league=league)
-        
+
         if not drafted_players.exists():
             error_msg = f"No drafted players found for league {league.id}"
             logger.warning(error_msg)
             raise Exception(error_msg)
-        
+
         # Step 5: Delete existing cache for this league only
         deleted_count = CachedPlayerStats.objects.filter(league=league).delete()[0]
         logger.debug(f"Deleted {deleted_count} old cache entries for league {league.id}")
-        
+
         # Step 6: Bulk update/create all CachedPlayers entries first (single query)
         week_to_game_type = {19: 'WC', 20: 'DIV', 21: 'CON', 22: 'SB'}
-        
+
         # Pre-fetch existing cached players to avoid N queries
         existing_cached = {
             (cp.gsis_id, cp.year): cp 
             for cp in CachedPlayers.objects.filter(year=year)
         }
-        
+
         cached_players_to_create = []
         cached_players_to_update = []
         now = timezone.now()
-        
+
         for drafted_player in drafted_players:
             key = (drafted_player.gsis_id, year)
             if key in existing_cached:
@@ -185,7 +222,7 @@ def refresh_league_cache(league):
                 )
                 cached_players_to_create.append(cp)
                 existing_cached[key] = cp
-        
+
         # Bulk operations
         if cached_players_to_create:
             CachedPlayers.objects.bulk_create(cached_players_to_create, batch_size=100)
@@ -196,64 +233,78 @@ def refresh_league_cache(league):
                  'most_recent_gametime', 'last_updated'],
                 batch_size=100
             )
-        
+
         logger.debug(f"Updated {len(cached_players_to_update)} and created {len(cached_players_to_create)} CachedPlayers")
-        
+
         # Step 7: Build all stats in one pass (vectorized operations)
         stats_bulk = []
-        players_cached = 0
-        
+        players_with_stats = set()  # Track which players have stats
+
         # Filter stats to only playoff weeks
         playoff_weeks = list(week_to_game_type.keys())
         weekly_stats_filtered = weekly_stats[weekly_stats['week'].isin(playoff_weeks)].copy()
-        
+
         # Pre-calculate fantasy points for all rows (vectorized using numpy operations)
         logger.debug("Calculating fantasy points for all rows...")
         weekly_stats_filtered['fantasy_points'] = 0.0
-        
+
         # Vectorized point calculation - much faster than apply()
         for stat, config in scoring_settings.items():
             if isinstance(config, dict):
                 multiplier = config.get("default_value", 0)
             else:
                 multiplier = config
-            
+
             if stat in weekly_stats_filtered.columns and pd.notna(multiplier):
                 # Vectorized: add points for all rows at once
                 weekly_stats_filtered['fantasy_points'] += (
                     weekly_stats_filtered[stat].fillna(0) * multiplier
                 )
-        
+
         # Convert to dict records for faster iteration (avoids pandas overhead)
         stats_records = weekly_stats_filtered.to_dict('records')
-        
+
+        # Debug: Check if is_eliminated is in the data
+        if stats_records:
+            sample_record = stats_records[0]
+            logger.debug(f"Sample record keys: {list(sample_record.keys())}")
+            if "is_eliminated" in sample_record:
+                logger.debug(
+                    f"is_eliminated present in records: {sample_record.get('is_eliminated')}"
+                )
+            else:
+                logger.warning("is_eliminated NOT found in records!")
+
         # Build lookup dict for faster matching
         logger.debug("Building player stat entries...")
         drafted_lookup = {
             (dp.player_name, dp.position, dp.nfl_team): dp 
             for dp in drafted_players
         }
-        
+
         for record in stats_records:
             key = (
                 record.get('player_display_name'),
                 record.get('position'),
                 record.get('team')
             )
-            
+
             if key not in drafted_lookup:
                 continue
-            
+
             drafted_player = drafted_lookup[key]
             cached_player = existing_cached.get((drafted_player.gsis_id, year))
-            
+
             if not cached_player:
                 continue
-            
+
+            # Track that this player has stats
+            players_with_stats.add(drafted_player.gsis_id)
+
             week = record['week']
             game_type = week_to_game_type[week]
             game_id = f"{record['season']}_{week}_{record.get('opponent', 'UNK')}"
-            
+
             stats_bulk.append(
                 CachedPlayerStats(
                     league=league,
@@ -263,20 +314,42 @@ def refresh_league_cache(league):
                     game_id=game_id,
                     most_recent_game_id=most_recent_game_id,
                     most_recent_gametime=most_recent_gametime,
-                    fantasy_points=record['fantasy_points']
+                    fantasy_points=record["fantasy_points"],
+                    is_eliminated=bool(record.get("is_eliminated", False)),
                 )
             )
-        
+
+        # Step 8: Create placeholder entries for players without stats yet (e.g., bye week)
+        logger.debug("Creating placeholder entries for players without stats...")
+        for drafted_player in drafted_players:
+            if drafted_player.gsis_id not in players_with_stats:
+                cached_player = existing_cached.get((drafted_player.gsis_id, year))
+                if cached_player:
+                    # Create a placeholder entry with 0 points for the first playoff week
+                    stats_bulk.append(
+                        CachedPlayerStats(
+                            league=league,
+                            cached_player=cached_player,
+                            week=19,  # Wildcard week
+                            game_type="WC",
+                            game_id=f"{year}_19_BYE",
+                            most_recent_game_id=most_recent_game_id,
+                            most_recent_gametime=most_recent_gametime,
+                            fantasy_points=0.0,
+                            is_eliminated=False,  # Not eliminated if they haven't played
+                        )
+                    )
+
         # Count unique players
         players_cached = len(set(stat.cached_player_id for stat in stats_bulk))
-        
+
         # Single bulk create for ALL stats
         logger.debug(f"Bulk creating {len(stats_bulk)} stat entries...")
         if stats_bulk:
             CachedPlayerStats.objects.bulk_create(stats_bulk, batch_size=1000)
-        
+
         stats_created = len(stats_bulk)
-        
+
         logger.info(
             f"Cache refresh complete for league {league.id} ({league.name}): "
             f"{players_cached} players cached, {stats_created} game stats created, "

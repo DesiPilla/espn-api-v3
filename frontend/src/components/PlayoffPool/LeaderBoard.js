@@ -84,7 +84,7 @@ const LeaderBoard = forwardRef(({ leagueId, isDraftComplete }, ref) => {
 
     const teams = teamsData.teams;
 
-    // Calculate team round totals from individual players' round_points
+    // Calculate team round totals and alive player count from individual players' round_points
     const processedTeams = teams.map((team) => {
         const roundTotals = {
             WC: 0,
@@ -93,13 +93,21 @@ const LeaderBoard = forwardRef(({ leagueId, isDraftComplete }, ref) => {
             SB: 0,
         };
 
-        // Sum up each player's round points for the team
+        let aliveCount = 0;
+        const totalPlayers = team.players.length;
+
+        // Sum up each player's round points and count alive players
         team.players.forEach((player) => {
             if (player.round_points) {
                 roundTotals.WC += player.round_points.WC || 0;
                 roundTotals.DIV += player.round_points.DIV || 0;
                 roundTotals.CON += player.round_points.CON || 0;
                 roundTotals.SB += player.round_points.SB || 0;
+            }
+
+            // Count player as alive if not eliminated
+            if (!player.is_eliminated) {
+                aliveCount++;
             }
         });
 
@@ -111,6 +119,8 @@ const LeaderBoard = forwardRef(({ leagueId, isDraftComplete }, ref) => {
             ...team,
             roundTotals,
             total_points: calculatedTotal, // Use our calculated total
+            aliveCount,
+            totalPlayers,
         };
     });
 
@@ -188,6 +198,20 @@ const LeaderBoard = forwardRef(({ leagueId, isDraftComplete }, ref) => {
                                 }}
                             >
                                 Team Name
+                            </th>
+                            <th
+                                style={{
+                                    padding: "12px 16px",
+                                    textAlign: "center",
+                                    fontSize: "12px",
+                                    fontWeight: "600",
+                                    color: "#374151",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.05em",
+                                    borderBottom: "1px solid #e5e7eb",
+                                }}
+                            >
+                                Alive
                             </th>
                             <th
                                 style={{
@@ -310,6 +334,28 @@ const LeaderBoard = forwardRef(({ leagueId, isDraftComplete }, ref) => {
                                         }}
                                     >
                                         {team.team_name}
+                                    </td>
+                                    <td
+                                        style={{
+                                            padding: "12px 16px",
+                                            fontSize: "14px",
+                                            color: "#374151",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        <span
+                                            style={{
+                                                color:
+                                                    team.aliveCount ===
+                                                    team.totalPlayers
+                                                        ? "#16a34a"
+                                                        : "#6b7280",
+                                                fontWeight: "500",
+                                            }}
+                                        >
+                                            {team.aliveCount}/
+                                            {team.totalPlayers}
+                                        </span>
                                     </td>
                                     <td
                                         style={{

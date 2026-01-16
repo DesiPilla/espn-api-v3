@@ -226,6 +226,9 @@ class CachedPlayerStats(models.Model):
     # Pre-computed fantasy points using league's scoring
     fantasy_points = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
+    # Player elimination status
+    is_eliminated = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:

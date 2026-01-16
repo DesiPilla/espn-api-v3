@@ -670,6 +670,10 @@ const DraftedTeams = () => {
                                                     alignItems: "center",
                                                     transition:
                                                         "background-color 0.15s",
+                                                    opacity:
+                                                        player.is_eliminated
+                                                            ? 0.5
+                                                            : 1,
                                                 }}
                                                 onMouseEnter={(e) =>
                                                     (e.currentTarget.style.backgroundColor =
@@ -738,9 +742,29 @@ const DraftedTeams = () => {
                                                             fontWeight: "500",
                                                             color: "#1f2937",
                                                             marginBottom: "2px",
+                                                            display: "flex",
+                                                            alignItems:
+                                                                "center",
+                                                            gap: "6px",
                                                         }}
                                                     >
                                                         {player.player_name}
+                                                        {player.is_eliminated && (
+                                                            <span
+                                                                style={{
+                                                                    display:
+                                                                        "inline-block",
+                                                                    width: "6px",
+                                                                    height: "6px",
+                                                                    borderRadius:
+                                                                        "50%",
+                                                                    backgroundColor:
+                                                                        "#dc2626",
+                                                                    flexShrink: 0,
+                                                                }}
+                                                                title="Player eliminated"
+                                                            />
+                                                        )}
                                                     </div>
                                                     <div
                                                         style={{
