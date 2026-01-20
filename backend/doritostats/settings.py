@@ -79,38 +79,24 @@ LOGGING = {
             "style": "{",
         },
     },
-    # "handlers": {
-    #     "console": {
-    #         "level": "INFO",  # Capture INFO and above (this includes INFO, WARNING, ERROR)
-    #         "class": "logging.StreamHandler",
-    #     },
-    #     "file": {
-    #         "level": "ERROR",  # Capture only ERROR and above (this includes ERROR, CRITICAL)
-    #         "class": "logging.FileHandler",
-    #         "filename": os.path.join(BASE_DIR, "debug.log"),  # ensure BASE_DIR is set
-    #         "formatter": "verbose",
-    #     },
-    # },
-    # "loggers": {
-    #     "django": {
-    #         "handlers": ["file"],
-    #         "level": "INFO",  # Capture INFO and above
-    #         "propagate": True,
-    #     },
-    #     "django.request": {
-    #         "handlers": ["file"],  # Log to both console and file
-    #         "level": "INFO",  # Capture INFO and above
-    #         "propagate": False,
-    #     },
-    #     "django.db.backends": {
-    #         "level": "INFO",  # Capture INFO and above (database queries)
-    #         "handlers": ["file"],
-    #     },
-    #     "root": {
-    #         "handlers": ["file"],
-    #         "level": "INFO",
-    #     },
-    # },
+    "handlers": {
+        "console": {
+            "level": "INFO",  # Capture INFO and above (this includes INFO, WARNING, ERROR)
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "backend.playoff_pool": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+    },
 }
 
 
@@ -118,6 +104,7 @@ LOGGING = {
 INSTALLED_APPS = [
     "corsheaders",
     "backend.fantasy_stats.apps.FantasyStatsConfig",
+    "backend.playoff_pool.apps.PlayoffPoolConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -126,7 +113,19 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
     "rest_framework",
+    "rest_framework.authtoken",
 ]
+
+# Django REST Framework Configuration
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -187,6 +186,15 @@ DATABASES = {
     )
 }
 
+# Cache Configuration
+# Using database-backed cache for simplicity (no additional setup needed)
+# For production with high traffic, consider Redis or Memcached
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "default-cache",
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

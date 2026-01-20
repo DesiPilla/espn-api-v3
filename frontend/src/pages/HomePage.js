@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import LeagueSelector from "../components/LeagueSelector";
@@ -76,6 +76,29 @@ const HomePage = () => {
                     dropdownClassName={dropdownClassName} // Pass common dropdown class
                 />
                 <NewLeagueForm />
+                
+                {/* Playoff Pool Link */}
+                <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                    <h3 style={{ marginBottom: '0.5rem' }}>🏈 NFL Playoff Pool</h3>
+                    <p style={{ marginBottom: '1rem', fontSize: '14px', color: '#6c757d' }}>
+                        Draft players from playoff teams and compete with your friends!
+                    </p>
+                    <Link 
+                        to="/playoff-pool"
+                        style={{
+                            display: 'inline-block',
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            padding: '10px 20px',
+                            textDecoration: 'none',
+                            borderRadius: '5px',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        Enter Playoff Pool →
+                    </Link>
+                </div>
+                
                 <CookiesInstructionsBox />
                 <br></br>
             </div>
