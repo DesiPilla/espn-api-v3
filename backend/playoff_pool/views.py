@@ -667,8 +667,10 @@ class LeagueViewSet(viewsets.ModelViewSet):
                 player["name"] = player.get("full_name", "")
 
         except Exception as e:
+            logger.exception("Error retrieving available players for league %s", league.id)
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "An internal error occurred while fetching available players."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         return Response(available_players)
 
