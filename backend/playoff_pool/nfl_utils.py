@@ -12,6 +12,9 @@ import pandas as pd
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Playoff teams for each year
 PLAYOFF_TEAMS = {
@@ -73,9 +76,10 @@ def current_nfl_season_api(request):
             'current_season': current_season,
             'status': 'success'
         })
+        logger.exception("Failed to get current NFL season")
     except Exception as e:
         return JsonResponse({
-            'error': str(e),
+            'error': 'An internal server error occurred.',
             'status': 'error'
         }, status=500)
 
