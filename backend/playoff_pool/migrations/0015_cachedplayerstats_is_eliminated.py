@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("playoff_pool", "0014_alter_cachedplayerstats_table_comment"),
     ]

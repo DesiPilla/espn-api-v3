@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("fantasy_stats", "0005_leagueinfo_deleted"),
     ]

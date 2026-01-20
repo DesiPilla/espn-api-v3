@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("playoff_pool", "0003_alter_leaguemembership_unique_together"),
     ]

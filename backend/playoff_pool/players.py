@@ -320,7 +320,6 @@ def add_draft_value(df, positions, league_size=12):
 def get_all_playoff_players(
     year: int, positions_to_keep: List[str] = ["QB", "RB", "WR", "TE", "K", "DST"]
 ) -> pd.DataFrame:
-
     # ------------ Get list of individual players ------------
     # Load rosters for the playoff teams (with caching)
     cache_key_rosters = f"nfl_rosters_{year}"

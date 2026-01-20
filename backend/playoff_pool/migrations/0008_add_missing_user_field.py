@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("playoff_pool", "0007_rename_team_draftedteam_nfl_team"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

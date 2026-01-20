@@ -208,7 +208,7 @@ class DraftedTeamSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         # If user is None, explicitly set it to None in the output
         if instance.user is None:
-            ret['user'] = None
+            ret["user"] = None
         return ret
 
     def get_drafted_at_est(self, obj):

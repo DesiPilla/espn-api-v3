@@ -100,7 +100,9 @@ class DraftedTeam(models.Model):
         League, on_delete=models.CASCADE, related_name="drafted_players"
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    team_membership = models.ForeignKey('LeagueMembership', on_delete=models.CASCADE, null=True, blank=True)
+    team_membership = models.ForeignKey(
+        "LeagueMembership", on_delete=models.CASCADE, null=True, blank=True
+    )
     team_name = models.CharField(max_length=100)
 
     # Player information

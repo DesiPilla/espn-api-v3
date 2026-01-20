@@ -43,10 +43,10 @@ PLAYOFF_TEAMS = {
 def get_current_nfl_season():
     """
     Get the current NFL season year.
-    
+
     Returns:
         int: The current NFL season year
-    
+
     Example:
         >>> season = get_current_nfl_season()
         >>> print(season)
@@ -55,15 +55,15 @@ def get_current_nfl_season():
     return nfl.get_current_season()
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def current_nfl_season_api(request):
     """
     API endpoint to get the current NFL season year.
-    
+
     Returns:
         JsonResponse: JSON response containing the current season year
-        
+
     Example response:
         {
             "current_season": 2025,
@@ -72,16 +72,12 @@ def current_nfl_season_api(request):
     """
     try:
         current_season = get_current_nfl_season()
-        return JsonResponse({
-            'current_season': current_season,
-            'status': 'success'
-        })
-        logger.exception("Failed to get current NFL season")
+        return JsonResponse({"current_season": current_season, "status": "success"})
     except Exception as e:
-        return JsonResponse({
-            'error': 'An internal server error occurred.',
-            'status': 'error'
-        }, status=500)
+        return JsonResponse(
+            {"error": "An internal server error occurred.", "status": "error"},
+            status=500,
+        )
 
 
 def calculate_player_playoff_points(league, year=None):

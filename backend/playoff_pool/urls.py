@@ -13,12 +13,12 @@ from .views import (
 )
 from .nfl_utils import current_nfl_season_api
 
-app_name = 'playoff_pool'
+app_name = "playoff_pool"
 
 router = DefaultRouter()
-router.register(r'leagues', LeagueViewSet, basename='league')
-router.register(r'memberships', LeagueMembershipViewSet, basename='membership')
-router.register(r'drafted-teams', DraftedTeamViewSet, basename='drafted-team')
+router.register(r"leagues", LeagueViewSet, basename="league")
+router.register(r"memberships", LeagueMembershipViewSet, basename="membership")
+router.register(r"drafted-teams", DraftedTeamViewSet, basename="drafted-team")
 
 urlpatterns = [
     # Debug endpoint

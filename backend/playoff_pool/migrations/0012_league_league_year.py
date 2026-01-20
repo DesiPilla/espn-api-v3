@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("playoff_pool", "0011_alter_playoffdraftableplayer_options_and_more"),
     ]

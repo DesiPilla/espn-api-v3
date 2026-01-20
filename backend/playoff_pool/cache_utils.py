@@ -22,10 +22,10 @@ def should_refresh_cache(league):
     """
     Fast heuristic: Compare cached game timestamp to current most recent game.
     Cost: 1 DB query + 1 lightweight API call (cached in-memory)
-    
+
     Args:
         league: League model instance
-        
+
     Returns:
         tuple: (needs_refresh: bool, reason: str)
     """
@@ -59,8 +59,8 @@ def should_refresh_cache(league):
             current_game_info = get_most_recent_game(year)
             _GAME_CACHE[cache_key] = (current_game_info, now)
 
-        current_game_id = current_game_info['game_id']
-        current_gametime = pd.to_datetime(current_game_info['gametime'])
+        current_game_id = current_game_info["game_id"]
+        current_gametime = pd.to_datetime(current_game_info["gametime"])
     except Exception as e:
         logger.warning(f"Could not get most recent game: {e}")
         return False, "Could not check for new games"
@@ -91,11 +91,15 @@ def refresh_league_cache(league):
     """
     Rebuild cache for a specific league using its custom scoring.
     Also updates global CachedPlayers table as needed.
-    
+
     Args:
         league: League model instance
     """
-    from .scoring import get_most_recent_game, get_league_scoring_settings, calculate_fantasy_points
+    from .scoring import (
+        get_most_recent_game,
+        get_league_scoring_settings,
+        calculate_fantasy_points,
+    )
     from .models import CachedPlayers, CachedPlayerStats, DraftedTeam
     from .players import get_defense_stats, get_schedule
 
@@ -107,12 +111,12 @@ def refresh_league_cache(league):
         # Step 1: Get most recent game metadata
         try:
             most_recent_game_info = get_most_recent_game(year)
-            most_recent_game_id = most_recent_game_info['game_id']
+            most_recent_game_id = most_recent_game_info["game_id"]
             # Convert to timezone-aware datetime
-            most_recent_gametime = pd.to_datetime(most_recent_game_info['gametime'])
+            most_recent_gametime = pd.to_datetime(most_recent_game_info["gametime"])
             if most_recent_gametime.tzinfo is None:
                 # Make timezone-aware (NFL games are in ET)
-                et_tz = pytz.timezone('America/New_York')
+                et_tz = pytz.timezone("America/New_York")
                 most_recent_gametime = et_tz.localize(most_recent_gametime)
         except Exception as e:
             error_msg = f"Could not get most recent game for year {year}: {e}"
@@ -193,15 +197,16 @@ def refresh_league_cache(league):
 
         # Step 5: Delete existing cache for this league only
         deleted_count = CachedPlayerStats.objects.filter(league=league).delete()[0]
-        logger.debug(f"Deleted {deleted_count} old cache entries for league {league.id}")
+        logger.debug(
+            f"Deleted {deleted_count} old cache entries for league {league.id}"
+        )
 
         # Step 6: Bulk update/create all CachedPlayers entries first (single query)
-        week_to_game_type = {19: 'WC', 20: 'DIV', 21: 'CON', 22: 'SB'}
+        week_to_game_type = {19: "WC", 20: "DIV", 21: "CON", 22: "SB"}
 
         # Pre-fetch existing cached players to avoid N queries
         existing_cached = {
-            (cp.gsis_id, cp.year): cp 
-            for cp in CachedPlayers.objects.filter(year=year)
+            (cp.gsis_id, cp.year): cp for cp in CachedPlayers.objects.filter(year=year)
         }
 
         cached_players_to_create = []
@@ -230,7 +235,7 @@ def refresh_league_cache(league):
                     nfl_team=drafted_player.nfl_team,
                     most_recent_game_id=most_recent_game_id,
                     most_recent_gametime=most_recent_gametime,
-                    last_updated=now
+                    last_updated=now,
                 )
                 cached_players_to_create.append(cp)
                 existing_cached[key] = cp
@@ -241,12 +246,20 @@ def refresh_league_cache(league):
         if cached_players_to_update:
             CachedPlayers.objects.bulk_update(
                 cached_players_to_update,
-                ['player_name', 'position', 'nfl_team', 'most_recent_game_id', 
-                 'most_recent_gametime', 'last_updated'],
-                batch_size=100
+                [
+                    "player_name",
+                    "position",
+                    "nfl_team",
+                    "most_recent_game_id",
+                    "most_recent_gametime",
+                    "last_updated",
+                ],
+                batch_size=100,
             )
 
-        logger.debug(f"Updated {len(cached_players_to_update)} and created {len(cached_players_to_create)} CachedPlayers")
+        logger.debug(
+            f"Updated {len(cached_players_to_update)} and created {len(cached_players_to_create)} CachedPlayers"
+        )
 
         # Step 7: Build all stats in one pass (vectorized operations)
         stats_bulk = []
@@ -254,11 +267,13 @@ def refresh_league_cache(league):
 
         # Filter stats to only playoff weeks
         playoff_weeks = list(week_to_game_type.keys())
-        weekly_stats_filtered = weekly_stats[weekly_stats['week'].isin(playoff_weeks)].copy()
+        weekly_stats_filtered = weekly_stats[
+            weekly_stats["week"].isin(playoff_weeks)
+        ].copy()
 
         # Pre-calculate fantasy points for all rows (vectorized using numpy operations)
         logger.debug("Calculating fantasy points for all rows...")
-        weekly_stats_filtered['fantasy_points'] = 0.0
+        weekly_stats_filtered["fantasy_points"] = 0.0
 
         # Vectorized point calculation - much faster than apply()
         for stat, config in scoring_settings.items():
@@ -269,12 +284,12 @@ def refresh_league_cache(league):
 
             if stat in weekly_stats_filtered.columns and pd.notna(multiplier):
                 # Vectorized: add points for all rows at once
-                weekly_stats_filtered['fantasy_points'] += (
+                weekly_stats_filtered["fantasy_points"] += (
                     weekly_stats_filtered[stat].fillna(0) * multiplier
                 )
 
         # Convert to dict records for faster iteration (avoids pandas overhead)
-        stats_records = weekly_stats_filtered.to_dict('records')
+        stats_records = weekly_stats_filtered.to_dict("records")
 
         # Debug: Check if is_eliminated is in the data
         if stats_records:
@@ -290,15 +305,14 @@ def refresh_league_cache(league):
         # Build lookup dict for faster matching
         logger.debug("Building player stat entries...")
         drafted_lookup = {
-            (dp.player_name, dp.position, dp.nfl_team): dp 
-            for dp in drafted_players
+            (dp.player_name, dp.position, dp.nfl_team): dp for dp in drafted_players
         }
 
         for record in stats_records:
             key = (
-                record.get('player_display_name'),
-                record.get('position'),
-                record.get('team')
+                record.get("player_display_name"),
+                record.get("position"),
+                record.get("team"),
             )
 
             if key not in drafted_lookup:
@@ -313,7 +327,7 @@ def refresh_league_cache(league):
             # Track that this player has stats
             players_with_stats.add(drafted_player.gsis_id)
 
-            week = record['week']
+            week = record["week"]
             game_type = week_to_game_type[week]
             game_id = f"{record['season']}_{week}_{record.get('opponent', 'UNK')}"
 
