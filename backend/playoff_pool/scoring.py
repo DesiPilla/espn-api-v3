@@ -493,7 +493,7 @@ def get_most_recent_game(year: int) -> pd.Series:
         cache.set(cache_key, schedules, 3600)
 
     return (
-        schedules.dropna(subset=["total"])
+        schedules.dropna(subset=["total", "result", "overtime"])
         .sort_values(by=["gameday", "gametime"], ascending=[False, False])
         .iloc[0][["game_id", "gameday", "gametime"]]
     )

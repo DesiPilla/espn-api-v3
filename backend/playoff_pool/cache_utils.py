@@ -31,20 +31,20 @@ def should_refresh_cache(league):
     """
     from .scoring import get_most_recent_game
     from .models import CachedPlayerStats, DraftedTeam
-    
+
     year = league.league_year
-    
+
     # Step 1: Check if any cached stats exist for this league
     cached_stat = CachedPlayerStats.objects.filter(league=league).first()
-    
+
     if not cached_stat:
         return True, "No cache exists for this league"
-    
+
     # Step 2: Get current most recent game (with in-memory caching)
     try:
         cache_key = f"game_{year}"
         now = datetime.now()
-        
+
         # Check in-memory cache first
         if cache_key in _GAME_CACHE:
             cached_data, cached_time = _GAME_CACHE[cache_key]
@@ -58,20 +58,32 @@ def should_refresh_cache(league):
             # Not in cache, fetch and cache it
             current_game_info = get_most_recent_game(year)
             _GAME_CACHE[cache_key] = (current_game_info, now)
-        
+
         current_game_id = current_game_info['game_id']
         current_gametime = pd.to_datetime(current_game_info['gametime'])
     except Exception as e:
         logger.warning(f"Could not get most recent game: {e}")
         return False, "Could not check for new games"
-    
+
     # Step 3: Compare timestamps
     # All stats for this league should have the same most_recent_game_id
     cached_game_id = cached_stat.most_recent_game_id
-    
+    cached_gametime = cached_stat.most_recent_gametime
+
+    logger.info(
+        f"Cache check for league {league.id}: "
+        f"Most recent game: {current_game_id} ({current_gametime}), "
+        f"Cached game: {cached_game_id} ({cached_gametime})"
+    )
+
     if cached_game_id != current_game_id:
+        logger.info(
+            f"Cache refresh NEEDED for league {league.id}: "
+            f"New game detected: {current_game_id} (cached: {cached_game_id})"
+        )
         return True, f"New game detected: {current_game_id} (cached: {cached_game_id})"
-    
+
+    logger.info(f"Cache refresh NOT needed for league {league.id}: Cache is up to date")
     return False, "Cache is up to date"
 
 
