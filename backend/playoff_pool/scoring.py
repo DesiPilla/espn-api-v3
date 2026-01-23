@@ -4,7 +4,7 @@ from django.core.cache import cache
 
 from backend.playoff_pool.models import League
 
-
+CACHE_DURATION = 2 * 60  # Cache duration in seconds (2 minutes)
 SCORING_MULTIPLIERS = {
     # -------------------
     # Passing
@@ -490,7 +490,6 @@ def get_most_recent_game(year: int) -> pd.Series:
     if schedules is None:
         schedules = nfl.load_schedules(seasons=[year]).to_pandas()
         # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key, schedules, 3600)
 
     return (
         schedules.dropna(subset=["total", "result", "overtime"])

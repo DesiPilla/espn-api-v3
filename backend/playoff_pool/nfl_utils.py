@@ -16,6 +16,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+CACHE_DURATION = 2 * 60
+
 # Playoff teams for each year
 PLAYOFF_TEAMS = {
     2024: [
@@ -111,7 +113,7 @@ def calculate_player_playoff_points(league, year=None):
             if weekly_stats is None:
                 weekly_stats = nfl.load_player_stats([year]).to_pandas()
                 # Cache for 1 hour (3600 seconds)
-                cache.set(cache_key, weekly_stats, 3600)
+                cache.set(cache_key, weekly_stats, CACHE_DURATION)
 
             defense_stats = get_defense_stats(year)
             defense_stats["player_name"] = defense_stats["full_name"]
