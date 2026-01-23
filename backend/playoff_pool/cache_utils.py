@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Cache most_recent_game at module level (refreshes per-process, not per-request)
 _GAME_CACHE = {}
-_GAME_CACHE_TTL = 300  # 5 minutes
+_GAME_CACHE_TTL = 1 * 60  # 1 minute
 
 
 def should_refresh_cache(league):
@@ -132,7 +132,7 @@ def refresh_league_cache(league):
 
         if weekly_stats is None:
             weekly_stats = nfl.load_player_stats([year]).to_pandas()
-            cache.set(cache_key_stats, weekly_stats, 3600)
+            cache.set(cache_key_stats, weekly_stats, timeout=_GAME_CACHE_TTL)
 
         defense_stats = get_defense_stats(year)
 

@@ -13,6 +13,7 @@ from backend.playoff_pool.scoring import (
 )
 from backend.playoff_pool.models import PlayoffDraftablePlayer
 
+CACHE_DURATION = 2 * 60
 PLAYOFF_TEAMS = {
     2024: [
         "KC",
@@ -63,8 +64,7 @@ def get_schedule(year: int) -> pd.DataFrame:
 
     if schedule is None:
         schedule = nfl.load_schedules(seasons=[year]).to_pandas()
-        # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key, schedule, 3600)
+        cache.set(cache_key, schedule, timeout=CACHE_DURATION)
 
     # Create mapping for home teams (opponent score = away_score)
     home_mapping = (
@@ -115,8 +115,7 @@ def get_defense_stats(year: int) -> pd.DataFrame:
 
     if defense_stats is None:
         defense_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
-        # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key, defense_stats, 3600)
+        cache.set(cache_key, defense_stats, timeout=CACHE_DURATION)
 
     # Add team D/ST identifiers
     defense_stats["gsis_id"] = defense_stats["team"]
@@ -328,7 +327,7 @@ def get_all_playoff_players(
     if playoff_rosters is None:
         playoff_rosters = nfl.load_rosters([year]).to_pandas()
         # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key_rosters, playoff_rosters, 3600)
+        cache.set(cache_key_rosters, playoff_rosters, timeout=CACHE_DURATION)
 
     playoff_rosters = playoff_rosters[playoff_rosters["team"].isin(PLAYOFF_TEAMS[year])]
 
@@ -339,7 +338,7 @@ def get_all_playoff_players(
     if player_stats is None:
         player_stats = nfl.load_player_stats([year]).to_pandas()
         # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key_stats, player_stats, 3600)
+        cache.set(cache_key_stats, player_stats, timeout=CACHE_DURATION)
     player_stats["fantasy_points"] = player_stats.apply(
         lambda row: calculate_fantasy_points(row, RELEVANT_SCORING_STATS),
         axis=1,
