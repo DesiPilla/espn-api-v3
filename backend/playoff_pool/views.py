@@ -1555,7 +1555,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "error": "Failed to refresh cache",
-                    "details": str(e),
+                    "details": "An internal error occurred while refreshing the cache.",
                     "status": "error",
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
