@@ -489,7 +489,7 @@ def get_most_recent_game(year: int) -> pd.Series:
 
     if schedules is None:
         schedules = nfl.load_schedules(seasons=[year]).to_pandas()
-        # Cache for 1 hour (3600 seconds)
+        cache.set(cache_key, schedules, timeout=CACHE_DURATION)
 
     return (
         schedules.dropna(subset=["total", "result", "overtime"])
