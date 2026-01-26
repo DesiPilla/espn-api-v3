@@ -1524,6 +1524,43 @@ class LeagueViewSet(viewsets.ModelViewSet):
             }
         )
 
+    @action(detail=True, methods=["post"], permission_classes=[permissions.AllowAny])
+    def manual_refresh_cache(self, request, pk=None):
+        """Manually trigger cache refresh for a league"""
+        league = self.get_object()
+
+        try:
+            from .cache_utils import refresh_league_cache
+
+            logger.info(
+                f"Manual cache refresh triggered for league {league.id} by user request"
+            )
+            refresh_league_cache(league)
+            logger.info(f"Manual cache refresh completed for league {league.id}")
+
+            return Response(
+                {
+                    "message": "Cache refreshed successfully",
+                    "league_id": league.id,
+                    "status": "success",
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Manual cache refresh failed for league {league.id}: {e}",
+                exc_info=True,
+            )
+            return Response(
+                {
+                    "error": "Failed to refresh cache",
+                    "details": str(e),
+                    "status": "error",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
     @action(detail=True, methods=["get"], permission_classes=[permissions.AllowAny])
     def playoff_stats(self, request, pk=None):
         """Get playoff stats for all drafted players with calculated fantasy points (with PostgreSQL caching)"""

@@ -34,7 +34,7 @@ class PlayoffPoolAPI {
 
                 return config;
             },
-            (error) => Promise.reject(error)
+            (error) => Promise.reject(error),
         );
     }
 
@@ -59,7 +59,7 @@ class PlayoffPoolAPI {
             localStorage.setItem("playoffPoolToken", response.data.token);
             localStorage.setItem(
                 "playoffPoolUser",
-                JSON.stringify(response.data.user)
+                JSON.stringify(response.data.user),
             );
         }
         return response.data;
@@ -71,7 +71,7 @@ class PlayoffPoolAPI {
             localStorage.setItem("playoffPoolToken", response.data.token);
             localStorage.setItem(
                 "playoffPoolUser",
-                JSON.stringify(response.data.user)
+                JSON.stringify(response.data.user),
             );
         }
         return response.data;
@@ -123,7 +123,7 @@ class PlayoffPoolAPI {
     async createTeam(leagueId, teamName) {
         const response = await this.api.post(
             `api/leagues/${leagueId}/create_team/`,
-            { team_name: teamName }
+            { team_name: teamName },
         );
         return response.data;
     }
@@ -134,7 +134,7 @@ class PlayoffPoolAPI {
             {
                 team_id: teamId,
                 confirm_multiple: confirmMultiple,
-            }
+            },
         );
         return response.data;
     }
@@ -151,7 +151,7 @@ class PlayoffPoolAPI {
     async unclaimTeam(leagueId, teamId) {
         const response = await this.api.post(
             `api/leagues/${leagueId}/unclaim_team/`,
-            { team_id: teamId }
+            { team_id: teamId },
         );
         return response.data;
     }
@@ -159,7 +159,7 @@ class PlayoffPoolAPI {
     async updateTeam(leagueId, teamId, teamName) {
         const response = await this.api.patch(
             `api/leagues/${leagueId}/teams/${teamId}/`,
-            { team_name: teamName }
+            { team_name: teamName },
         );
         return response.data;
     }
@@ -177,7 +177,7 @@ class PlayoffPoolAPI {
     // Draft
     async getAvailablePlayers(leagueId) {
         const response = await this.api.get(
-            `api/leagues/${leagueId}/available_players/`
+            `api/leagues/${leagueId}/available_players/`,
         );
         return response.data;
     }
@@ -196,28 +196,28 @@ class PlayoffPoolAPI {
 
         const response = await this.api.post(
             `api/leagues/${leagueId}/draft_player/`,
-            payload
+            payload,
         );
         return response.data;
     }
 
     async completeDraft(leagueId) {
         const response = await this.api.post(
-            `api/leagues/${leagueId}/complete_draft/`
+            `api/leagues/${leagueId}/complete_draft/`,
         );
         return response.data;
     }
 
     async undoDraft(leagueId) {
         const response = await this.api.post(
-            `api/leagues/${leagueId}/undo_draft/`
+            `api/leagues/${leagueId}/undo_draft/`,
         );
         return response.data;
     }
 
     async resetDraft(leagueId) {
         const response = await this.api.post(
-            `api/leagues/${leagueId}/reset_draft/`
+            `api/leagues/${leagueId}/reset_draft/`,
         );
         return response.data;
     }
@@ -238,6 +238,13 @@ class PlayoffPoolAPI {
         }`;
 
         const response = await this.api.get(url);
+        return response.data;
+    }
+
+    async manualRefreshCache(leagueId) {
+        const response = await this.api.post(
+            `api/leagues/${leagueId}/manual_refresh_cache/`,
+        );
         return response.data;
     }
 
@@ -265,7 +272,7 @@ class PlayoffPoolAPI {
     // League scoring settings
     async getLeagueScoringSettings(leagueId) {
         const response = await this.api.get(
-            `api/leagues/${leagueId}/scoring_settings/`
+            `api/leagues/${leagueId}/scoring_settings/`,
         );
         return response.data;
     }
@@ -275,7 +282,7 @@ class PlayoffPoolAPI {
             `api/leagues/${leagueId}/update_scoring_settings/`,
             {
                 scoring_settings: scoringSettings,
-            }
+            },
         );
         return response.data;
     }
