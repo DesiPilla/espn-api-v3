@@ -24,6 +24,8 @@ const LeagueDetail = () => {
     const [showScoringEditor, setShowScoringEditor] = useState(false);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [resetLoading, setResetLoading] = useState(false);
+    const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
+    const [refreshLoading, setRefreshLoading] = useState(false);
 
     useEffect(() => {
         if (leagueId) {
@@ -199,6 +201,34 @@ const LeagueDetail = () => {
     const confirmRemoveTeam = (team) => {
         setTeamToRemove(team);
         setShowRemoveConfirm(true);
+    };
+
+    const handleRefreshCache = () => {
+        setShowRefreshConfirm(true);
+    };
+
+    const confirmRefreshCache = async () => {
+        try {
+            setRefreshLoading(true);
+            setShowRefreshConfirm(false);
+            await playoffPoolAPI.manualRefreshCache(leagueId);
+
+            // Reload leaderboard to reflect updated stats
+            if (leaderboardRef.current) {
+                leaderboardRef.current.reload();
+            }
+
+            alert("Cache refreshed successfully! Stats have been updated.");
+        } catch (err) {
+            alert(err.response?.data?.error || "Failed to refresh cache");
+            console.error("Error refreshing cache:", err);
+        } finally {
+            setRefreshLoading(false);
+        }
+    };
+
+    const cancelRefreshCache = () => {
+        setShowRefreshConfirm(false);
     };
 
     const handleClaimTeam = async (team) => {
@@ -499,6 +529,73 @@ const LeagueDetail = () => {
                         leagueId={leagueId}
                         isDraftComplete={draftComplete}
                     />
+
+                    {/* Refresh Cache Button - only show when draft is complete */}
+                    {draftComplete && (
+                        <div
+                            style={{
+                                marginTop: "16px",
+                                display: "flex",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <button
+                                onClick={handleRefreshCache}
+                                disabled={refreshLoading}
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    padding: "8px 16px",
+                                    backgroundColor: refreshLoading
+                                        ? "#9ca3af"
+                                        : "#6b7280",
+                                    color: "white",
+                                    fontWeight: "500",
+                                    fontSize: "13px",
+                                    borderRadius: "6px",
+                                    border: "none",
+                                    cursor: refreshLoading
+                                        ? "not-allowed"
+                                        : "pointer",
+                                    transition: "background-color 0.15s",
+                                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                                    opacity: refreshLoading ? 0.7 : 1,
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!refreshLoading) {
+                                        e.target.style.backgroundColor =
+                                            "#4b5563";
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!refreshLoading) {
+                                        e.target.style.backgroundColor =
+                                            "#6b7280";
+                                    }
+                                }}
+                            >
+                                {refreshLoading ? (
+                                    <>
+                                        <div
+                                            style={{
+                                                width: "14px",
+                                                height: "14px",
+                                                border: "2px solid rgba(255,255,255,0.3)",
+                                                borderTop: "2px solid white",
+                                                borderRadius: "50%",
+                                                animation:
+                                                    "spin 1s linear infinite",
+                                            }}
+                                        />
+                                        Refreshing...
+                                    </>
+                                ) : (
+                                    <>🔄 Refresh Stats</>
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -748,6 +845,143 @@ const LeagueDetail = () => {
                                                 "spin 1s linear infinite",
                                         }}
                                     />
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Refresh Cache Confirmation Modal */}
+            {showRefreshConfirm && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 999999,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setShowRefreshConfirm(false);
+                        }
+                    }}
+                >
+                    <div
+                        className="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 p-6"
+                        style={{
+                            position: "relative",
+                            zIndex: 1000000,
+                            backgroundColor: "white",
+                            borderRadius: "8px",
+                            padding: "24px",
+                            margin: "16px",
+                            maxWidth: "500px",
+                            width: "100%",
+                            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3
+                            style={{
+                                fontSize: "18px",
+                                fontWeight: "bold",
+                                marginBottom: "16px",
+                                color: "#1f2937",
+                            }}
+                        >
+                            Refresh League Stats?
+                        </h3>
+                        <p
+                            style={{
+                                marginBottom: "16px",
+                                color: "#374151",
+                                lineHeight: "1.5",
+                            }}
+                        >
+                            This will manually refresh the cached statistics for
+                            this league.
+                        </p>
+                        <p
+                            style={{
+                                marginBottom: "20px",
+                                color: "#6b7280",
+                                fontSize: "14px",
+                                lineHeight: "1.4",
+                                fontStyle: "italic",
+                            }}
+                        >
+                            <strong>Note:</strong> Stats are not available until
+                            shortly after the completion of a game. If a game
+                            just ended, please wait a few minutes before
+                            refreshing.
+                        </p>
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                gap: "12px",
+                            }}
+                        >
+                            <button
+                                onClick={cancelRefreshCache}
+                                style={{
+                                    padding: "8px 16px",
+                                    border: "1px solid #d1d5db",
+                                    borderRadius: "6px",
+                                    backgroundColor: "white",
+                                    color: "#374151",
+                                    cursor: "pointer",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmRefreshCache}
+                                disabled={refreshLoading}
+                                style={{
+                                    padding: "8px 16px",
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    backgroundColor: refreshLoading
+                                        ? "#9ca3af"
+                                        : "#3b82f6",
+                                    color: "white",
+                                    cursor: refreshLoading
+                                        ? "not-allowed"
+                                        : "pointer",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                }}
+                            >
+                                {refreshLoading ? (
+                                    <>
+                                        <div
+                                            style={{
+                                                width: "14px",
+                                                height: "14px",
+                                                border: "2px solid rgba(255,255,255,0.3)",
+                                                borderTop: "2px solid white",
+                                                borderRadius: "50%",
+                                                animation:
+                                                    "spin 1s linear infinite",
+                                            }}
+                                        />
+                                        Refreshing...
+                                    </>
+                                ) : (
+                                    "Refresh Stats"
                                 )}
                             </button>
                         </div>
