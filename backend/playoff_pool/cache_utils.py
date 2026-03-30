@@ -31,7 +31,7 @@ def should_refresh_cache(league):
         tuple: (needs_refresh: bool, reason: str)
     """
     from .scoring import get_most_recent_game
-    from .models import CachedPlayerStats, DraftedTeam
+    from .models import CachedPlayerStats
 
     year = league.league_year
 
@@ -99,7 +99,7 @@ def refresh_league_cache(league):
     from .scoring import (
         get_most_recent_game,
         get_league_scoring_settings,
-        calculate_fantasy_points,
+        SCORING_MULTIPLIERS,
     )
     from .models import CachedPlayers, CachedPlayerStats, DraftedTeam
     from .players import get_defense_stats, get_schedule
@@ -127,11 +127,29 @@ def refresh_league_cache(league):
             most_recent_game_id = f"{year}_NO_GAME"
             most_recent_gametime = et_tz.localize(pd.Timestamp("2000-01-01"))
 
-        # Step 2: Load NFL playoff data
+        # Step 2: Load NFL playoff data — filter immediately to keep only what's needed.
+        # nfl.load_player_stats() returns all seasons/weeks (~17k rows, 50+ columns).
+        # We only need POST weeks and the columns used in scoring + player identity.
         logger.debug(f"Loading NFL playoff data for year {year}")
 
-        # nflreadpy uses filesystem cache (configured in apps.py), so call directly
-        weekly_stats = nfl.load_player_stats([year]).to_pandas()
+        _player_id_cols = [
+            "player_display_name", "position", "team",
+            "season", "week", "season_type", "opponent",
+        ]
+        _raw_player = nfl.load_player_stats([year]).to_pandas()
+        _scoring_cols = list(SCORING_MULTIPLIERS.keys())
+        _player_keep = [
+            c for c in (_player_id_cols + _scoring_cols)
+            if c in _raw_player.columns
+        ]
+        weekly_stats = (
+            _raw_player[_raw_player["season_type"] == "POST"][_player_keep]
+            .copy()
+        )
+        del _raw_player
+        gc.collect()
+        pa.default_memory_pool().release_unused()
+        logger.debug(f"Player stats: {len(weekly_stats)} POST rows retained")
 
         defense_stats = get_defense_stats(year)
 
@@ -144,7 +162,9 @@ def refresh_league_cache(league):
             columns=["team_score", "opponent_score"], errors="ignore"
         )
 
-        weekly_stats = pd.concat([weekly_stats, defense_stats])
+        # Concat: player rows carry player-scoring columns; defense rows carry defense-scoring
+        # columns. Mismatched columns become NaN — the scoring loop handles this with fillna(0).
+        weekly_stats = pd.concat([weekly_stats, defense_stats], sort=False)
         del defense_stats  # Free memory: no longer needed after concat
         weekly_stats = weekly_stats[weekly_stats["season_type"] == "POST"]
 
@@ -153,6 +173,32 @@ def refresh_league_cache(league):
                 f"No playoff stats yet for year {year} — "
                 "placeholder cache will be built with 0-point entries"
             )
+
+        # Step 3 (pre-filter): Narrow weekly_stats to only this league's drafted players
+        # before the schedule merge. Reduces from ~1,700 rows (all 14 playoff-team players)
+        # to ~50-100 rows, making all downstream operations much cheaper.
+        drafted_players = DraftedTeam.objects.filter(league=league)
+        if not drafted_players.exists():
+            error_msg = f"No drafted players found for league {league.id}"
+            logger.warning(error_msg)
+            raise Exception(error_msg)
+
+        if not weekly_stats.empty:
+            _drafted_filter = pd.DataFrame([
+                {
+                    "player_display_name": dp.player_name,
+                    "position": dp.position,
+                    "team": dp.nfl_team,
+                }
+                for dp in drafted_players
+            ])
+            weekly_stats = weekly_stats.merge(
+                _drafted_filter,
+                on=["player_display_name", "position", "team"],
+                how="inner",
+            )
+            del _drafted_filter
+            logger.debug(f"Stats filtered to drafted players: {len(weekly_stats)} rows")
 
         if not weekly_stats.empty:
             # Step 3a: Load schedule and calculate elimination status
@@ -189,15 +235,8 @@ def refresh_league_cache(league):
         # Step 3b: Get league's custom scoring settings
         scoring_settings = get_league_scoring_settings(league)
 
-        # Step 4: Get drafted players for this league
-        drafted_players = DraftedTeam.objects.filter(league=league)
-
-        if not drafted_players.exists():
-            error_msg = f"No drafted players found for league {league.id}"
-            logger.warning(error_msg)
-            raise Exception(error_msg)
-
-        # Step 5: Delete existing cache for this league only
+        # Step 4: Delete existing cache for this league only
+        # (drafted_players already queried and validated above)
         deleted_count = CachedPlayerStats.objects.filter(league=league).delete()[0]
         logger.debug(
             f"Deleted {deleted_count} old cache entries for league {league.id}"
