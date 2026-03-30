@@ -1100,7 +1100,11 @@ class LeagueViewSet(viewsets.ModelViewSet):
                         exc_info=True,
                     )
                     return Response(
-                        {"teams": [], "playoff_rounds": [], "message": "Playoff data unavailable. Please try again."},
+                        {
+                            "teams": [],
+                            "playoff_rounds": [],
+                            "message": "Playoff data unavailable. Please try again.",
+                        },
                         status=status.HTTP_200_OK,
                     )
 
@@ -1114,7 +1118,11 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     f"No cache found for league {league.id} after refresh attempt"
                 )
                 return Response(
-                    {"teams": [], "playoff_rounds": [], "message": "Playoff stats not yet available."},
+                    {
+                        "teams": [],
+                        "playoff_rounds": [],
+                        "message": "Playoff stats not yet available.",
+                    },
                     status=status.HTTP_200_OK,
                 )
 
@@ -1592,7 +1600,12 @@ class LeagueViewSet(viewsets.ModelViewSet):
                         exc_info=True,
                     )
                     return Response(
-                        {"teams": [], "playoff_rounds": [], "total_teams": 0, "message": "Playoff data unavailable. Please try again."},
+                        {
+                            "teams": [],
+                            "playoff_rounds": [],
+                            "total_teams": 0,
+                            "message": "Playoff data unavailable. Please try again.",
+                        },
                         status=status.HTTP_200_OK,
                     )
 
@@ -1614,7 +1627,12 @@ class LeagueViewSet(viewsets.ModelViewSet):
                     f"No cache found for league {league.id} after refresh attempt"
                 )
                 return Response(
-                    {"teams": [], "playoff_rounds": [], "total_teams": 0, "message": "Playoff stats not yet available."},
+                    {
+                        "teams": [],
+                        "playoff_rounds": [],
+                        "total_teams": 0,
+                        "message": "Playoff stats not yet available.",
+                    },
                     status=status.HTTP_200_OK,
                 )
 

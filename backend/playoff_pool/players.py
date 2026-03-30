@@ -61,9 +61,18 @@ def load_raw_schedule(year: int) -> pd.DataFrame:
         pd.DataFrame: Filtered schedule DataFrame
     """
     _keep_cols = [
-        "game_id", "season", "week",
-        "home_team", "away_team", "home_score", "away_score",
-        "gameday", "gametime", "total", "result", "overtime",
+        "game_id",
+        "season",
+        "week",
+        "home_team",
+        "away_team",
+        "home_score",
+        "away_score",
+        "gameday",
+        "gametime",
+        "total",
+        "result",
+        "overtime",
     ]
     raw = nfl.load_schedules(seasons=[year]).to_pandas()
     result = raw[[c for c in _keep_cols if c in raw.columns]].copy()
