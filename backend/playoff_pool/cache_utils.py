@@ -2,8 +2,10 @@
 Cache utilities for playoff pool application.
 Handles pre-computing and storing fantasy points in PostgreSQL.
 """
+import gc
 import logging
 import pandas as pd
+import pyarrow as pa
 import nflreadpy as nfl
 from django.db import transaction
 from django.utils import timezone
@@ -143,6 +145,7 @@ def refresh_league_cache(league):
         )
 
         weekly_stats = pd.concat([weekly_stats, defense_stats])
+        del defense_stats  # Free memory: no longer needed after concat
         weekly_stats = weekly_stats[weekly_stats["season_type"] == "POST"]
 
         if weekly_stats.empty:
@@ -344,6 +347,15 @@ def refresh_league_cache(league):
                     )
                 )
 
+        # Free large DataFrames now that stats_bulk is built — no longer needed
+        weekly_stats = None
+        if "weekly_stats_filtered" in dir():
+            weekly_stats_filtered = None
+        if "stats_records" in dir():
+            stats_records = None
+        if "schedule" in dir():
+            schedule = None
+
         # Step 8: Create placeholder entries for players without stats yet (e.g., bye week)
         logger.debug("Creating placeholder entries for players without stats...")
         for drafted_player in drafted_players:
@@ -380,3 +392,14 @@ def refresh_league_cache(league):
             f"{players_cached} players cached, {stats_created} game stats created, "
             f"most recent game: {most_recent_game_id}"
         )
+
+    # Return pyarrow's memory pool back to the OS.
+    # pyarrow's allocator never returns freed buffers to the OS on its own,
+    # so after loading large DataFrames the process RSS stays elevated forever.
+    # release_unused() is the only way to reclaim that RAM.
+    gc.collect()
+    try:
+        pa.default_memory_pool().release_unused()
+        logger.debug("Released pyarrow memory pool after cache refresh")
+    except Exception:
+        pass
