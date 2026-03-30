@@ -2,7 +2,6 @@ from typing import List
 
 import nflreadpy as nfl
 import pandas as pd
-import polars as pl
 from django.core.cache import cache
 
 from backend.playoff_pool.scoring import (
@@ -50,6 +49,24 @@ PLAYOFF_TEAMS = {
 }
 
 
+def load_raw_schedule(year: int) -> pd.DataFrame:
+    """Load and cache the raw NFL schedule DataFrame for the given year.
+
+    Args:
+        year (int): NFL season year
+    Returns:
+        pd.DataFrame: Raw schedule DataFrame as returned by nflreadpy
+    """
+    cache_key = f"nfl_schedule_{year}"
+    schedule = cache.get(cache_key)
+
+    if schedule is None:
+        schedule = nfl.load_schedules(seasons=[year]).to_pandas()
+        cache.set(cache_key, schedule, timeout=CACHE_DURATION)
+
+    return schedule
+
+
 def get_schedule(year: int) -> pd.DataFrame:
     """Load NFL schedule for the given year with caching.
 
@@ -58,13 +75,7 @@ def get_schedule(year: int) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame of the NFL schedule for the given year
     """
-    # Load schedule to get points allowed (with caching)
-    cache_key = f"nfl_schedule_{year}"
-    schedule = cache.get(cache_key)
-
-    if schedule is None:
-        schedule = nfl.load_schedules(seasons=[year]).to_pandas()
-        cache.set(cache_key, schedule, timeout=CACHE_DURATION)
+    schedule = load_raw_schedule(year)
 
     # Create mapping for home teams (opponent score = away_score)
     home_mapping = (

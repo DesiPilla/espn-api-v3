@@ -187,12 +187,13 @@ DATABASES = {
 }
 
 # Cache Configuration
-# Using database-backed cache for simplicity (no additional setup needed)
-# For production with high traffic, consider Redis or Memcached
+# Using database-backed cache so large DataFrames are stored in Neon PostgreSQL
+# rather than in the gunicorn process heap, preventing memory growth on Railway.
+# Run `python manage.py createcachetable` once to create the django_cache table.
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "default-cache",
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache",
     }
 }
 
