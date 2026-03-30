@@ -1,7 +1,9 @@
+import gc
 from typing import List
 
 import nflreadpy as nfl
 import pandas as pd
+import pyarrow as pa
 
 from backend.playoff_pool.scoring import (
     DEFENSE_SCORING_MULTIPLIERS,
@@ -50,12 +52,34 @@ PLAYOFF_TEAMS = {
 def load_raw_schedule(year: int) -> pd.DataFrame:
     """Load the raw NFL schedule DataFrame for the given year.
 
+    Only keeps the columns actually used downstream (game metadata + scores).
+    Frees the full raw DataFrame and releases pyarrow memory immediately.
+
     Args:
         year (int): NFL season year
     Returns:
-        pd.DataFrame: Raw schedule DataFrame as returned by nflreadpy
+        pd.DataFrame: Filtered schedule DataFrame
     """
-    return nfl.load_schedules(seasons=[year]).to_pandas()
+    _keep_cols = [
+        "game_id",
+        "season",
+        "week",
+        "home_team",
+        "away_team",
+        "home_score",
+        "away_score",
+        "gameday",
+        "gametime",
+        "total",
+        "result",
+        "overtime",
+    ]
+    raw = nfl.load_schedules(seasons=[year]).to_pandas()
+    result = raw[[c for c in _keep_cols if c in raw.columns]].copy()
+    del raw
+    gc.collect()
+    pa.default_memory_pool().release_unused()
+    return result
 
 
 def get_schedule(year: int) -> pd.DataFrame:
