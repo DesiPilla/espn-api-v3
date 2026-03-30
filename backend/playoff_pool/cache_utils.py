@@ -7,7 +7,6 @@ import pandas as pd
 import nflreadpy as nfl
 from django.db import transaction
 from django.utils import timezone
-from django.core.cache import cache
 import pytz
 from datetime import datetime
 
@@ -126,13 +125,8 @@ def refresh_league_cache(league):
         # Step 2: Load NFL playoff data
         logger.debug(f"Loading NFL playoff data for year {year}")
 
-        # Cache player stats (1 hour TTL)
-        cache_key_stats = f"nfl_player_stats_{year}"
-        weekly_stats = cache.get(cache_key_stats)
-
-        if weekly_stats is None:
-            weekly_stats = nfl.load_player_stats([year]).to_pandas()
-            cache.set(cache_key_stats, weekly_stats, timeout=_GAME_CACHE_TTL)
+        # nflreadpy uses filesystem cache (configured in apps.py), so call directly
+        weekly_stats = nfl.load_player_stats([year]).to_pandas()
 
         defense_stats = get_defense_stats(year)
 
