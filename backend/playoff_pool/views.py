@@ -1099,8 +1099,10 @@ class LeagueViewSet(viewsets.ModelViewSet):
                         f"Cache refresh failed for league {league.id}: {refresh_error}",
                         exc_info=True,
                     )
-                    # If refresh fails, use fallback immediately
-                    return self._drafted_teams_fallback(league)
+                    return Response(
+                        {"teams": [], "playoff_rounds": [], "message": "Playoff data unavailable. Please try again."},
+                        status=status.HTTP_200_OK,
+                    )
 
             # Query cached stats (fast join query)
             cached_stats = CachedPlayerStats.objects.filter(
@@ -1109,9 +1111,12 @@ class LeagueViewSet(viewsets.ModelViewSet):
 
             if not cached_stats.exists():
                 logger.warning(
-                    f"No cache found for league {league.id} after refresh attempt, using fallback"
+                    f"No cache found for league {league.id} after refresh attempt"
                 )
-                return self._drafted_teams_fallback(league)
+                return Response(
+                    {"teams": [], "playoff_rounds": [], "message": "Playoff stats not yet available."},
+                    status=status.HTTP_200_OK,
+                )
 
             # Build player results from cache
             player_results = {}
@@ -1586,8 +1591,10 @@ class LeagueViewSet(viewsets.ModelViewSet):
                         f"Cache refresh failed for league {league.id}: {refresh_error}",
                         exc_info=True,
                     )
-                    # If refresh fails, use fallback immediately
-                    return self._playoff_stats_fallback(league, request)
+                    return Response(
+                        {"teams": [], "playoff_rounds": [], "total_teams": 0, "message": "Playoff data unavailable. Please try again."},
+                        status=status.HTTP_200_OK,
+                    )
 
             # Pre-fetch ALL drafted teams in a single query to avoid N+1 problem
             drafted_teams = DraftedTeam.objects.filter(league=league).select_related(
@@ -1604,9 +1611,12 @@ class LeagueViewSet(viewsets.ModelViewSet):
 
             if not cached_stats.exists():
                 logger.warning(
-                    f"No cache found for league {league.id} after refresh attempt, using fallback"
+                    f"No cache found for league {league.id} after refresh attempt"
                 )
-                return self._playoff_stats_fallback(league, request)
+                return Response(
+                    {"teams": [], "playoff_rounds": [], "total_teams": 0, "message": "Playoff stats not yet available."},
+                    status=status.HTTP_200_OK,
+                )
 
             # Build player results from cache
             player_results = {}

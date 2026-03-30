@@ -108,19 +108,22 @@ def refresh_league_cache(league):
 
     with transaction.atomic():
         # Step 1: Get most recent game metadata
+        et_tz = pytz.timezone("America/New_York")
         try:
             most_recent_game_info = get_most_recent_game(year)
             most_recent_game_id = most_recent_game_info["game_id"]
             # Convert to timezone-aware datetime
             most_recent_gametime = pd.to_datetime(most_recent_game_info["gametime"])
             if most_recent_gametime.tzinfo is None:
-                # Make timezone-aware (NFL games are in ET)
-                et_tz = pytz.timezone("America/New_York")
                 most_recent_gametime = et_tz.localize(most_recent_gametime)
         except Exception as e:
-            error_msg = f"Could not get most recent game for year {year}: {e}"
-            logger.error(error_msg)
-            raise Exception(error_msg) from e
+            # No completed games yet — build a placeholder cache so subsequent
+            # requests serve from the DB rather than loading DataFrames every time.
+            logger.info(
+                f"No completed games found for year {year}, building placeholder cache: {e}"
+            )
+            most_recent_game_id = f"{year}_NO_GAME"
+            most_recent_gametime = et_tz.localize(pd.Timestamp("2000-01-01"))
 
         # Step 2: Load NFL playoff data
         logger.debug(f"Loading NFL playoff data for year {year}")
@@ -143,40 +146,42 @@ def refresh_league_cache(league):
         weekly_stats = weekly_stats[weekly_stats["season_type"] == "POST"]
 
         if weekly_stats.empty:
-            error_msg = f"No playoff stats found for year {year}"
-            logger.warning(error_msg)
-            raise Exception(error_msg)
+            logger.info(
+                f"No playoff stats yet for year {year} — "
+                "placeholder cache will be built with 0-point entries"
+            )
 
-        # Step 3a: Load schedule and calculate elimination status
-        logger.debug(
-            f"Loading schedule and calculating elimination status for year {year}"
-        )
-        schedule = get_schedule(year)
+        if not weekly_stats.empty:
+            # Step 3a: Load schedule and calculate elimination status
+            logger.debug(
+                f"Loading schedule and calculating elimination status for year {year}"
+            )
+            schedule = get_schedule(year)
 
-        # Filter schedule to only playoff weeks to match with weekly_stats
-        schedule_playoff = schedule[schedule["week"].isin([19, 20, 21, 22])]
+            # Filter schedule to only playoff weeks to match with weekly_stats
+            schedule_playoff = schedule[schedule["week"].isin([19, 20, 21, 22])]
 
-        # Merge schedule with weekly stats to get team scores
-        # Use left join to keep all player stats even if schedule data doesn't exist yet
-        weekly_stats = weekly_stats.merge(
-            schedule_playoff[
-                ["season", "week", "team", "team_score", "opponent_score"]
-            ],
-            on=["season", "week", "team"],
-            how="left",
-        )
+            # Merge schedule with weekly stats to get team scores
+            # Use left join to keep all player stats even if schedule data doesn't exist yet
+            weekly_stats = weekly_stats.merge(
+                schedule_playoff[
+                    ["season", "week", "team", "team_score", "opponent_score"]
+                ],
+                on=["season", "week", "team"],
+                how="left",
+            )
 
-        # Ensure columns exist even if merge produced no matches
-        if "team_score" not in weekly_stats.columns:
-            weekly_stats["team_score"] = pd.NA
-        if "opponent_score" not in weekly_stats.columns:
-            weekly_stats["opponent_score"] = pd.NA
+            # Ensure columns exist even if merge produced no matches
+            if "team_score" not in weekly_stats.columns:
+                weekly_stats["team_score"] = pd.NA
+            if "opponent_score" not in weekly_stats.columns:
+                weekly_stats["opponent_score"] = pd.NA
 
-        # Calculate elimination: player is eliminated if their team lost (score < opponent_score)
-        # NaN comparisons evaluate to False, so players with no game data default to not eliminated
-        weekly_stats["is_eliminated"] = (
-            weekly_stats["team_score"] < weekly_stats["opponent_score"]
-        ).fillna(False)
+            # Calculate elimination: player is eliminated if their team lost
+            # NaN comparisons evaluate to False, so no-game-data defaults to not eliminated
+            weekly_stats["is_eliminated"] = (
+                weekly_stats["team_score"] < weekly_stats["opponent_score"]
+            ).fillna(False)
 
         # Step 3b: Get league's custom scoring settings
         scoring_settings = get_league_scoring_settings(league)
@@ -255,89 +260,89 @@ def refresh_league_cache(league):
             f"Updated {len(cached_players_to_update)} and created {len(cached_players_to_create)} CachedPlayers"
         )
 
-        # Step 7: Build all stats in one pass (vectorized operations)
+        # Step 7: Build stats entries from playoff records (skipped if no playoff data yet)
         stats_bulk = []
         players_with_stats = set()  # Track which players have stats
 
-        # Filter stats to only playoff weeks
-        playoff_weeks = list(week_to_game_type.keys())
-        weekly_stats_filtered = weekly_stats[
-            weekly_stats["week"].isin(playoff_weeks)
-        ].copy()
+        if not weekly_stats.empty:
+            # Filter stats to only playoff weeks
+            playoff_weeks = list(week_to_game_type.keys())
+            weekly_stats_filtered = weekly_stats[
+                weekly_stats["week"].isin(playoff_weeks)
+            ].copy()
 
-        # Pre-calculate fantasy points for all rows (vectorized using numpy operations)
-        logger.debug("Calculating fantasy points for all rows...")
-        weekly_stats_filtered["fantasy_points"] = 0.0
+            # Pre-calculate fantasy points for all rows (vectorized using numpy operations)
+            logger.debug("Calculating fantasy points for all rows...")
+            weekly_stats_filtered["fantasy_points"] = 0.0
 
-        # Vectorized point calculation - much faster than apply()
-        for stat, config in scoring_settings.items():
-            if isinstance(config, dict):
-                multiplier = config.get("default_value", 0)
-            else:
-                multiplier = config
+            # Vectorized point calculation - much faster than apply()
+            for stat, config in scoring_settings.items():
+                if isinstance(config, dict):
+                    multiplier = config.get("default_value", 0)
+                else:
+                    multiplier = config
 
-            if stat in weekly_stats_filtered.columns and pd.notna(multiplier):
-                # Vectorized: add points for all rows at once
-                weekly_stats_filtered["fantasy_points"] += (
-                    weekly_stats_filtered[stat].fillna(0) * multiplier
+                if stat in weekly_stats_filtered.columns and pd.notna(multiplier):
+                    weekly_stats_filtered["fantasy_points"] += (
+                        weekly_stats_filtered[stat].fillna(0) * multiplier
+                    )
+
+            # Convert to dict records for faster iteration (avoids pandas overhead)
+            stats_records = weekly_stats_filtered.to_dict("records")
+
+            # Debug: Check if is_eliminated is in the data
+            if stats_records:
+                sample_record = stats_records[0]
+                logger.debug(f"Sample record keys: {list(sample_record.keys())}")
+                if "is_eliminated" in sample_record:
+                    logger.debug(
+                        f"is_eliminated present in records: {sample_record.get('is_eliminated')}"
+                    )
+                else:
+                    logger.warning("is_eliminated NOT found in records!")
+
+            # Build lookup dict for faster matching
+            logger.debug("Building player stat entries...")
+            drafted_lookup = {
+                (dp.player_name, dp.position, dp.nfl_team): dp for dp in drafted_players
+            }
+
+            for record in stats_records:
+                key = (
+                    record.get("player_display_name"),
+                    record.get("position"),
+                    record.get("team"),
                 )
 
-        # Convert to dict records for faster iteration (avoids pandas overhead)
-        stats_records = weekly_stats_filtered.to_dict("records")
+                if key not in drafted_lookup:
+                    continue
 
-        # Debug: Check if is_eliminated is in the data
-        if stats_records:
-            sample_record = stats_records[0]
-            logger.debug(f"Sample record keys: {list(sample_record.keys())}")
-            if "is_eliminated" in sample_record:
-                logger.debug(
-                    f"is_eliminated present in records: {sample_record.get('is_eliminated')}"
+                drafted_player = drafted_lookup[key]
+                cached_player = existing_cached.get((drafted_player.gsis_id, year))
+
+                if not cached_player:
+                    continue
+
+                # Track that this player has stats
+                players_with_stats.add(drafted_player.gsis_id)
+
+                week = record["week"]
+                game_type = week_to_game_type[week]
+                game_id = f"{record['season']}_{week}_{record.get('opponent', 'UNK')}"
+
+                stats_bulk.append(
+                    CachedPlayerStats(
+                        league=league,
+                        cached_player=cached_player,
+                        week=week,
+                        game_type=game_type,
+                        game_id=game_id,
+                        most_recent_game_id=most_recent_game_id,
+                        most_recent_gametime=most_recent_gametime,
+                        fantasy_points=record["fantasy_points"],
+                        is_eliminated=bool(record.get("is_eliminated", False)),
+                    )
                 )
-            else:
-                logger.warning("is_eliminated NOT found in records!")
-
-        # Build lookup dict for faster matching
-        logger.debug("Building player stat entries...")
-        drafted_lookup = {
-            (dp.player_name, dp.position, dp.nfl_team): dp for dp in drafted_players
-        }
-
-        for record in stats_records:
-            key = (
-                record.get("player_display_name"),
-                record.get("position"),
-                record.get("team"),
-            )
-
-            if key not in drafted_lookup:
-                continue
-
-            drafted_player = drafted_lookup[key]
-            cached_player = existing_cached.get((drafted_player.gsis_id, year))
-
-            if not cached_player:
-                continue
-
-            # Track that this player has stats
-            players_with_stats.add(drafted_player.gsis_id)
-
-            week = record["week"]
-            game_type = week_to_game_type[week]
-            game_id = f"{record['season']}_{week}_{record.get('opponent', 'UNK')}"
-
-            stats_bulk.append(
-                CachedPlayerStats(
-                    league=league,
-                    cached_player=cached_player,
-                    week=week,
-                    game_type=game_type,
-                    game_id=game_id,
-                    most_recent_game_id=most_recent_game_id,
-                    most_recent_gametime=most_recent_gametime,
-                    fantasy_points=record["fantasy_points"],
-                    is_eliminated=bool(record.get("is_eliminated", False)),
-                )
-            )
 
         # Step 8: Create placeholder entries for players without stats yet (e.g., bye week)
         logger.debug("Creating placeholder entries for players without stats...")
