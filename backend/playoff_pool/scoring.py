@@ -1,6 +1,4 @@
 import pandas as pd
-import nflreadpy as nfl
-from django.core.cache import cache
 
 from backend.playoff_pool.models import League
 
@@ -484,12 +482,9 @@ def get_most_recent_game(year: int) -> pd.Series:
         pd.Series: A pandas Series containing the game_id, gameday, and gametime
                    of the most recent game.
     """
-    cache_key = f"nfl_schedule_{year}"
-    schedules = cache.get(cache_key)
+    from .players import load_raw_schedule
 
-    if schedules is None:
-        schedules = nfl.load_schedules(seasons=[year]).to_pandas()
-        cache.set(cache_key, schedules, timeout=CACHE_DURATION)
+    schedules = load_raw_schedule(year)
 
     return (
         schedules.dropna(subset=["total", "result", "overtime"])
