@@ -2,7 +2,6 @@ from typing import List
 
 import nflreadpy as nfl
 import pandas as pd
-from django.core.cache import cache
 
 from backend.playoff_pool.scoring import (
     DEFENSE_SCORING_MULTIPLIERS,
@@ -12,7 +11,6 @@ from backend.playoff_pool.scoring import (
 )
 from backend.playoff_pool.models import PlayoffDraftablePlayer
 
-CACHE_DURATION = 2 * 60
 PLAYOFF_TEAMS = {
     2024: [
         "KC",
@@ -50,21 +48,14 @@ PLAYOFF_TEAMS = {
 
 
 def load_raw_schedule(year: int) -> pd.DataFrame:
-    """Load and cache the raw NFL schedule DataFrame for the given year.
+    """Load the raw NFL schedule DataFrame for the given year.
 
     Args:
         year (int): NFL season year
     Returns:
         pd.DataFrame: Raw schedule DataFrame as returned by nflreadpy
     """
-    cache_key = f"nfl_schedule_{year}"
-    schedule = cache.get(cache_key)
-
-    if schedule is None:
-        schedule = nfl.load_schedules(seasons=[year]).to_pandas()
-        cache.set(cache_key, schedule, timeout=CACHE_DURATION)
-
-    return schedule
+    return nfl.load_schedules(seasons=[year]).to_pandas()
 
 
 def get_schedule(year: int) -> pd.DataFrame:
@@ -120,13 +111,8 @@ def get_defense_stats(year: int) -> pd.DataFrame:
         pd.DataFrame: DataFrame of defensive stats for all teams
     """
 
-    # Load all available team level stats (with caching)
-    cache_key = f"nfl_team_stats_{year}"
-    defense_stats = cache.get(cache_key)
-
-    if defense_stats is None:
-        defense_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
-        cache.set(cache_key, defense_stats, timeout=CACHE_DURATION)
+    # nflreadpy uses filesystem cache (configured in apps.py), so call directly
+    defense_stats = nfl.load_team_stats(seasons=[year]).to_pandas()
 
     # Add team D/ST identifiers
     defense_stats["gsis_id"] = defense_stats["team"]
@@ -331,25 +317,11 @@ def get_all_playoff_players(
     year: int, positions_to_keep: List[str] = ["QB", "RB", "WR", "TE", "K", "DST"]
 ) -> pd.DataFrame:
     # ------------ Get list of individual players ------------
-    # Load rosters for the playoff teams (with caching)
-    cache_key_rosters = f"nfl_rosters_{year}"
-    playoff_rosters = cache.get(cache_key_rosters)
-
-    if playoff_rosters is None:
-        playoff_rosters = nfl.load_rosters([year]).to_pandas()
-        # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key_rosters, playoff_rosters, timeout=CACHE_DURATION)
-
+    # nflreadpy uses filesystem cache (configured in apps.py), so call directly
+    playoff_rosters = nfl.load_rosters([year]).to_pandas()
     playoff_rosters = playoff_rosters[playoff_rosters["team"].isin(PLAYOFF_TEAMS[year])]
 
-    # Load player game-level stats for multiple seasons (with caching)
-    cache_key_stats = f"nfl_player_stats_{year}"
-    player_stats = cache.get(cache_key_stats)
-
-    if player_stats is None:
-        player_stats = nfl.load_player_stats([year]).to_pandas()
-        # Cache for 1 hour (3600 seconds)
-        cache.set(cache_key_stats, player_stats, timeout=CACHE_DURATION)
+    player_stats = nfl.load_player_stats([year]).to_pandas()
     player_stats["fantasy_points"] = player_stats.apply(
         lambda row: calculate_fantasy_points(row, RELEVANT_SCORING_STATS),
         axis=1,

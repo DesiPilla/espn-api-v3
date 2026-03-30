@@ -5,7 +5,6 @@ from backend.playoff_pool.players import get_defense_stats
 from backend.playoff_pool.scoring import (
     calculate_fantasy_points,
     get_league_scoring_settings,
-    DEFENSE_SCORING_MULTIPLIERS,
 )
 import nflreadpy as nfl
 import pandas as pd
@@ -104,16 +103,8 @@ def calculate_player_playoff_points(league, year=None):
         nfl_cached_data = None
 
         if True:  # Always fetch fresh data (will be cached in DB by cache_utils)
-            # Get weekly stats for playoff weeks (with Django caching)
-            from django.core.cache import cache
-
-            cache_key = f"nfl_player_stats_{year}"
-            weekly_stats = cache.get(cache_key)
-
-            if weekly_stats is None:
-                weekly_stats = nfl.load_player_stats([year]).to_pandas()
-                # Cache for 1 hour (3600 seconds)
-                cache.set(cache_key, weekly_stats, CACHE_DURATION)
+            # nflreadpy uses filesystem cache (configured in apps.py), so call directly
+            weekly_stats = nfl.load_player_stats([year]).to_pandas()
 
             defense_stats = get_defense_stats(year)
             defense_stats["player_name"] = defense_stats["full_name"]
