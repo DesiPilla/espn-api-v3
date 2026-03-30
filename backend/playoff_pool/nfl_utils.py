@@ -1,6 +1,7 @@
 """
 NFL utility functions for playoff pool application.
 """
+
 from backend.playoff_pool.players import get_defense_stats
 from backend.playoff_pool.scoring import (
     calculate_fantasy_points,

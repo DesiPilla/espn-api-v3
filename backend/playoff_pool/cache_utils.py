@@ -2,6 +2,7 @@
 Cache utilities for playoff pool application.
 Handles pre-computing and storing fantasy points in PostgreSQL.
 """
+
 import gc
 import logging
 import pandas as pd
@@ -133,19 +134,22 @@ def refresh_league_cache(league):
         logger.debug(f"Loading NFL playoff data for year {year}")
 
         _player_id_cols = [
-            "player_display_name", "position", "team",
-            "season", "week", "season_type", "opponent",
+            "player_display_name",
+            "position",
+            "team",
+            "season",
+            "week",
+            "season_type",
+            "opponent",
         ]
         _raw_player = nfl.load_player_stats([year]).to_pandas()
         _scoring_cols = list(SCORING_MULTIPLIERS.keys())
         _player_keep = [
-            c for c in (_player_id_cols + _scoring_cols)
-            if c in _raw_player.columns
+            c for c in (_player_id_cols + _scoring_cols) if c in _raw_player.columns
         ]
-        weekly_stats = (
-            _raw_player[_raw_player["season_type"] == "POST"][_player_keep]
-            .copy()
-        )
+        weekly_stats = _raw_player[_raw_player["season_type"] == "POST"][
+            _player_keep
+        ].copy()
         del _raw_player
         gc.collect()
         pa.default_memory_pool().release_unused()
@@ -184,14 +188,16 @@ def refresh_league_cache(league):
             raise Exception(error_msg)
 
         if not weekly_stats.empty:
-            _drafted_filter = pd.DataFrame([
-                {
-                    "player_display_name": dp.player_name,
-                    "position": dp.position,
-                    "team": dp.nfl_team,
-                }
-                for dp in drafted_players
-            ])
+            _drafted_filter = pd.DataFrame(
+                [
+                    {
+                        "player_display_name": dp.player_name,
+                        "position": dp.position,
+                        "team": dp.nfl_team,
+                    }
+                    for dp in drafted_players
+                ]
+            )
             weekly_stats = weekly_stats.merge(
                 _drafted_filter,
                 on=["player_display_name", "position", "team"],

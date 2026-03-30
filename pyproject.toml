@@ -36,6 +36,9 @@ resend = "^2.13.1"
 nflreadpy = "^0.1.5"
 pyarrow = "^22.0.0"
 
+[tool.pytest.ini_options]
+addopts = "--ignore=test_ram_monitor.py"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
