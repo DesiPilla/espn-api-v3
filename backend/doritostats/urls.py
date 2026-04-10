@@ -39,5 +39,6 @@ urlpatterns = [
     ),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}),
     path("admin/", admin.site.urls),
+    path("api/auth/", include("backend.accounts.urls")),
     path("", include("backend.fantasy_stats.urls"), name="index"),  # Catch-all last
 ]

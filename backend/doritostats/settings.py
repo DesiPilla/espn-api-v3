@@ -35,13 +35,16 @@ ADMINS = [
     ("Desi Pilla", os.getenv("EMAIL_USER")),
 ]
 
-# Email backend configuration (example with SMTP)
+# Email backend — uses Resend SMTP relay in production (RESEND_API_KEY env var),
+# falls back to any SMTP credentials supplied via EMAIL_HOST / EMAIL_HOST_USER /
+# EMAIL_HOST_PASSWORD for local overrides.
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.resend.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv("EMAIL_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "resend")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD") or os.getenv("RESEND_API_KEY")
+DEFAULT_FROM_EMAIL = os.getenv("SENDER_EMAIL", "onboarding@resend.dev")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(strtobool(os.getenv("DJANGO_DEBUG", "True")))
@@ -103,6 +106,7 @@ LOGGING = {
 # Application definition
 INSTALLED_APPS = [
     "corsheaders",
+    "backend.accounts.apps.AccountsConfig",
     "backend.fantasy_stats.apps.FantasyStatsConfig",
     "backend.playoff_pool.apps.PlayoffPoolConfig",
     "django.contrib.admin",
@@ -240,3 +244,18 @@ STATIC_ROOT = BASE_DIR / "static"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 APPEND_SLASH = True
+
+# Authentication backends: try email-based login first, fall back to username.
+AUTHENTICATION_BACKENDS = [
+    "backend.accounts.backends.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+# Base URL of the React frontend (used in password-reset emails).
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+# Production HTTPS security — only active when DEBUG is False.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True

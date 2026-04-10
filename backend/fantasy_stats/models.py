@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -30,6 +31,13 @@ class LeagueInfo(models.Model):
     league_name = models.CharField(max_length=50, default="<Name Missing>")
     created_date = models.DateTimeField(auto_now_add=True)
     deleted = models.BooleanField(default=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="leagues",
+    )
 
     objects = SoftDeleteManager()  # default manager (excludes deleted)
     all_objects = models.Manager()  # backup manager (includes deleted)

@@ -13,6 +13,7 @@ espn-api = "0.44.1"
 numpy = "^2.1.2"
 pandas = "^2.2.2"
 pytest = "^8.3.3"
+pytest-django = "^4.9.0"
 python-dotenv = "^0.21.0"
 requests = "^2.32.3"
 scikit-learn = "^1.5.0"
@@ -38,6 +39,7 @@ pyarrow = "^22.0.0"
 
 [tool.pytest.ini_options]
 addopts = "--ignore=test_ram_monitor.py"
+DJANGO_SETTINGS_MODULE = "backend.doritostats.settings"
 
 [build-system]
 requires = ["poetry-core"]

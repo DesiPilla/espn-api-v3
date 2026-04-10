@@ -4,6 +4,11 @@ const api = axios.create({
     baseURL: process.env.REACT_APP_API_BASE_URL,
 });
 
+const getAuthHeaders = () => {
+    const token = localStorage.getItem("doritostatsToken");
+    return token ? { Authorization: `Token ${token}` } : {};
+};
+
 export const safeFetch = async (
     endpoint,
     options,
@@ -25,9 +30,20 @@ export const safeFetch = async (
         let data;
 
         try {
-            response = await fetch(endpoint, options);
+            const mergedOptions = {
+                ...options,
+                headers: { ...getAuthHeaders(), ...(options?.headers || {}) },
+            };
+            response = await fetch(endpoint, mergedOptions);
             if (verbose) {
                 console.log(`[safeFetch] Received response:`, response);
+            }
+
+            if (response.status === 401) {
+                localStorage.removeItem("doritostatsToken");
+                localStorage.removeItem("doritostatsUser");
+                window.location.href = "/login";
+                return;
             }
 
             // Attempt to parse JSON
@@ -116,7 +132,11 @@ export const safeFetch = async (
 export const fetchWithRetry = async (url, options, retries) => {
     for (let i = 0; i <= retries; i++) {
         try {
-            const response = await fetch(url, options);
+            const mergedOptions = {
+                ...options,
+                headers: { ...getAuthHeaders(), ...(options?.headers || {}) },
+            };
+            const response = await fetch(url, mergedOptions);
             // If we get a response, return it (even if it's a 400/500)
             return response;
         } catch (err) {
