@@ -202,7 +202,9 @@ class RegisterViewTests(TestCase):
             "password_confirm": "StrongPass123!",
         }
         payload.update(kwargs)
-        return self.client.post(REGISTER_URL, data=payload, content_type="application/json")
+        return self.client.post(
+            REGISTER_URL, data=payload, content_type="application/json"
+        )
 
     def test_success_returns_201(self):
         resp = self._post()
@@ -313,13 +315,17 @@ class LoginViewTests(TestCase):
 
     def test_missing_email_returns_400(self):
         resp = self.client.post(
-            LOGIN_URL, data={"password": "StrongPass123!"}, content_type="application/json"
+            LOGIN_URL,
+            data={"password": "StrongPass123!"},
+            content_type="application/json",
         )
         self.assertEqual(resp.status_code, 400)
 
     def test_missing_password_returns_400(self):
         resp = self.client.post(
-            LOGIN_URL, data={"email": "user@example.com"}, content_type="application/json"
+            LOGIN_URL,
+            data={"email": "user@example.com"},
+            content_type="application/json",
         )
         self.assertEqual(resp.status_code, 400)
 
@@ -549,7 +555,8 @@ class LeaguesDataTests(TestCase):
         resp = auth_client(self.user_a).get(LEAGUES_URL)
         all_ids = [
             l["league_id"]
-            for l in resp.json()["leagues_current_year"] + resp.json()["leagues_previous_year"]
+            for l in resp.json()["leagues_current_year"]
+            + resp.json()["leagues_previous_year"]
         ]
         self.assertNotIn(20, all_ids)
 

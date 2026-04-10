@@ -135,9 +135,7 @@ def password_reset_confirm_view(request):
     try:
         validate_password(new_password, user)
     except ValidationError as e:
-        return Response(
-            {"error": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
     user.set_password(new_password)
     user.save()
@@ -145,7 +143,5 @@ def password_reset_confirm_view(request):
     Token.objects.filter(user=user).delete()
 
     return Response(
-        {
-            "detail": "Password reset successfully. Please log in with your new password."
-        }
+        {"detail": "Password reset successfully. Please log in with your new password."}
     )

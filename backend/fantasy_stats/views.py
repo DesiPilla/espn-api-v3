@@ -406,8 +406,11 @@ def copy_old_league(request, league_id: int):
             status=400,
         )
     except Exception as e:
+        logger.exception(
+            "Unexpected error fetching league %s (%s)", league_id, current_year
+        )
         return JsonResponse(
-            {"error": f"Failed to fetch league: {str(e)}"}, status=500
+            {"error": "Failed to fetch league. Please try again."}, status=500
         )
 
     # Save new league info
