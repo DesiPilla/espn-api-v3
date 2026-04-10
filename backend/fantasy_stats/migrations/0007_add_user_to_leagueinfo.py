@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("fantasy_stats", "0006_alter_leagueinfo_options"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
