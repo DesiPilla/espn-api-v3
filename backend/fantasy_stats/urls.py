@@ -14,6 +14,7 @@ app_name = "fantasy_stats"
 urlpatterns = [
     # Backend URLs for React
     path("api/leagues/", views.leagues_data, name="leagues_data"),
+    path("api/league/<int:pk>/delete/", views.delete_league, name="delete_league"),
     path("api/league/<int:year>/<int:league_id>/", views.get_league_details),
     path("api/distinct-leagues-previous/", views.get_distinct_leagues_previous_year),
     path("api/copy-old-league/<int:league_id>/", views.copy_old_league),

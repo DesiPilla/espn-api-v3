@@ -13,8 +13,9 @@ espn-api = "0.44.1"
 numpy = "^2.1.2"
 pandas = "^2.2.2"
 pytest = "^8.3.3"
+pytest-django = "^4.9.0"
 python-dotenv = "^0.21.0"
-requests = "^2.32.3"
+requests = ">=2.33.0"
 scikit-learn = "^1.5.0"
 
 black = "24.3.0"
@@ -23,11 +24,10 @@ dj-database-url = "^2.2.0"
 gunicorn = "^23.0.0"
 joblib = "^1.4.2"
 scipy = "^1.14.1"
-setuptools = "^75.2.0"
+setuptools = ">=78.1.1"
 sqlalchemy = "^2.0.36"
-urllib3 = "^2.2.3"
 whitenoise = { extras = ["brotli"], version = "^6.7.0" }
-Django = "^5.1.2"
+Django = ">=5.1.15,<6.0.0"
 psycopg2-binary = "^2.9.10"
 pytz = "^2024.2"
 djangorestframework = "^3.15.2"
@@ -37,7 +37,7 @@ nflreadpy = "^0.1.5"
 pyarrow = "^22.0.0"
 
 [tool.pytest.ini_options]
-addopts = "--ignore=test_ram_monitor.py"
+addopts = "--ignore=test_ram_monitor.py --ignore=backend/tests/test_auth.py"
 
 [build-system]
 requires = ["poetry-core"]

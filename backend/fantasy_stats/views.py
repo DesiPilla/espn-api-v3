@@ -21,6 +21,7 @@ from espn_api.requests.espn_requests import (
 from .models import LeagueInfo
 from .errors.email import send_new_league_added_alert
 from .errors.error_codes import InvalidLeagueError, JsonErrorCodes
+from backend.accounts.decorators import token_auth_required
 from backend.src.doritostats.analytic_utils import (
     get_naughty_players,
     get_lineup,
@@ -34,8 +35,6 @@ from backend.src.doritostats.django_utils import (
     django_standings,
     django_strength_of_schedule,
     django_weekly_stats,
-    get_leagues_current_year,
-    get_leagues_previous_year,
 )
 from backend.src.doritostats.exceptions import InactiveLeagueError
 from backend.src.doritostats.fetch_utils import fetch_league
@@ -104,6 +103,7 @@ def get_csrf_token(request):
     return JsonResponse({"detail": "CSRF cookie set"})
 
 
+@token_auth_required
 @require_POST
 def league_input(request):
     data = json.loads(request.body)
@@ -115,7 +115,7 @@ def league_input(request):
 
     print("Checking for League {} ({}) in database...".format(league_id, league_year))
     league_info_objs = LeagueInfo.objects.filter(
-        league_id=league_id, league_year=league_year
+        league_id=league_id, league_year=league_year, user=request.user
     )
     try:
         if league_info_objs:
@@ -140,6 +140,7 @@ def league_input(request):
                 swid=swid,
                 espn_s2=espn_s2,
                 league_name=league_obj.name,
+                user=request.user,
             )
             league_info.save()
             print(
@@ -230,12 +231,19 @@ def league_input(request):
         )
 
 
+@token_auth_required
 def leagues_data(request) -> JsonResponse:
-    league_info_current_year = get_leagues_current_year()
-    league_info_previous_year = get_leagues_previous_year()
+    league_info_current_year = LeagueInfo.objects.filter(
+        league_year=CURRENT_YEAR, user=request.user
+    ).order_by("league_name", "league_id")
+
+    league_info_previous_year = LeagueInfo.objects.filter(
+        league_year__lt=CURRENT_YEAR, user=request.user
+    ).order_by("league_name", "-league_year", "league_id")
 
     leagues_current_year = [
         {
+            "id": league.id,
             "league_id": league.league_id,
             "league_year": league.league_year,
             "league_name": league.league_name,
@@ -246,6 +254,7 @@ def leagues_data(request) -> JsonResponse:
     ]
     leagues_previous_year = [
         {
+            "id": league.id,
             "league_id": league.league_id,
             "league_year": league.league_year,
             "league_name": league.league_name,
@@ -264,10 +273,23 @@ def leagues_data(request) -> JsonResponse:
     )
 
 
+@token_auth_required
+@require_POST
+def delete_league(request, pk):
+    league_info = LeagueInfo.objects.filter(pk=pk, user=request.user).first()
+    if not league_info:
+        return JsonResponse({"error": "League not found."}, status=404)
+    league_info.delete()  # soft delete via SoftDeleteManager
+    return JsonResponse({"success": True})
+
+
+@token_auth_required
 def get_league_details(request, year, league_id):
     if request.method == "GET":
         # Fetch the league data (for example from the League model)
-        league_qs = LeagueInfo.objects.filter(league_year=year, league_id=league_id)
+        league_qs = LeagueInfo.objects.filter(
+            league_year=year, league_id=league_id, user=request.user
+        )
         if not league_qs.exists():
             return JsonResponse(
                 {
@@ -290,6 +312,7 @@ def get_league_details(request, year, league_id):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
+@token_auth_required
 def get_distinct_leagues_previous_year(request):
     if request.method != "GET":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -299,15 +322,21 @@ def get_distinct_leagues_previous_year(request):
     latest_league_qs = LeagueInfo.objects.filter(
         league_id=OuterRef("league_id"),
         league_year__lt=CURRENT_YEAR,
+        user=request.user,
     ).order_by("-league_year")
 
     # Then get the distinct leagues with the most recent year per league_id
     distinct_leagues = LeagueInfo.objects.filter(
-        league_year=Subquery(latest_league_qs.values("league_year")[:1])
+        league_year=Subquery(latest_league_qs.values("league_year")[:1]),
+        user=request.user,
     ).order_by("league_name")
 
-    # Get the leagues for the current year
-    leagues_current_year = get_leagues_current_year()
+    # Get the league IDs the user already has for the current year
+    current_year_ids = set(
+        LeagueInfo.objects.filter(
+            league_year=CURRENT_YEAR, user=request.user
+        ).values_list("league_id", flat=True)
+    )
 
     return JsonResponse(
         [
@@ -319,14 +348,13 @@ def get_distinct_leagues_previous_year(request):
                 "league_espn_s2": league_obj.espn_s2,
             }
             for league_obj in distinct_leagues
-            if league_obj.league_id not in leagues_current_year
-            # if league_obj.league_id == 754151273  # DELETE ME
-            # if league_obj.league_id == 1086064  # DELETE ME
+            if league_obj.league_id not in current_year_ids
         ],
         safe=False,
     )
 
 
+@token_auth_required
 @require_POST
 def copy_old_league(request, league_id: int):
     print(f"LOGGER NAME: {logger.name}")
@@ -334,10 +362,10 @@ def copy_old_league(request, league_id: int):
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
-    # Get the most recent league for this ID
-    previous_leagues = LeagueInfo.objects.filter(league_id=league_id).order_by(
-        "-league_year"
-    )
+    # Get the most recent league for this user and ID
+    previous_leagues = LeagueInfo.objects.filter(
+        league_id=league_id, user=request.user
+    ).order_by("-league_year")
     if not previous_leagues.exists():
         return JsonResponse(
             {"error": f"No previous league found with ID {league_id}"}, status=404
@@ -349,11 +377,11 @@ def copy_old_league(request, league_id: int):
 
     current_year = (datetime.datetime.today() - datetime.timedelta(weeks=12)).year
 
-    try:
-        # Check if league already exists
-        league_info = LeagueInfo.objects.get(
-            league_id=league_id, league_year=current_year
-        )
+    # Check if the current-year league already exists for this user
+    existing = LeagueInfo.objects.filter(
+        league_id=league_id, league_year=current_year, user=request.user
+    ).first()
+    if existing:
         return JsonResponse(
             {
                 "success": True,
@@ -361,27 +389,29 @@ def copy_old_league(request, league_id: int):
             }
         )
 
-    except LeagueInfo.DoesNotExist:
-        try:
-            league_obj = fetch_league(
-                league_id=league_id, year=current_year, swid=swid, espn_s2=espn_s2
+    try:
+        league_obj = fetch_league(
+            league_id=league_id, year=current_year, swid=swid, espn_s2=espn_s2
+        )
+    except InactiveLeagueError as e:
+        print(
+            "League {} ({}) IS NOT ACTIVE YET! ESPN returned an error: {}".format(
+                league_id, current_year, e
             )
-        except InactiveLeagueError as e:
-            print(
-                "League {} ({}) IS NOT ACTIVE YET! ESPN returned an error: {}".format(
-                    league_id, current_year, e
-                )
-            )
-            return JsonResponse(
-                {
-                    "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID."
-                },
-                status=400,
-            )
-        except Exception as e:
-            return JsonResponse(
-                {"error": f"Failed to fetch league: {str(e)}"}, status=500
-            )
+        )
+        return JsonResponse(
+            {
+                "error": f"League ID {league_id} not found. Please check that you have entered the correct league ID."
+            },
+            status=400,
+        )
+    except Exception as e:
+        logger.exception(
+            "Unexpected error fetching league %s (%s)", league_id, current_year
+        )
+        return JsonResponse(
+            {"error": "Failed to fetch league. Please try again."}, status=500
+        )
 
     # Save new league info
     try:
@@ -391,6 +421,7 @@ def copy_old_league(request, league_id: int):
             swid=swid,
             espn_s2=espn_s2,
             league_name=league_obj.name,
+            user=request.user,
         )
         league_info.save()
         send_new_league_added_alert(league_info)
@@ -414,9 +445,13 @@ def get_cached_league(league_id: int, league_year: int) -> League:
 
     if not league_obj:
         try:
-            league_info = LeagueInfo.objects.get(
+            league_info = LeagueInfo.objects.filter(
                 league_id=league_id, league_year=league_year
-            )
+            ).first()
+            if not league_info:
+                raise InvalidLeagueError(
+                    f"League {league_id} ({league_year}) not found in database."
+                )
             league_obj = fetch_league(
                 league_id=league_id,
                 year=league_year,

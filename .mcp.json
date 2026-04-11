@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "excalidraw": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "excalidraw-mcp"
+      ]
+    },
+    "railway": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@railway/mcp-server"
+      ]
+    }
+  }
+}
