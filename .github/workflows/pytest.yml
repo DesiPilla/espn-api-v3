@@ -30,9 +30,17 @@ jobs:
       - name: Install Dependencies
         run: poetry install
 
-      - name: Run Pytest
+      - name: Run Django auth tests
         env:
-          PYTHONPATH: ./backend
+          PYTHONPATH: .
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: poetry run python manage.py test backend.tests.test_auth --settings=backend.doritostats.test_settings
+
+      - name: Run Pytest (non-Django)
+        env:
+          PYTHONPATH: .
           DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
@@ -41,4 +49,4 @@ jobs:
           LEAGUE_ID: ${{ secrets.LEAGUE_ID }}
           SWID: ${{ secrets.SWID }}
           ESPN_S2: ${{ secrets.ESPN_S2 }}
-        run: poetry run pytest
+        run: poetry run pytest --ignore=backend/tests/test_auth.py

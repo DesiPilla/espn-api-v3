@@ -9,12 +9,10 @@ Covers:
     distinct-leagues-previous, copy-old-league, league-input
 
 Run with:
-    pytest backend/tests/test_auth.py -v
+    python manage.py test backend.tests.test_auth --settings=backend.doritostats.test_settings
 """
 
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock, PropertyMock, patch
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
@@ -25,6 +23,7 @@ from rest_framework.authtoken.models import Token
 
 from backend.accounts.backends import EmailBackend
 from backend.fantasy_stats.models import LeagueInfo
+from backend.src.doritostats.django_utils import CURRENT_YEAR
 
 # ── URL constants ─────────────────────────────────────────────────────────────
 
@@ -411,6 +410,7 @@ class MeViewTests(TestCase):
 class PasswordResetViewTests(TestCase):
     def setUp(self):
         self.user = make_user()
+        mail.outbox = []
 
     def _post(self, email="user@example.com"):
         return self.client.post(
@@ -538,8 +538,8 @@ class LeaguesDataTests(TestCase):
     def setUp(self):
         self.user_a = make_user(email="a@example.com")
         self.user_b = make_user(email="b@example.com")
-        make_league(self.user_a, league_id=10, league_year=2024, league_name="A League")
-        make_league(self.user_b, league_id=20, league_year=2024, league_name="B League")
+        make_league(self.user_a, league_id=10, league_year=CURRENT_YEAR, league_name="A League")
+        make_league(self.user_b, league_id=20, league_year=CURRENT_YEAR, league_name="B League")
 
     def test_unauthenticated_returns_401(self):
         resp = self.client.get(LEAGUES_URL)
@@ -561,7 +561,7 @@ class LeaguesDataTests(TestCase):
         self.assertNotIn(20, all_ids)
 
     def test_previous_year_leagues_are_separated(self):
-        make_league(self.user_a, league_id=11, league_year=2022, league_name="Old A")
+        make_league(self.user_a, league_id=11, league_year=CURRENT_YEAR - 4, league_name="Old A")
         resp = auth_client(self.user_a).get(LEAGUES_URL)
         prev_ids = [l["league_id"] for l in resp.json()["leagues_previous_year"]]
         self.assertIn(11, prev_ids)
@@ -582,33 +582,33 @@ class GetLeagueDetailsTests(TestCase):
     def setUp(self):
         self.user_a = make_user(email="a@example.com")
         self.user_b = make_user(email="b@example.com")
-        make_league(self.user_a, league_id=100, league_year=2024)
+        make_league(self.user_a, league_id=100, league_year=CURRENT_YEAR)
 
     def test_unauthenticated_returns_401(self):
-        resp = self.client.get(LEAGUE_DETAIL_URL.format(year=2024, league_id=100))
+        resp = self.client.get(LEAGUE_DETAIL_URL.format(year=CURRENT_YEAR, league_id=100))
         self.assertEqual(resp.status_code, 401)
 
     def test_other_user_cannot_access_league_returns_400(self):
         resp = auth_client(self.user_b).get(
-            LEAGUE_DETAIL_URL.format(year=2024, league_id=100)
+            LEAGUE_DETAIL_URL.format(year=CURRENT_YEAR, league_id=100)
         )
         self.assertEqual(resp.status_code, 400)
 
     def test_nonexistent_league_returns_400(self):
         resp = auth_client(self.user_a).get(
-            LEAGUE_DETAIL_URL.format(year=2024, league_id=9999)
+            LEAGUE_DETAIL_URL.format(year=CURRENT_YEAR, league_id=9999)
         )
         self.assertEqual(resp.status_code, 400)
 
     def test_owner_can_access_own_league(self):
         """Owner gets 200 with league data (view only reads DB, no ESPN call)."""
         resp = auth_client(self.user_a).get(
-            LEAGUE_DETAIL_URL.format(year=2024, league_id=100)
+            LEAGUE_DETAIL_URL.format(year=CURRENT_YEAR, league_id=100)
         )
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertEqual(data["league_id"], 100)
-        self.assertEqual(data["league_year"], 2024)
+        self.assertEqual(data["league_year"], CURRENT_YEAR)
 
 
 class DistinctLeaguesPreviousYearTests(TestCase):
@@ -671,9 +671,10 @@ class LeagueInputTests(TestCase):
     def test_authenticated_reaches_view_logic(self):
         """Authenticated request passes auth gate (ESPN API is mocked)."""
         user = make_user()
-        with patch("backend.fantasy_stats.views.fetch_league") as mock_fetch:
+        with patch("backend.fantasy_stats.views.fetch_league") as mock_fetch, \
+             patch("backend.fantasy_stats.views.send_new_league_added_alert"):
             mock_league = MagicMock()
-            mock_league.settings.name = "Mock League"
+            type(mock_league).name = PropertyMock(return_value="Mock League")
             mock_fetch.return_value = mock_league
             resp = auth_client(user).post(
                 LEAGUE_INPUT_URL,
@@ -691,9 +692,10 @@ class LeagueInputTests(TestCase):
     def test_league_input_associates_league_with_user(self):
         """New league is stored under the authenticated user."""
         user = make_user()
-        with patch("backend.fantasy_stats.views.fetch_league") as mock_fetch:
+        with patch("backend.fantasy_stats.views.fetch_league") as mock_fetch, \
+             patch("backend.fantasy_stats.views.send_new_league_added_alert"):
             mock_league = MagicMock()
-            mock_league.settings.name = "New League"
+            type(mock_league).name = PropertyMock(return_value="New League")
             mock_fetch.return_value = mock_league
             auth_client(user).post(
                 LEAGUE_INPUT_URL,
@@ -706,5 +708,5 @@ class LeagueInputTests(TestCase):
                 content_type="application/json",
             )
         league = LeagueInfo.objects.filter(league_id=99, league_year=2024).first()
-        if league:  # Only assert if the view succeeded in creating the record
-            self.assertEqual(league.user, user)
+        self.assertIsNotNone(league)
+        self.assertEqual(league.user, user)

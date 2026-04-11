@@ -38,8 +38,7 @@ nflreadpy = "^0.1.5"
 pyarrow = "^22.0.0"
 
 [tool.pytest.ini_options]
-addopts = "--ignore=test_ram_monitor.py"
-DJANGO_SETTINGS_MODULE = "backend.doritostats.settings"
+addopts = "--ignore=test_ram_monitor.py --ignore=backend/tests/test_auth.py"
 
 [build-system]
 requires = ["poetry-core"]

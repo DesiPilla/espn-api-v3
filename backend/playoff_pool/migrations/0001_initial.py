@@ -105,13 +105,6 @@ class Migration(migrations.Migration):
                     models.IntegerField(help_text="Order in which player was drafted"),
                 ),
                 (
-                    "user",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
-                (
                     "league",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
