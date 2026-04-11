@@ -538,8 +538,12 @@ class LeaguesDataTests(TestCase):
     def setUp(self):
         self.user_a = make_user(email="a@example.com")
         self.user_b = make_user(email="b@example.com")
-        make_league(self.user_a, league_id=10, league_year=CURRENT_YEAR, league_name="A League")
-        make_league(self.user_b, league_id=20, league_year=CURRENT_YEAR, league_name="B League")
+        make_league(
+            self.user_a, league_id=10, league_year=CURRENT_YEAR, league_name="A League"
+        )
+        make_league(
+            self.user_b, league_id=20, league_year=CURRENT_YEAR, league_name="B League"
+        )
 
     def test_unauthenticated_returns_401(self):
         resp = self.client.get(LEAGUES_URL)
@@ -561,7 +565,9 @@ class LeaguesDataTests(TestCase):
         self.assertNotIn(20, all_ids)
 
     def test_previous_year_leagues_are_separated(self):
-        make_league(self.user_a, league_id=11, league_year=CURRENT_YEAR - 4, league_name="Old A")
+        make_league(
+            self.user_a, league_id=11, league_year=CURRENT_YEAR - 4, league_name="Old A"
+        )
         resp = auth_client(self.user_a).get(LEAGUES_URL)
         prev_ids = [l["league_id"] for l in resp.json()["leagues_previous_year"]]
         self.assertIn(11, prev_ids)
@@ -585,7 +591,9 @@ class GetLeagueDetailsTests(TestCase):
         make_league(self.user_a, league_id=100, league_year=CURRENT_YEAR)
 
     def test_unauthenticated_returns_401(self):
-        resp = self.client.get(LEAGUE_DETAIL_URL.format(year=CURRENT_YEAR, league_id=100))
+        resp = self.client.get(
+            LEAGUE_DETAIL_URL.format(year=CURRENT_YEAR, league_id=100)
+        )
         self.assertEqual(resp.status_code, 401)
 
     def test_other_user_cannot_access_league_returns_400(self):
@@ -671,8 +679,9 @@ class LeagueInputTests(TestCase):
     def test_authenticated_reaches_view_logic(self):
         """Authenticated request passes auth gate (ESPN API is mocked)."""
         user = make_user()
-        with patch("backend.fantasy_stats.views.fetch_league") as mock_fetch, \
-             patch("backend.fantasy_stats.views.send_new_league_added_alert"):
+        with patch("backend.fantasy_stats.views.fetch_league") as mock_fetch, patch(
+            "backend.fantasy_stats.views.send_new_league_added_alert"
+        ):
             mock_league = MagicMock()
             type(mock_league).name = PropertyMock(return_value="Mock League")
             mock_fetch.return_value = mock_league
@@ -692,8 +701,9 @@ class LeagueInputTests(TestCase):
     def test_league_input_associates_league_with_user(self):
         """New league is stored under the authenticated user."""
         user = make_user()
-        with patch("backend.fantasy_stats.views.fetch_league") as mock_fetch, \
-             patch("backend.fantasy_stats.views.send_new_league_added_alert"):
+        with patch("backend.fantasy_stats.views.fetch_league") as mock_fetch, patch(
+            "backend.fantasy_stats.views.send_new_league_added_alert"
+        ):
             mock_league = MagicMock()
             type(mock_league).name = PropertyMock(return_value="New League")
             mock_fetch.return_value = mock_league

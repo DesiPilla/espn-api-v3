@@ -12,8 +12,10 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 # Strip email-alerting middleware so tests never make Resend API calls.
 MIDDLEWARE = [
-    m for m in MIDDLEWARE  # noqa: F405
-    if m not in {
+    m
+    for m in MIDDLEWARE  # noqa: F405
+    if m
+    not in {
         "backend.fantasy_stats.errors.error_middleware.SecurityAlertMiddleware",
         "backend.fantasy_stats.errors.error_middleware.ErrorStatusEmailMiddleware",
     }
